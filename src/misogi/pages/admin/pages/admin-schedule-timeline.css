@@ -228,6 +228,7 @@
 
 /* PC: 全画面幅（components.css を確実に上書き） */
 @media (min-width: 980px) {
+
   .admin-schedule-timeline-page .report-page-content,
   .admin-schedule-timeline-page .admin-schedule-timeline-content {
     max-width: none !important;
@@ -431,9 +432,10 @@
 .admin-schedule-timeline-page .summaryPills {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
-  max-width: 520px;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .admin-schedule-timeline-page .pill {
@@ -506,6 +508,7 @@
   .admin-schedule-timeline-page .pcOnly {
     display: block;
   }
+
   .admin-schedule-timeline-page .spOnly {
     display: none;
   }
@@ -540,11 +543,22 @@
   margin-bottom: 14px;
 }
 
+/* 昼パート：明るい背景 */
+.admin-schedule-timeline-page .timelinePCHorizontal.timelinePart-day {
+  background: rgba(18, 22, 33, 0.7);
+}
+
+/* 夜パート：暗い背景 */
+.admin-schedule-timeline-page .timelinePCHorizontal.timelinePart-night {
+  background: rgba(12, 15, 22, 0.85);
+}
+
 .admin-schedule-timeline-page .timelinePCContainerHorizontal {
   display: flex;
   flex-direction: row;
   min-width: 0;
-  overflow-x: visible; /* 横スクロールを無効化 */
+  overflow-x: visible;
+  /* 横スクロールを無効化 */
 }
 
 /* 左側：名簿（縦並び、固定幅） */
@@ -630,7 +644,8 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: #4caf50; /* 緑 */
+  background: #4caf50;
+  /* 緑 */
 }
 
 .admin-schedule-timeline-page .nameListCell.unit-maintenance::before {
@@ -640,7 +655,8 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: #ff9800; /* オレンジ */
+  background: #ff9800;
+  /* オレンジ */
 }
 
 .admin-schedule-timeline-page .nameListCell .name {
@@ -696,6 +712,22 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+.admin-schedule-timeline-page .accidentChip {
+  background: linear-gradient(135deg, #ff4b2b 0%, #ff416c 100%) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(255, 65, 108, 0.4);
+}
+
+.admin-schedule-timeline-page .accidentChip span {
+  color: #ffffff !important;
+}
+
+.admin-schedule-timeline-page .accidentChip:hover {
+  box-shadow: 0 4px 15px rgba(255, 65, 108, 0.6) !important;
+  transform: translateY(-1px);
+}
+
 .admin-schedule-timeline-page .daytimeChipIcon {
   font-size: 14px;
   opacity: 0.9;
@@ -743,7 +775,8 @@
   background: rgba(18, 22, 33, 0.95);
   border-bottom: 1px solid var(--line);
   position: sticky;
-  top: 0; /* 昼イベントタグ列がない場合は0、ある場合は44px（JSで動的に設定） */
+  top: 0;
+  /* 昼イベントタグ列がない場合は0、ある場合は44px（JSで動的に設定） */
   z-index: 9;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
@@ -754,7 +787,8 @@
 }
 
 .admin-schedule-timeline-page .timeHeaderCell {
-  flex: 1; /* 画面幅いっぱいに均等表示 */
+  flex: 1;
+  /* 画面幅いっぱいに均等表示 */
   min-width: 0;
   height: var(--time-header-height);
   display: flex;
@@ -785,12 +819,14 @@
 .admin-schedule-timeline-page .cleanerRowGrid {
   display: flex;
   flex-direction: row;
-  width: 100%; /* 画面幅いっぱいに均等表示 */
+  width: 100%;
+  /* 画面幅いっぱいに均等表示 */
   height: 100%;
 }
 
 .admin-schedule-timeline-page .slotCellHorizontal {
-  flex: 1; /* 画面幅いっぱいに均等表示 */
+  flex: 1;
+  /* 画面幅いっぱいに均等表示 */
   min-width: 0;
   height: 100%;
   padding: 0;
@@ -1080,7 +1116,8 @@
   position: relative;
   border-left: 1px solid rgba(39, 48, 73, 0.6);
   overflow: hidden;
-  min-width: 140px;           /* 詰まり防止（120〜160で調整） */
+  min-width: 140px;
+  /* 詰まり防止（120〜160で調整） */
 }
 
 /* タイムライン列グリッド：時間列と同じ flex 列にして 1 セル高さを揃える */
@@ -2226,6 +2263,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -2236,6 +2274,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -2304,16 +2343,20 @@
   .admin-schedule-timeline-page .formGrid {
     grid-template-columns: 1fr;
   }
+
   .admin-schedule-timeline-page .field.span2 {
     grid-column: span 1;
   }
+
   .admin-schedule-timeline-page .row {
     grid-template-columns: 140px 1fr;
     grid-auto-rows: auto;
   }
+
   .admin-schedule-timeline-page .row.head {
     display: none;
   }
+
   .admin-schedule-timeline-page .row.body {
     grid-template-columns: 140px 1fr;
     gap: 6px 10px;
@@ -2646,8 +2689,10 @@
 
 .admin-schedule-timeline-page .rollingWeekGrid {
   display: grid;
-  grid-template-columns: minmax(280px, 320px) 1fr;
+  grid-template-columns: 1.2fr 6.8fr;
+  /* 全体で8日分。今日を少し広めに */
   overflow: hidden;
+  width: 100%;
 }
 
 .admin-schedule-timeline-page .todayColumn {
@@ -2655,14 +2700,14 @@
   left: 0;
   z-index: 20;
   background: #0b1020;
-  border-right: 3px solid #3a6cff;
-  box-shadow: inset -4px 0 0 #3a6cff;
+  border-right: 2px solid #3a6cff;
 }
 
 .admin-schedule-timeline-page .futureColumns {
   display: grid;
-  grid-template-columns: repeat(7, minmax(220px, 1fr));
-  overflow-x: auto;
+  grid-template-columns: repeat(7, 1fr);
+  min-width: 0;
+  /* 禁止スクロール */
 }
 
 .admin-schedule-timeline-page .todayBadge {
@@ -2706,38 +2751,52 @@
   width: 360px;
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 32px);
-  background: transparent; /* 背景を無くす */
-  border: none; /* ボーダーを無くす */
+  background: transparent;
+  /* 背景を無くす */
+  border: none;
+  /* ボーダーを無くす */
   border-radius: 16px;
-  box-shadow: none; /* ボックスシャドウも無くす */
+  box-shadow: none;
+  /* ボックスシャドウも無くす */
   z-index: 1000;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  backdrop-filter: none; /* ブラーも無くす */
+  backdrop-filter: none;
+  /* ブラーも無くす */
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .misogi-overlay.status-normal {
-  border: none; /* ボーダーを無くす */
-  box-shadow: none; /* ボックスシャドウを無くす */
+  border: none;
+  /* ボーダーを無くす */
+  box-shadow: none;
+  /* ボックスシャドウを無くす */
 }
 
 .misogi-overlay.status-warning {
-  border: none; /* ボーダーを無くす */
-  box-shadow: none; /* ボックスシャドウを無くす */
+  border: none;
+  /* ボーダーを無くす */
+  box-shadow: none;
+  /* ボックスシャドウを無くす */
 }
 
 .misogi-overlay.status-danger {
-  border: none; /* ボーダーを無くす */
-  box-shadow: none; /* ボックスシャドウを無くす */
-  animation: none; /* アニメーションも無くす */
+  border: none;
+  /* ボーダーを無くす */
+  box-shadow: none;
+  /* ボックスシャドウを無くす */
+  animation: none;
+  /* アニメーションも無くす */
 }
 
 @keyframes misogi-danger-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 80, 80, 0.3), 0 0 30px rgba(255, 80, 80, 0.2);
   }
+
   50% {
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 80, 80, 0.5), 0 0 40px rgba(255, 80, 80, 0.3);
   }
@@ -2745,14 +2804,18 @@
 
 .misogi-header {
   padding: 8px 12px;
-  border-bottom: 1px solid transparent; /* ボーダーを透明にする */
+  border-bottom: 1px solid transparent;
+  /* ボーダーを透明にする */
   display: flex;
-  justify-content: flex-end; /* 閉じるボタンを右側に配置 */
+  justify-content: flex-end;
+  /* 閉じるボタンを右側に配置 */
   align-items: center;
   cursor: grab;
   user-select: none;
-  background: transparent; /* 背景を透明にする */
-  min-height: 40px; /* 最小高さを設定 */
+  background: transparent;
+  /* 背景を透明にする */
+  min-height: 40px;
+  /* 最小高さを設定 */
 }
 
 .misogi-header:active {
@@ -2797,16 +2860,20 @@
   height: 200px;
   position: relative;
   overflow: hidden;
-  background: transparent; /* 背景を無くす */
+  background: transparent;
+  /* 背景を無くす */
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: grab; /* ドラッグ可能であることを示す */
-  user-select: none; /* テキスト選択を防ぐ */
+  cursor: grab;
+  /* ドラッグ可能であることを示す */
+  user-select: none;
+  /* テキスト選択を防ぐ */
 }
 
 .misogi-visualizer-container:active {
-  cursor: grabbing; /* ドラッグ中はgrabbing */
+  cursor: grabbing;
+  /* ドラッグ中はgrabbing */
 }
 
 /* 波紋リング（.wave）を非表示にする */
@@ -2820,11 +2887,13 @@
 }
 
 .misogi-overlay.status-warning .misogi-visualizer-container {
-  background: transparent; /* 背景を無くす */
+  background: transparent;
+  /* 背景を無くす */
 }
 
 .misogi-overlay.status-danger .misogi-visualizer-container {
-  background: transparent; /* 背景を無くす */
+  background: transparent;
+  /* 背景を無くす */
 }
 
 .misogi-visualizer {
@@ -2882,10 +2951,14 @@
 }
 
 .misogi-message.ai .misogi-bubble {
-  background: rgba(100, 150, 255, 0.15); /* パーソナルカラー（青系） */
-  color: rgba(200, 220, 255, 0.95); /* パーソナルカラーに合わせたテキスト色 */
-  border: 1px solid rgba(100, 150, 255, 0.4); /* パーソナルカラーのボーダー */
-  box-shadow: 0 2px 8px rgba(100, 150, 255, 0.2), 0 0 12px rgba(100, 150, 255, 0.1); /* パーソナルカラーの光彩 */
+  background: rgba(100, 150, 255, 0.15);
+  /* パーソナルカラー（青系） */
+  color: rgba(200, 220, 255, 0.95);
+  /* パーソナルカラーに合わせたテキスト色 */
+  border: 1px solid rgba(100, 150, 255, 0.4);
+  /* パーソナルカラーのボーダー */
+  box-shadow: 0 2px 8px rgba(100, 150, 255, 0.2), 0 0 12px rgba(100, 150, 255, 0.1);
+  /* パーソナルカラーの光彩 */
   position: relative;
 }
 
@@ -2900,7 +2973,8 @@
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-bottom: 8px solid rgba(100, 150, 255, 0.4); /* パーソナルカラーのボーダー */
+  border-bottom: 8px solid rgba(100, 150, 255, 0.4);
+  /* パーソナルカラーのボーダー */
 }
 
 .misogi-message.ai .misogi-bubble::after {
@@ -2913,7 +2987,8 @@
   height: 0;
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
-  border-bottom: 7px solid rgba(100, 150, 255, 0.15); /* パーソナルカラーの背景 */
+  border-bottom: 7px solid rgba(100, 150, 255, 0.15);
+  /* パーソナルカラーの背景 */
 }
 
 .misogi-message.ai .misogi-bubble.loading {
@@ -3078,6 +3153,16 @@
 [data-theme="light"] .admin-schedule-timeline-page .timelinePCHorizontal {
   background: rgba(255, 255, 255, 0.9);
   border-color: var(--line);
+}
+
+/* ライトモード：昼パート */
+[data-theme="light"] .admin-schedule-timeline-page .timelinePCHorizontal.timelinePart-day {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* ライトモード：夜パート（少し暗く） */
+[data-theme="light"] .admin-schedule-timeline-page .timelinePCHorizontal.timelinePart-night {
+  background: rgba(240, 242, 245, 0.95);
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .timelineNameListContainer {
@@ -3668,4 +3753,198 @@
 [data-theme="light"] .admin-schedule-timeline-page .s-conflict {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* 事前連絡日ラベル（枠の外・上部に浮かせる） */
+.admin-schedule-timeline-page .weekCol {
+  position: relative;
+  /* ラベル分の余白を確保 */
+  margin-top: 24px;
+}
+
+.admin-schedule-timeline-page .contactDayLabelOutside {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
+  padding: 2px 0;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -2px 10px rgba(255, 75, 43, 0.3);
+  z-index: 5;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  animation: contactPulse 2s infinite;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-schedule-timeline-page .weekApptName {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+@keyframes contactPulse {
+  0% {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+
+  100% {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+
+/* TODAYバッジも外に出して統一感を出す */
+.admin-schedule-timeline-page .todayBadge {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  background: #3a6cff;
+  border-radius: 4px 4px 0 0;
+  font-weight: 800;
+  padding: 2px 0;
+}
+
+/* --- スケジュール空き状況エリア --- */
+.admin-schedule-timeline-page .weekAvailabilityHeader {
+  background: rgba(22, 27, 41, 0.5);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 0;
+  margin-bottom: 24px;
+  backdrop-filter: blur(8px);
+}
+
+.admin-schedule-timeline-page .availabilityTitleContainer {
+  padding: 0 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-schedule-timeline-page .availabilityTitleIcon {
+  font-size: 18px;
+}
+
+.admin-schedule-timeline-page .availabilityTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.05em;
+}
+
+.admin-schedule-timeline-page .availabilitySubtitle {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.admin-schedule-timeline-page .availabilityGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 6.8fr;
+  /* rollingWeekGridと一致させる */
+  width: 100%;
+}
+
+.admin-schedule-timeline-page .availabilityTodayCell {
+  padding: 0 12px;
+  border-right: 2px solid transparent;
+  /* 位置調整 */
+}
+
+.admin-schedule-timeline-page .availabilityFutureGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%;
+}
+
+.admin-schedule-timeline-page .av-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.3s ease;
+}
+
+.admin-schedule-timeline-page .av-count {
+  font-size: 20px;
+  font-weight: 900;
+  color: #4caf50;
+  /* 空きがある場合は緑 */
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.admin-schedule-timeline-page .av-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: -2px;
+}
+
+/* 満員（空き0）の時のスタイル */
+.admin-schedule-timeline-page .av-cell.is-full .av-count {
+  color: #64748b;
+  text-shadow: none;
+}
+
+.admin-schedule-timeline-page .av-cell.is-full::after {
+  content: 'FULL';
+  font-size: 9px;
+  background: #334155;
+  color: #94a3b8;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-top: 2px;
+}
+
+/* --- ポテンシャル表示（最大連続空き時間）の追加スタイル --- */
+.admin-schedule-timeline-page .av-main {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.admin-schedule-timeline-page .av-detail {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.admin-schedule-timeline-page .av-highlight {
+  color: #60a5fa;
+  /* 青色で強調 */
+  font-weight: 800;
+}
+
+.admin-schedule-timeline-page .availabilityTodayCell .av-cell {
+  background: rgba(100, 150, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.admin-schedule-timeline-page .av-cell.is-full .av-highlight {
+  color: #94a3b8;
 }

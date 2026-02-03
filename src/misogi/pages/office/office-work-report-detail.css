@@ -1,0 +1,89 @@
+/**
+ * 業務報告詳細ページ（閲覧・印刷／PDF用）
+ */
+
+/* 印刷時は「一覧へ」「印刷ボタン」を非表示 */
+@media print {
+  .office-work-report-detail .no-print,
+  .office-work-report-detail .office-work-report-detail-actions {
+    display: none !important;
+  }
+
+  .office-work-report-detail {
+    max-width: 100% !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .office-work-report-detail section {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    break-inside: avoid;
+  }
+
+  .office-work-report-detail h1,
+  .office-work-report-detail h2 {
+    color: #111 !important;
+  }
+
+  .office-work-report-detail dt {
+    color: #333 !important;
+  }
+
+  .office-work-report-detail dd,
+  .office-work-report-detail p,
+  .office-work-report-detail li {
+    color: #222 !important;
+  }
+
+  .office-work-report-detail a[href] {
+    color: #06c !important;
+  }
+
+  .office-work-report-detail .report-print-title {
+    margin-bottom: 16px;
+    font-size: 1.25rem;
+    color: #111 !important;
+  }
+
+  .office-work-report-detail .report-print-meta {
+    font-size: 0.9rem;
+    color: #555 !important;
+    margin-bottom: 20px;
+  }
+}
+
+.office-work-report-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.office-work-report-detail-actions .btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.office-work-report-detail-actions .btn:hover {
+  background: var(--card-border);
+}
+
+.office-work-report-detail-actions .btn-print {
+  background: var(--job-office, #3b82f6);
+  color: #fff;
+  border-color: var(--job-office, #3b82f6);
+}
+
+.office-work-report-detail-actions .btn-print:hover {
+  opacity: 0.9;
+}

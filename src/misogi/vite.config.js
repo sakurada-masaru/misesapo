@@ -47,7 +47,7 @@ export default defineConfig({
   },
   server: {
     port: 3334,
-    host: '127.0.0.1', // IPv4のlocalhostのみでリッスン（IPv6の権限エラーを回避）
+    host: '0.0.0.0', // Allow binding to all interfaces
     proxy,
     watch: {
       // リアルタイム更新を確実にする（エディタ・クラウド同期で監視が効かない場合に有効）

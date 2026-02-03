@@ -1,0 +1,430 @@
+/* ===== スマホファースト設計 ===== */
+.cleaner-schedule-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  /* スマホでの横スクロール防止 */
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.cleaner-schedule-content {
+  padding-top: var(--space-4);
+}
+
+.cleaner-schedule-page .header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* スマホでの安全領域を考慮 */
+  padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+}
+
+.cleaner-schedule-page .headerRow {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cleaner-schedule-page .titleBlock {
+  width: 100%;
+}
+
+.cleaner-schedule-page .title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.cleaner-schedule-page .subtitle {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.cleaner-schedule-page .headerActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.cleaner-schedule-page .headerActions .btn {
+  min-height: 44px; /* タップしやすいサイズ */
+  font-size: 0.95rem;
+  padding: 12px 16px;
+  border-radius: 8px;
+  touch-action: manipulation; /* ダブルタップズーム防止 */
+}
+
+.cleaner-schedule-page .main {
+  padding: var(--space-4);
+  padding-bottom: max(var(--space-4), env(safe-area-inset-bottom) + var(--space-4));
+}
+
+.cleaner-schedule-page .schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cleaner-schedule-page .schedule-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* タッチ操作を最適化 */
+  touch-action: manipulation;
+}
+
+.cleaner-schedule-page .schedule-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cleaner-schedule-page .schedule-time {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.cleaner-schedule-page .schedule-status {
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cleaner-schedule-page .schedule-status.s-booked {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.cleaner-schedule-page .schedule-status.s-checkedin {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.cleaner-schedule-page .schedule-status.s-inprogress {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.cleaner-schedule-page .schedule-status.s-done {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.cleaner-schedule-page .schedule-status.s-cancelled {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.cleaner-schedule-page .schedule-card-body {
+  margin-bottom: 20px;
+}
+
+.cleaner-schedule-page .schedule-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.cleaner-schedule-page .schedule-type {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.cleaner-schedule-page .schedule-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cleaner-schedule-page .schedule-card-actions .btn {
+  width: 100%;
+  min-height: 52px; /* 大きなタップ領域 */
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 14px 20px;
+  border-radius: 12px;
+  touch-action: manipulation;
+  /* アクティブ状態の視覚的フィードバック */
+  transition: transform 0.1s, opacity 0.1s;
+}
+
+.cleaner-schedule-page .schedule-card-actions .btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.cleaner-schedule-page .schedule-card-actions .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cleaner-schedule-page .schedule-completed {
+  color: var(--muted);
+  font-size: 1rem;
+  text-align: center;
+  padding: 12px;
+  font-weight: 500;
+}
+
+/* PC向けの拡張（769px以上） */
+@media (min-width: 769px) {
+  .cleaner-schedule-page .header {
+    padding: var(--space-4) var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .cleaner-schedule-page .headerRow {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cleaner-schedule-page .titleBlock {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .cleaner-schedule-page .title {
+    font-size: 1.5rem;
+  }
+
+  .cleaner-schedule-page .headerActions {
+    display: flex;
+    grid-template-columns: none;
+    gap: 8px;
+    width: auto;
+  }
+
+  .cleaner-schedule-page .headerActions .btn {
+    min-height: 40px;
+    padding: 10px 16px;
+  }
+
+  .cleaner-schedule-page .main {
+    padding: var(--space-6);
+  }
+
+  .cleaner-schedule-page .schedule-list {
+    gap: 16px;
+  }
+
+  .cleaner-schedule-page .schedule-card {
+    padding: 24px;
+  }
+
+  .cleaner-schedule-page .schedule-card-actions {
+    flex-direction: row;
+  }
+
+  .cleaner-schedule-page .schedule-card-actions .btn {
+    width: auto;
+    min-width: 120px;
+    min-height: 44px;
+    flex: 1;
+  }
+}
+
+/* ===== タイムライン表示 ===== */
+.cleaner-schedule-page .timelineSP {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-top: var(--space-4);
+}
+
+.cleaner-schedule-page .spList {
+  padding: var(--space-4);
+}
+
+.cleaner-schedule-page .spHint {
+  padding: 8px 4px 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.cleaner-schedule-page .spSlot {
+  display: grid;
+  grid-template-columns: 66px 1fr;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.cleaner-schedule-page .spSlot:last-child {
+  border-bottom: none;
+}
+
+.cleaner-schedule-page .spTime {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding-top: 6px;
+  font-weight: 500;
+}
+
+.cleaner-schedule-page .spSlotBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cleaner-schedule-page .spEmpty {
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 14px 12px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  touch-action: manipulation;
+  transition: background 0.2s, color 0.2s;
+}
+
+.cleaner-schedule-page .spEmpty:active {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
+}
+
+.cleaner-schedule-page .spAppt {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  padding: 12px;
+  text-align: left;
+  color: var(--text);
+  background: var(--panel);
+}
+
+.cleaner-schedule-page .spApptRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.cleaner-schedule-page .spApptMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.cleaner-schedule-page .spApptName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.cleaner-schedule-page .spApptMeta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.cleaner-schedule-page .spApptTime {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.cleaner-schedule-page .blockCard {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.cleaner-schedule-page .blockCard .spApptName {
+  color: #3b82f6;
+}
+
+/* PC向けの拡張（769px以上） */
+@media (min-width: 769px) {
+  .cleaner-schedule-page .main {
+    padding: var(--space-6);
+  }
+
+  .cleaner-schedule-page .timelineSP {
+    margin-top: var(--space-6);
+  }
+
+  .cleaner-schedule-page .spEmpty:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text);
+  }
+}
+
+/* ライトモード対応 */
+[data-theme="light"] .cleaner-schedule-page {
+  background: #ffffff;
+}
+
+[data-theme="light"] .cleaner-schedule-page .header {
+  background: #f8f9fa;
+  border-bottom-color: #e5e7eb;
+}
+
+[data-theme="light"] .cleaner-schedule-page .schedule-card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .cleaner-schedule-page .timelineSP {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+@media (min-width: 769px) {
+  [data-theme="light"] .cleaner-schedule-page .timelineSP {
+    border-color: #e5e7eb;
+  }
+}
+
+[data-theme="light"] .cleaner-schedule-page .spSlot {
+  border-bottom-color: #e5e7eb;
+}
+
+[data-theme="light"] .cleaner-schedule-page .spEmpty {
+  border-color: #e5e7eb;
+  color: #64748b;
+}
+
+[data-theme="light"] .cleaner-schedule-page .spEmpty:active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .cleaner-schedule-page .spAppt {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+[data-theme="light"] .cleaner-schedule-page .blockCard {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
+}

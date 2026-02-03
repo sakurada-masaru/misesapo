@@ -120,6 +120,13 @@
   margin-bottom: 0;
 }
 
+.sales-day-success {
+  color: var(--job-cleaning, #10b981);
+  font-size: var(--fs-13, 13px);
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+}
+
 .sales-day-file-input {
   position: absolute;
   width: 0;

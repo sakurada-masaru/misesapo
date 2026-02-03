@@ -1,0 +1,2225 @@
+BEGIN:VCALENDAR
+PRODID:-//Google Inc//Google Calendar 70.9054//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:ミセサポ_清掃日程
+X-WR-TIMEZONE:Asia/Tokyo
+BEGIN:VTIMEZONE
+TZID:Asia/Tokyo
+X-LIC-LOCATION:Asia/Tokyo
+BEGIN:STANDARD
+TZOFFSETFROM:+0900
+TZOFFSETTO:+0900
+TZNAME:GMT+9
+DTSTART:19700101T000000
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260413T233000
+DTEND;TZID=Asia/Tokyo:20260414T033000
+RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=2MO
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:aqv1s57erimnfh9hl4flcir60m@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=re
+ bond.yonezawa@gmail.com;X-NUM-GUESTS=0:mailto:rebond.yonezawa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ga
+ brielamayumi444@gmail.com;X-NUM-GUESTS=0:mailto:gabrielamayumi444@gmail.com
+CREATED:20250411T092551Z
+DESCRIPTION:定期清掃\nグリストラップ　毎月\n厨房フィルター　毎月\nグリスフィルター　毎月\nエアコンフィルター清掃　毎月\nフィルタ
+ ーケース分解洗浄　スポット\nホール床清掃\n\n　\nキーボックス　0709
+LAST-MODIFIED:20251108T162841Z
+LOCATION:麺と肴 担々麺 ぺん坊 ラーメン 本所吾妻橋\, 日本、〒130-0001 東京都墨田区吾妻橋３丁目６−１５ サンサーラ吾妻橋 10
+ 5
+SEQUENCE:3
+STATUS:CONFIRMED
+SUMMARY:【隔月清掃】麺と肴　担々麺 ペン坊 　青柳社長
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260211T020000
+DTEND;TZID=Asia/Tokyo:20260211T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:v4qpqf8k5rqt2s97me029c7ka8@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=bibisa
+ yuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokagroup@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260211T020000
+CREATED:20250917T071211Z
+DESCRIPTION:一週間前連絡済み\n12/10事前連絡済\n\nグリストラップの排水管が詰まっているのか、大量の水を流した際\nグリストとグレ
+ ーチングから溢れそうになるため重点的に見てもらいたい。\n\n　\n害虫駆除（毎月）            　\nネズミ駆除（毎月）         
+    　\nレンジフード清掃（隔月）  →1.3.5.7.9.11月        　\nキッチン床清掃（隔月）  →1.3.5.7.9.11月\n床
+ 清掃（隔月）    →1.3.5.7.9.11月     　\nグレーチング清掃（半年）→5月.11月\n\n＜キーボックス＞\nビルのポストのダイヤ
+ ルを5に合わせると鍵があります。大きい方の鍵でドアが開きます。\n\n 深夜で鍵があかないなど何かあったらこちらへ\n店長　08019762559
+LAST-MODIFIED:20260202T072329Z
+LOCATION:ピッツェリア ドォーロ 新橋店
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】メティウスフーズ ピッツェリア ドォーロ 新橋店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260202T000000
+DTEND;TZID=Asia/Tokyo:20260202T095000
+RRULE:FREQ=MONTHLY;BYDAY=1MO
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:gtjn7vlp8uf84s3e6tn4flln29_R20260201T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=no
+ emi_midory@hotmail.com;X-NUM-GUESTS=0:mailto:noemi_midory@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+CREATED:20250728T120009Z
+DESCRIPTION:LINEにて、チョウバエコバエが沸いている。<br>チョウバエバスターで排水回りに害虫駆除を行う<br><br>害虫駆除（毎月
+ ） <br>ネズミ駆除（毎月） <br>グリストラップ清掃（毎月） <br>ホール床清掃（隔月） → 11月・1月・3月・5月・7月・9月<br>冷蔵
+ 庫フィルター清掃（毎月） <br>レンジフード拭きあげ（毎月） <br>キッチン床清掃（隔月） → 11月・1月・3月・5月・7月・9月<br>トイレ
+ 清掃（四半期） → 10月・1月・4月・7月<br>エアコンフィルター清掃（都度） <br>テーブル拭き（都度） <br><br>シンクが狭いので、ト
+ ロ舟を多めに持っていく<br><br>キーボックスは５店舗まとめてこちらのお店に返す<br><br>キーボックス　番号2183<br><br>薬剤<b
+ r><br>シルバー 500ML　￥２５０<br>乳化剤 500ML　￥５００<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー１個
+ 　￥３５０</b><br>ベクトロン　２０ML  ￥１２００<br>ラットシート　７枚　￥５００<br>ネオラッテ　５個　￥２００<br><br><b
+ >合計: </b><b>￥3250</b><br><br>道具<br><br>電ドラ　（グリストラップ）<br>ブラシ２個<br>金たわし５個<br>
+ ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚<br>モープ・スクイージーセット<br>ごみ袋<br>バケツ２個<br>雑巾ワイパー
+LAST-MODIFIED:20260202T072037Z
+LOCATION:ニーハオ蒲田本店
+SEQUENCE:9
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ蒲田　別館
+TRANSP:OPAQUE
+ATTACH;FILENAME=メモ - 「【定期清掃】ニーハオ蒲田　別館」;FMTTYPE=application/vnd.google-apps.
+ document:https://docs.google.com/document/d/1Y9zBdPpl0sF4O3mshIyd9Z_zgHvx57
+ 8wYtEkN6SY3LY/edit
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260225T030000
+DTEND;TZID=Asia/Tokyo:20260225T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:50ld412ckfdohv2qnrnihf0rob@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260228T010000
+CREATED:20251008T160629Z
+DESCRIPTION:生ごみ回収（毎日｜45L×3袋上限）\nエアコンフィルター清掃（毎月）\n\nスポット追加で3500円　配線整理　 \n１かい
+ 床清掃（掻き出し込み・隔月｜10月・11月・1月・3月・5月・7月） \n２かい床清掃（掻き出し込み・隔月｜10月・12月・2月・4月・6月・8月） 
+ \n  \n以下別途見積： エアコン分解洗浄 階段清掃\n\nキーボックス：0248\n建物の間にかけてあります
+LAST-MODIFIED:20260202T073756Z
+LOCATION:富士屋本店 日本橋浜町\, 日本、〒103-0007 東京都中央区日本橋浜町２丁目２４−２
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】富士屋本店日本橋浜町
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260222T230000
+DTEND;TZID=Asia/Tokyo:20260223T000000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:2bihqr9mr8h8smq4snclpaupfn@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/dcd-chnn-hfu
+RECURRENCE-ID;TZID=Asia/Tokyo:20260223T230000
+CREATED:20251222T063750Z
+DESCRIPTION:Google Meet に参加: https://meet.google.com/dcd-chnn-hfu\n電話で参加: (
+ JP) +81 3-4545-0450 PIN: 5990996095936#\nその他の電話番号: https://tel.meet/dcd-chn
+ n-hfu?pin=5990996095936&hs=7\n\nMeet の詳細: https://support.google.com/a/user
+ s/answer/9282720
+LAST-MODIFIED:20260123T104709Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【定期ゴミ回収】六本木 ATOMIC BAR ゴミ回収
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260210T090000
+DTEND;TZID=Asia/Tokyo:20260210T163000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:jv3b63en1hj901bthohmi11l29_R20260113T000000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260210T090000
+CREATED:20250819T040328Z
+DESCRIPTION:1/6 1週間前連絡済\n\n外部サポーターのなーろんさん\n定期修繕
+LAST-MODIFIED:20260123T101037Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【定期修繕】カラオケパセラ上野駅前店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260222T050000
+DTEND;TZID=Asia/Tokyo:20260222T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:iqq6j1o4sepai1ac1cemgi3kb4_R20260221T200000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/dvh-rydx-ukr
+RECURRENCE-ID;TZID=Asia/Tokyo:20260222T050000
+CREATED:20250930T060519Z
+DESCRIPTION:事前確認電話済\n\nゴミ回収（毎日）        1    　\nグリストラップ清掃（毎月）        1    　\
+ nグレーチング（毎月）        1    　\n厨房機器下の掻き出し（毎月）        1    　\nキッチン床清掃（半年　10月　5月）
+         1    　\nホール床清掃（半年　10月　5月）　        1    　\nエアコン分解洗浄（年1　10月）（天カセ6台/ビル
+ トイン1台）        7    　\n排気/換気口清掃（年1　10月）     1    　\nファンモーター点検（年1　10月）      1
+     　\n粗大ゴミ回収　実費請求        1\n\n〈キーボックス ：5493  〉\n\nGoogle Meet に参加: https:/
+ /meet.google.com/dvh-rydx-ukr\n電話で参加: (JP) +81 3-4545-0450 PIN: 35376696658
+ 16#\nその他の電話番号: https://tel.meet/dvh-rydx-ukr?pin=3537669665816&hs=7\n\nMeet
+  の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T073818Z
+LOCATION:魚無双トオダ\, 日本、〒105-0004 東京都港区新橋４丁目１５−６
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　魚無双トオダ
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260209T100000
+DTEND;TZID=Asia/Tokyo:20260209T110000
+RRULE:FREQ=MONTHLY;UNTIL=20260308T145959Z;BYDAY=2MO
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:jprvkijrurn8ccvgeje9m7jt8t_R20260209T010000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ga
+ brielamayumi444@gmail.com;X-NUM-GUESTS=0:mailto:gabrielamayumi444@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+CREATED:20250806T120420Z
+DESCRIPTION:\n※ ・指定時間以外の入店は行わない \nスタッフ不在時に入店が必要な場合は、必ず事前・事後に報告・お借りした物や設置物は原
+ 状復帰を徹底\n\nマット交換  6枚
+LAST-MODIFIED:20260123T100337Z
+LOCATION:モンキーツリー馬喰町
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】モンキーツリー株式会社エデュケーション MONKEY TREE 日本橋店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260608T100000
+DTEND;TZID=Asia/Tokyo:20260608T110000
+RRULE:FREQ=MONTHLY;BYDAY=2MO
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:jprvkijrurn8ccvgeje9m7jt8t_R20260608T010000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ga
+ brielamayumi444@gmail.com;X-NUM-GUESTS=0:mailto:gabrielamayumi444@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+CREATED:20250806T120420Z
+DESCRIPTION:\n※ ・指定時間以外の入店は行わない \nスタッフ不在時に入店が必要な場合は、\n必ず事前・事後に報告・お借りした物や設置物
+ は原状復帰を徹底\n\nマット交換  6枚
+LAST-MODIFIED:20260123T100337Z
+LOCATION:モンキーツリー馬喰町
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】モンキーツリー株式会社エデュケーション MONKEY TREE 日本橋店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260228T050000
+DTEND;TZID=Asia/Tokyo:20260228T100000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:59ff64u8u5rfnp4otmmqc4rk4j@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260228T010000
+CREATED:20250502T044707Z
+DESCRIPTION:<p><br>グルストラップ清掃<br>グリスフィルター<br>エアコンフィルター<br>グレーチング剥がし、清掃<br> U
+ 字溝清掃<br>入り口の石畳の床清掃（ダンボールどかす）<br><br><br>エアコン点検/修理<br>ファンベルト交換<br>大和冷機洗浄（フィル
+ ター設置込み）<br><br>鍵：入り口の引き出しの中にあります。</p>
+LAST-MODIFIED:20260123T111929Z
+LOCATION:デニーロ神田店\, 日本、〒101-0054 東京都千代田区神田錦町３丁目１４−３ 神田錦町ビル 1階
+SEQUENCE:7
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】デニーロ 神田店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260222T060000
+DTEND;TZID=Asia/Tokyo:20260222T090000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:n23n8j8ufrlet7l92lp77agb65_R20260221T203000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/xdk-gtvd-rjn
+RECURRENCE-ID;TZID=Asia/Tokyo:20260222T053000
+CREATED:20250930T062427Z
+DESCRIPTION:12/10 1週間前連絡済\n12/12 事前連絡するも不出\n12/15事前連絡済み\nホール床清掃(半月)が元々契約に含ま
+ れていたと仰せ)12月お願いできますか？\n\nゴミ回収（毎日）        1    　\nグリストラップ清掃（毎月）        1    　
+ \nグレーチング（毎月）1←12/10 LINE\nキッチン配管高圧洗浄（半年　10月　5月）        1    　\n厨房機器下の掻き出し（毎
+ 月）        1    　\nキッチン床清掃（半年　10月　5月）        1    　    　\nエアコン分解洗浄（年1 　10月）（
+ 天カセ）        6    　\n排気/換気口清掃（年1　10月）   1    　\nファンモーター点検（年1　10月）      1    
+ 　\n\n粗大ゴミ回収　実費請求        1\nキーボックス：4840\n\nGoogle Meet に参加: https://meet.goo
+ gle.com/xdk-gtvd-rjn\n電話で参加: (JP) +81 3-4545-0450 PIN: 5075878220930#\nその他の
+ 電話番号: https://tel.meet/xdk-gtvd-rjn?pin=5075878220930&hs=7\n\nMeet の詳細: htt
+ ps://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T073838Z
+LOCATION:〒105-0004 東京都港区新橋４丁目１４−１ AUNビル 3階
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　ホルモンのマンモス
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260223T070000
+DTEND;TZID=Asia/Tokyo:20260223T100000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:ourf0o7jls642clob1pc1tu8tc@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/ert-jpdf-tyb
+RECURRENCE-ID;TZID=Asia/Tokyo:20260223T030000
+CREATED:20250930T062756Z
+DESCRIPTION:レンジフード（グリスフィルターはレンタル）をやってもらえると助かるとのこと。\n\n12/15 1週間前連絡済\n\nごみ回収
+ （毎日）\nグリストラップ清掃（毎月）\nドリンクの下・厨房機器下の掻き出し（毎月）\nキッチン配管高圧洗浄（年2回）\nキッチン床清掃（半年）→20
+ 25.10/22実施済　次回は26年４月\nエアコン分解洗浄（年1｜天カセ6台）→2025.10/22実施済\n排気／換気口清掃（年1）\nファンモー
+ ター点検（年1）\n粗大ごみ回収（実費請求）\nグレーチング清掃(都度)\n\n鍵：ポスト上の白箱にシャッターのリモコンある。\n\nB1: 1209
+  暗証番号\n\nGoogle Meet に参加: https://meet.google.com/ert-jpdf-tyb\n電話で参加: (JP)
+  +81 3-4545-0450 PIN: 5988381229128#\nその他の電話番号: https://tel.meet/ert-jpdf-t
+ yb?pin=5988381229128&hs=7\n\nMeet の詳細: https://support.google.com/a/users/a
+ nswer/9282720
+LAST-MODIFIED:20260202T073744Z
+LOCATION:〒105-0004 東京都港区新橋４丁目１４−１ AUNビル B1F\,1F
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　ニューサカナヤキオ
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260202T003000
+DTEND;TZID=Asia/Tokyo:20260202T033000
+RRULE:FREQ=MONTHLY;BYDAY=1MO
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:to5bqg6h28d7alcu1c8mkh4da2_R20260201T153000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+CREATED:20251105T114922Z
+DESCRIPTION:\nトイレ洗浄（毎月）        2    　\n厨房床清掃（毎月）        1    　\n床ホール清掃（毎月） 
+        1\n\n【ガス元栓】\nお手洗いの中\n【給湯器】\nキッチンの一番奥の左側の壁\n【鍵】\n入口の左側\nキーボックス：6611
+LAST-MODIFIED:20260123T090935Z
+LOCATION:中華食堂 一番館 新小岩店\, 日本、〒124-0024 東京都葛飾区新小岩１丁目４２−８
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社友進中華食堂一番館 新小岩店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260222T030000
+DTEND;TZID=Asia/Tokyo:20260222T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:uj98vu65q8825v3nq0lt6fqnmb@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/zum-jgcx-jtz
+RECURRENCE-ID;TZID=Asia/Tokyo:20260222T030000
+CREATED:20250930T042853Z
+DESCRIPTION:ごみ回収（毎日）\nグリストラップ（毎月）\n厨房機器下の掻き出し（毎月）\nキッチン/トイレ配管高圧洗浄（年2回）※つまり対
+ 応は別途　1回目26年1月対応\nキッチン床清掃（半年　4月）\nホール床清掃（半年　4月）\nエアコン分解洗浄（年1　10月）（天カセ3台／ビルトイ
+ ン1台）\n排気/換気口清掃（年1　10月）  \nファンモーター点検（年1　10月）\n粗大ごみ回収（実費請求）\n\nキーボックス：0808\nシ
+ ャッター開けて階段のところにある\nガス栓：空いてるとのこと\n\nGoogle Meet に参加: https://meet.google.com/
+ zum-jgcx-jtz\n電話で参加: (JP) +81 3-4545-0450 PIN: 3601269510908#\nその他の電話番号: ht
+ tps://tel.meet/zum-jgcx-jtz?pin=3601269510908&hs=7\n\nMeet の詳細: https://sup
+ port.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T073809Z
+LOCATION:魚焼男 弐\, 日本、〒105-0004 東京都港区新橋３丁目１５−８ 精工ビル B1F
+SEQUENCE:8
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　魚焼男 弐
+TRANSP:OPAQUE
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-P0DT1H0M0S
+DESCRIPTION:This is an event reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260227T070000
+DTEND;TZID=Asia/Tokyo:20260227T083000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:6jd4el6qcr2jgqv06fgkvg5m3h@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260227T070000
+CREATED:20251029T072046Z
+DESCRIPTION:ゴミ回収<br>床清掃（10坪）<br>配管詰まってる（遠藤さん必須）<br>次亜塩素酸でのスプレー消毒<br><br>東京都
+ 渋谷区道玄坂1-17-4<br>ウナギノボリビルの4階<br><br>薬剤<br><br>シルバー 500ML　￥２５０<br>床剤 500ML　￥２
+ ５０<br><b>激泡ガラスクリーナー０.33個　</b>￥１５０<br><br><b>合計: </b><b>￥６５０</b><br><br>道具<b
+ r><br>ブラシ２個<br>金たわし５個<br>ナノエッジ機械<br>ウエス<br>手袋３枚<br>モープ・スクイージーセット<br>ごみ袋<br>
+ バケツ２個<br>雑巾ワイパー
+LAST-MODIFIED:20260123T093145Z
+LOCATION:道玄坂１丁目１７−４\, 日本、〒150-0043 東京都渋谷区道玄坂１丁目１７−４
+SEQUENCE:9
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】S BAR 渋谷
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260204T000000
+DTEND;TZID=Asia/Tokyo:20260204T060000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:q38aj2iqglsakcdmcom0ius3tq@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokagroup@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260203T010000
+CREATED:20251016T072144Z
+DESCRIPTION:LINEworks連絡\n\n作業内容\n・エアコンフィルター設置（交換）\n・フィルター 3枚交換\n\n料金\n1枚：10
+ \,000円\n計:30\,000円\n\n1階郵便受けの中にキーボックスが入っています\n\nポスト\n右に0 左に2\n\nキーボックス\n110
+ 6\n\n中に小さいエレベーター鍵が入っているので1階エレベーター部分を開錠して入室お願いします\n\n【電気】\n入ってすぐレジ横の壁\n3列の電源
+ スイッチ\n真ん中の列縦に3つ全て\n向かって右の列上から2つをつければ\nホール、キッチン全て電気がつきます。\n\n【ガス栓】\n店舗入って頂き1
+ 番奥にスタッフルームがあり、スタッフルーム内1番奥の壁に\n安全装置があります。\n\nルーム入り口入ってすぐの壁にトイレとスタッフルームの電源スイッ
+ チがあります。\n①まずはこちらをつけて下さい。\n\n安全装置、点検を押して30秒ほどすると解除されるので（OKとランプがつきます）。\n\n②そう
+ したらすぐ横の給湯器をつけ、キッチン内のガス栓を開けるとお湯など使用ができます。\n\n③店舗を出る時はその逆を行なって頂ければ問題なしです。\n\n
+ 薬剤\n\nシルバー１L  ￥500\n床剤１L　￥500\n激泡ガラスクリーナー33%　￥150\n\n\n合計: ￥1150\n\n道具\n\nへ
+ ら２個\nブラシ２個\n金たわし３個\n床クリーナー機械（大きい）\nウエス\n手袋３枚\nモープ・スクイージーセット\nごみ袋\nバケツ２個\nほう
+ き・ちり取り\n雑巾ワイパー
+LAST-MODIFIED:20260202T192933Z
+LOCATION:〒171-0021 東京都豊島区西池袋１丁目１３−1 タグリート池袋 B1F
+SEQUENCE:3
+STATUS:CONFIRMED
+SUMMARY:【スポット】GOSSO（株） 0秒レモンサワーときわ亭池袋西口店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260203T060000
+DTEND;TZID=Asia/Tokyo:20260203T100000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:e3t0459ecv186tf9pmn05e1cc4_R20260105T210000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/ooh-pqiq-ufr
+RECURRENCE-ID;TZID=Asia/Tokyo:20260203T060000
+CREATED:20250213T082944Z
+DESCRIPTION:メール連絡ずみ2/2<br><br>毎月｜グリストラップ洗浄<br>毎月｜ネズミ駆除<br>3ヶ月に一度｜床洗浄→ 12月・3
+ 月・6月・9月<br>6ヶ月に一度｜床洗浄（キッチン）→ 12月・6月<br>12ヶ月に一度｜エアコン分解洗浄（4方向）→ 5月<br><br>ポスト
+ に鍵入ってます。<br>ポストのダイヤルが<br>時計周りに4   2回<br>左に7   1回<br><br><br>キーボックス：4351<br>
+ <br><br>薬剤<br><br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー０.２５個　</b>￥１００<br><b>乳化剤</b
+ >500ML　￥５００<br>ピーピースルー<b>０.２５個　</b>￥７５０<br><br><b>合計: </b><b>￥1600</b><br><
+ br>道具<br><br>ブラシ２個<br>金たわし３個<br>床クリーナー機械（大きい）<br>ウエス<br>手袋３枚<br>ごみ袋<br>バケツ２
+ 個<br>ほうき・ちり取り\n\nGoogle Meet に参加: https://meet.google.com/ooh-pqiq-ufr\n\nM
+ eet の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T071844Z
+LOCATION:輝らく\, 日本、〒162-0825 東京都新宿区神楽坂３丁目１ クレール神楽坂３
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】飯田橋 輝らく　定休日(火・水曜日)
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260208T020000
+DTEND;TZID=Asia/Tokyo:20260208T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:a6ib9akrasmm21p57q9eb9ukh4_R20260207T170000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260208T020000
+CREATED:20250909T061608Z
+DESCRIPTION:1/6 1週間前連絡済<br>1/8事前連絡済<br>※2月より日曜21時以降か月曜日午前12時以降に<br>変更して欲しいと
+ の事。<br><br>2026年2月請求分より以下3名CCへ追加<br><a href="mailto:kazuki.kawai20170218@gm
+ ail.com" target="_blank">kazuki.kawai20170218@gmail.com</a><br><a href="mai
+ lto:kan.ribumon.ty@gmail.com" target="_blank">kan.ribumon.ty@gmail.com</a><
+ br><a href="mailto:t.yuko.ty@gmail.com" target="_blank">t.yuko.ty@gmail.com
+ </a><br><br><br>扇風機清掃について<br>現在年一の契約だが、<br>３台のうち1か月に１つずつ或いは３台まとめて隔月清掃に変更したい
+ と仰せ。<br>→３台まとめて<b>隔月</b>に対応<br><br><br>ユウジのメンバー入れる<br><br>以下の定期清掃    ¥50\,0
+ 00    1    　<br>エアコンフィルター洗浄（毎月）        1    　<br>冷蔵庫フィルター（毎月）        1    　
+ <br>グリスフィルター（毎月）            　<br>キッチン床（隔月）        1     →1.3.5.7.9.11月<br>ホ
+ ール床（隔月）        1    　 →1.3.5.7.9.11月<br>焼き台周辺（隔月）        1   →2.4.6.8.10.12
+ 月<br>レンジフード（隔月）        1   → 1.3.5.7.9.11月<br>店舗内ミニ扇風機（隔月）        3    (12.
+ 2.4.6.8.10月)<br>冷蔵庫清掃（都度）        1<br><br><br><br>キーボックス：9586
+LAST-MODIFIED:20260123T091040Z
+LOCATION:貝出汁中華そば竹祥
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】テイクユー　貝出汁中華そば 竹祥
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260203T233000
+DTEND;TZID=Asia/Tokyo:20260204T033000
+RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=1TU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:qqg27kjt5k17agghiar76dhisb@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ga
+ brielamayumi444@gmail.com;X-NUM-GUESTS=0:mailto:gabrielamayumi444@gmail.com
+CREATED:20250411T092551Z
+DESCRIPTION:1週間前連絡済(メール)\nダクト左側油受けが前回の清掃時にネジが取れ\n簡易的に止めております。固定欲しい。\n又、ダクト下
+ の皿を置く棚の清掃もお願い致します。\n\n定期清掃【※12月以降は隔月清掃】\n\nグリストラップ　毎月\n厨房フィルター　毎月\nグリスフィルター
+ 　毎月\nエアコンフィルター清掃　毎月\nフィルターケース分解洗浄　スポット\nホール床清掃\n\n　\nキーボックス0907
+LAST-MODIFIED:20260123T091014Z
+LOCATION:麺と肴 担々麺 ぺん坊 ラーメン 本所吾妻橋\, 日本、〒130-0001 東京都墨田区吾妻橋３丁目６−１５ サンサーラ吾妻橋 10
+ 5
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】麺と肴　担々麺 ペン坊 　青柳社長
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260204
+DTEND;VALUE=DATE:20260205
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:738eqqgo6870hgbbirpmiip904@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=zu
+ omuhezhen187@gmail.com;X-NUM-GUESTS=0:mailto:zuomuhezhen187@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+CREATED:20260123T104507Z
+DESCRIPTION:zuomuhezhen187@gmail.com
+LAST-MODIFIED:20260127T083209Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:佐々木さん入社
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260227T190000
+DTEND;TZID=Asia/Tokyo:20260227T200000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:2bihqr9mr8h8smq4snclpaupfn@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/hze-bztu-cke
+RECURRENCE-ID;TZID=Asia/Tokyo:20260226T230000
+CREATED:20251222T063750Z
+DESCRIPTION:Google Meet に参加: https://meet.google.com/hze-bztu-cke\n電話で参加: (
+ JP) +81 3-4545-0450 PIN: 5425262254565#\nその他の電話番号: https://tel.meet/hze-bzt
+ u-cke?pin=5425262254565&hs=7\n\nMeet の詳細: https://support.google.com/a/user
+ s/answer/9282720
+LAST-MODIFIED:20260123T104654Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【定期ゴミ回収】六本木 ATOMIC BAR ゴミ回収
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260222T050000
+DTEND;TZID=Asia/Tokyo:20260222T080000
+RRULE:FREQ=MONTHLY;BYDAY=4SU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:iqq6j1o4sepai1ac1cemgi3kb4_R20260221T200000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=DECLINED;CN=matsuo
+ kajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=no
+ emi_midory@hotmail.com;X-NUM-GUESTS=0:mailto:noemi_midory@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/dvh-rydx-ukr
+CREATED:20250930T060519Z
+DESCRIPTION:事前確認電話済\n\nゴミ回収（毎日）        1    　\nグリストラップ清掃（毎月）        1    　\
+ nグレーチング（毎月）        1    　\n厨房機器下の掻き出し（毎月）        1    　\nキッチン床清掃（半年　10月　5月）
+         1    　\nホール床清掃（半年　10月　5月）　        1    　\nエアコン分解洗浄（年1　10月）（天カセ6台/ビル
+ トイン1台）        7    　\n排気/換気口清掃（年1　10月）     1    　\nファンモーター点検（年1　10月）      1
+     　\n粗大ゴミ回収　実費請求        1\n\n〈キーボックス ：5493  〉\n\nGoogle Meet に参加: https:/
+ /meet.google.com/dvh-rydx-ukr\n電話で参加: (JP) +81 3-4545-0450 PIN: 35376696658
+ 16#\nその他の電話番号: https://tel.meet/dvh-rydx-ukr?pin=3537669665816&hs=7\n\nMeet
+  の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T073207Z
+LOCATION:魚無双トオダ\, 日本、〒105-0004 東京都港区新橋４丁目１５−６
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　魚無双トオダ
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260216T060000
+DTEND;TZID=Asia/Tokyo:20260216T090000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:625r1lpopkc9c4kopqc65sagd1@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260216T060000
+CREATED:20251006T054849Z
+DESCRIPTION:<p><br></p><br><br>1/9　1週間前連絡(平さん)<br><br>グリスフィルター（毎月）        4
+     　<br>天カセ３台/2方向 1台 エアコンフィルター （毎月）       4    　<br>害虫駆除（毎月）        1    　
+ <br>害獣駆除（毎月）        1    　<br>キッチン床/ホール床/掻き出し（隔月）    (1.3.5.739.11月)    1  
+   　<br>グレーチング（年2回）        1    　<br>レンジフード（年2回）        2    　<br>冷蔵庫拭き拭き（都度
+ ）        1     　<br>キッチン回り（都度）        1<br><br>＜キーボックス＞<br>番号：0520<br>場所：裏階
+ 段<br>色：黒
+LAST-MODIFIED:20260123T103757Z
+LOCATION:大衆寿司酒場 こがね商店\, 日本、〒340-0034 埼玉県草加市氷川町２１２４−１４
+SEQUENCE:8
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】大衆寿司酒場 こがね商店（日曜定休）
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260217T190000
+DTEND;TZID=Asia/Tokyo:20260217T235500
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:0r52ckjmel61q3p5np7brjt65v@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/pwd-fvnq-vyc
+RECURRENCE-ID;TZID=Asia/Tokyo:20260217T190000
+CREATED:20250513T134047Z
+DESCRIPTION:12/9 1週間前連絡済\n12/15事前連絡済\n\n〈以下定期清掃〉\nオーブン機器清掃\n厨房床清掃/厨房機器下清掃 　
+  　　\n厨房機器フィルター清掃 \n害虫駆除\n天井の埃とり\n\n追加項目\n・作業台・収納棚の裏や隙間の汚れ清掃\n・手洗い場およびトイレ（床・
+ 便器など）の汚れ除去\n・壁や天井のクモの巣取り\n・厨房機器周辺（コーヒーメーカー等）の油汚れ清掃\n\n鍵を営業終わりにあづかり、次の日に返却する
+ 。\n\n請求書：info@daisy1962co.jp宛てに送る\n\nGoogle Meet に参加: https://meet.google.c
+ om/pwd-fvnq-vyc\n電話で参加: (JP) +81 3-4545-0450 PIN: 1771169604861#\nその他の電話番号:
+  https://tel.meet/pwd-fvnq-vyc?pin=1771169604861&hs=7\n\nMeet の詳細: https://
+ support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260123T103110Z
+LOCATION:デイジイ西新宿店 (DAISY)\, 日本、〒160-0023 東京都新宿区西新宿６丁目１１−３ Dタワー西新宿 １階
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】パン屋 デイジイ西新宿
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260222T050000
+DTEND;TZID=Asia/Tokyo:20260222T100000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:qec88cr7hnm58h0ln3je0h03hk@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/vbp-ztxz-qru
+RECURRENCE-ID;TZID=Asia/Tokyo:20260222T050000
+CREATED:20250930T043427Z
+DESCRIPTION:24時開始\nキーボックス：0919\n\n\nゴミ回収（毎日）        1    　\n厨房機器下の掻き出し（毎月） 
+        1    　\n汚水槽バキューム（年2回　11月 / 5月）        1    　11月未実施の為1月対応\nキッチン配管高圧洗浄
+ （年２回 11月 / 5月）        1    　11月未実施の為1月対応\nキッチン床清掃（半年　5月）        1    　\nホール
+ 床清掃（半年　5月）　        1    　\nエアコン分解洗浄（年1　10月）（天カセ3台/業務用１方向）        4    　\n排気
+ /換気口清掃（年1　10月）        1    　\nファンモーター点検（年1　10月）        1    　\n粗大ゴミ回収　実費請求 
+        1バキューム　11\n\nGoogle Meet に参加: https://meet.google.com/vbp-ztxz-qru\n
+ 電話で参加: (JP) +81 3-4545-0450 PIN: 4403106875341#\nその他の電話番号: https://tel.meet
+ /vbp-ztxz-qru?pin=4403106875341&hs=7\n\nMeet の詳細: https://support.google.co
+ m/a/users/answer/9282720
+LAST-MODIFIED:20260202T073826Z
+LOCATION:大興ビル\, 日本、〒105-0004 東京都港区新橋３丁目５ 大興ビル
+SEQUENCE:12
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　魚焼男新橋本店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260223T080000
+DTEND;TZID=Asia/Tokyo:20260223T160000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:b671ttrpqd7vl1map58l82dn9p_R20260208T230000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/pgu-pirv-dff
+RECURRENCE-ID;TZID=Asia/Tokyo:20260223T080000
+CREATED:20250917T124307Z
+DESCRIPTION:連絡は梅岡さん<br>毎月最初の清掃で月一清掃を行う。<br><br><br>＜以下の定期清掃＞  ¥150\,0001　<b
+ r>トイレ（週1）2　<br>ガラス清掃（週1）　<br>床モップ掛け（週1）　　<br>シンク洗浄（週1）1　<br>カラオケ部屋清掃（週1）1　<
+ br>床ポリッシャー洗浄/床下ゴミ掻き出し（月1）害虫駆除（月1）　<br>害獣駆除（月1）　<br>エアコンフィルター洗浄（月1）　<br>厨房シン
+ ク清掃（月1）<br><br>＜スポット＞<br>フィルム貼り<br>カーテンつける<br>フィルム直しドア<br>ダンス禁止紙貼り<br><br><
+ br>薬剤<br><br>シルバー 500ML　￥２５０<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー１個　</b>￥３５０<b
+ r><b>ガラス油取り１０％　</b>￥１００<br><b>シール剥がし　</b>￥１００<br><b>ハイター１個　</b>￥２５０<br><b>5
+ 分でピカピカ１個　</b>￥４００<br><br><b>合計: </b><b>￥1700</b><br><br>道具<br><br>トイレ用ブラシ１個
+ <br>ブラシ２個<br>シール剥がしへら２個<br>金たわし５個<br>床クリーナー機械（大きい）<br>ウエス<br>手袋３枚<br>モープ・スク
+ イージーセット<br>ごみ袋<br>バケツ２個<br>ほうき・ちり取り<br>雑巾ワイパー\n\nGoogle Meet に参加: https://m
+ eet.google.com/pgu-pirv-dff\n電話で参加: (JP) +81 3-4545-0450 PIN: 3209752470340
+ #\nその他の電話番号: https://tel.meet/pgu-pirv-dff?pin=3209752470340&hs=7\n\nMeet の
+ 詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T072154Z
+SEQUENCE:9
+STATUS:CONFIRMED
+SUMMARY:【定期隔週清掃】アトミック　bar
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260210T020000
+DTEND;TZID=Asia/Tokyo:20260210T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:uslkcg435lm4j5oe3b5vsi149e@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260210T020000
+CREATED:20250808T092028Z
+DESCRIPTION:\n【毎月実施】\n・レンジフード／プロペラファン清掃\n・家庭用冷蔵庫拭き上げ\n・壁掛けエアコンフィルター清掃\n・水シン
+ ク1台・手洗い洗面清掃\n・トイレ清掃\n・ガスコンロ周りの清掃\n【隔月（偶数月：2・4・6・8・10・12月）】\n・ホール床清掃\n【四半期（2
+ ・5・8・11月）】\n・厨房床清掃\n・コンロ回り／ガス台回り\n・製氷機まわり清掃\n【半年（5月・11月）】\n・厨房壁清掃\n【都度対応】\n
+ ・シール剥がし\n※必要箇所を現場確認の上で対応\n\n※オイルカップの設置（ステンレスのフードに多めの穴を開ける必要あり）\n\n\nシンクに入らな
+ いので、トロ舟を持参してください。\n店が狭くトロ船を置く場所がないので、蛇口からホースを通して外で洗うのが理想。\n蛇口のアタッチも必要\n\n\n
+ キーボックス\n番号：0207\n店の左側にある黒
+LAST-MODIFIED:20260202T072244Z
+LOCATION:麺処いのこ平和台店\, 日本、〒179-0083 東京都練馬区平和台２丁目５２−８
+SEQUENCE:14
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】麺処いのこ平和台店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260220T010000
+DTEND;TZID=Asia/Tokyo:20260220T093000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:5gq5qpj4ph369qur5bpajvc65r@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260216T010000
+CREATED:20250728T115956Z
+DESCRIPTION:害虫駆除（毎月）チョウバエ<br>ネズミ駆除（毎月）　<br>グリストラップ清掃（毎月）　<br>ホール床清掃（隔月）　1.3
+ .5.7.9.11月<br>冷蔵庫フィルター清掃（毎月）　<br>レンジフード拭きあげ（毎月）　<br>キッチン床清掃（隔月）1.3.5.7.9.11
+ 月<br>シンク清掃（四半期）　1.4.710<br>エアコンフィルター清掃（都度）<br>ガス台清掃（都度）<br>U字溝/グレーチング清掃（都度）
+ <br><br>シンクが狭いので、トロ舟を多めに持っていく。<br><br>＜キーボックス＞　<br>別館地下入口入っておくに　番号2183<br><
+ br>薬剤<br><br>シルバー 500ML　￥２５０<br>乳化剤　500ML　￥５００<br>床剤 500ML　￥２５０<br><b>激泡ガラス
+ クリーナー１個　￥３５０</b><br>ベクトロン　２０ML  ￥１２００<br>ラットシート　７枚　￥５００<br>ネオラッテ　５個　￥２００<br
+ ><br><b>合計: </b><b>￥3250</b><br><br>道具<br><br>電ドラ　（グリトラップ）<br>ブラシ２個<br>金たわし
+ ５個<br>ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚<br>モープ・スクイージーセット<br>ごみ袋<br>バケツ２個<br>雑巾ワイパ
+ ー
+LAST-MODIFIED:20260202T072913Z
+LOCATION:你好 大井町\, 日本、〒140-0011 東京都品川区東大井５丁目１７−４ 高山ビル B1
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ大井町店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260209T080000
+DTEND;TZID=Asia/Tokyo:20260209T090000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:2bihqr9mr8h8smq4snclpaupfn@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/ixz-ntfy-kwp
+RECURRENCE-ID;TZID=Asia/Tokyo:20260208T230000
+CREATED:20251222T063750Z
+DESCRIPTION:Google Meet に参加: https://meet.google.com/ixz-ntfy-kwp\n電話で参加: (
+ JP) +81 3-4545-0450 PIN: 4526650443651#\nその他の電話番号: https://tel.meet/ixz-ntf
+ y-kwp?pin=4526650443651&hs=7\n\nMeet の詳細: https://support.google.com/a/user
+ s/answer/9282720
+LAST-MODIFIED:20260128T025816Z
+SEQUENCE:3
+STATUS:CONFIRMED
+SUMMARY:【定期ゴミ回収】六本木 ATOMIC BAR ゴミ回収
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260208T020000
+DTEND;TZID=Asia/Tokyo:20260208T080000
+RRULE:FREQ=MONTHLY;BYDAY=2SU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:a6ib9akrasmm21p57q9eb9ukh4_R20260207T170000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+CREATED:20250909T061608Z
+DESCRIPTION:1/6 1週間前連絡済<br>1/8事前連絡済<br>※2月より日曜21時以降か月曜日午前12時以降に<br>変更して欲しいと
+ の事。<br><br>2026年2月請求分より以下3名CCへ追加<br><a href="mailto:kazuki.kawai20170218@gm
+ ail.com" target="_blank">kazuki.kawai20170218@gmail.com</a><br><a href="mai
+ lto:kan.ribumon.ty@gmail.com" target="_blank">kan.ribumon.ty@gmail.com</a><
+ br><a href="mailto:t.yuko.ty@gmail.com" target="_blank">t.yuko.ty@gmail.com
+ </a><br><br><br>扇風機清掃について<br>現在年一の契約だが、<br>３台のうち1か月に１つずつ或いは３台まとめて隔月清掃に変更したい
+ と仰せ。<br>→３台まとめて<b>隔月</b>に対応<br><br><br>ユウジのメンバー入れる<br><br>以下の定期清掃    ¥50\,0
+ 00    1    　<br>エアコンフィルター洗浄（毎月）        1    　<br>冷蔵庫フィルター（毎月）        1    　
+ <br>グリスフィルター（毎月）            　<br>キッチン床（隔月）        1     →1.3.5.7.9.11月<br>ホ
+ ール床（隔月）        1    　 →1.3.5.7.9.11月<br>焼き台周辺（隔月）        1   →2.4.6.8.10.12
+ 月<br>レンジフード（隔月）        1   → 1.3.5.7.9.11月<br>店舗内ミニ扇風機（隔月）        3    (12.
+ 2.4.6.8.10月)<br>冷蔵庫清掃（都度）        1<br><br><br><br>キーボックス：9586
+LAST-MODIFIED:20260116T004808Z
+LOCATION:貝出汁中華そば竹祥
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】テイクユー　貝出汁中華そば 竹祥
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260226T020000
+DTEND;TZID=Asia/Tokyo:20260226T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:htha3949o62m4d635ue8j08cmt@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260228T030000
+CREATED:20250808T034752Z
+DESCRIPTION:神田店終わったら請求書送る\n12/179:36LINEにて1週間前連絡済\n\nネズミ駆除（毎月）　\n害虫駆除（毎月）　\
+ nグリスフィルター（毎月）2　\n男性用女性用トイレ（毎月）2　\n天カセフィルター（毎月）2　\nレンジフード（隔月）2　（11.1.3.5.7.9
+ 月)\n厨房床（隔月） (8.10.12.2.4.6月)\nホール床（隔月）　 (8.10.12.2.4.6月)\n汚水槽地下（半月）(8 .2 月)
+ \n\nキーボックス：0000
+LAST-MODIFIED:20260202T073800Z
+LOCATION:ニイハオ 神田店\, 日本、〒101-0044 東京都千代田区鍛冶町１丁目６−２ 林ビル B1F
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ 神田店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260216T000000
+DTEND;TZID=Asia/Tokyo:20260216T034500
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:5fab7nq0pr3qlt5pgc1ehu03l8_R20260118T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260216T000000
+CREATED:20251006T054749Z
+DESCRIPTION:<p>1/81週間前連絡済</p><br><br><br>①厨房のガスコンロ下1列鍋をよけて拭いて頂きたい<br>②(手が届く
+ 範囲で)厨房の上の壁ホコリがある箇所軽く拭いて欲しい<br><br>グリストラップ（毎月）        1    　<br>天カセエアコンフィルター
+ （毎月）        3    　<br>厨房機器まわり（都度）        3    　<br>冷蔵庫フィルター清掃（毎月）        6 
+    　<br>害虫駆除（毎月）        1    　<br>グリスフィルター（毎月）        6    　<br>レンジフード（隔月） 
+        3   　→ 1月.3月.5月.7月.9月.11月<br>キッチン床（隔月）        1  　　→1月.3月.5月.7月.9月.1
+ 1月<br><br>キーボックス：2119
+LAST-MODIFIED:20260123T103819Z
+LOCATION:大衆焼肉酒場 こがね\, 日本、〒343-0845 埼玉県越谷市南越谷４丁目７−３
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】元気ダイニング  大衆焼肉酒場こがね（日曜定休）
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260209T080000
+DTEND;TZID=Asia/Tokyo:20260209T160000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:b671ttrpqd7vl1map58l82dn9p_R20260208T230000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=la
+ tachumilk16@icloud.com;X-NUM-GUESTS=0:mailto:latachumilk16@icloud.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ni
+ cklk25@hotmail.com;X-NUM-GUESTS=0:mailto:nicklk25@hotmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/abj-mooo-ukk
+RECURRENCE-ID;TZID=Asia/Tokyo:20260209T080000
+CREATED:20250917T124307Z
+DESCRIPTION:連絡は梅岡さん<br>毎月最初の清掃で月一清掃を行う。<br><br><br>＜以下の定期清掃＞  ¥150\,0001　<b
+ r>トイレ（週1）2　<br>ガラス清掃（週1）　<br>床モップ掛け（週1）　　<br>シンク洗浄（週1）1　<br>カラオケ部屋清掃（週1）1　<
+ br>床ポリッシャー洗浄/床下ゴミ掻き出し（月1）害虫駆除（月1）　<br>害獣駆除（月1）　<br>エアコンフィルター洗浄（月1）　<br>厨房シン
+ ク清掃（月1）<br><br>＜スポット＞<br>フィルム貼り<br>カーテンつける<br>フィルム直しドア<br>ダンス禁止紙貼り<br><br><
+ br>薬剤<br><br>シルバー 500ML　￥２５０<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー１個　</b>￥３５０<b
+ r><b>ガラス油取り１０％　</b>￥１００<br><b>シール剥がし　</b>￥１００<br><b>ハイター１個　</b>￥２５０<br><b>5
+ 分でピカピカ１個　</b>￥４００<br><br><b>合計: </b><b>￥1700</b><br><br>道具<br><br>トイレ用ブラシ１個
+ <br>ブラシ２個<br>シール剥がしへら２個<br>金たわし５個<br>床クリーナー機械（大きい）<br>ウエス<br>手袋３枚<br>モープ・スク
+ イージーセット<br>ごみ袋<br>バケツ２個<br>ほうき・ちり取り<br>雑巾ワイパー\n\nGoogle Meet に参加: https://m
+ eet.google.com/abj-mooo-ukk\n電話で参加: (JP) +81 3-4545-0450 PIN: 4948011304657
+ #\nその他の電話番号: https://tel.meet/abj-mooo-ukk?pin=4948011304657&hs=7\n\nMeet の
+ 詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T083330Z
+SEQUENCE:9
+STATUS:CONFIRMED
+SUMMARY:【定期隔週清掃】アトミック　bar
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260209T060000
+DTEND;TZID=Asia/Tokyo:20260209T090000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:kj1sam6ch6dibpo9qk1gd8mv14_R20260111T210000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260209T060000
+CREATED:20251006T054730Z
+DESCRIPTION:<p>⅙ 1週間前連絡済</p>1/8事前連絡済<br><br>グリストラップ（毎月）        1    　<br>天カ
+ セ/ルーム エアコンフィルター（毎月）        3    　   　<br>冷蔵庫フィルター清掃（毎月）        6    　<br>害虫
+ 駆除（毎月）        1    　<br>グリスフィルター（毎月）        4    　<br>レンジフード（隔月）        1  
+   　(1.3.5.7.9.11月)<br>キッチン床/グレーチング（隔月）        1    　(1.3.5.7.9.11月)<br>ホール床
+ 清掃（隔月）        1    　<br>レンジフード下の壁（四半期）        1　(2.5.8.11月)<br>厨房機器まわり（都度） 
+        3<br><br>＜キーボックス＞<br>番号：0358
+LAST-MODIFIED:20260123T091106Z
+LOCATION:大衆寿司酒場こがね\, 日本、〒343-0845 埼玉県越谷市南越谷１丁目２６−９
+SEQUENCE:8
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】大衆寿司酒場こがね（日曜定休）
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260208T000000
+DTEND;TZID=Asia/Tokyo:20260208T053000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:8jkr394jibrvc86049n3vcgqf3@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260208T000000
+CREATED:20251016T074509Z
+DESCRIPTION:1週間前連絡済\n\n＜定期清掃＞\n【毎月実施】\n・グリストラップ清掃\n・キッチン床清掃\n・ホール床清掃（※重点箇所）
+ \n・グリスフィルター清掃（8枚）\n・エアコンフィルター清掃（3台）\n・害虫駆除\n・ネズミ駆除\n\n【隔月（奇数月：1・3・5・7・9・11月
+ ）】\n・レンジフード分解清掃（2基）\n\n【年1回（10月）】\n・ファンモーター点検\n\n＜キーボックス＞\nポスト左5 右3\n鍵で1階エレ
+ ベーターの下に5階の鍵をONに回して上がってください。\n最後は逆の手順で1階に降りたら鍵を差し込みoffにしてください。\n\nガス栓：ドリンク付近
+ の時計のすぐ下にある。
+LAST-MODIFIED:20260202T072940Z
+LOCATION:立川酒場 魚丸 南口店\, 日本、〒190-0023 東京都立川市柴崎町３丁目３−５ ベルフェアー・立川
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】H VIEW株式会社　立川酒場 魚丸 南口店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260204T040000
+DTEND;TZID=Asia/Tokyo:20260204T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:qqg27kjt5k17agghiar76dhisb@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260203T233000
+CREATED:20250411T092551Z
+DESCRIPTION:ライン連絡2／3 \nダクト左側油受けが前回の清掃時にネジが取れ\n簡易的に止めております。固定欲しい。\n又、ダクト下の皿を
+ 置く棚の清掃もお願い致します。\n\n定期清掃【※12月以降は隔月清掃】\n\nグリストラップ　毎月\n厨房フィルター　毎月\nグリスフィルター　毎月
+ \nエアコンフィルター清掃　毎月\nフィルターケース分解洗浄　スポット\nホール床清掃\n\n　\nキーボックス0907
+LAST-MODIFIED:20260202T050925Z
+LOCATION:麺と肴 担々麺 ぺん坊 ラーメン 本所吾妻橋\, 日本、〒130-0001 東京都墨田区吾妻橋３丁目６−１５ サンサーラ吾妻橋 10
+ 5
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】麺と肴　担々麺 ペン坊 　青柳社長
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260309T100000
+DTEND;TZID=Asia/Tokyo:20260309T110000
+RRULE:FREQ=MONTHLY;UNTIL=20260607T145959Z;BYDAY=2MO
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:jprvkijrurn8ccvgeje9m7jt8t_R20260309T010000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ga
+ brielamayumi444@gmail.com;X-NUM-GUESTS=0:mailto:gabrielamayumi444@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+CREATED:20250806T120420Z
+DESCRIPTION:\n※ ・指定時間以外の入店は行わない \nスタッフ不在時に入店が必要な場合は、必ず事前・事後に報告・お借りした物や設置物は原
+ 状復帰を徹底\n\nマット交換  6枚
+LAST-MODIFIED:20260123T100337Z
+LOCATION:モンキーツリー馬喰町
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】モンキーツリー株式会社エデュケーション MONKEY TREE 日本橋店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260227T090000
+DTEND;TZID=Asia/Tokyo:20260227T100000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:gls82o1hkfccf18hhq76dcl9ev@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260227T090000
+CREATED:20250429T004955Z
+DESCRIPTION:12ヶ月に一度 エアコン分解洗浄（天カセ型4方向）     ¥2\,939    3    \n6ヶ月に一度 床ポリッシャー洗
+ 浄（キッチン）     ¥2\,000    1    \n6ヶ月に一度 床ポリッシャー洗浄（タイル、石材、フローリング床）     ¥2\,455 
+    2    \n12ヶ月に一度 トイレ洗浄（分解洗浄あり）     ¥1\,000    2    \n毎月 不用品 / 粗大ゴミ回収 （※処分代
+ 実費）     ¥5\,000    1
+LAST-MODIFIED:20260123T100925Z
+LOCATION:米と魚 さかなさま 日本橋茅場町店\, 日本、〒103-0026 東京都中央区日本橋兜町１５−６ 製粉会館ビル 地下1階
+SEQUENCE:7
+STATUS:CONFIRMED
+SUMMARY:米と魚　さかなさま　定期清掃/ゴミ回収
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260212T233000
+DTEND;TZID=Asia/Tokyo:20260213T000000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:jh963b6gc7o52p2mducit56s34@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/fow-kwpf-ufw
+RECURRENCE-ID;TZID=Asia/Tokyo:20260212T233000
+CREATED:20251205T032603Z
+DESCRIPTION:12/11事前連絡済\n定期清掃\n\n害虫駆除(毎月)\n害獣駆除（毎月）\n\n〈キーボックス〉\nキーボックスなし、\n
+ マット下に鍵おいてあります。\n\n電気の位置が分かりにくいそうです。頑張って探してください。今後のためにわかったらグループに写真送ってください。\n
+ \nGoogle Meet に参加: https://meet.google.com/fow-kwpf-ufw\n電話で参加: (JP) +81 3-
+ 4545-0450 PIN: 8422835770104#\nその他の電話番号: https://tel.meet/fow-kwpf-ufw?pin=
+ 8422835770104&hs=7\n\nMeet の詳細: https://support.google.com/a/users/answer/9
+ 282720
+LAST-MODIFIED:20260123T111513Z
+LOCATION:ピッツェリア ドォーロ 麹町店\, 日本、〒102-0083 東京都千代田区麹町４丁目３−１０ 小倉ビル 1F
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:株式会社メティウスフーズ ピッツェリアドォーロ麹町店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260201T220000
+DTEND;TZID=Asia/Tokyo:20260201T230000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:2bihqr9mr8h8smq4snclpaupfn@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/hit-otnh-wxe
+RECURRENCE-ID;TZID=Asia/Tokyo:20260202T230000
+CREATED:20251222T063750Z
+DESCRIPTION:Google Meet に参加: https://meet.google.com/hit-otnh-wxe\n電話で参加: (
+ JP) +81 3-4545-0450 PIN: 6319892387930#\nその他の電話番号: https://tel.meet/hit-otn
+ h-wxe?pin=6319892387930&hs=7\n\nMeet の詳細: https://support.google.com/a/user
+ s/answer/9282720
+LAST-MODIFIED:20260201T040502Z
+SEQUENCE:2
+STATUS:CONFIRMED
+SUMMARY:【定期ゴミ回収】六本木 ATOMIC BAR ゴミ回収
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260217T050000
+DTEND;TZID=Asia/Tokyo:20260217T100000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:1dbr6tpomghllqfkqsth6d6ce9@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=bibisa
+ yuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/voq-vubn-gwt
+RECURRENCE-ID;TZID=Asia/Tokyo:20260217T050000
+CREATED:20250725T044058Z
+DESCRIPTION:害虫駆除            　\nネズミ駆除            　\nグリストラップ清掃            　\n
+ ホール床清掃            　\nキッチン床清掃            　\nレンジフード        \n\nキーボックス：6575\n\
+ nGoogle Meet に参加: https://meet.google.com/voq-vubn-gwt\n電話で参加: (JP) +81 3-4
+ 545-0450 PIN: 4693050498070#\nその他の電話番号: https://tel.meet/voq-vubn-gwt?pin=4
+ 693050498070&hs=7\n\nMeet の詳細: https://support.google.com/a/users/answer/92
+ 82720
+LAST-MODIFIED:20260202T072901Z
+LOCATION:楽が気\, 日本、〒105-0004 東京都港区新橋３丁目２１−４ 新橋第2ペリカンビル 1F
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社ダイニングエッジ　楽が気　新橋本店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260201T010000
+DTEND;TZID=Asia/Tokyo:20260201T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:e7guceohvgg3dnktf955bcjhnh_R20260131T160000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/zyq-oecs-obi
+RECURRENCE-ID;TZID=Asia/Tokyo:20260201T010000
+CREATED:20250725T051210Z
+DESCRIPTION:事前連絡済み\n\n【鍵について】\nポスト　右に1 左に7  左に7 右に1\n左側のパスワード3470\n右側のパスワード
+ 1314\n\nトイレの配管等清掃依頼　12/1８LINE WORKSより\n\n\n現状の優先度としては、\n床\nグリスト＆グレーチング\nエアコ
+ ン\nネズミ駆除\n\n12/19LINE WORKSより\nトイレの配管などの清掃\n\n薬剤\n\n乳化剤１L　￥１０００\nシルバー５００ML　
+ ￥５００\nラットシート７枚　￥５００\nネオラッテ３袋　￥１５０\n床剤５００ML　￥２５０\n\n合計: ￥2400\n\n道具\n\nブラシ１個
+ \n金たわし３個\n電ドラ（グリストラップ用）\nナノエッジ\nウエス\n手袋３枚\nモープ・スクイージーセット\nごみ袋\nバケツ２個\nほうき・ち
+ り取り\n\nGoogle Meet に参加: https://meet.google.com/zyq-oecs-obi\n電話で参加: (JP) +
+ 81 3-4545-0450 PIN: 8144150038718#\nその他の電話番号: https://tel.meet/zyq-oecs-obi
+ ?pin=8144150038718&hs=7\n\nMeet の詳細: https://support.google.com/a/users/ans
+ wer/9282720
+LAST-MODIFIED:20260201T035544Z
+LOCATION:武蔵野アブラ学会 代々木店\, 日本、〒151-0053 東京都渋谷区代々木１丁目５８−７
+SEQUENCE:7
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】武蔵野アブラ学会　代々木店
+TRANSP:OPAQUE
+ATTACH;FILENAME=メモ - 「武蔵野アブラ学会　代々木店」;FMTTYPE=application/vnd.google-apps.do
+ cument:https://docs.google.com/document/d/1yPnB-VP_GI8vUzgz96ReNdopUMi4UwGJ
+ uqo3lN3Tp7w/edit
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260205T000000
+DTEND;TZID=Asia/Tokyo:20260205T095000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:gtjn7vlp8uf84s3e6tn4flln29_R20260201T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260202T000000
+CREATED:20250728T120009Z
+DESCRIPTION:LINEにて、チョウバエコバエが沸いている。<br>チョウバエバスターで排水回りに害虫駆除を行う<br><br>害虫駆除（毎月
+ ） <br>ネズミ駆除（毎月） <br>グリストラップ清掃（毎月） <br>ホール床清掃（隔月） → 11月・1月・3月・5月・7月・9月<br>冷蔵
+ 庫フィルター清掃（毎月） <br>レンジフード拭きあげ（毎月） <br>キッチン床清掃（隔月） → 11月・1月・3月・5月・7月・9月<br>トイレ
+ 清掃（四半期） → 10月・1月・4月・7月<br>エアコンフィルター清掃（都度） <br>テーブル拭き（都度） <br><br>シンクが狭いので、ト
+ ロ舟を多めに持っていく<br><br>キーボックスは５店舗まとめてこちらのお店に返す<br><br>キーボックス　番号2183<br><br>薬剤<b
+ r><br>シルバー 500ML　￥２５０<br>乳化剤 500ML　￥５００<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー１個
+ 　￥３５０</b><br>ベクトロン　２０ML  ￥１２００<br>ラットシート　７枚　￥５００<br>ネオラッテ　５個　￥２００<br><br><b
+ >合計: </b><b>￥3250</b><br><br>道具<br><br>電ドラ　（グリストラップ）<br>ブラシ２個<br>金たわし５個<br>
+ ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚<br>モープ・スクイージーセット<br>ごみ袋<br>バケツ２個<br>雑巾ワイパー
+LAST-MODIFIED:20260202T072037Z
+LOCATION:ニーハオ蒲田本店
+SEQUENCE:10
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ蒲田　別館
+TRANSP:OPAQUE
+ATTACH;FILENAME=メモ - 「【定期清掃】ニーハオ蒲田　別館」;FMTTYPE=application/vnd.google-apps.
+ document:https://docs.google.com/document/d/1Y9zBdPpl0sF4O3mshIyd9Z_zgHvx57
+ 8wYtEkN6SY3LY/edit
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260216T090000
+DTEND;TZID=Asia/Tokyo:20260216T130000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:tronr7f2o9c761baqmkldo24s0@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260216T053000
+CREATED:20251028T003900Z
+DESCRIPTION:1/9 1週間前連絡済\n1/15事前連絡済\n毎日のゴミ回収\n\n＜定期清掃項目＞\n・グリストラップ清掃（毎月） \n厨
+ 房機器下の掻き出し（毎月） \nキッチン配管高圧洗浄（年２回）※1回目26年4月、2回目は相談\n キッチン床清掃（半年） 1．7月\nホール床清掃（
+ 半年 ）1．7月\n エアコン分解洗浄（月）（天カセ4台／ビルトイン1台）\n 排気／換気口清掃（年1　1月） \nファンモーター点検（年1　1月）\
+ n\n\n＜キーボックス＞\n番号： 3110\n隣の品川サウナの隣の白い柵にかかっているキーボックス\nhttps://maps.app.goo.g
+ l/59YNnoHRHsu4XY4v7
+LAST-MODIFIED:20260123T103010Z
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】オン・ザ・プラネット 魚豪商コダマ大井町店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260220T190000
+DTEND;TZID=Asia/Tokyo:20260220T200000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:2bihqr9mr8h8smq4snclpaupfn@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/fsw-vcfo-mie
+RECURRENCE-ID;TZID=Asia/Tokyo:20260220T230000
+CREATED:20251222T063750Z
+DESCRIPTION:Google Meet に参加: https://meet.google.com/fsw-vcfo-mie\n電話で参加: (
+ JP) +81 3-4545-0450 PIN: 4337433869525#\nその他の電話番号: https://tel.meet/fsw-vcf
+ o-mie?pin=4337433869525&hs=7\n\nMeet の詳細: https://support.google.com/a/user
+ s/answer/9282720
+LAST-MODIFIED:20260123T104641Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【定期ゴミ回収】六本木 ATOMIC BAR ゴミ回収
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260216T020000
+DTEND;TZID=Asia/Tokyo:20260216T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:32ao9sumqcd1bl10at3o3cjplv@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/oaa-hucq-rig
+RECURRENCE-ID;TZID=Asia/Tokyo:20260224T020000
+CREATED:20251202T021817Z
+DESCRIPTION:店舗内壁拭き掃除（客席側一部のみ）（毎月）\n店内換気扇の内側洗浄（毎月）2台\n店内照明器具（小型スポットライトのみ）12.
+ 2.4.6.8.10月\n埃と油汚れ取り清掃（隔月）10      12.2.4.6.8.10月レンジフード内外吹上げ清掃（隔月）1  12.2.4.
+ 6.8.10月\nエアコン分解洗浄（年2回）3台　3.10月\nファンモーター点検（年1回）1　12月\n\nGoogle Meet に参加: htt
+ ps://meet.google.com/oaa-hucq-rig\n電話で参加: (JP) +81 3-4545-0450 PIN: 5683795
+ 121085#\nその他の電話番号: https://tel.meet/oaa-hucq-rig?pin=5683795121085&hs=7\n\n
+ Meet の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T074200Z
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社東神　かおたん赤坂店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260209T080000
+DTEND;TZID=Asia/Tokyo:20260209T160000
+RRULE:FREQ=WEEKLY;WKST=SU;INTERVAL=2;BYDAY=MO
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:b671ttrpqd7vl1map58l82dn9p_R20260208T230000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+CREATED:20250917T124307Z
+DESCRIPTION:連絡は梅岡さん<br>毎月最初の清掃で月一清掃を行う。<br><br><br>＜以下の定期清掃＞  ¥150\,0001　<b
+ r>トイレ（週1）2　<br>ガラス清掃（週1）　<br>床モップ掛け（週1）　　<br>シンク洗浄（週1）1　<br>カラオケ部屋清掃（週1）1　<
+ br>床ポリッシャー洗浄/床下ゴミ掻き出し（月1）害虫駆除（月1）　<br>害獣駆除（月1）　<br>エアコンフィルター洗浄（月1）　<br>厨房シン
+ ク清掃（月1）<br><br>＜スポット＞<br>フィルム貼り<br>カーテンつける<br>フィルム直しドア<br>ダンス禁止紙貼り<br><br><
+ br>薬剤<br><br>シルバー 500ML　￥２５０<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー１個　</b>￥３５０<b
+ r><b>ガラス油取り１０％　</b>￥１００<br><b>シール剥がし　</b>￥１００<br><b>ハイター１個　</b>￥２５０<br><b>5
+ 分でピカピカ１個　</b>￥４００<br><br><b>合計: </b><b>￥1700</b><br><br>道具<br><br>トイレ用ブラシ１個
+ <br>ブラシ２個<br>シール剥がしへら２個<br>金たわし５個<br>床クリーナー機械（大きい）<br>ウエス<br>手袋３枚<br>モープ・スク
+ イージーセット<br>ごみ袋<br>バケツ２個<br>ほうき・ちり取り<br>雑巾ワイパー
+LAST-MODIFIED:20260202T072154Z
+SEQUENCE:9
+STATUS:CONFIRMED
+SUMMARY:【定期隔週清掃】アトミック　bar
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260224T000000
+DTEND;TZID=Asia/Tokyo:20260224T040000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:efiqj304iqqcohj1siqmf9r13r@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/fio-wkhz-cpd
+RECURRENCE-ID;TZID=Asia/Tokyo:20260224T000000
+CREATED:20250922T084417Z
+DESCRIPTION:12/17 9:54 1週間前連絡済(Mail)\n\nネズミ駆除メイン\n厨房機器下掻き出し\nレンジフード\n床ポリッシャ
+ ー\n\n＜防災センターー事前申請＞3日前まで\nhttps://mori-portal.my.site.com/s/login/\n\nネズミ駆除（
+ 定期清掃）\nキッチン/ホール等の占有部分の清掃\n\nドリンク側のポストに鍵をいれている\n\nGoogle Meet に参加: https://m
+ eet.google.com/fio-wkhz-cpd\n電話で参加: (JP) +81 3-4545-0450 PIN: 8969922075790
+ #\nその他の電話番号: https://tel.meet/fio-wkhz-cpd?pin=8969922075790&hs=7\n\nMeet の
+ 詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T073749Z
+LOCATION:東京寿司 ITAMAE SUSHI 愛宕店\, 日本、〒105-0001 東京都港区虎ノ門３丁目２１−５ 愛宕グリーンヒルズプラザ1
+ F
+SEQUENCE:3
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】愛宕板前寿司　（森ビル案件）
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260209T100000
+DTEND;TZID=Asia/Tokyo:20260209T110000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:jprvkijrurn8ccvgeje9m7jt8t_R20260209T010000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260209T100000
+CREATED:20250806T120420Z
+DESCRIPTION:\n※ ・指定時間以外の入店は行わない \nスタッフ不在時に入店が必要な場合は、必ず事前・事後に報告・お借りした物や設置物は原
+ 状復帰を徹底\n\nマット交換  6枚
+LAST-MODIFIED:20260123T100337Z
+LOCATION:モンキーツリー馬喰町
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】モンキーツリー株式会社エデュケーション MONKEY TREE 日本橋店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260201T000000
+DTEND;TZID=Asia/Tokyo:20260201T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:vkmsr56ngm21apfku3bfkd94n0@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=kokien
+ dou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/tka-pbrc-opc
+RECURRENCE-ID;TZID=Asia/Tokyo:20260201T000000
+CREATED:20251031T113555Z
+DESCRIPTION:事前連絡済み<br><br>ネズミ駆除（毎月）        1    　<br>グリストラップ（毎月）        1  
+   　<br>キッチン/ホール床清掃掻き出し込み（隔月）        1    　12.2.4.6.8.10月<br>グレーチング/レンジフード清掃
+ （年２回）        1    　<br>冷蔵庫/ショーケース拭き（年2回）        1    　<br>換気口清掃/ファンモーター点検（年
+ 1回）        4    　<br>エアコン分解洗浄（年1）        3    　<br>キッチン回り清掃（都度）        1   
+  　<br>トイレ清掃（都度）        2    　<br><br><br>暗証番号0082です。<br><br><br>薬剤<br><br>シ
+ ルバー 500ML　￥２５０<br>乳化剤　500ML　￥５００<br>床剤 500ML　￥２５０<br>5分放置でピカピカ１個　￥４００<br>ハイ
+ ター１個　￥２５０<br><b>激泡ガラスクリーナー１個　￥３５０</b><br>ベクトロン　２０ML  ￥１２００<br>ラットシート　７枚　￥５０
+ ０<br>ネオラッテ　５個　￥２００<br><br><b>合計: </b><b>￥3900</b><br><br>道具<br><br>電ドラ　（グリト
+ ラップ）<br>ブラシ２個<br>金たわし５個<br>ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚<br>モープ・スクイージーセット<br>
+ ごみ袋<br>バケツ２個<br>雑巾ワイパー\n\nGoogle Meet に参加: https://meet.google.com/tka-pbrc
+ -opc\n電話で参加: (JP) +81 3-4545-0450 PIN: 9999371291766#\nその他の電話番号: https://te
+ l.meet/tka-pbrc-opc?pin=9999371291766&hs=7\n\nMeet の詳細: https://support.goo
+ gle.com/a/users/answer/9282720
+LAST-MODIFIED:20260201T035555Z
+LOCATION:https://maps.app.goo.gl/SYdUTgJVW12hWZPG6?g_st=ipc
+SEQUENCE:3
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】メティウスフーズ PASTA of LIFE 新宿店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260201T010000
+DTEND;TZID=Asia/Tokyo:20260201T070000
+RRULE:FREQ=MONTHLY;BYDAY=1SU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:e7guceohvgg3dnktf955bcjhnh_R20260131T160000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/zyq-oecs-obi
+CREATED:20250725T051210Z
+DESCRIPTION:12/26 1週間前連絡済\n\n\n【鍵について】\nポスト　右に1 左に7  左に7 右に1\n左側のパスワード3470\
+ n右側のパスワード1314\n\nトイレの配管等清掃依頼　12/1８LINE WORKSより\n\n\n現状の優先度としては、\n床\nグリスト＆グレ
+ ーチング\nエアコン\nネズミ駆除\n\n12/19LINE WORKSより\nトイレの配管などの清掃\n\n薬剤\n\n乳化剤１L　￥１０００\nシ
+ ルバー５００ML　￥５００\nラットシート７枚　￥５００\nネオラッテ３袋　￥１５０\n床剤５００ML　￥２５０\n\n合計: ￥2400\n\n道具
+ \n\nブラシ１個\n金たわし３個\n電ドラ（グリストラップ用）\nナノエッジ\nウエス\n手袋３枚\nモープ・スクイージーセット\nごみ袋\nバケツ
+ ２個\nほうき・ちり取り\n\nGoogle Meet に参加: https://meet.google.com/zyq-oecs-obi\n電話で参
+ 加: (JP) +81 3-4545-0450 PIN: 8144150038718#\nその他の電話番号: https://tel.meet/zyq
+ -oecs-obi?pin=8144150038718&hs=7\n\nMeet の詳細: https://support.google.com/a/
+ users/answer/9282720
+LAST-MODIFIED:20260201T035544Z
+LOCATION:武蔵野アブラ学会 代々木店\, 日本、〒151-0053 東京都渋谷区代々木１丁目５８−７
+SEQUENCE:7
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】武蔵野アブラ学会　代々木店
+TRANSP:OPAQUE
+ATTACH;FILENAME=メモ - 「武蔵野アブラ学会　代々木店」;FMTTYPE=application/vnd.google-apps.do
+ cument:https://docs.google.com/document/d/1yPnB-VP_GI8vUzgz96ReNdopUMi4UwGJ
+ uqo3lN3Tp7w/edit
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260206T070000
+DTEND;TZID=Asia/Tokyo:20260206T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:2bihqr9mr8h8smq4snclpaupfn@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/wuv-rzre-bvz
+RECURRENCE-ID;TZID=Asia/Tokyo:20260205T230000
+CREATED:20251222T063750Z
+DESCRIPTION:Google Meet に参加: https://meet.google.com/wuv-rzre-bvz\n電話で参加: (
+ JP) +81 3-4545-0450 PIN: 9588237770368#\nその他の電話番号: https://tel.meet/wuv-rzr
+ e-bvz?pin=9588237770368&hs=7\n\nMeet の詳細: https://support.google.com/a/user
+ s/answer/9282720
+LAST-MODIFIED:20260123T104641Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【定期ゴミ回収】六本木 ATOMIC BAR ゴミ回収
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260212T023000
+DTEND;TZID=Asia/Tokyo:20260212T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:v2vdg4q51lc16bi2gbsc23o54c@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/qsv-sitq-fvf
+RECURRENCE-ID;TZID=Asia/Tokyo:20260212T023000
+CREATED:20250924T125813Z
+DESCRIPTION:1/5事前連絡不通\n1/6事前連絡不通\n\n毎日ゴミ回収            　\nキッチン清掃（隔月）    (12.
+ 2.4.6.8.10月)     　\nホール清掃（隔月）          (12.2.4.6.8.10月 )  　\nグリストラップ等清掃（毎月）
+             　\n各所埃とり（隔月）   (11.1.3.5.7.9月)           　\nダクト周辺清掃（隔月）        
+   (11.1.3.5.7.9月)  　\nエアコンフィルター清掃（毎月）            　\n厨房機器下書き出し（毎月）          
+   　\n粗大ゴミ回収（実費請求）\n\nゴミ回収：袋２個分がお店の前に出してありますので、写真を取って回収を行なってください。\n(ガス栓）\n閉め
+ ていない\n\n〈鍵について〉\n合鍵をいただいてるので、忘れないこと。\n絶対無くさないように。\n無くしたら鍵ごと取り換えになります。\n\nGo
+ ogle Meet に参加: https://meet.google.com/qsv-sitq-fvf\n電話で参加: (JP) +81 3-4545
+ -0450 PIN: 9376979942478#\nその他の電話番号: https://tel.meet/qsv-sitq-fvf?pin=9376
+ 979942478&hs=7\n\nMeet の詳細: https://support.google.com/a/users/answer/92827
+ 20
+LAST-MODIFIED:20260202T072425Z
+LOCATION:アイムズ芝大門\, 日本、〒105-0012 東京都港区芝大門１丁目４−５ アイムズ芝大門 1階
+SEQUENCE:2
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】鮨ひのもと
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260219T010000
+DTEND;TZID=Asia/Tokyo:20260219T093000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:uq82i4i13qe9gg5otknqkb24ao@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260216T010000
+CREATED:20250728T115514Z
+DESCRIPTION:1週間前連絡済<br>  <br>害虫駆除（毎月）<br>ネズミ駆除（毎月） <br>グリストラップ清掃（毎月）<br>ホール
+ 床清掃（隔月） → <strong>11月・1月・3月・5月・7月・9月</strong><br>冷蔵庫フィルター清掃（毎月） <br>レンジフード拭
+ きあげ（毎月）<br>キッチン床清掃（隔月） → <strong>11月・1月・3月・5月・7月・9月</strong><br>シンク清掃（四半期） 
+ → <strong>11月・2月・5月・8月</strong><br>エアコンフィルター清掃（都度）<br>ガス台清掃（都度） <br>U字溝／グレー
+ チング清掃（都度） <br><br>シンクが狭いので、トロ舟を多めに持っていく。<br><br>キーボックス：0000
+LAST-MODIFIED:20260202T072907Z
+LOCATION:ニイハオ 大森店\, 日本、〒143-0016 東京都大田区大森北１丁目２−１
+SEQUENCE:13
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ大森店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260212T193000
+DTEND;TZID=Asia/Tokyo:20260213T000000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:nrpmpsdsegenfmji1t1drrce1h@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/fyc-mdfk-pad
+RECURRENCE-ID;TZID=Asia/Tokyo:20260212T193000
+CREATED:20250707T055029Z
+DESCRIPTION:19時→19時30分にカレンダー変更。11/14\n\n\n隔月（9月・11月・1月・3月・5月・7月）\n•エアコンフィルタ
+ ー清掃\n•グリスフィルター清掃\n•厨房床清掃／厨房機器下清掃\n•厨房フィルター清掃\n\n四半期（9月・1月・5月）\n•レンジフード清掃\n\
+ n四半期（11月・3月・7月）\n•ホール床清掃\n\n半年（1月・7月）\n•冷蔵庫コンデンサー清掃\n\n半年（11月・5月）\n•1階・2階 窓
+ 清掃\n\n年1回（1月）\n•壁清掃\n\n追加依頼項目\n　•    作業台・収納棚の裏や隙間の汚れ\n    •    手洗い場やトイレ（床・便
+ 器など）の汚れ\n    •    壁や天井のクモの巣\n    •    厨房機器（コーヒーメーカーなど）周辺の油汚れ\n    •    パン保管
+ 用の布カバーの破損\n定期清掃の2.0倍で対応（請求書発行時料金変更する）\n\nキーボックス：4173 \nビル入ってすぐの裏口のドアから鍵を開けて
+ 入れます。\n\nGoogle Meet に参加: https://meet.google.com/fyc-mdfk-pad\n電話で参加: (JP)
+  +81 3-4545-0450 PIN: 3076169305806#\nその他の電話番号: https://tel.meet/fyc-mdfk-p
+ ad?pin=3076169305806&hs=7\n\nMeet の詳細: https://support.google.com/a/users/a
+ nswer/9282720
+LAST-MODIFIED:20260202T072531Z
+LOCATION:デイジイ 麹町店\, 日本、〒102-0083 東京都千代田区麹町４丁目３−２２ 紅谷ビル
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】デイジー麹町店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260223T004500
+DTEND;TZID=Asia/Tokyo:20260223T044500
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:4od513adopgld1kokltht0na4v@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/hwu-gzvy-rhw
+RECURRENCE-ID;TZID=Asia/Tokyo:20260223T004500
+CREATED:20250930T044627Z
+DESCRIPTION:ゴミ回収（毎日）        1    　\n床置形グリストラップ清掃（毎月）        1    　\n厨房機器下の掻
+ き出し（毎月）        1    　\nキッチン床ドライ清掃（半年 5月）        1    　\nホール床清掃（半年）　        
+ 1    　\nエアコン分解洗浄（年1　10月）（天カセ３台）        3    　\nキッチン高圧洗浄（年２回　10月4月）        1
+     　\n排気/換気口清掃（年1　10月）        1    　\nファンモーター点検（年1　10月）        1    　\n粗大ゴ
+ ミ回収　実費請求        1\n\n本日11時閉店、11時30分迄\nキーボックス番号0601\n\nGoogle Meet に参加: http
+ s://meet.google.com/hwu-gzvy-rhw\n電話で参加: (JP) +81 3-4545-0450 PIN: 98367204
+ 70518#\nその他の電話番号: https://tel.meet/hwu-gzvy-rhw?pin=9836720470518&hs=7\n\nM
+ eet の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T073732Z
+LOCATION:桜井ビル\, 日本、〒105-0004 東京都港区新橋３丁目１９−４ 桜井ビル
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　焼肉男マンモス
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260202T000000
+DTEND;TZID=Asia/Tokyo:20260202T080000
+RRULE:FREQ=MONTHLY;BYDAY=1MO
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:fpi6sbbkdaceip9erb2vf3cejv_R20260201T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=no
+ emi_midory@hotmail.com;X-NUM-GUESTS=0:mailto:noemi_midory@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokagroup@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+CREATED:20250728T115609Z
+DESCRIPTION:害虫駆除（毎月）　　<br>ネズミ駆除（毎月）　<br>ホール床清掃（隔月）　1.3.5.7.9.11月<br>レンジフード清
+ 掃（毎月）<br>冷蔵庫/作業台拭きあげ（隔月）　1.3.5.7.9.11月<br>ガス台まわり清掃（四半期) 2.5.8.11月<br><br>シン
+ クが狭いので、トロ舟を多めに持っていく<br><br>キーボックスはニーハオ別館にまとめて置いてあります。<br><br><br>薬剤<br><br>
+ シルバー 500ML　￥２５０<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー１個　￥３５０</b><br>ベクトロン　２０ML 
+  ￥１２００<br>ラットシート　７枚　￥５００<br>ネオラッテ　５個　￥２００<br><br><b>合計: </b><b>￥2750</b><br
+ ><br>道具<br><br>ブラシ２個<br>金たわし５個<br>ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚<br>モープ・スクイージー
+ セット<br>ごみ袋<br>バケツ２個<br>雑巾ワイパー
+LAST-MODIFIED:20260202T071742Z
+LOCATION:你好(ニーハオ)大飯店\, 日本、〒144-0052 東京都大田区蒲田４丁目３６−８ プランドール
+SEQUENCE:8
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ蒲田　工場
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260201T220000
+DTEND;TZID=Asia/Tokyo:20260202T010000
+RRULE:FREQ=MONTHLY;BYDAY=1SU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:sg25t1ffq276ul7f05cpcljc9a_R20260201T130000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=pu
+ rio727856@gmail.com;X-NUM-GUESTS=0:mailto:purio727856@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=DECLINED;CN=matsuo
+ kajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+CREATED:20250728T115452Z
+DESCRIPTION:害虫駆除（毎月）　<br>ネズミ駆除（毎月）　<br>グリストラップ清掃（毎月）　<br>冷蔵庫フィルター清掃（毎月）　<br
+ >キッチン床清掃（隔月）　　1.3.5.7.9.11月<br>ホール床清掃（隔月）　1.3.5.7.9.11月<br>テーブル拭き（隔月）　1.3.5
+ .7.9.11月<br>トイレ清掃（四半期）　1.4.7.10月<br>エアコンフィルター清掃（都度）　<br>レンジフード周り清掃（都度）<br><
+ br>シンクが狭いので、トロ舟を多めに持っていく<br><br>別館地下入口入っておくに<br>キーボックス　番号2183<br><br><br>薬剤
+ <br><br>シルバー 500ML　￥２５０<br>乳化剤　500ML　￥５００<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー
+ １個　￥３５０</b><br>ベクトロン　２０ML  ￥１２００<br>ラットシート　７枚　￥５００<br>ネオラッテ　５個　￥２００<br><br>
+ <b>合計: </b><b>￥3250</b><br><br>道具<br><br>電ドラ　（グリトラップ）<br>ブラシ２個<br>金たわし５個<br
+ >ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚<br>モープ・スクイージーセット<br>ごみ袋<br>バケツ２個<br>雑巾ワイパー
+LAST-MODIFIED:20260202T072145Z
+LOCATION:中国家庭料理 你好 本店\, 日本、〒144-0052 東京都大田区蒲田４丁目２４−１４
+SEQUENCE:10
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ蒲田本店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260205T000000
+DTEND;TZID=Asia/Tokyo:20260205T030000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:sg25t1ffq276ul7f05cpcljc9a_R20260201T130000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260201T220000
+CREATED:20250728T115452Z
+DESCRIPTION:事前連絡済み<br><br>害虫駆除（毎月）　<br>ネズミ駆除（毎月）　<br>グリストラップ清掃（毎月）　<br>冷蔵庫フ
+ ィルター清掃（毎月）　<br>キッチン床清掃（隔月）　　1.3.5.7.9.11月<br>ホール床清掃（隔月）　1.3.5.7.9.11月<br>テー
+ ブル拭き（隔月）　1.3.5.7.9.11月<br>トイレ清掃（四半期）　1.4.7.10月<br>エアコンフィルター清掃（都度）　<br>レンジフー
+ ド周り清掃（都度）<br><br>シンクが狭いので、トロ舟を多めに持っていく<br><br>別館地下入口入っておくに<br>キーボックス　番号2183
+ <br><br><br>薬剤<br><br>シルバー 500ML　￥２５０<br>乳化剤　500ML　￥５００<br>床剤 500ML　￥２５０<br
+ ><b>激泡ガラスクリーナー１個　￥３５０</b><br>ベクトロン　２０ML  ￥１２００<br>ラットシート　７枚　￥５００<br>ネオラッテ　５
+ 個　￥２００<br><br><b>合計: </b><b>￥3250</b><br><br>道具<br><br>電ドラ　（グリトラップ）<br>ブラシ２
+ 個<br>金たわし５個<br>ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚<br>モープ・スクイージーセット<br>ごみ袋<br>バケツ２個
+ <br>雑巾ワイパー
+LAST-MODIFIED:20260202T072145Z
+LOCATION:中国家庭料理 你好 本店\, 日本、〒144-0052 東京都大田区蒲田４丁目２４−１４
+SEQUENCE:12
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ蒲田本店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260225T030000
+DTEND;TZID=Asia/Tokyo:20260225T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:fdp2kd2i03l2us04080gbq7bq7@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/fqo-zyxi-vmx
+RECURRENCE-ID;TZID=Asia/Tokyo:20260225T030000
+CREATED:20250930T061709Z
+DESCRIPTION:12/816:35　不出\n12/9 15:20 事前確認済み\n※可能であれば、2：30からに変更して欲しいとの事。\n難し
+ いようであれば1時30でも構わない。\n \nゴミ回収（毎日）        1    　\nグリストラップ清掃（毎月）        1    　\
+ nグレーチング（毎月）        1    　\n厨房機器下の掻き出し（毎月）        1    　\nキッチン床清掃（半年　10月　5月）
+         1    　\nホール床清掃（半年　10月　5月）　        1    　\nエアコン分解洗浄（年1　10月）（天カセ6台/ビル
+ トイン1台）        7    　\n排気/換気口清掃（年1　10月）       1    　\nファンモーター点検（年1　10月）     
+    1    　\n粗大ゴミ回収　実費請求        1\n\n〈キーボックス〉\n番号：5493\n\nGoogle Meet に参加: ht
+ tps://meet.google.com/fqo-zyxi-vmx\n電話で参加: (JP) +81 3-4545-0450 PIN: 722737
+ 8215205#\nその他の電話番号: https://tel.meet/fqo-zyxi-vmx?pin=7227378215205&hs=7\n\
+ nMeet の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T073753Z
+LOCATION:第二魚寅ビル\, 日本、〒130-0022 東京都墨田区江東橋３丁目１３−８ 第二魚寅ビル
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　魚豪商コダマ錦糸町
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260210T230000
+DTEND;TZID=Asia/Tokyo:20260211T070000
+RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=2TU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:eorqkt00vgr01go26k6omjcftp@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+CREATED:20251204T040805Z
+DESCRIPTION:12/9 1週間連絡(架電)<br>12/12 14:31事前確認電話済<br><br>【  鍵の解錠と入室  】<li><p
+ ><b>設置場所</b>店舗左側にある<b>クーラー室外機</b></p></li><li><p><b>保管方法</b>ダイヤル式キーボックス</p>
+ </li><li><p><b>暗証番号</b><b>0893</b></p></li><li><p><b>中身</b>シャッターの鍵ドアの鍵</p><
+ /li><li><p><b>手順</b>ボックスから鍵を取り出し、シャッターとドアの開錠をお願いします。</p></li><br><h3>お湯（給湯器
+ ）<span> 店舗の</span><b>壁 右側</b><span> </span><b>炊飯器の上</b><span>にスイッチ有。</span>
+ <span>4つあるシンクのうち</span><b>右から2番目</b><span>のシンクのみがお湯に対応してる。  </span></h3><br
+ >以下の項目の定期清掃    ¥35\,000    1 隔月（12月、2月、4月、6月、8月、10月）<br>エアコンフィルター清掃     <br
+ >レンジフード清掃   <br><br>年3回（12月、4月、8月） 　<br>ホール床            <br><br>年1回（12月）<br
+ >エアコン分解洗浄
+LAST-MODIFIED:20260108T072929Z
+LOCATION:肉屋食堂たけうち 蕨店\, 日本、〒335-0002 埼玉県蕨市塚越１丁目７−４
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【隔月清掃】肉屋食堂たけうち　蕨店　初回
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260222T050000
+DTEND;TZID=Asia/Tokyo:20260222T060000
+RRULE:FREQ=MONTHLY;BYDAY=4SU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:6flh7aecaf4ik0bog6hstjqtkk@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+CREATED:20260123T094046Z
+DESCRIPTION:\n【毎月】\n・害虫駆除、ネズミ駆除\n\n────────────
+LAST-MODIFIED:20260123T094047Z
+LOCATION:分けとく山 
+SEQUENCE:0
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】とくやまホールディングス 分けとく山
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260202T040000
+DTEND;TZID=Asia/Tokyo:20260202T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:fb7qslagous5lg9m8lktqflgoh@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/vzk-zadb-bms
+RECURRENCE-ID;TZID=Asia/Tokyo:20260202T040000
+CREATED:20251105T114830Z
+DESCRIPTION:事前連絡済み<br><br>トイレ洗浄（毎月）        2    　<br>厨房床清掃（毎月）        1    
+ 　<br>床ホール清掃（毎月）        1    　<br>階段清掃（毎月）        1<br>2階窓ガラス清掃 / 高所ゴンドラ作業（半
+ 年）   1 次回は2026年5月<br><br><br>窓ガラスは消防士佐藤さんに依頼する予定<br><br>〈キーボックス〉<br>暗号番号112
+ 0<br>場所：厨房入口<br><br>薬剤<br><br>シルバー 500ML　￥２５０<br>床剤 500ML　￥２５０<br><b>激泡ガラスク
+ リーナー１個　￥３５０</b><br><b>ガラス油取り１０％　￥１００</b><br><b>ハイター　￥２５０</b><br><b>5分放置でピカピ
+ カ　￥４００<br></b><br><b>合計: </b><b>￥１６００</b><br><br>道具<br><br>ブラシ２個<br>金たわし５個<
+ br>ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚<br>モープ・スクイージーセット<br>ごみ袋<br>バケツ２個<br>雑巾ワイパー\n
+ \nGoogle Meet に参加: https://meet.google.com/vzk-zadb-bms\n電話で参加: (JP) +81 3-
+ 4545-0450 PIN: 9722568800947#\nその他の電話番号: https://tel.meet/vzk-zadb-bms?pin=
+ 9722568800947&hs=7\n\nMeet の詳細: https://support.google.com/a/users/answer/9
+ 282720
+LAST-MODIFIED:20260201T035528Z
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社友進中華食堂一番館 東陽町
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260210T230000
+DTEND;TZID=Asia/Tokyo:20260211T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:eorqkt00vgr01go26k6omjcftp@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260210T230000
+CREATED:20251204T040805Z
+DESCRIPTION:12/9 1週間連絡(架電)<br>12/12 14:31事前確認電話済<br><br>【  鍵の解錠と入室  】<li><p
+ ><b>設置場所</b>店舗左側にある<b>クーラー室外機</b></p></li><li><p><b>保管方法</b>ダイヤル式キーボックス</p>
+ </li><li><p><b>暗証番号</b><b>0893</b></p></li><li><p><b>中身</b>シャッターの鍵ドアの鍵</p><
+ /li><li><p><b>手順</b>ボックスから鍵を取り出し、シャッターとドアの開錠をお願いします。</p></li><br><h3>お湯（給湯器
+ ）<span> 店舗の</span><b>壁 右側</b><span> </span><b>炊飯器の上</b><span>にスイッチ有。</span>
+ <span>4つあるシンクのうち</span><b>右から2番目</b><span>のシンクのみがお湯に対応してる。  </span></h3><br
+ >以下の項目の定期清掃    ¥35\,000    1 隔月（12月、2月、4月、6月、8月、10月）<br>エアコンフィルター清掃     <br
+ >レンジフード清掃   <br><br>年3回（12月、4月、8月） 　<br>ホール床            <br><br>年1回（12月）<br
+ >エアコン分解洗浄
+LAST-MODIFIED:20260202T072316Z
+LOCATION:肉屋食堂たけうち 蕨店\, 日本、〒335-0002 埼玉県蕨市塚越１丁目７−４
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【隔月清掃】肉屋食堂たけうち　蕨店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260227T000000
+DTEND;TZID=Asia/Tokyo:20260227T060000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:9orq2s2i8gfqsqf69km0smr4qu_R20260226T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/usc-byyr-vvf
+RECURRENCE-ID;TZID=Asia/Tokyo:20260227T000000
+CREATED:20250418T023818Z
+DESCRIPTION:ダクトロースター分解洗浄        11    \nグリスフィルター清掃        5    \nグリスフード分解洗浄
+         1   \n グリストラップ洗浄        1   \n "床洗浄（コンクリート20坪）染み抜きは含まない"        1  
+   \nスポット 高所 / 厨房機器内 埃取り    ¥5\,000    1    \nエアコンフィルター清掃（毎月）    ¥1\,000    
+ 2    \nエアコン分解洗浄（年１）    ¥2\,500    2\n\n\n＜入口鍵＞\n鍵はキーボックスで対応と店内のSECOMの解除も必要で
+ す。\nキーボックスは入口階段上がって階段手摺に設置しています。\n番号は「0707」で開錠できます。\n\n入口鍵を開けたら30秒以内にSECOMの
+ 解除が必要になります。\n入口入って左手にレジがあり、その棚の右側にSECOMの機械とカードキーを吊るしてありますのでカードキーをかざして頂ければ解除
+ できます。\n\n退出の際は機械のボタンを押してカードをかざし1分以内に入口の鍵を閉めて頂ければ大丈夫です。\n\nGoogle Meet に参加: 
+ https://meet.google.com/usc-byyr-vvf\n電話で参加: (JP) +81 3-4545-0450 PIN: 5634
+ 459719310#\nその他の電話番号: https://tel.meet/usc-byyr-vvf?pin=5634459719310&hs=7\
+ n\nMeet の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T074159Z
+LOCATION:〒150-0043 東京都渋谷区道玄坂１丁目５−５ 藤木ビル 2F
+SEQUENCE:7
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】GOSSO　0秒レモンサワー 仙台ホルモン焼肉酒場 ときわ亭 渋谷店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260210T000000
+DTEND;TZID=Asia/Tokyo:20260210T060000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:ba5a7dkg070lipchvk6qpc1cjv_R20260209T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/xem-ithf-ptm
+RECURRENCE-ID;TZID=Asia/Tokyo:20260210T000000
+CREATED:20250728T114937Z
+DESCRIPTION:<h3><span><br><span>【毎月実施】</span></span></h3><h3><p><span>・害虫駆除
+ <br>・厨房床清掃<br>・グリストラップ清掃<br>・キッチン回り厨房清掃<br>・グリスフィルター清掃<br></span></p><hr />
+ </h3><h3><span>【隔月（偶数月）】(12.2.4.6.8.10月)→12月対象<br>・水だめグレーチング排水溝清掃<br><br></
+ span></h3><h3><hr /></h3><h3><span><span>【四半期（2・5・8・11月）】<br>・レンジフード／ダクト清掃<
+ /span><br><br></span></h3>トロ舟持参するかも<br><br>キーボックス<br>番号：0207\n\nGoogle Meet
+  に参加: https://meet.google.com/xem-ithf-ptm\n電話で参加: (JP) +81 3-4545-0450 PIN
+ : 5481207110453#\nその他の電話番号: https://tel.meet/xem-ithf-ptm?pin=5481207110453
+ &hs=7\n\nMeet の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T072229Z
+LOCATION:麺処いのこ 赤塚店\, 日本、〒175-0093 東京都板橋区赤塚新町３丁目８−２５
+SEQUENCE:11
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】いのこ板橋区赤塚店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260218T060000
+DTEND;TZID=Asia/Tokyo:20260218T090000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:g6mle9p7vtgc39rni64cpb81qv@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260216T060000
+CREATED:20250611T123649Z
+DESCRIPTION:＜不夜城＞\nネズミ駆除（ファインメッシュでの防鼠）←重要\nレンジフード清掃\nキッチン床/ホール床清掃\nビールサーバー清
+ 掃\n厨房下掻き出し\nシンク設備回り水漏れ点検\n焼き台清掃\nガス台まわり清掃\n配線整理/壁固定\n\n\n\nものすごく狭い店なので、３人は清
+ 掃で入れません。\n\nシンクも狭いので、シンクでの洗いは不可能。\n高圧洗浄機かホースで外洗いになります。\nホースを使う際は散水栓を開ける工具が要
+ ります。\n\n\nキーボックス　右に0を2回   左に4を1回
+LAST-MODIFIED:20260202T073052Z
+LOCATION:オイスター&珍味 BAR 不夜城\, 日本、〒160-0021 東京都新宿区歌舞伎町１丁目３−１０ 思い出の抜け道ビル 2.3F
+SEQUENCE:9
+STATUS:CONFIRMED
+SUMMARY:スモールズ オイスター&珍味 bar 不夜城 隔月清掃
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260224T040000
+DTEND;TZID=Asia/Tokyo:20260224T090000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:mmia68bl49vdijipg8jbsnkia1@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokagroup@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260228T000000
+CREATED:20250326T072008Z
+DESCRIPTION:※ ・指定時間以外の入店は行わない\n・スタッフ不在時に入店が必要な場合は、必ず事前・事後に報告\n・お借りした物や設置物は原
+ 状復帰を徹底\n\n\n気になったところ丸っと清掃する。\nレンジフード/グリストラップはやる\n\n右2回3\n左1回7
+LAST-MODIFIED:20260202T074200Z
+LOCATION:モンキーツリー馬喰町
+SEQUENCE:6
+STATUS:CONFIRMED
+SUMMARY:【定期清掃/ラグ交換】モンキーツリー
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260202T040000
+DTEND;TZID=Asia/Tokyo:20260202T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:to5bqg6h28d7alcu1c8mkh4da2_R20260201T153000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260202T003000
+CREATED:20251105T114922Z
+DESCRIPTION:事前連絡済み\n\nトイレ洗浄（毎月）        2    　\n厨房床清掃（毎月）        1    　\n床ホー
+ ル清掃（毎月）        1\n\n【ガス元栓】\nお手洗いの中\n【給湯器】\nキッチンの一番奥の左側の壁\n【鍵】\n入口の左側\nキーボック
+ ス：6611
+LAST-MODIFIED:20260201T035515Z
+LOCATION:中華食堂 一番館 新小岩店\, 日本、〒124-0024 東京都葛飾区新小岩１丁目４２−８
+SEQUENCE:7
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社友進中華食堂一番館 新小岩店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260227T000000
+DTEND;TZID=Asia/Tokyo:20260227T060000
+RRULE:FREQ=MONTHLY;BYDAY=-1FR
+DTSTAMP:20260203T021547Z
+UID:9orq2s2i8gfqsqf69km0smr4qu_R20260226T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+CREATED:20250418T023818Z
+DESCRIPTION:ダクトロースター分解洗浄        11    \nグリスフィルター清掃        5    \nグリスフード分解洗浄
+         1   \n グリストラップ洗浄        1   \n "床洗浄（コンクリート20坪）染み抜きは含まない"        1  
+   \nスポット 高所 / 厨房機器内 埃取り    ¥5\,000    1    \nエアコンフィルター清掃（毎月）    ¥1\,000    
+ 2    \nエアコン分解洗浄（年１）    ¥2\,500    2\n\n\n＜入口鍵＞\n鍵はキーボックスで対応と店内のSECOMの解除も必要で
+ す。\nキーボックスは入口階段上がって階段手摺に設置しています。\n番号は「0707」で開錠できます。\n\n入口鍵を開けたら30秒以内にSECOMの
+ 解除が必要になります。\n入口入って左手にレジがあり、その棚の右側にSECOMの機械とカードキーを吊るしてありますのでカードキーをかざして頂ければ解除
+ できます。\n\n退出の際は機械のボタンを押してカードをかざし1分以内に入口の鍵を閉めて頂ければ大丈夫です。
+LAST-MODIFIED:20260130T035141Z
+LOCATION:〒150-0043 東京都渋谷区道玄坂１丁目５−５ 藤木ビル 2F
+SEQUENCE:7
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】GOSSO　0秒レモンサワー 仙台ホルモン焼肉酒場 ときわ亭 渋谷店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260210T000000
+DTEND;TZID=Asia/Tokyo:20260210T060000
+RRULE:FREQ=MONTHLY;BYDAY=2TU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:ba5a7dkg070lipchvk6qpc1cjv_R20260209T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ko
+ kiendou7@gmail.com;X-NUM-GUESTS=0:mailto:kokiendou7@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=pu
+ rio727856@gmail.com;X-NUM-GUESTS=0:mailto:purio727856@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/xem-ithf-ptm
+CREATED:20250728T114937Z
+DESCRIPTION:<h3><span><br><span>【毎月実施】</span></span></h3><h3><p><span>・害虫駆除
+ <br>・厨房床清掃<br>・グリストラップ清掃<br>・キッチン回り厨房清掃<br>・グリスフィルター清掃<br></span></p><hr />
+ </h3><h3><span>【隔月（偶数月）】(12.2.4.6.8.10月)→12月対象<br>・水だめグレーチング排水溝清掃<br><br></
+ span></h3><h3><hr /></h3><h3><span><span>【四半期（2・5・8・11月）】<br>・レンジフード／ダクト清掃<
+ /span><br><br></span></h3>トロ舟持参するかも<br><br>キーボックス<br>番号：0207\n\nGoogle Meet
+  に参加: https://meet.google.com/xem-ithf-ptm\n電話で参加: (JP) +81 3-4545-0450 PIN
+ : 5481207110453#\nその他の電話番号: https://tel.meet/xem-ithf-ptm?pin=5481207110453
+ &hs=7\n\nMeet の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T072229Z
+LOCATION:麺処いのこ 赤塚店\, 日本、〒175-0093 東京都板橋区赤塚新町３丁目８−２５
+SEQUENCE:11
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】いのこ板橋区赤塚店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260204T050000
+DTEND;TZID=Asia/Tokyo:20260204T100000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:0koj902nc7n8pd0mk5r8atipng@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=bibisa
+ yuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokagroup@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/grs-ynif-nex
+RECURRENCE-ID;TZID=Asia/Tokyo:20260204T050000
+CREATED:20250527T021324Z
+DESCRIPTION:メール連絡2/2<br><br>・グリストラップの清掃：1回/月<br>・キッチン床清掃：1回/月<br>・ホール床<br>・
+ レンジフード清掃（フィルターケースは分解しない）<br>・グリストラップ上流配管/下流配管高圧洗浄 <br><br>＜鍵の開け方＞<br>➀ポスト正面
+ についてある蓋（カバー）を開け、<br>　画像2の赤いボタンを上に上げ、<br>　中から画像3の鍵付きロックキーを取り出す<br><br>②暗証番号（
+ 1221）でロックを解除し、<br>　中から鍵を取り出す。<br><br>③画像5、6の通り、ポスト上の左側にあるシャッターの鍵を開け、<br>　↑ボ
+ タンを押し、シャッターを開ける<br><br>④画像7の通り、店舗の鍵を開ける<br><br>薬剤<br><br>シルバー 500ML　￥２５０<br
+ >乳化剤 500ML　￥５００<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー１個　</b>￥３５０<br><br><b>合計: 
+ </b><b>￥1350</b><br><br>道具<br><br>電ドラ　（グリストラップ）<br>ブラシ２個<br>金たわし５個<br>ナノエッジ
+ 機械<br>ウエス<br>手袋３枚<br>モープ・スクイージーセット<br>ごみ袋<br>バケツ２個<br>雑巾ワイパー\n\nGoogle Meet
+  に参加: https://meet.google.com/grs-ynif-nex\n電話で参加: (JP) +81 3-4545-0450 PIN
+ : 7956668349098#\nその他の電話番号: https://tel.meet/grs-ynif-nex?pin=7956668349098
+ &hs=7\n\nMeet の詳細: https://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T175745Z
+LOCATION:蕎麦割烹居酒屋　更科天狐〜さらしなてんこ〜
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】蕎麦割烹居酒屋　更科天狐〜さらしなてんこ〜
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260223T030000
+DTEND;TZID=Asia/Tokyo:20260223T070000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:4cg0crgbpgt9ubn5l1cms6h8pb@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/dnx-pbkj-ekw
+RECURRENCE-ID;TZID=Asia/Tokyo:20260223T030000
+CREATED:20250930T043242Z
+DESCRIPTION:ごみ回収（毎日）\nグリストラップ清掃（毎月）\n厨房機器下の掻き出し（毎月）\nキッチン配管高圧洗浄（12月、6月）\nキッ
+ チン床清掃（半年　12月、6月  ）\nホール床清掃（半年　12月、6月  ）\nエアコン分解洗浄（年1 　10月）（天カセ4台／ビルトイン1台）\n
+ 排気／換気口清掃（年1　12月）\nファンモーター点検（年1　12月）\n粗大ごみ回収（実費請求）\n\n\n＜キーボックス＞\n裏口右側の手すりにつ
+ いてます。\n番号0606\n\nGoogle Meet に参加: https://meet.google.com/dnx-pbkj-ekw\n電話で
+ 参加: (JP) +81 3-4545-0450 PIN: 5025492792755#\nその他の電話番号: https://tel.meet/dn
+ x-pbkj-ekw?pin=5025492792755&hs=7\n\nMeet の詳細: https://support.google.com/a
+ /users/answer/9282720
+LAST-MODIFIED:20260202T073738Z
+LOCATION:魚豪商 コダマ\, 日本、〒105-0004 東京都港区新橋４丁目１９−１０ タカソビル 1F A
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　魚豪商 コダマ新橋店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260202T000000
+DTEND;TZID=Asia/Tokyo:20260202T080000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:fpi6sbbkdaceip9erb2vf3cejv_R20260201T150000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=in
+ fo@misesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokagroup@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260202T000000
+CREATED:20250728T115609Z
+DESCRIPTION:事前連絡済み<br><br>害虫駆除（毎月）　　<br>ネズミ駆除（毎月）　<br>ホール床清掃（隔月）　1.3.5.7.9.
+ 11月<br>レンジフード清掃（毎月）<br>冷蔵庫/作業台拭きあげ（隔月）　1.3.5.7.9.11月<br>ガス台まわり清掃（四半期) 2.5.8
+ .11月<br><br>シンクが狭いので、トロ舟を多めに持っていく<br><br>キーボックスはニーハオ別館にまとめて置いてあります。<br><br>
+ <br>薬剤<br><br>シルバー 500ML　￥２５０<br>床剤 500ML　￥２５０<br><b>激泡ガラスクリーナー１個　￥３５０</b><
+ br>ベクトロン　２０ML  ￥１２００<br>ラットシート　７枚　￥５００<br>ネオラッテ　５個　￥２００<br><br><b>合計: </b><
+ b>￥2750</b><br><br>道具<br><br>ブラシ２個<br>金たわし５個<br>ナノエッジ・床クリーナー<br>ウエス<br>手袋５枚
+ <br>モープ・スクイージーセット<br>ごみ袋<br>バケツ２個<br>雑巾ワイパー
+LAST-MODIFIED:20260202T071742Z
+LOCATION:你好(ニーハオ)大飯店\, 日本、〒144-0052 東京都大田区蒲田４丁目３６−８ プランドール
+SEQUENCE:8
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】ニーハオ蒲田　工場
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260223T094500
+DTEND;TZID=Asia/Tokyo:20260223T124500
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:80ar5a99lvnibapa3efq166i35@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/qho-yiaz-jam
+RECURRENCE-ID;TZID=Asia/Tokyo:20260223T041500
+CREATED:20250930T063127Z
+DESCRIPTION:ゴミ回収（毎日）        1    　\nグリストラップ清掃（毎月）        1    　\nキッチン配管高圧洗浄
+ （半年　10月　5月）        1    　\n厨房機器下の掻き出し（毎月）        1    　\nキッチン床清掃（半年　10月　5月）
+        1    　\nエアコン分解洗浄（年1　10月）（天カセ）        6    　\n排気/換気口清掃（年1　10月）       
+  1    　\nファンモーター点検（年1　10月）     1    　\n粗大ゴミ回収　実費請求        1\n\nキーボックス：0625\
+ n\nGoogle Meet に参加: https://meet.google.com/qho-yiaz-jam\n電話で参加: (JP) +81 3
+ -4545-0450 PIN: 6882958109542#\nその他の電話番号: https://tel.meet/qho-yiaz-jam?pin
+ =6882958109542&hs=7\n\nMeet の詳細: https://support.google.com/a/users/answer/
+ 9282720
+LAST-MODIFIED:20260202T073747Z
+LOCATION:新燻男ニューイブシオ
+SEQUENCE:5
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　新燻男ニューイブシオ
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260222T053000
+DTEND;TZID=Asia/Tokyo:20260222T083000
+RRULE:FREQ=MONTHLY;BYDAY=4SU
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:n23n8j8ufrlet7l92lp77agb65_R20260221T203000@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=le
+ mueldesousa@gmail.com;X-NUM-GUESTS=0:mailto:lemueldesousa@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=pu
+ rio727856@gmail.com;X-NUM-GUESTS=0:mailto:purio727856@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=bi
+ bisayuri2011@hotmail.com;X-NUM-GUESTS=0:mailto:bibisayuri2011@hotmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=ma
+ tsuokajonas@gmail.com;X-NUM-GUESTS=0:mailto:matsuokajonas@gmail.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=umeoka
+ group@gmail.com;X-NUM-GUESTS=0:mailto:umeokagroup@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/xdk-gtvd-rjn
+CREATED:20250930T062427Z
+DESCRIPTION:12/10 1週間前連絡済\n12/12 事前連絡するも不出\n12/15事前連絡済み\nホール床清掃(半月)が元々契約に含ま
+ れていたと仰せ)12月お願いできますか？\n\nゴミ回収（毎日）        1    　\nグリストラップ清掃（毎月）        1    　
+ \nグレーチング（毎月）1←12/10 LINE\nキッチン配管高圧洗浄（半年　10月　5月）        1    　\n厨房機器下の掻き出し（毎
+ 月）        1    　\nキッチン床清掃（半年　10月　5月）        1    　    　\nエアコン分解洗浄（年1 　10月）（
+ 天カセ）        6    　\n排気/換気口清掃（年1　10月）   1    　\nファンモーター点検（年1　10月）      1    
+ 　\n\n粗大ゴミ回収　実費請求        1\nキーボックス：4840\n\nGoogle Meet に参加: https://meet.goo
+ gle.com/xdk-gtvd-rjn\n電話で参加: (JP) +81 3-4545-0450 PIN: 5075878220930#\nその他の
+ 電話番号: https://tel.meet/xdk-gtvd-rjn?pin=5075878220930&hs=7\n\nMeet の詳細: htt
+ ps://support.google.com/a/users/answer/9282720
+LAST-MODIFIED:20260202T073242Z
+LOCATION:〒105-0004 東京都港区新橋４丁目１４−１ AUNビル 3階
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】株式会社オン・ザ・プラネット　ホルモンのマンモス
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260215T230000
+DTEND;TZID=Asia/Tokyo:20260216T000000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:2bihqr9mr8h8smq4snclpaupfn@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=yu
+ in3034@gmail.com;X-NUM-GUESTS=0:mailto:yuin3034@gmail.com
+X-GOOGLE-CONFERENCE:https://meet.google.com/eug-toyb-drw
+RECURRENCE-ID;TZID=Asia/Tokyo:20260214T230000
+CREATED:20251222T063750Z
+DESCRIPTION:Google Meet に参加: https://meet.google.com/eug-toyb-drw\n電話で参加: (
+ JP) +81 3-4545-0450 PIN: 9124003277278#\nその他の電話番号: https://tel.meet/eug-toy
+ b-drw?pin=9124003277278&hs=7\n\nMeet の詳細: https://support.google.com/a/user
+ s/answer/9282720
+LAST-MODIFIED:20260123T104641Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【定期ゴミ回収】六本木 ATOMIC BAR ゴミ回収
+TRANSP:OPAQUE
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-P0DT0H10M0S
+DESCRIPTION:This is an event reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260420T053000
+DTEND;TZID=Asia/Tokyo:20260420T093000
+DTSTAMP:20260203T021547Z
+ORGANIZER;CN=info@misesapo.app:mailto:info@misesapo.app
+UID:tronr7f2o9c761baqmkldo24s0@google.com
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=info@m
+ isesapo.app;X-NUM-GUESTS=0:mailto:info@misesapo.app
+ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=um
+ eokayudi@gmail.com;X-NUM-GUESTS=0:mailto:umeokayudi@gmail.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260420T053000
+CREATED:20251028T003900Z
+DESCRIPTION:1/9 1週間前連絡済\n1/15事前連絡済\n毎日のゴミ回収\n\n＜定期清掃項目＞\n・グリストラップ清掃（毎月） \n厨
+ 房機器下の掻き出し（毎月） \nキッチン配管高圧洗浄（年２回）※1回目26年4月、2回目は相談\n キッチン床清掃（半年） 1．7月\nホール床清掃（
+ 半年 ）1．7月\n エアコン分解洗浄（月）（天カセ4台／ビルトイン1台）\n 排気／換気口清掃（年1　1月） \nファンモーター点検（年1　1月）\
+ n\n\n＜キーボックス＞\n番号： 3110\n隣の品川サウナの隣の白い柵にかかっているキーボックス\nhttps://maps.app.goo.g
+ l/59YNnoHRHsu4XY4v7
+LAST-MODIFIED:20260123T102932Z
+SEQUENCE:4
+STATUS:CONFIRMED
+SUMMARY:【定期清掃】オン・ザ・プラネット 魚豪商コダマ大井町店
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=Asia/Tokyo:20260213T190000
+DTEND;TZID=Asia/Tokyo:20260213T200000
+DTSTAMP:20260203T021547Z
+UID:2bihqr9mr8h8smq4snclpaupfn@google.com
+RECURRENCE-ID;TZID=Asia/Tokyo:20260211T230000
+CREATED:20251222T063750Z
+LAST-MODIFIED:20260123T104641Z
+SEQUENCE:1
+STATUS:CONFIRMED
+SUMMARY:【定期ゴミ回収】六本木 ATOMIC BAR ゴミ回収
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR

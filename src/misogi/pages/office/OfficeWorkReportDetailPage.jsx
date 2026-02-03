@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getAdminWorkReportDetail } from '../shared/api/adminWorkReportsApi';
 import '../shared/styles/components.css';
+import './office-work-report-detail.css';
 
 function safeJsonParse(val) {
   if (val == null) return {};
@@ -90,15 +91,24 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
   const isDay = report.template_id === 'SALES_DAY_V1';
   const isCase = report.template_id === 'SALES_CASE_V1';
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className={`report-page office-work-report-detail ${embed ? 'embed' : ''}`} data-job="office" style={{ padding: 24, maxWidth: 720, margin: '0 auto' }}>
       {!embed && (
         <>
-          <p style={{ marginBottom: 16 }}>
-            <Link to="/admin/work-reports" style={{ color: 'var(--job-office)' }}>← 業務報告（管理）一覧</Link>
-          </p>
-          <h1 style={{ fontSize: '1.25rem', marginBottom: 8 }}>業務報告（閲覧）</h1>
-          <p style={{ fontSize: '0.9rem', color: 'var(--muted)', marginBottom: 24 }}>
+          <div className="office-work-report-detail-actions no-print">
+            <p style={{ margin: 0 }}>
+              <Link to="/admin/work-reports" style={{ color: 'var(--job-office)' }}>← 業務報告（管理）一覧</Link>
+            </p>
+            <button type="button" className="btn btn-print" onClick={handlePrint} aria-label="印刷またはPDFで保存">
+              印刷／PDFで保存
+            </button>
+          </div>
+          <h1 className="report-print-title" style={{ fontSize: '1.25rem', marginBottom: 8 }}>業務報告（閲覧）</h1>
+          <p className="report-print-meta" style={{ fontSize: '0.9rem', color: 'var(--muted)', marginBottom: 24 }}>
             {templateLabel(report.template_id)} · {report.work_date || '—'} · {report.state || '—'}
           </p>
         </>

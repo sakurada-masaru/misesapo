@@ -834,6 +834,7 @@ try:
     CLEANING_LOGS_TABLE = dynamodb.Table('cleaning-logs')
     NFC_TAGS_TABLE = dynamodb.Table('nfc-tags')
     SCHEDULES_TABLE = dynamodb.Table('schedules')
+    BLOCKS_TABLE = dynamodb.Table('blocks')
     ESTIMATES_TABLE = dynamodb.Table('estimates')
     WORKERS_TABLE = dynamodb.Table('workers')
     WORKER_AVAILABILITY_TABLE = dynamodb.Table('worker-availability')
@@ -1399,6 +1400,30 @@ def lambda_handler(event, context):
                 return get_schedules(event, headers)
             elif method == 'POST':
                 return create_schedule(event, headers)
+        elif normalized_path.startswith('/schedules/'):
+            # スケジュール詳細の取得・更新・削除
+            schedule_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_schedule_detail(schedule_id, headers)
+            elif method == 'PUT':
+                return update_schedule(schedule_id, event, headers)
+            elif method == 'DELETE':
+                return delete_schedule(schedule_id, headers)
+        elif normalized_path == '/blocks':
+            # ブロック（クローズ）の取得・作成
+            if method == 'GET':
+                return get_blocks(event, headers)
+            elif method == 'POST':
+                return create_block(event, headers)
+        elif normalized_path.startswith('/blocks/'):
+            # ブロック詳細の取得・更新・削除
+            block_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_block_detail(block_id, headers)
+            elif method == 'PUT':
+                return update_block(block_id, event, headers)
+            elif method == 'DELETE':
+                return delete_block(block_id, headers)
         elif normalized_path == '/google-calendar/events':
             # Google Calendar連携は廃止（今後はシステム内スケジュールのみ）
             return {
@@ -5061,7 +5086,10 @@ def get_schedules(event, headers):
             filter_expressions.append(Attr('assigned_to').eq(assigned_to))
         
         if worker_id:
-            filter_expressions.append(Attr('worker_id').eq(worker_id))
+            # worker_idパラメータがある場合、worker_idまたはassigned_toのいずれかに一致するものを取得
+            filter_expressions.append(
+                (Attr('worker_id').eq(worker_id) | Attr('assigned_to').eq(worker_id))
+            )
         
         # フィルタ式を結合
         if filter_expressions:
@@ -5544,6 +5572,294 @@ def delete_schedule(schedule_id, headers):
             }, ensure_ascii=False)
         }
 
+def get_blocks(event, headers):
+    """
+    ブロック（クローズ）一覧を取得
+    クエリパラメータ:
+    - user_id: ユーザーIDでフィルタ
+    - date_from: 開始日でフィルタ (YYYY-MM-DD)
+    - date_to: 終了日でフィルタ (YYYY-MM-DD)
+    - limit: 最大取得件数（デフォルト: 1000）
+    """
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        user_id = query_params.get('user_id')
+        date_from = query_params.get('date_from')
+        date_to = query_params.get('date_to')
+        limit = int(query_params.get('limit', 1000))
+        
+        # フィルタ式を構築
+        filter_expressions = []
+        
+        if user_id:
+            filter_expressions.append(Attr('user_id').eq(user_id))
+        
+        if date_from or date_to:
+            # 日付範囲でフィルタ（start_atまたはend_atが範囲内にあるもの）
+            if date_from:
+                filter_expressions.append(Attr('start_at').gte(date_from))
+            if date_to:
+                filter_expressions.append(Attr('end_at').lte(date_to + 'T23:59:59'))
+        
+        # スキャン実行
+        if filter_expressions:
+            filter_expr = filter_expressions[0]
+            for expr in filter_expressions[1:]:
+                filter_expr = filter_expr & expr
+            response = BLOCKS_TABLE.scan(FilterExpression=filter_expr, Limit=limit)
+        else:
+            response = BLOCKS_TABLE.scan(Limit=limit)
+        
+        items = response.get('Items', [])
+        
+        # ページネーション対応
+        while 'LastEvaluatedKey' in response and len(items) < limit:
+            if filter_expressions:
+                response = BLOCKS_TABLE.scan(
+                    FilterExpression=filter_expr,
+                    ExclusiveStartKey=response['LastEvaluatedKey'],
+                    Limit=limit - len(items)
+                )
+            else:
+                response = BLOCKS_TABLE.scan(
+                    ExclusiveStartKey=response['LastEvaluatedKey'],
+                    Limit=limit - len(items)
+                )
+            items.extend(response.get('Items', []))
+        
+        # Decimal型を変換
+        for item in items:
+            for key, value in item.items():
+                if isinstance(value, Decimal):
+                    item[key] = float(value) if value % 1 else int(value)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'items': items,
+                'count': len(items),
+                'has_more': 'LastEvaluatedKey' in response
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting blocks: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブロックの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_block(event, headers):
+    """
+    ブロック（クローズ）を作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 必須フィールドのチェック
+        if not body_json.get('start_at') or not body_json.get('end_at'):
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'start_atとend_atは必須です'
+                }, ensure_ascii=False)
+            }
+        
+        # ブロックIDを生成
+        block_id = f"BLK-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+        
+        now = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+        
+        # ブロックアイテムを作成
+        block_item = {
+            'id': block_id,
+            'user_id': body_json.get('user_id'),
+            'start_at': body_json['start_at'],
+            'end_at': body_json['end_at'],
+            'type': body_json.get('type', 'personal_close'),
+            'reason_code': body_json.get('reason_code', 'other'),
+            'reason_note': body_json.get('reason_note'),
+            'visibility': body_json.get('visibility', 'admin_only'),
+            'rrule': body_json.get('rrule'),
+            'created_at': now,
+            'updated_at': now
+        }
+        
+        # DynamoDBに保存
+        BLOCKS_TABLE.put_item(Item=block_item)
+        
+        return {
+            'statusCode': 201,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'block': block_item,
+                'message': 'ブロックを作成しました'
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error creating block: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブロックの作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_block_detail(block_id, headers):
+    """
+    ブロック詳細を取得
+    """
+    try:
+        response = BLOCKS_TABLE.get_item(Key={'id': block_id})
+        
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'ブロックが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        item = response['Item']
+        # Decimal型を変換
+        for key, value in item.items():
+            if isinstance(value, Decimal):
+                item[key] = float(value) if value % 1 else int(value)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'block': item
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting block detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブロックの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_block(block_id, event, headers):
+    """
+    ブロックを更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 更新可能なフィールド
+        update_fields = ['start_at', 'end_at', 'reason_code', 'reason_note', 'rrule']
+        
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+        
+        for field in update_fields:
+            if field in body_json:
+                update_expression_parts.append(f"#{field} = :{field}")
+                expression_attribute_names[f"#{field}"] = field
+                expression_attribute_values[f":{field}"] = body_json[field]
+        
+        if not update_expression_parts:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '更新するフィールドが指定されていません'
+                }, ensure_ascii=False)
+            }
+        
+        update_expression_parts.append("#updated_at = :updated_at")
+        expression_attribute_names["#updated_at"] = "updated_at"
+        expression_attribute_values[":updated_at"] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+        
+        update_expression = "SET " + ", ".join(update_expression_parts)
+        
+        # DynamoDBを更新
+        BLOCKS_TABLE.update_item(
+            Key={'id': block_id},
+            UpdateExpression=update_expression,
+            ExpressionAttributeNames=expression_attribute_names,
+            ExpressionAttributeValues=expression_attribute_values,
+            ReturnValues='ALL_NEW'
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'ブロックを更新しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating block: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブロックの更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_block(block_id, headers):
+    """
+    ブロックを削除
+    """
+    try:
+        BLOCKS_TABLE.delete_item(Key={'id': block_id})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'ブロックを削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting block: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブロックの削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
 def clear_all_schedules(event, headers):
     """
     危険操作: schedules テーブルを全件削除（システム側のみ）
@@ -5665,31 +5981,35 @@ def import_google_ics(event, headers):
             body_json = json.loads(body.decode('utf-8'))
         
         ics_url = body_json.get('ics_url', '').strip()
+        ics_content_direct = body_json.get('ics_content', '').strip()
         from_date = body_json.get('from', '').strip()
         to_date = body_json.get('to', '').strip()
         dry_run = body_json.get('dry_run', False)
         
-        if not ics_url:
+        ics_content = ""
+        if ics_content_direct:
+            ics_content = ics_content_direct
+        elif ics_url:
+            # ICSファイルを取得
+            try:
+                req = urllib.request.Request(ics_url)
+                req.add_header('User-Agent', 'MISOGI-ICS-Importer/1.0')
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    ics_content = response.read().decode('utf-8')
+            except Exception as e:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': 'ICS取得失敗',
+                        'message': f'ICS URLの取得に失敗しました: {str(e)}'
+                    }, ensure_ascii=False)
+                }
+        else:
             return {
                 'statusCode': 400,
                 'headers': headers,
-                'body': json.dumps({'error': 'ics_url is required'}, ensure_ascii=False)
-            }
-        
-        # ICSファイルを取得
-        try:
-            req = urllib.request.Request(ics_url)
-            req.add_header('User-Agent', 'MISOGI-ICS-Importer/1.0')
-            with urllib.request.urlopen(req, timeout=30) as response:
-                ics_content = response.read().decode('utf-8')
-        except Exception as e:
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'body': json.dumps({
-                    'error': 'ICS取得失敗',
-                    'message': f'ICS URLの取得に失敗しました: {str(e)}'
-                }, ensure_ascii=False)
+                'body': json.dumps({'error': 'ics_url or ics_content is required'}, ensure_ascii=False)
             }
         
         # ICSをパース
@@ -5708,19 +6028,69 @@ def import_google_ics(event, headers):
                 }, ensure_ascii=False, default=str)
             }
         
-        # 既存のexternal_idをチェック（重複防止）
-        existing_external_ids = set()
+        # 従業員情報を取得（メールアドレスからworker_idを引くため）
+        worker_email_map = {}
+        # イレギュラーな個人用メールアドレスとワーカーIDのマッピング
+        personal_email_to_worker_id = {
+            'lemueldesousa@gmail.com': 'W01005',
+            'kokiendou7@gmail.com': 'W021',
+            'yuin3034@gmail.com': 'W003',
+            'zuomuhezhen187@gmail.com': 'W006',
+            'matsuokajonas@gmail.com': 'W01000',
+            'bibisayuri2011@hotmail.com': 'W01003',
+            'umeokagroup@gmail.com': 'W002'
+        }
+
         try:
-            scan_response = SCHEDULES_TABLE.scan(
-                ProjectionExpression='external_id',
-                FilterExpression=Attr('external_id').exists()
-            )
-            for item in scan_response.get('Items', []):
-                ext_id = item.get('external_id')
-                if ext_id:
-                    existing_external_ids.add(ext_id)
+            worker_scan = WORKERS_TABLE.scan(ProjectionExpression='id, email')
+            worker_items = worker_scan.get('Items', [])
+            while 'LastEvaluatedKey' in worker_scan:
+                worker_scan = WORKERS_TABLE.scan(
+                    ProjectionExpression='id, email',
+                    ExclusiveStartKey=worker_scan['LastEvaluatedKey']
+                )
+                worker_items.extend(worker_scan.get('Items', []))
+            
+            for w in worker_items:
+                email = w.get('email')
+                if email:
+                    worker_email_map[email.lower().strip()] = w.get('id')
         except Exception as e:
-            print(f"Warning: Failed to check existing external_ids: {str(e)}")
+            print(f"Warning: Failed to fetch worker emails: {str(e)}")
+
+        # 店舗情報を取得（名寄せ・自動紐付けのため）
+        all_stores = []
+        try:
+            store_scan = STORES_TABLE.scan(ProjectionExpression='id, store_name, brand_name, security_code')
+            all_stores = store_scan.get('Items', [])
+            while 'LastEvaluatedKey' in store_scan:
+                store_scan = STORES_TABLE.scan(
+                    ProjectionExpression='id, store_name, brand_name, security_code',
+                    ExclusiveStartKey=store_scan['LastEvaluatedKey']
+                )
+                all_stores.extend(store_scan.get('Items', []))
+        except Exception as e:
+            print(f"Warning: Failed to fetch stores for matching: {str(e)}")
+
+        # 既存のexternal_idとworker_idをチェック（重複防止）
+        existing_schedules = set() # (external_id, worker_id) のタプル
+        try:
+            scan_kwargs = {
+                'ProjectionExpression': 'external_id, worker_id',
+                'FilterExpression': Attr('external_id').exists()
+            }
+            while True:
+                scan_response = SCHEDULES_TABLE.scan(**scan_kwargs)
+                for item in scan_response.get('Items', []):
+                    ext_id = item.get('external_id')
+                    w_id = item.get('worker_id')
+                    existing_schedules.add((ext_id, w_id))
+                
+                if 'LastEvaluatedKey' not in scan_response:
+                    break
+                scan_kwargs['ExclusiveStartKey'] = scan_response['LastEvaluatedKey']
+        except Exception as e:
+            print(f"Warning: Failed to check existing schedules: {str(e)}")
         
         # 日付ごとにグループ化して、各日付の最大連番を事前に取得（パフォーマンス最適化）
         date_to_max_seq = {}
@@ -5755,13 +6125,30 @@ def import_google_ics(event, headers):
                 errors.append({'event': event_data.get('summary', 'Unknown'), 'error': 'UID not found'})
                 continue
             
-            # 重複チェック
-            if external_id in existing_external_ids:
-                skipped += 1
-                continue
-            
             try:
-                # スケジュールID生成（事前取得した最大連番を使用）
+                # 参加者のメールアドレスからマッチする従業員を探す
+                attendees = event_data.get('attendees', [])
+                matched_worker_ids = []
+                attendee_emails = []
+                if attendees:
+                    for a in attendees:
+                        email = a.get('email')
+                        if email:
+                            email_clean = email.lower().strip()
+                            attendee_emails.append(email_clean)
+                            
+                            # まず個人用メール対応表をチェック
+                            w_id = personal_email_to_worker_id.get(email_clean)
+                            if not w_id:
+                                # 次にシステム用メールをチェック
+                                w_id = worker_email_map.get(email_clean)
+                                
+                            if w_id and w_id not in matched_worker_ids:
+                                matched_worker_ids.append(w_id)
+                
+                # 作成ターゲット（worker_idのリスト）。マッチしなければNone（未割当）で1件作成
+                targets = matched_worker_ids if matched_worker_ids else [None]
+                
                 date_str = event_data.get('date')
                 if not date_str:
                     errors.append({'event': event_data.get('summary', 'Unknown'), 'error': 'Date not found'})
@@ -5769,50 +6156,127 @@ def import_google_ics(event, headers):
                 
                 date_obj = datetime.strptime(date_str, '%Y-%m-%d')
                 date_prefix = date_obj.strftime('%Y%m%d')
-                
-                # 日付ごとの連番をインクリメント
-                if date_str not in date_seq_counters:
-                    date_seq_counters[date_str] = 0
-                date_seq_counters[date_str] += 1
-                seq_str = str(date_seq_counters[date_str]).zfill(3)
-                schedule_id = f"SCH-{date_prefix}-{seq_str}"
-                
-                now = datetime.utcnow().isoformat() + 'Z'
-                
-                schedule_item = {
-                    'id': schedule_id,
-                    'scheduled_date': event_data['date'],
-                    'date': event_data['date'],  # 互換性のため
-                    'start_time': event_data.get('start_time', '09:00'),
-                    'end_time': event_data.get('end_time', '10:00'),
-                    'start_min': event_data.get('start_min', 540),  # 9:00
-                    'end_min': event_data.get('end_min', 600),  # 10:00
-                    'service': 'cleaning',
-                    'status': 'scheduled',
-                    'work_type': 'external',  # 外部取り込み
-                    'origin': 'google_ics',
-                    'external_id': external_id,
-                    'target_name': event_data.get('summary', '外部予定'),
-                    'location': event_data.get('location', ''),
-                    'description': event_data.get('description', ''),
-                    'raw': json.dumps({
-                        'summary': event_data.get('summary'),
-                        'location': event_data.get('location'),
-                        'description': event_data.get('description', '')[:500]  # 長すぎる場合は切り詰め
-                    }, ensure_ascii=False),
-                    'created_at': now,
-                    'updated_at': now
-                }
-                
-                # store_id/worker_idはnullでOK（後で手動で紐づけ可能）
-                if event_data.get('store_id'):
-                    schedule_item['store_id'] = event_data['store_id']
-                if event_data.get('worker_id'):
-                    schedule_item['worker_id'] = event_data['worker_id']
-                
-                SCHEDULES_TABLE.put_item(Item=schedule_item)
-                existing_external_ids.add(external_id)
-                inserted += 1
+
+                # 重複チェック（UIDと清掃員の組み合わせ）
+                for worker_id in targets:
+                    if (external_id, worker_id) in existing_schedules:
+                        skipped += 1
+                        continue
+                        
+                    # --- AI情報抽出ロジック ---
+                    summary = event_data.get('summary', '').strip()
+                    if not summary:
+                        summary = "(本文から推測)" if event_data.get('description') else "名称未設定"
+                    
+                    description = event_data.get('description', '').strip()
+                    
+                    work_type = 'cleaning' # デフォルト
+                    target_name = summary
+                    
+                    # 1. プラン/種別の抽出 【定期清掃】など
+                    plan_match = re.search(r'【([^】]+)】', summary)
+                    if plan_match:
+                        work_type_extracted = plan_match.group(1)
+                        # 長すぎる場合は現場名のママにするが、短いものは種別へ
+                        if len(work_type_extracted) < 15:
+                            work_type = work_type_extracted
+                        # 現場名からはブラケット部分を除く
+                        target_name = summary.replace(f'【{work_type_extracted}】', '').strip()
+                    
+                    # 2. 店舗の自動同定（名寄せ）
+                    matched_store = None
+                    # ヒントになる文字列を準備
+                    match_target_text = (summary + " " + target_name).lower()
+                    
+                    # スコアリングで最も近い店舗を探す（簡易実装）
+                    best_match_score = 0
+                    for s in all_stores:
+                        s_name = str(s.get('store_name') or '').lower()
+                        b_name = str(s.get('brand_name') or '').lower()
+                        
+                        score = 0
+                        if s_name and s_name in match_target_text:
+                            score += 10
+                        if b_name and b_name in match_target_text:
+                            score += 5
+                        
+                        # 完全に一致する場合
+                        if s_name and s_name == target_name.lower():
+                            score += 50
+                            
+                        if score > best_match_score and score >= 10:
+                            best_match_score = score
+                            matched_store = s
+                    
+                    # 3. セキュリティーコード（キーボックス番号）の抽出
+                    security_code = matched_store.get('security_code') if matched_store else ''
+                    # 本文から数字を探す (例: 番号：0207, ロックナンバー 1234, キーボックス: 5566 等)
+                    key_match = re.search(r'(番号|コード|暗証番号|キーボックス|ロックナンバー|解錠|キー)[:：\s]*(\d{3,6})', description)
+                    if key_match:
+                        security_code = key_match.group(2)
+                    
+                    # 4. 清掃項目の抽出（・や*で始まる行を探す）
+                    cleaning_items = []
+                    lines = description.split('\n')
+                    for line in lines:
+                        line = line.strip()
+                        if line.startswith(('・', '*', '-', '●')):
+                            item_name = re.sub(r'^[・\*\-\●]\s*', '', line).strip()
+                            if item_name:
+                                cleaning_items.append({'name': item_name, 'status': 'pending'})
+                    
+                    # --- ID生成 ---
+                    if date_str not in date_seq_counters:
+                        date_seq_counters[date_str] = 0
+                    date_seq_counters[date_str] += 1
+                    seq_str = str(date_seq_counters[date_str]).zfill(3)
+                    schedule_id = f"SCH-{date_prefix}-{seq_str}"
+                    
+                    now = datetime.utcnow().isoformat() + 'Z'
+                    
+                    schedule_item = {
+                        'id': schedule_id,
+                        'scheduled_date': event_data['date'],
+                        'date': event_data['date'],
+                        'start_time': event_data.get('start_time', '09:00'),
+                        'end_time': event_data.get('end_time', '10:00'),
+                        'start_min': event_data.get('start_min', 540),
+                        'end_min': event_data.get('end_min', 600),
+                        'service': 'cleaning',
+                        'status': 'scheduled',
+                        'work_type': work_type,
+                        'origin': 'google_ics',
+                        'external_id': external_id,
+                        'target_name': target_name,
+                        'location': event_data.get('location', ''),
+                        'description': description, # 生のデータを残す
+                        'notes': description, # 備考欄を指示書代わりに使う
+                        'security_code': security_code,
+                        'cleaning_items': cleaning_items,
+                        'raw': json.dumps({
+                            'summary': summary,
+                            'location': event_data.get('location'),
+                            'description': description[:1000],
+                            'attendees': attendees
+                        }, ensure_ascii=False),
+                        'created_at': now,
+                        'updated_at': now
+                    }
+                    
+                    if matched_store:
+                        schedule_item['store_id'] = matched_store.get('id')
+                    
+                    if attendee_emails:
+                        schedule_item['attendee_emails'] = attendee_emails
+                    
+                    if worker_id:
+                        schedule_item['worker_id'] = worker_id
+                        schedule_item['assigned_to'] = worker_id
+                    
+                    SCHEDULES_TABLE.put_item(Item=schedule_item)
+                    existing_schedules.add((external_id, worker_id))
+                    inserted += 1
+
             except Exception as e:
                 errors.append({
                     'event': event_data.get('summary', 'Unknown'),
@@ -5827,7 +6291,7 @@ def import_google_ics(event, headers):
                 'success': True,
                 'inserted': inserted,
                 'skipped': skipped,
-                'errors': errors[:10],  # 最初の10件のエラーのみ
+                'errors': errors[:10],
                 'range': {'from': from_date, 'to': to_date}
             }, ensure_ascii=False, default=str)
         }
@@ -5958,6 +6422,47 @@ def parse_ics_content(ics_content, from_date=None, to_date=None):
                 # DESCRIPTION
                 if key_part == 'DESCRIPTION':
                     current_event['description'] = unescape_ics_text(value.strip())
+                
+                # ORGANIZER（主催者）
+                if key_part == 'ORGANIZER':
+                    # mailto:email@example.com の形式からメールアドレスを抽出
+                    if 'mailto:' in value:
+                        email = value.split('mailto:')[1].strip()
+                        if 'attendees' not in current_event:
+                            current_event['attendees'] = []
+                        current_event['attendees'].append({
+                            'email': email,
+                            'role': 'organizer',
+                            'status': 'accepted'
+                        })
+                
+                # ATTENDEE（参加者）
+                if key_part == 'ATTENDEE':
+                    # パラメータから情報を抽出
+                    params = parts[0].split(';')
+                    email = None
+                    status = 'needs-action'
+                    role = 'req-participant'
+                    
+                    # mailto:email@example.com の形式からメールアドレスを抽出
+                    if 'mailto:' in value:
+                        email = value.split('mailto:')[1].strip()
+                    
+                    # PARTSTATパラメータから参加ステータスを取得
+                    for param in params:
+                        if param.startswith('PARTSTAT='):
+                            status = param.split('=')[1].lower()
+                        elif param.startswith('ROLE='):
+                            role = param.split('=')[1].lower()
+                    
+                    if email:
+                        if 'attendees' not in current_event:
+                            current_event['attendees'] = []
+                        current_event['attendees'].append({
+                            'email': email,
+                            'role': role,
+                            'status': status
+                        })
             
             i = j
         else:

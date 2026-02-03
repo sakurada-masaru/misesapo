@@ -167,8 +167,10 @@ export default function SalesDayReportPage() {
   const [headerSubmitting, setHeaderSubmitting] = useState(false);
   const [headerError, setHeaderError] = useState('');
   const [headerSubmitError, setHeaderSubmitError] = useState('');
+  const [headerSaveSuccess, setHeaderSaveSuccess] = useState(false);
   const [caseSaving, setCaseSaving] = useState({});
   const [caseErrors, setCaseErrors] = useState({});
+  const [caseSaveSuccess, setCaseSaveSuccess] = useState({});
   const [submitErrors, setSubmitErrors] = useState({});
   const [uploading, setUploading] = useState({ section: null, id: null });
   const [attachmentErrors, setAttachmentErrors] = useState({});
@@ -177,6 +179,7 @@ export default function SalesDayReportPage() {
   /** 提出成功後にサーバーで読めない場合の警告（保存が別テーブル等で反映されていない） */
   const [shareVerifyError, setShareVerifyError] = useState(null);
   const fileInputRefs = useRef({});
+  const saveSuccessTimerRef = useRef(null);
 
   const updateHeader = useCallback((next) => setHeader((h) => (typeof next === 'function' ? next(h) : { ...h, ...next })), []);
   const updateCase = useCallback((index, next) => {
@@ -288,8 +291,12 @@ export default function SalesDayReportPage() {
 
   const handleHeaderSave = useCallback(async () => {
     const err = validateHeader();
-    setHeaderError(err);
-    if (err) return;
+    setHeaderError('');
+    setHeaderSaveSuccess(false);
+    if (err) {
+      setHeaderError(err);
+      return;
+    }
     setHeaderSaving(true);
     try {
       const reporterName = user?.name || header.reporter_name || '';
@@ -307,9 +314,24 @@ export default function SalesDayReportPage() {
         body.version = header.saved.version;
       }
       const res = await putWorkReport(body);
-      setHeader((h) => ({ ...h, saved: { log_id: res.log_id, version: res.version, state: res.state } }));
+      // レスポンス検証: log_id が返らない場合は保存未反映としてエラー表示
+      if (!res || res.log_id == null) {
+        setHeaderError('保存に失敗しました（サーバーから log_id が返りませんでした）。しばらくしてから再試行してください。');
+        return;
+      }
+      const logId = res.log_id ?? header.saved?.log_id;
+      const version = res.version ?? header.saved?.version ?? 0;
+      const state = res.state ?? 'draft';
+      setHeader((h) => ({ ...h, saved: { log_id: logId, version, state } }));
       setHeaderError('');
+      setHeaderSaveSuccess(true);
+      if (saveSuccessTimerRef.current) clearTimeout(saveSuccessTimerRef.current);
+      saveSuccessTimerRef.current = setTimeout(() => {
+        setHeaderSaveSuccess(false);
+        saveSuccessTimerRef.current = null;
+      }, 2500);
     } catch (e) {
+      if (e?.status === 401) setAuthError(true);
       const msg = e?.message || '保存に失敗しました';
       setHeaderError(msg);
       if (msg.includes('another process') || msg.includes('refresh')) {
@@ -409,6 +431,7 @@ export default function SalesDayReportPage() {
         return;
       }
     } catch (e) {
+      if (e?.status === 401) setAuthError(true);
       const msg = e?.message || e?.body || '提出に失敗しました';
       console.error('[handleHeaderSubmit] Error:', e);
       setHeaderSubmitError(msg);
@@ -432,6 +455,7 @@ export default function SalesDayReportPage() {
     async (index) => {
       const c = cases[index];
       setCaseErrors((prev) => ({ ...prev, [index]: null }));
+      setCaseSaveSuccess((prev) => ({ ...prev, [index]: false }));
       setCaseSaving((prev) => ({ ...prev, [index]: true }));
       try {
         const body = {
@@ -448,8 +472,18 @@ export default function SalesDayReportPage() {
           body.version = c.saved.version;
         }
         const res = await putWorkReport(body);
-        updateCase(index, (prev) => ({ ...prev, saved: { log_id: res.log_id, version: res.version, state: res.state } }));
+        if (!res || res.log_id == null) {
+          setCaseErrors((prev) => ({ ...prev, [index]: '保存に失敗しました（サーバーから log_id が返りませんでした）。しばらくしてから再試行してください。' }));
+          return;
+        }
+        updateCase(index, (prev) => ({
+          ...prev,
+          saved: { log_id: res.log_id, version: res.version ?? prev.saved?.version, state: res.state ?? 'draft' },
+        }));
+        setCaseSaveSuccess((prev) => ({ ...prev, [index]: true }));
+        setTimeout(() => setCaseSaveSuccess((prev) => ({ ...prev, [index]: false })), 2500);
       } catch (e) {
+        if (e?.status === 401) setAuthError(true);
         const msg = e?.message || '保存に失敗しました';
         setCaseErrors((prev) => ({ ...prev, [index]: msg }));
         if (msg.includes('another process') || msg.includes('refresh')) {
@@ -545,6 +579,7 @@ export default function SalesDayReportPage() {
           return;
         }
       } catch (e) {
+        if (e?.status === 401) setAuthError(true);
         const msg = e?.message || e?.body || '提出に失敗しました';
         console.error('[handleCaseSubmit] Error:', e);
         setSubmitErrors((prev) => ({ ...prev, [index]: msg }));
@@ -573,6 +608,12 @@ export default function SalesDayReportPage() {
   useEffect(() => {
     setHeader((h) => ({ ...h, work_date: workDate }));
   }, [workDate]);
+
+  useEffect(() => {
+    return () => {
+      if (saveSuccessTimerRef.current) clearTimeout(saveSuccessTimerRef.current);
+    };
+  }, []);
 
   const [authError, setAuthError] = useState(false);
   useEffect(() => {
@@ -742,6 +783,7 @@ export default function SalesDayReportPage() {
               {headerSubmitting ? '提出中...' : '提出する'}
             </button>
           </div>
+          {headerSaveSuccess && <p className="sales-day-success" role="status">保存しました</p>}
           {headerError && <p className="sales-day-error">{headerError}</p>}
           {headerSubmitError && <p className="sales-day-error">{headerSubmitError}</p>}
         </section>
@@ -834,6 +876,7 @@ export default function SalesDayReportPage() {
                     この案件を提出
                   </button>
                 </div>
+                {caseSaveSuccess[index] && <p className="sales-day-success" role="status">保存しました</p>}
                 {caseErrors[index] && <p className="sales-day-error">{caseErrors[index]}</p>}
                 {submitErrors[index] && <p className="sales-day-error">{submitErrors[index]}</p>}
               </div>

@@ -77,10 +77,17 @@ function sortLeaderFirst(list, leaderKey) {
 }
 
 const defaultCleaners = [
-  { id: 'c1', name: '山田', unit: 'cleaning' },
-  { id: 'c2', name: '佐藤', unit: 'cleaning' },
-  { id: 'c3', name: '鈴木', unit: 'maintenance' },
-  { id: 'c4', name: '田中', unit: 'maintenance' },
+  { id: '__unassigned__', name: '📋 未割当', unit: 'cleaning' },
+  { id: 'W002', name: '梅岡アレサンドレユウジ', unit: 'cleaning' },
+  { id: 'W01000', name: '松岡ジョナス', unit: 'cleaning' },
+  { id: 'W01005', name: 'ソウザ　レムエル', unit: 'cleaning' },
+  { id: 'W740024', name: 'Noemi Midory', unit: 'cleaning' },
+  { id: 'W01003', name: '松岡ガブリエレ', unit: 'cleaning' },
+  { id: 'W021', name: '遠藤虹輝', unit: 'maintenance' },
+  { id: 'W006', name: '佐々木一真', unit: 'maintenance' },
+  { id: 'W01006', name: '中澤裕', unit: 'maintenance' },
+  { id: 'W003', name: '中島郁哉', unit: 'maintenance' },
+  { id: 'W005', name: '吉井奎吾', unit: 'maintenance' },
 ];
 
 function loadJson(key, fallback) {
@@ -128,14 +135,12 @@ function roundTo30Minutes(min) {
 function isDaytimeEvent(startMin, endMin) {
   const DAYTIME_START = 600;  // 10:00
   const DAYTIME_END = 1260;    // 21:00
-  // 重なり判定: max(start_min, 600) < min(end_min, 1260)
   return Math.max(startMin, DAYTIME_START) < Math.min(endMin, DAYTIME_END);
 }
 
-/** 時間を21:00基準のoffsetMinに変換（21:00→0, 22:00→60, 10:00→780） */
+/** 時間を基準のoffsetMinに変換（0:00基準に戻す） */
 function toOffsetMin(min) {
-  const NIGHT_START = 1260; // 21:00
-  return (min >= NIGHT_START) ? (min - NIGHT_START) : (min + 1440 - NIGHT_START);
+  return min % 1440;
 }
 
 function clamp(n, a, b) {
@@ -181,19 +186,19 @@ async function createRandomAppointments(cleaners, dateISO, setAppointments, clie
     alert('清掃員が登録されていません');
     return;
   }
-  
+
   if (clients.length === 0) {
     alert('顧客データが取得できていません。しばらく待ってから再度お試しください。');
     return;
   }
-  
+
   const workTypes = ['定期', '特別', '入念', '検査対応', '夜間'];
   const statuses = ['booked', 'checked_in', 'in_progress', 'done'];
   const times = [9 * 60, 10 * 60, 11 * 60, 13 * 60, 14 * 60, 15 * 60, 16 * 60]; // 9:00, 10:00, ...
-  
+
   const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
   const base = apiBase.replace(/\/$/, '');
-  
+
   // ランダムに5件の顧客を選択
   const selectedClients = [];
   for (let i = 0; i < Math.min(5, clients.length); i++) {
@@ -202,31 +207,31 @@ async function createRandomAppointments(cleaners, dateISO, setAppointments, clie
       selectedClients.push(randomClient);
     }
   }
-  
+
   const newAppts = [];
-  
+
   // 各顧客の店舗を取得して案件を作成
   for (let i = 0; i < selectedClients.length; i++) {
     const client = selectedClients[i];
-    
+
     try {
       // 顧客の店舗一覧を取得
       const storesResponse = await fetch(`${base}/stores?client_id=${client.id}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         cache: 'no-store'
       });
-      
+
       let stores = [];
       if (storesResponse.ok) {
         const storesData = await storesResponse.json();
         stores = Array.isArray(storesData) ? storesData : (storesData?.items ?? []);
       }
-      
+
       // 店舗がある場合はランダムに選択、ない場合は顧客名を使用
       let store = null;
       let targetName = '';
       let storeId = null;
-      
+
       if (stores.length > 0) {
         store = stores[Math.floor(Math.random() * stores.length)];
         targetName = store.name || store.store_name || '';
@@ -235,17 +240,17 @@ async function createRandomAppointments(cleaners, dateISO, setAppointments, clie
         // 店舗がない場合は顧客名を使用
         targetName = client.name || client.client_name || `顧客${i + 1}`;
       }
-      
+
       if (!targetName) {
         targetName = `顧客${i + 1}`;
       }
-      
+
       // ランダムな清掃員、時刻、作業種別を選択
       const cleaner = cleaners[Math.floor(Math.random() * cleaners.length)];
       const startTime = times[Math.floor(Math.random() * times.length)];
       const duration = [30, 60, 90][Math.floor(Math.random() * 3)]; // 30分、60分、90分
       const endTime = Math.min(startTime + duration, 24 * 60);
-      
+
       const appt = {
         id: `random_${Date.now()}_${i}`,
         schedule_id: newScheduleId('sch'),
@@ -273,7 +278,7 @@ async function createRandomAppointments(cleaners, dateISO, setAppointments, clie
       const startTime = times[Math.floor(Math.random() * times.length)];
       const duration = [30, 60, 90][Math.floor(Math.random() * 3)];
       const endTime = Math.min(startTime + duration, 24 * 60);
-      
+
       const appt = {
         id: `random_${Date.now()}_${i}`,
         schedule_id: newScheduleId('sch'),
@@ -296,7 +301,7 @@ async function createRandomAppointments(cleaners, dateISO, setAppointments, clie
       newAppts.push(appt);
     }
   }
-  
+
   setAppointments((prev) => [...prev, ...newAppts]);
   alert(`${newAppts.length}件のランダム案件を追加しました（実際の顧客名簿から選択）`);
 }
@@ -307,12 +312,12 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
     alert('清掃員が登録されていません');
     return;
   }
-  
+
   if (clients.length === 0) {
     alert('顧客データが取得できていません。しばらく待ってから再度お試しください。');
     return;
   }
-  
+
   const workTypes = ['定期', '特別', '入念', '検査対応', '夜間'];
   const statuses = ['booked', 'checked_in', 'in_progress', 'done'];
   // ゴールデンタイム：21:00〜翌10:00の開始時刻（平均4時間の作業時間を考慮）
@@ -329,10 +334,10 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
     6 * 60,   // 6:00
   ];
   const avgDuration = 4 * 60; // 平均4時間 = 240分
-  
+
   const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
   const base = apiBase.replace(/\/$/, '');
-  
+
   // ランダムに8件の顧客を選択（ゴールデンタイムの案件数）
   const selectedClients = [];
   const clientCount = Math.min(8, clients.length);
@@ -342,12 +347,12 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
       selectedClients.push(randomClient);
     }
   }
-  
+
   const newAppts = [];
-  
+
   // 既存の案件を取得（重複チェック用）
   const existingAppts = appointments || [];
-  
+
   // 各清掃員の既存案件を整理（重複チェック用）
   const byCleaner = new Map();
   for (const a of existingAppts) {
@@ -357,29 +362,29 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
       byCleaner.set(a.cleaner_id, list);
     }
   }
-  
+
   // 各顧客の店舗を取得して案件を作成
   for (let i = 0; i < selectedClients.length; i++) {
     const client = selectedClients[i];
-    
+
     try {
       // 顧客の店舗一覧を取得
       const storesResponse = await fetch(`${base}/stores?client_id=${client.id}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         cache: 'no-store'
       });
-      
+
       let stores = [];
       if (storesResponse.ok) {
         const storesData = await storesResponse.json();
         stores = Array.isArray(storesData) ? storesData : (storesData?.items ?? []);
       }
-      
+
       // 店舗がある場合はランダムに選択、ない場合は顧客名を使用
       let store = null;
       let targetName = '';
       let storeId = null;
-      
+
       if (stores.length > 0) {
         store = stores[Math.floor(Math.random() * stores.length)];
         targetName = store.name || store.store_name || '';
@@ -388,42 +393,42 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
         // 店舗がない場合は顧客名を使用
         targetName = client.name || client.client_name || `顧客${i + 1}`;
       }
-      
+
       if (!targetName) {
         targetName = `顧客${i + 1}`;
       }
-      
+
       // 清掃員をランダムに選択
       const shuffledCleaners = [...cleaners].sort(() => Math.random() - 0.5);
       let cleaner = null;
       let startTime = null;
       let endTime = null;
       let duration = null;
-      
+
       // 各清掃員について、重複しない時間を探す
       for (const candidateCleaner of shuffledCleaners) {
         const cleanerId = candidateCleaner.id;
         const existingForCleaner = byCleaner.get(cleanerId) || [];
-        
+
         // ゴールデンタイムの開始時刻候補をフィルタリング（時間的に可能なもの）
         const timeCandidates = goldenTimes.filter(t => {
           // 4時間後が翌10:00を超えない時刻のみ
           const potentialEnd = (t + avgDuration) % (24 * 60);
           return potentialEnd <= 10 * 60 || t >= 21 * 60;
         });
-        
+
         // 重複しない時間を探す
         for (let attempt = 0; attempt < 20; attempt++) {
           let candidateStart = timeCandidates[Math.floor(Math.random() * timeCandidates.length)];
           candidateStart = roundTo30Minutes(candidateStart);
-          
+
           // 平均4時間（240分）を基準に、±30分のランダムな変動を加える（30分単位）
           const durationVariation = (Math.random() - 0.5) * 60;
           let candidateDuration = Math.max(180, Math.min(300, avgDuration + durationVariation));
           candidateDuration = roundTo30Minutes(candidateDuration);
-          
+
           let candidateEnd = candidateStart + candidateDuration;
-          
+
           // 21:00以降開始の場合、24時間を超える可能性がある
           if (candidateStart >= 21 * 60) {
             if (candidateEnd > 24 * 60) {
@@ -438,13 +443,13 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
             candidateEnd = Math.min(candidateEnd, 10 * 60);
           }
           candidateEnd = roundTo30Minutes(candidateEnd);
-          
+
           // 既存案件（既存 + 今回作成済み）と重複チェック
           const allExisting = [...existingForCleaner, ...newAppts.filter(a => a.cleaner_id === cleanerId).map(a => ({ start_min: a.start_min, end_min: a.end_min }))];
           const hasConflict = allExisting.some(existing => {
             return overlaps(candidateStart, candidateEnd, existing.start_min, existing.end_min);
           });
-          
+
           if (!hasConflict) {
             cleaner = candidateCleaner;
             startTime = candidateStart;
@@ -453,16 +458,16 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
             break;
           }
         }
-        
+
         if (cleaner) break;
       }
-      
+
       // 重複しない時間が見つからなかった場合はスキップ
       if (!cleaner || startTime === null || endTime === null) {
         console.warn(`[createGoldenTimeAppointments] 重複しない時間が見つかりませんでした。案件${i + 1}をスキップします。`);
         continue;
       }
-      
+
       const appt = {
         id: `golden_${Date.now()}_${i}`,
         schedule_id: newScheduleId('sch'),
@@ -483,7 +488,7 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
         contact_reminders: [],
       };
       newAppts.push(appt);
-      
+
       // 作成済み案件を記録（次の案件の重複チェック用）
       const list = byCleaner.get(cleaner.id) || [];
       list.push({ start_min: startTime, end_min: endTime });
@@ -492,36 +497,36 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
       console.warn(`[createGoldenTimeAppointments] Failed to get stores for client ${client.id}:`, error);
       // エラーが発生しても顧客名で案件を作成
       const targetName = client.name || client.client_name || `顧客${i + 1}`;
-      
+
       // 清掃員をランダムに選択
       const shuffledCleaners = [...cleaners].sort(() => Math.random() - 0.5);
       let cleaner = null;
       let startTime = null;
       let endTime = null;
       let duration = null;
-      
+
       // 各清掃員について、重複しない時間を探す
       for (const candidateCleaner of shuffledCleaners) {
         const cleanerId = candidateCleaner.id;
         const existingForCleaner = byCleaner.get(cleanerId) || [];
-        
+
         // ゴールデンタイムの開始時刻候補をフィルタリング（時間的に可能なもの）
         const timeCandidates = goldenTimes.filter(t => {
           const potentialEnd = (t + avgDuration) % (24 * 60);
           return potentialEnd <= 10 * 60 || t >= 21 * 60;
         });
-        
+
         // 重複しない時間を探す
         for (let attempt = 0; attempt < 20; attempt++) {
           let candidateStart = timeCandidates[Math.floor(Math.random() * timeCandidates.length)];
           candidateStart = roundTo30Minutes(candidateStart);
-          
+
           const durationVariation = (Math.random() - 0.5) * 60;
           let candidateDuration = Math.max(180, Math.min(300, avgDuration + durationVariation));
           candidateDuration = roundTo30Minutes(candidateDuration);
-          
+
           let candidateEnd = candidateStart + candidateDuration;
-          
+
           if (candidateStart >= 21 * 60) {
             if (candidateEnd > 24 * 60) {
               const nextDayEnd = candidateEnd - 24 * 60;
@@ -535,13 +540,13 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
             candidateEnd = Math.min(candidateEnd, 10 * 60);
           }
           candidateEnd = roundTo30Minutes(candidateEnd);
-          
+
           // 既存案件（既存 + 今回作成済み）と重複チェック
           const allExisting = [...existingForCleaner, ...newAppts.filter(a => a.cleaner_id === cleanerId).map(a => ({ start_min: a.start_min, end_min: a.end_min }))];
           const hasConflict = allExisting.some(existing => {
             return overlaps(candidateStart, candidateEnd, existing.start_min, existing.end_min);
           });
-          
+
           if (!hasConflict) {
             cleaner = candidateCleaner;
             startTime = candidateStart;
@@ -550,16 +555,16 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
             break;
           }
         }
-        
+
         if (cleaner) break;
       }
-      
+
       // 重複しない時間が見つからなかった場合はスキップ
       if (!cleaner || startTime === null || endTime === null) {
         console.warn(`[createGoldenTimeAppointments] 重複しない時間が見つかりませんでした。案件${i + 1}をスキップします。`);
         continue;
       }
-      
+
       const appt = {
         id: `golden_${Date.now()}_${i}`,
         schedule_id: newScheduleId('sch'),
@@ -580,14 +585,14 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
         contact_reminders: [],
       };
       newAppts.push(appt);
-      
+
       // 作成済み案件を記録（次の案件の重複チェック用）
       const list = byCleaner.get(cleaner.id) || [];
       list.push({ start_min: startTime, end_min: endTime });
       byCleaner.set(cleaner.id, list);
     }
   }
-  
+
   setAppointments((prev) => [...prev, ...newAppts]);
   alert(`${newAppts.length}件のゴールデンタイム案件を追加しました（21:00〜翌10:00、平均4時間、実際の顧客名簿から選択）`);
 }
@@ -598,36 +603,36 @@ async function createDaytimeAppointment(cleaners, dateISO, appointments, setAppo
     alert('清掃員が登録されていません');
     return;
   }
-  
+
   if (clients.length === 0) {
     alert('顧客データが取得できていません。しばらく待ってから再度お試しください。');
     return;
   }
-  
+
   const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}').token);
   const base = apiBase.replace(/\/$/, '');
-  
+
   // ランダムに1件の顧客を選択
   const randomClient = clients[Math.floor(Math.random() * clients.length)];
-  
+
   try {
     // 顧客の店舗一覧を取得
     const storesResponse = await fetch(`${base}/stores?client_id=${randomClient.id}`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       cache: 'no-store'
     });
-    
+
     let stores = [];
     if (storesResponse.ok) {
       const storesData = await storesResponse.json();
       stores = Array.isArray(storesData) ? storesData : (storesData?.items ?? []);
     }
-    
+
     // 店舗がある場合はランダムに選択、ない場合は顧客名を使用
     let store = null;
     let targetName = '';
     let storeId = null;
-    
+
     if (stores.length > 0) {
       store = stores[Math.floor(Math.random() * stores.length)];
       targetName = store.name || store.store_name || '';
@@ -635,37 +640,37 @@ async function createDaytimeAppointment(cleaners, dateISO, appointments, setAppo
     } else {
       targetName = randomClient.name || randomClient.client_name || '顧客1';
     }
-    
+
     if (!targetName) {
       targetName = '顧客1';
     }
-    
+
     // 清掃員をランダムに選択
     const cleaner = cleaners[Math.floor(Math.random() * cleaners.length)];
-    
+
     // 昼間の時間帯（10:00-21:00）でランダムに開始時刻を選択（30分単位）
     const daytimeStart = 10 * 60; // 10:00
     const daytimeEnd = 21 * 60;   // 21:00
     const duration = 4 * 60; // 4時間
-    
+
     // 開始時刻をランダムに選択（30分単位）
     const startMinutes = Math.floor(Math.random() * ((daytimeEnd - daytimeStart - duration) / 30)) * 30 + daytimeStart;
     const startTime = roundTo30Minutes(startMinutes);
     const endTime = roundTo30Minutes(Math.min(startTime + duration, daytimeEnd));
-    
+
     // 既存の案件を取得（重複チェック用）
     const existingAppts = appointments || [];
-    const existingForCleaner = existingAppts.filter(a => 
-      a.date === dateISO && 
+    const existingForCleaner = existingAppts.filter(a =>
+      a.date === dateISO &&
       a.cleaner_id === cleaner.id &&
       overlaps(startTime, endTime, a.start_min, a.end_min)
     );
-    
+
     if (existingForCleaner.length > 0) {
       alert('選択した清掃員の時間が重複しています。別の清掃員を選択してください。');
       return;
     }
-    
+
     // 案件を作成
     const appt = {
       id: `appt_${Date.now()}`,
@@ -688,7 +693,7 @@ async function createDaytimeAppointment(cleaners, dateISO, appointments, setAppo
       client_id: randomClient.id || null,
       brand_id: store?.brand_id || null,
     };
-    
+
     setAppointments((prev) => [...prev, appt]);
     alert(`昼間案件を1件追加しました（${minutesToHHMM(startTime)}〜${minutesToHHMM(endTime)}、${targetName}）`);
   } catch (error) {
@@ -748,35 +753,496 @@ function ensureContactFields(appt) {
 
 /** DynamoDBのスケジュールデータをフロントエンド形式に変換 */
 function convertScheduleToAppointment(schedule) {
+  // 日付フィールド（複数のフィールド名に対応）
   const date = schedule.scheduled_date || schedule.date || '';
-  const startMin = schedule.start_min ?? (schedule.start_time ? hhmmToMinutes(schedule.start_time) : 540);
-  const endMin = schedule.end_min ?? (schedule.end_time ? hhmmToMinutes(schedule.end_time) : 600);
-  
+
+  // 開始時間の取得（複数のフィールド名に対応）
+  const startTimeStr = schedule.start_time || schedule.startTime || schedule.scheduled_time || schedule.time_slot || '';
+  const startMin = schedule.start_min ?? (startTimeStr ? hhmmToMinutes(startTimeStr) : 540);
+
+  // 終了時間の取得（なければ開始時間+2時間）
+  const endTimeStr = schedule.end_time || schedule.endTime || '';
+  const endMin = schedule.end_min ?? (endTimeStr ? hhmmToMinutes(endTimeStr) : startMin + 120);
+
+  // 店舗名の取得（複数のフィールド名に対応）
+  const targetName = schedule.target_name || schedule.store_name || schedule.storeName || schedule.summary || schedule.brand_name || '要契約確認';
+
+  // 担当者IDの取得（複数のフィールド名に対応）
+  const workerId = schedule.worker_id || schedule.assigned_to || schedule.sales_id || '';
+
   return {
     id: schedule.id,
     schedule_id: schedule.id,
     date: date,
-    cleaner_id: schedule.worker_id || schedule.assigned_to || '',
+    cleaner_id: workerId,
     start_min: startMin,
     end_min: endMin,
-    start: schedule.start_time || minutesToHHMM(startMin),
-    end: schedule.end_time || minutesToHHMM(endMin),
-    target_name: schedule.target_name || schedule.summary || '未設定',
-    work_type: schedule.work_type || 'その他',
+    start: startTimeStr || minutesToHHMM(startMin),
+    end: endTimeStr || minutesToHHMM(endMin),
+    target_name: targetName,
+    work_type: schedule.work_type || schedule.order_type || 'その他',
     status: schedule.status || 'booked',
-    memo: schedule.description || schedule.memo || '',
-    location: schedule.location || '',
+    memo: schedule.description || schedule.memo || schedule.notes || '',
+    location: schedule.location || schedule.address || '',
     store_id: schedule.store_id || null,
-    origin: schedule.origin || 'manual',
-    external_id: schedule.external_id || null,
+    client_id: schedule.client_id || null,
+    brand_name: schedule.brand_name || '',
+    origin: schedule.origin || schedule.type || 'manual',
+    external_id: schedule.external_id || schedule.googleEventId || null,
     contact_note: '',
     contact_last_at: null,
     contact_status: 'pending',
     contact_reminders: [],
-    cleaner_ids: schedule.worker_id ? [schedule.worker_id] : [],
+    cleaner_ids: schedule.worker_ids || (workerId ? [workerId] : []),
+    attendee_emails: schedule.attendee_emails || [],
     created_at: schedule.created_at ? new Date(schedule.created_at).getTime() : Date.now(),
     updated_at: schedule.updated_at ? new Date(schedule.updated_at).getTime() : Date.now(),
   };
+}
+
+/** メールアドレス一覧モーダル */
+function EmailListModal({ emails, schedules, onClose }) {
+  // メールアドレスごとに、どのスケジュールに含まれているかを集計
+  const emailToSchedules = {};
+  emails.forEach(email => {
+    emailToSchedules[email] = schedules.filter(s =>
+      s.attendee_emails && s.attendee_emails.includes(email)
+    );
+  });
+
+  return (
+    <div className="modalBackdrop" onMouseDown={onClose} role="presentation">
+      <div className="modal" onMouseDown={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '800px' }}>
+        <div className="modalHeader">
+          <div>
+            <div className="modalTitle">参加者メールアドレス一覧</div>
+            <div className="muted">Googleカレンダーから取り込んだスケジュールの参加者メールアドレス（{emails.length}件）</div>
+          </div>
+          <button type="button" className="iconBtn" onClick={onClose} aria-label="閉じる">✕</button>
+        </div>
+        <div className="modalBody" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {emails.map((email, idx) => {
+              const relatedSchedules = emailToSchedules[email] || [];
+              return (
+                <div key={idx} style={{ padding: '12px', border: '1px solid var(--line)', borderRadius: '8px', background: 'var(--panel)' }}>
+                  <div style={{ fontSize: '1em', fontFamily: 'monospace', fontWeight: 'bold', marginBottom: '8px' }}>
+                    {email}
+                  </div>
+                  <div style={{ fontSize: '0.85em', color: 'var(--muted)' }}>
+                    参加スケジュール: {relatedSchedules.length}件
+                    {relatedSchedules.length > 0 && (
+                      <div style={{ marginTop: '4px', paddingLeft: '8px' }}>
+                        {relatedSchedules.slice(0, 3).map(s => (
+                          <div key={s.id} style={{ marginTop: '2px' }}>
+                            • {s.target_name} ({s.date} {s.start}-{s.end})
+                          </div>
+                        ))}
+                        {relatedSchedules.length > 3 && (
+                          <div style={{ marginTop: '2px', color: 'var(--muted)' }}>
+                            ...他{relatedSchedules.length - 3}件
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="modalFooter">
+          <div className="right">
+            <button type="button" className="btn" onClick={onClose}>閉じる</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** フィルターオーバーレイモーダル */
+function FilterOverlay({
+  filterUnit,
+  setFilterUnit,
+  filterCleaner,
+  setFilterCleaner,
+  filterStatus,
+  setFilterStatus,
+  filterWorkType,
+  setFilterWorkType,
+  cleanersForFilter,
+  onClose
+}) {
+  const hasActiveFilters = filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all';
+
+  const handleReset = () => {
+    setFilterUnit('all');
+    setFilterCleaner('all');
+    setFilterStatus('all');
+    setFilterWorkType('all');
+  };
+
+  return (
+    <div className="modalBackdrop" onMouseDown={onClose} role="presentation">
+      <div className="modal" onMouseDown={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '500px' }}>
+        <div className="modalHeader">
+          <div>
+            <div className="modalTitle">フィルター</div>
+            <div className="muted">スケジュールを絞り込みます</div>
+          </div>
+          <button type="button" className="iconBtn" onClick={onClose} aria-label="閉じる">✕</button>
+        </div>
+        <div className="modalBody">
+          <div className="formGrid">
+            <label className="field span2">
+              <span>ユニット</span>
+              <select value={filterUnit} onChange={(e) => setFilterUnit(e.target.value)}>
+                <option value="all">全て</option>
+                <option value="cleaning">清掃員（梅岡ユニット）</option>
+                <option value="maintenance">メンテナンス（遠藤ユニット）</option>
+              </select>
+            </label>
+            <label className="field span2">
+              <span>清掃員</span>
+              <select value={filterCleaner} onChange={(e) => setFilterCleaner(e.target.value)}>
+                <option value="all">{filterUnit === 'all' ? '全員' : filterUnit === 'cleaning' ? '全員（清掃）' : '全員（メンテ）'}</option>
+                {cleanersForFilter.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="field span2">
+              <span>状態</span>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                <option value="all">全て</option>
+                {STATUSES.map((s) => (
+                  <option key={s.key} value={s.key}>{s.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="field span2">
+              <span>種別</span>
+              <select value={filterWorkType} onChange={(e) => setFilterWorkType(e.target.value)}>
+                <option value="all">全て</option>
+                {WORK_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+        <div className="modalFooter">
+          <div className="left">
+            {hasActiveFilters && (
+              <button type="button" className="btn" onClick={handleReset}>
+                リセット
+              </button>
+            )}
+          </div>
+          <div className="right">
+            <button type="button" className="btnPrimary" onClick={onClose}>
+              適用
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 未割り当てスケジュール割り当てモーダル */
+function UnassignedSchedulesModal({ schedules, cleaners, onClose, onAssign }) {
+  const [assignments, setAssignments] = useState({}); // { schedule_id: [worker_id1, worker_id2, ...] }
+  const [saving, setSaving] = useState(false);
+  const [filterDate, setFilterDate] = useState(''); // 日付フィルター
+  const [filterTime, setFilterTime] = useState(''); // 時間フィルター（開始時刻）
+  const [filterStore, setFilterStore] = useState(''); // 現場名検索
+  const [filterEmail, setFilterEmail] = useState(''); // メールアドレス検索
+
+  // 日時順（若い順）にソート
+  const sortedSchedules = useMemo(() => {
+    return [...schedules].sort((a, b) => {
+      // まず日付で比較
+      if (a.date !== b.date) {
+        return a.date.localeCompare(b.date);
+      }
+      // 日付が同じ場合は開始時刻で比較
+      const aStart = a.start_min ?? (a.start ? hhmmToMinutes(a.start) : 0);
+      const bStart = b.start_min ?? (b.start ? hhmmToMinutes(b.start) : 0);
+      return aStart - bStart;
+    });
+  }, [schedules]);
+
+  // フィルター適用
+  const filteredSchedules = useMemo(() => {
+    return sortedSchedules.filter((schedule) => {
+      // 日付フィルター
+      if (filterDate && schedule.date !== filterDate) {
+        return false;
+      }
+
+      // 時間フィルター（開始時刻が指定時刻以降）
+      if (filterTime) {
+        const filterStartMin = hhmmToMinutes(filterTime);
+        const scheduleStartMin = schedule.start_min ?? (schedule.start ? hhmmToMinutes(schedule.start) : 0);
+        if (scheduleStartMin < filterStartMin) {
+          return false;
+        }
+      }
+
+      // 現場名検索
+      if (filterStore) {
+        const storeLower = filterStore.toLowerCase();
+        const targetName = (schedule.target_name || '').toLowerCase();
+        if (!targetName.includes(storeLower)) {
+          return false;
+        }
+      }
+
+      // メールアドレス検索
+      if (filterEmail) {
+        const emailLower = filterEmail.toLowerCase();
+        const hasEmail = schedule.attendee_emails && schedule.attendee_emails.some(
+          (email) => email.toLowerCase().includes(emailLower)
+        );
+        if (!hasEmail) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [sortedSchedules, filterDate, filterTime, filterStore, filterEmail]);
+
+  const handleAssign = async () => {
+    setSaving(true);
+    try {
+      let totalAssignments = 0;
+      for (const [scheduleId, workerIds] of Object.entries(assignments)) {
+        if (Array.isArray(workerIds) && workerIds.length > 0) {
+          // 最初の清掃員で既存のスケジュールを更新、2番目以降で新しいスケジュールを作成
+          for (let i = 0; i < workerIds.length; i++) {
+            const workerId = workerIds[i];
+            if (workerId) {
+              await onAssign(scheduleId, workerId, i === 0);
+              totalAssignments++;
+            }
+          }
+        }
+      }
+      // 全ての割り当てが完了したらスケジュールを再読み込み
+      // 注意: onAssign関数内でも再読み込みしているが、最後に1回だけ再読み込みする方が効率的
+      // しかし、エラーハンドリングのため、各onAssign呼び出し後に再読み込みする方が安全
+      alert(`${totalAssignments}件の割り当てが完了しました`);
+      onClose();
+    } catch (err) {
+      alert('割り当てに失敗しました: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 清掃員の選択状態を切り替え
+  const toggleCleaner = (scheduleId, workerId) => {
+    setAssignments((prev) => {
+      const current = prev[scheduleId] || [];
+      const newList = current.includes(workerId)
+        ? current.filter((id) => id !== workerId)
+        : [...current, workerId];
+      return { ...prev, [scheduleId]: newList };
+    });
+  };
+
+  return (
+    <div className="modalBackdrop" onMouseDown={onClose} role="presentation">
+      <div className="modal" onMouseDown={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '900px' }}>
+        <div className="modalHeader">
+          <div>
+            <div className="modalTitle">未割り当てスケジュールの清掃員割り当て</div>
+            <div className="muted">メールアドレスから清掃員を選択してください（{filteredSchedules.length}件 / 全{schedules.length}件）</div>
+          </div>
+          <button type="button" className="iconBtn" onClick={onClose} aria-label="閉じる">✕</button>
+        </div>
+        <div className="modalBody" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+          {/* フィルターエリア */}
+          <div style={{ padding: '16px', background: 'var(--panel2)', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--line)' }}>
+            <div style={{ fontSize: '0.9em', fontWeight: 'bold', marginBottom: '12px', color: 'var(--text)' }}>フィルター</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              <label className="field" style={{ margin: 0 }}>
+                <span style={{ fontSize: '0.85em' }}>日付</span>
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  style={{ fontSize: '0.9em' }}
+                />
+              </label>
+              <label className="field" style={{ margin: 0 }}>
+                <span style={{ fontSize: '0.85em' }}>開始時刻以降</span>
+                <input
+                  type="time"
+                  value={filterTime}
+                  onChange={(e) => setFilterTime(e.target.value)}
+                  style={{ fontSize: '0.9em' }}
+                />
+              </label>
+              <label className="field" style={{ margin: 0 }}>
+                <span style={{ fontSize: '0.85em' }}>現場名検索</span>
+                <input
+                  type="text"
+                  value={filterStore}
+                  onChange={(e) => setFilterStore(e.target.value)}
+                  placeholder="現場名で検索"
+                  style={{ fontSize: '0.9em' }}
+                />
+              </label>
+              <label className="field" style={{ margin: 0 }}>
+                <span style={{ fontSize: '0.85em' }}>メールアドレス検索</span>
+                <input
+                  type="text"
+                  value={filterEmail}
+                  onChange={(e) => setFilterEmail(e.target.value)}
+                  placeholder="メールアドレスで検索"
+                  style={{ fontSize: '0.9em' }}
+                />
+              </label>
+            </div>
+            {(filterDate || filterTime || filterStore || filterEmail) && (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setFilterDate('');
+                  setFilterTime('');
+                  setFilterStore('');
+                  setFilterEmail('');
+                }}
+                style={{ marginTop: '12px', fontSize: '0.85em' }}
+              >
+                フィルターをクリア
+              </button>
+            )}
+          </div>
+
+          <div className="formGrid">
+            {filteredSchedules.length === 0 ? (
+              <div style={{ gridColumn: 'span 2', padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>
+                {schedules.length === 0 ? '未割り当てのスケジュールがありません' : 'フィルター条件に一致するスケジュールがありません'}
+              </div>
+            ) : (
+              filteredSchedules.map((schedule) => (
+                <div key={schedule.id} style={{ gridColumn: 'span 2', padding: '16px', border: '1px solid var(--line)', borderRadius: '8px', marginBottom: '12px', background: 'var(--panel)' }}>
+                  <div style={{ marginBottom: '12px' }}>
+                    <strong style={{ fontSize: '1.1em' }}>{schedule.target_name}</strong>
+                    <div style={{ fontSize: '0.9em', color: 'var(--muted)', marginTop: '4px' }}>
+                      📅 {schedule.date} ⏰ {schedule.start} - {schedule.end}
+                    </div>
+                    {schedule.location && (
+                      <div style={{ fontSize: '0.85em', color: 'var(--muted)', marginTop: '4px' }}>
+                        📍 {schedule.location}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ marginBottom: '12px', padding: '8px', background: 'var(--panel2)', borderRadius: '4px' }}>
+                    <div style={{ fontSize: '0.85em', color: 'var(--muted)', marginBottom: '6px', fontWeight: 'bold' }}>参加者メールアドレス:</div>
+                    {schedule.attendee_emails && schedule.attendee_emails.length > 0 ? (
+                      <div style={{ fontSize: '0.9em' }}>
+                        {schedule.attendee_emails.map((email, idx) => (
+                          <div key={idx} style={{ padding: '2px 0', fontFamily: 'monospace' }}>{email}</div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.85em', color: 'var(--muted)' }}>メールアドレスなし</div>
+                    )}
+                  </div>
+                  <div className="field">
+                    <span style={{ display: 'block', marginBottom: '8px' }}>清掃員を選択（複数選択可）</span>
+                    <div style={{
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      border: '1px solid var(--line)',
+                      borderRadius: '4px',
+                      padding: '8px',
+                      background: 'var(--bg)'
+                    }}>
+                      {cleaners.length === 0 ? (
+                        <div style={{ padding: '8px', color: 'var(--muted)', fontSize: '0.9em' }}>清掃員が登録されていません</div>
+                      ) : (
+                        cleaners.map((cleaner) => {
+                          const isSelected = (assignments[schedule.id] || []).includes(cleaner.id);
+                          return (
+                            <label
+                              key={cleaner.id}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '8px',
+                                cursor: 'pointer',
+                                borderRadius: '4px',
+                                marginBottom: '4px',
+                                background: isSelected ? 'var(--panel2)' : 'transparent',
+                                transition: 'background 0.2s'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isSelected) e.currentTarget.style.background = 'var(--panel2)';
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isSelected) e.currentTarget.style.background = 'transparent';
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleCleaner(schedule.id, cleaner.id)}
+                                disabled={saving}
+                                style={{ marginRight: '8px', cursor: 'pointer' }}
+                              />
+                              <span style={{ fontSize: '0.9em', flex: 1 }}>{cleaner.name}</span>
+                              {cleaner.unit && (
+                                <span style={{ fontSize: '0.8em', color: 'var(--muted)', marginLeft: '8px' }}>
+                                  ({cleaner.unit})
+                                </span>
+                              )}
+                            </label>
+                          );
+                        })
+                      )}
+                    </div>
+                    {(assignments[schedule.id] || []).length > 0 && (
+                      <div style={{ marginTop: '8px', fontSize: '0.85em', color: 'var(--muted)' }}>
+                        選択中: {(assignments[schedule.id] || []).length}名
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        <div className="modalFooter">
+          <div className="left">
+            <button type="button" className="btn" onClick={onClose} disabled={saving}>キャンセル</button>
+          </div>
+          <div className="right">
+            <button
+              type="button"
+              className="btnPrimary"
+              onClick={handleAssign}
+              disabled={saving || Object.values(assignments).every(arr => !Array.isArray(arr) || arr.length === 0)}
+            >
+              {saving ? '割り当て中...' : (() => {
+                const total = Object.values(assignments).reduce((sum, arr) => {
+                  return sum + (Array.isArray(arr) ? arr.length : 0);
+                }, 0);
+                return `割り当て実行（${total}件）`;
+              })()}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function statusMeta(statusKey) {
@@ -851,7 +1317,8 @@ function detectConflicts(appointments) {
 }
 
 export default function AdminScheduleTimelinePage() {
-  const [cleaners, setCleaners] = useState(() => loadJson(STORAGE_CLEANERS, defaultCleaners));
+  // localStorageの古いデータを使わず、defaultCleanersを使用（APIから読み込み後に更新される）
+  const [cleaners, setCleaners] = useState(defaultCleaners);
   const [dateISO, setDateISO] = useState(todayISO());
   const [view, setView] = useState('day');
   const [query, setQuery] = useState('');
@@ -859,7 +1326,8 @@ export default function AdminScheduleTimelinePage() {
   const [filterCleaner, setFilterCleaner] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterWorkType, setFilterWorkType] = useState('all');
-  const [activeCleanerSP, setActiveCleanerSP] = useState(cleaners[0]?.id ?? 'c1');
+  const [timelinePart, setTimelinePart] = useState('night'); // 'day' or 'night'
+  const [activeCleanerSP, setActiveCleanerSP] = useState(defaultCleaners[0]?.id ?? 'W002');
 
   /** unit を付与し、梅岡ユニット→遠藤ユニットの順。各ユニット内はリーダーが左（先頭） */
   const cleanersWithUnit = useMemo(() => {
@@ -910,17 +1378,17 @@ export default function AdminScheduleTimelinePage() {
   /** APIからスケジュールを読み込む関数 */
   const loadSchedulesFromAPI = useCallback((targetDateISO = dateISO) => {
     setIsLoadingSchedules(true);
-    
+
     const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
     const base = API_BASE.replace(/\/$/, '');
-    
+
     // 日付範囲を計算（選択日付の前後30日）
     const selectedDate = dayjs(targetDateISO);
     const dateFrom = selectedDate.subtract(30, 'day').format('YYYY-MM-DD');
     const dateTo = selectedDate.add(30, 'day').format('YYYY-MM-DD');
-    
+
     const url = `${base}/schedules?date_from=${dateFrom}&date_to=${dateTo}&limit=2000`;
-    
+
     return fetch(url, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       cache: 'no-store'
@@ -937,7 +1405,7 @@ export default function AdminScheduleTimelinePage() {
         const converted = schedules
           .map(convertScheduleToAppointment)
           .map(ensureContactFields);
-        
+
         setAppointments(converted);
         setIsLoadingSchedules(false);
         return converted;
@@ -1083,7 +1551,7 @@ export default function AdminScheduleTimelinePage() {
     let cancelled = false;
     const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
     const base = API_BASE.replace(/\/$/, '');
-    
+
     // 店舗IDから店舗情報を取得
     fetch(`${base}/stores/${selectedAppt.store_id}`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {},
@@ -1122,7 +1590,7 @@ export default function AdminScheduleTimelinePage() {
           setSelectedStore(null);
         }
       });
-    
+
     return () => {
       cancelled = true;
     };
@@ -1200,10 +1668,26 @@ export default function AdminScheduleTimelinePage() {
   const summary = useMemo(() => {
     const total = filteredAppointments.length;
     const byStatus = new Map();
+    let recleanCount = 0; // 清掃事故案件の数
+    let unassignedCount = 0; // 未割り当て案件の数
+    let needsContractReviewCount = 0; // 要契約確認の数
+
     for (const a of filteredAppointments) {
       byStatus.set(a.status, (byStatus.get(a.status) ?? 0) + 1);
+      // 清掃事故案件をカウント
+      if (a.work_type === '再清掃' || a.work_type === '再清掃案件') {
+        recleanCount++;
+      }
+      // 未割り当て案件をカウント（cleaner_idがnullまたはundefined）
+      if (!a.cleaner_id) {
+        unassignedCount++;
+      }
+      // 「要契約確認」をカウント
+      if (a.target_name === '要契約確認') {
+        needsContractReviewCount++;
+      }
     }
-    return { total, byStatus };
+    return { total, byStatus, recleanCount, unassignedCount, needsContractReviewCount };
   }, [filteredAppointments]);
 
   const [modal, setModal] = useState({ open: false, appt: null, mode: 'view' });
@@ -1217,6 +1701,9 @@ export default function AdminScheduleTimelinePage() {
   const [blockModalInitialEndAt, setBlockModalInitialEndAt] = useState(null);
   const [blockConflictError, setBlockConflictError] = useState(null);
   const [icsImportModal, setIcsImportModal] = useState({ open: false });
+  const [unassignedModal, setUnassignedModal] = useState({ open: false });
+  const [emailListModal, setEmailListModal] = useState({ open: false });
+  const [filterOverlayOpen, setFilterOverlayOpen] = useState(false);
   const [isMisogiOpen, setIsMisogiOpen] = useState(false);
 
   /** defaultCleanerId: 清掃員ID。startMinOptional: 指定時はその時刻で新規作成（タイムラインクリック用） */
@@ -1264,7 +1751,7 @@ export default function AdminScheduleTimelinePage() {
 
     // 複数の清掃員が選択されている場合、各清掃員ごとに案件を作成
     const cleanerIds = updated.cleaner_ids || (updated.cleaner_id ? [updated.cleaner_id] : []);
-    
+
     if (cleanerIds.length === 0) {
       setSaveConflictError('清掃員を1人以上選択してください');
       return;
@@ -1272,7 +1759,7 @@ export default function AdminScheduleTimelinePage() {
 
     // 既存案件の更新か新規作成か
     const exists = appointments.some((p) => p.id === updated.id);
-    
+
     if (exists) {
       // 既存案件の更新：最初の清掃員で更新（既存の動作を維持）
       const candidate = [apptToConflictShape({ ...updated, cleaner_id: cleanerIds[0], schedule_id: updated.schedule_id ?? updated.id })];
@@ -1348,12 +1835,40 @@ export default function AdminScheduleTimelinePage() {
     }
   }
 
-  function deleteAppt(id) {
-    const scheduleId = appointments.find((p) => p.id === id)?.schedule_id;
-    setAppointments((prev) => prev.filter((p) => p.id !== id));
-    if (selectedAppointmentId === id) setSelectedAppointmentId(null);
-    if (selectedAppt?.schedule_id === scheduleId) setSelectedAppt(null);
-    closeModal();
+  const getToken = () => {
+    return localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
+  };
+
+  async function deleteAppt(id) {
+    const schedule = appointments.find((p) => p.id === id);
+    const scheduleId = schedule?.schedule_id || schedule?.id;
+
+    if (!scheduleId) {
+      alert('削除対象のスケジュールIDが見つかりません');
+      return;
+    }
+
+    try {
+      const token = getToken();
+      const base = API_BASE.replace(/\/$/, '');
+      const response = await fetch(`${base}/schedules/${scheduleId}`, {
+        method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) {
+        throw new Error(`削除に失敗しました: ${response.status}`);
+      }
+
+      setAppointments((prev) => prev.filter((p) => p.id !== id));
+      if (selectedAppointmentId === id) setSelectedAppointmentId(null);
+      if (selectedAppt?.id === id || selectedAppt?.schedule_id === scheduleId) setSelectedAppt(null);
+      closeModal();
+      alert('スケジュールを削除しました');
+    } catch (error) {
+      console.error('[AdminScheduleTimelinePage] Delete failed:', error);
+      alert(`削除に失敗しました: ${error.message}`);
+    }
   }
 
   function handleScheduleCardClick(appt) {
@@ -1508,6 +2023,9 @@ export default function AdminScheduleTimelinePage() {
               <div className="subtitle">
                 {view === 'week' ? `${getWeekRangeLabel(dateISO)} の週` : `${isoToDateLabel(dateISO)} の割当`}
               </div>
+              <div style={{ fontSize: '0.75em', color: 'var(--muted)', marginTop: '4px' }}>
+                清掃サイクル『🌙：04:00~』『☀️:16:00~』16:00以降は次の日案件
+              </div>
             </div>
             <div className="headerActions">
               {view === 'week' ? (
@@ -1529,17 +2047,29 @@ export default function AdminScheduleTimelinePage() {
               )}
               <button type="button" className="btnPrimary" onClick={() => openCreate(filterCleaner !== 'all' ? filterCleaner : cleanersWithUnit[0]?.id)}>＋ 割当追加</button>
               <button type="button" className="btn" onClick={() => setIcsImportModal({ open: true })}>📅 Googleカレンダー取り込み</button>
-              <button type="button" className="btn" onClick={() => createRandomAppointments(cleanersWithUnit, dateISO, setAppointments, clients, API_BASE)}>🎲 ランダム割当（テスト）</button>
-              <button type="button" className="btn" onClick={async () => {
-                clearAllAppointments(setAppointments);
-                // 少し待ってからゴールデンタイム案件を作成
-                setTimeout(async () => {
-                  await createGoldenTimeAppointments(cleanersWithUnit, dateISO, appointments, setAppointments, clients, API_BASE);
-                }, 100);
-              }}>🌙 全削除→ゴールデンタイム案件作成</button>
-              <button type="button" className="btn" onClick={async () => {
-                await createDaytimeAppointment(cleanersWithUnit, dateISO, appointments, setAppointments, clients, API_BASE);
-              }}>☀ 昼間案件を1件作成</button>
+              <button type="button" className="btn" onClick={() => {
+                const icsSchedules = appointments.filter(a => a.origin === 'google_ics');
+                if (icsSchedules.length === 0) {
+                  alert('Googleカレンダーから取り込んだスケジュールがありません');
+                  return;
+                }
+                // 全メールアドレスを抽出
+                const allEmails = new Set();
+                icsSchedules.forEach(schedule => {
+                  if (schedule.attendee_emails && schedule.attendee_emails.length > 0) {
+                    schedule.attendee_emails.forEach(email => allEmails.add(email));
+                  }
+                });
+                setEmailListModal({ open: true, emails: Array.from(allEmails).sort(), schedules: icsSchedules });
+              }}>📧 参加者メールアドレス一覧</button>
+              <button type="button" className="btn" onClick={() => {
+                const unassigned = appointments.filter(a => !a.cleaner_id && a.origin === 'google_ics');
+                if (unassigned.length === 0) {
+                  alert('未割り当てのスケジュールがありません');
+                  return;
+                }
+                setUnassignedModal({ open: true, schedules: unassigned });
+              }}>👤 未割り当て清掃員割り当て</button>
             </div>
           </div>
           <div className="headerRow headerRow2">
@@ -1558,63 +2088,113 @@ export default function AdminScheduleTimelinePage() {
                 <span>表示</span>
                 <div className="viewSwitcherButtons" role="group" aria-label="表示切替">
                   <button type="button" className={`viewSwitcherBtn ${view === 'day' ? 'active' : ''}`} onClick={() => setView('day')} title="タイムライン" aria-pressed={view === 'day'}>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden><rect x="2" y="4" width="4" height="3" rx="0.5"/><rect x="8" y="6" width="4" height="3" rx="0.5"/><rect x="14" y="8" width="4" height="3" rx="0.5"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden><rect x="2" y="4" width="4" height="3" rx="0.5" /><rect x="8" y="6" width="4" height="3" rx="0.5" /><rect x="14" y="8" width="4" height="3" rx="0.5" /></svg>
                   </button>
                   <button type="button" className={`viewSwitcherBtn ${view === 'week' ? 'active' : ''}`} onClick={() => setView('week')} title="週" aria-pressed={view === 'week'}>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden><rect x="1" y="4" width="2.5" height="12" rx="0.5"/><rect x="5" y="4" width="2.5" height="12" rx="0.5"/><rect x="9" y="4" width="2.5" height="12" rx="0.5"/><rect x="13" y="4" width="2.5" height="12" rx="0.5"/><rect x="17" y="4" width="2.5" height="12" rx="0.5"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden><rect x="1" y="4" width="2.5" height="12" rx="0.5" /><rect x="5" y="4" width="2.5" height="12" rx="0.5" /><rect x="9" y="4" width="2.5" height="12" rx="0.5" /><rect x="13" y="4" width="2.5" height="12" rx="0.5" /><rect x="17" y="4" width="2.5" height="12" rx="0.5" /></svg>
                   </button>
                   <button type="button" className={`viewSwitcherBtn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')} title="一覧" aria-pressed={view === 'list'}>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden><rect x="2" y="3" width="16" height="2" rx="0.5"/><rect x="2" y="9" width="16" height="2" rx="0.5"/><rect x="2" y="15" width="16" height="2" rx="0.5"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden><rect x="2" y="3" width="16" height="2" rx="0.5" /><rect x="2" y="9" width="16" height="2" rx="0.5" /><rect x="2" y="15" width="16" height="2" rx="0.5" /></svg>
                   </button>
                   <button type="button" className={`viewSwitcherBtn ${view === 'month' ? 'active' : ''}`} onClick={() => setView('month')} title="月（簡易）" aria-pressed={view === 'month'}>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden><rect x="2" y="2" width="16" height="16" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none"/><rect x="4" y="5" width="2.5" height="2.5" rx="0.3"/><rect x="8" y="5" width="2.5" height="2.5" rx="0.3"/><rect x="12" y="5" width="2.5" height="2.5" rx="0.3"/><rect x="4" y="9" width="2.5" height="2.5" rx="0.3"/><rect x="8" y="9" width="2.5" height="2.5" rx="0.3"/><rect x="12" y="9" width="2.5" height="2.5" rx="0.3"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden><rect x="2" y="2" width="16" height="16" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" /><rect x="4" y="5" width="2.5" height="2.5" rx="0.3" /><rect x="8" y="5" width="2.5" height="2.5" rx="0.3" /><rect x="12" y="5" width="2.5" height="2.5" rx="0.3" /><rect x="4" y="9" width="2.5" height="2.5" rx="0.3" /><rect x="8" y="9" width="2.5" height="2.5" rx="0.3" /><rect x="12" y="9" width="2.5" height="2.5" rx="0.3" /></svg>
                   </button>
                 </div>
               </div>
-              <label className="field">
-                <span>ユニット</span>
-                <select value={filterUnit} onChange={(e) => setFilterUnit(e.target.value)}>
-                  <option value="all">全て</option>
-                  <option value="cleaning">清掃員（梅岡ユニット）</option>
-                  <option value="maintenance">メンテナンス（遠藤ユニット）</option>
-                </select>
-              </label>
-              <label className="field">
-                <span>清掃員</span>
-                <select value={filterCleaner} onChange={(e) => setFilterCleaner(e.target.value)}>
-                  <option value="all">{filterUnit === 'all' ? '全員' : filterUnit === 'cleaning' ? '全員（清掃）' : '全員（メンテ）'}</option>
-                  {cleanersForFilter.map((d) => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>状態</span>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                  <option value="all">全て</option>
-                  {STATUSES.map((s) => (
-                    <option key={s.key} value={s.key}>{s.label}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>種別</span>
-                <select value={filterWorkType} onChange={(e) => setFilterWorkType(e.target.value)}>
-                  <option value="all">全て</option>
-                  {WORK_TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </label>
+              <button
+                type="button"
+                className={`btn ${filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all' ? 'btnPrimary' : ''}`}
+                onClick={() => setFilterOverlayOpen(true)}
+                title="フィルター"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+                  <path d="M1.5 3a.5.5 0 0 1 .5-.5h12a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5zM3 6a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 6zm2 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 9zm1 3a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5z" />
+                </svg>
+                フィルター
+                {(filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all') && (
+                  <span style={{ marginLeft: '4px', fontSize: '0.85em' }}>●</span>
+                )}
+              </button>
               <div className="summaryPills">
                 <span className="pill">合計 {summary.total}</span>
                 {STATUSES.map((s) => (
                   <span key={s.key} className="pill subtle">{s.label} {summary.byStatus.get(s.key) ?? 0}</span>
                 ))}
+                <span className="pill subtle" style={{ color: '#dc2626', fontWeight: 'bold' }}>清掃事故 {summary.recleanCount}</span>
+                {summary.needsContractReviewCount > 0 && (
+                  <span className="pill subtle" style={{ color: '#dc2626', fontWeight: 'bold' }}>要契約確認 {summary.needsContractReviewCount}</span>
+                )}
+                {summary.unassignedCount > 0 && (
+                  <span className="pill subtle" style={{ color: '#f59e0b', fontWeight: 'bold' }}>未割り当て {summary.unassignedCount}</span>
+                )}
               </div>
             </div>
           </div>
         </header>
+
+        {/* 清掃事故案件エリア（mainコンテナの上、全幅独立コンテナ） */}
+        {(view === 'day' || view === 'week') && (() => {
+          // 表示する予定リストを選択
+          const appointmentsToShow = view === 'day' ? filteredAppointments : weekFilteredAppointments;
+
+          const recleanEvents = appointmentsToShow.filter(a => {
+            const isDaytime = isDaytimeEvent(a.start_min, a.end_min);
+            const isReclean = a.work_type === '再清掃' || a.work_type === '再清掃案件';
+            return isReclean && isDaytime;
+          });
+
+          return (
+            <div className="recleanEventsContainer" style={{ width: '100%', padding: '12px 16px', background: 'var(--panel)', borderBottom: '1px solid var(--line)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 'bold', fontSize: '0.9em', color: 'var(--accent-red)' }}>清掃事故案件:</span>
+                {recleanEvents.length > 0 ? (
+                  recleanEvents.map((appt) => {
+                    const meta = statusMeta(appt.status);
+                    const conflict = conflictIds.has(appt.id);
+                    const store = appt.store_id ? stores.find((s) => String(s.id) === String(appt.store_id)) : null;
+                    const client = appt.client_id ? clients.find((c) => String(c.id) === String(appt.client_id)) : null;
+                    const brand = store?.brand_id ? brands.find((b) => String(b.id) === String(store.brand_id)) : null;
+                    const brandName = brand?.name || store?.brand_name || '';
+                    const storeName = store?.name || store?.store_name || appt.target_name || '';
+                    const reminders = appt.contact_reminders || [];
+                    const reminderTags = [];
+                    if (reminders.includes('7日前')) reminderTags.push('7◯');
+                    if (reminders.includes('3日前')) reminderTags.push('3◯');
+                    if (reminders.includes('1日前')) reminderTags.push('1◯');
+                    const reminderDisplay = reminderTags.length > 0 ? reminderTags.join(' ') : '';
+
+                    return (
+                      <button
+                        key={appt.id}
+                        type="button"
+                        className={`daytimeChip ${appt.is_accident ? 'accidentChip' : meta.colorClass} ${conflict ? 'conflict' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); handleScheduleCardClick(appt); }}
+                        title={`${minutesToHHMM(appt.start_min)}-${minutesToHHMM(appt.end_min)} ${appt.target_name}`}
+                      >
+                        <span className="daytimeChipIcon">☀</span>
+                        {brandName && <span className="daytimeChipBrand">{brandName}</span>}
+                        {brandName && storeName && <span>/</span>}
+                        {storeName && <span className="daytimeChipStore">{storeName}</span>}
+                        {(brandName || storeName) && <span>/</span>}
+                        <span className="daytimeChipTime">{minutesToHHMM(appt.start_min)}-{minutesToHHMM(appt.end_min)}</span>
+                        {reminderDisplay && (
+                          <>
+                            <span>/</span>
+                            <span className="daytimeChipReminders">{reminderDisplay}</span>
+                          </>
+                        )}
+                        <span className="daytimeChipStatus">({meta.label})</span>
+                        {conflict && <span className="daytimeChipWarn">⚠</span>}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <span style={{ color: 'var(--muted)', fontSize: '0.9em' }}>清掃事故案件なし</span>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         <main className="main">
           {view === 'day' && (
@@ -1635,6 +2215,8 @@ export default function AdminScheduleTimelinePage() {
                   stores={stores}
                   clients={clients}
                   brands={brands}
+                  timelinePart={timelinePart}
+                  onTimelinePartChange={setTimelinePart}
                 />
               </div>
               <div className="spOnly">
@@ -1725,7 +2307,7 @@ export default function AdminScheduleTimelinePage() {
 
         {selectedAppt && (
           <section className="karteDock" style={{ height: `${karteDockHeight}px` }}>
-            <div 
+            <div
               className={`karteDockHeader ${isResizingKarteDock ? 'resizing' : ''}`}
               onMouseDown={handleKarteDockResizeStart}
               onTouchStart={handleKarteDockResizeStart}
@@ -1773,7 +2355,7 @@ export default function AdminScheduleTimelinePage() {
                     const storeName = store?.name || store?.store_name || '';
                     const clientName = client?.name || client?.client_name || store?.client_name || '';
                     const phone = store?.phone || store?.tel || store?.phone_number || client?.phone || client?.tel || client?.phone_number || '';
-                    
+
                     return (
                       <>
                         {storeName && <div className="kdInfoRow"><span className="kdInfoLabel">店舗名：</span><span>{storeName}</span></div>}
@@ -1789,7 +2371,7 @@ export default function AdminScheduleTimelinePage() {
                     const storeId = selectedAppt?.store_id;
                     const store = storeId ? selectedStore : null;
                     const salesPerson = store?.sales_person || store?.sales_person_name || store?.salesPerson || '';
-                    
+
                     return (
                       <>
                         {salesPerson && (
@@ -1833,17 +2415,22 @@ export default function AdminScheduleTimelinePage() {
                     })}
                   </div>
                   {(() => {
-                    const cleanerId = selectedAppt?.cleaner_id;
-                    const cleaner = cleanerId ? cleanersWithUnit.find((c) => String(c.id) === String(cleanerId)) : null;
-                    const cleanerName = cleaner?.name || cleaner?.cleaner_name || '';
-                    
+                    const cleanerIds = selectedAppt?.cleaner_ids || (selectedAppt?.cleaner_id ? [selectedAppt.cleaner_id] : []);
+                    const assignedCleaners = cleanerIds
+                      .map(id => cleanersWithUnit.find(c => String(c.id) === String(id)))
+                      .filter(Boolean);
+
                     return (
                       <>
-                        {cleanerName && (
+                        {assignedCleaners.length > 0 && (
                           <>
                             <div className="kdSectionTitle">清掃担当</div>
-                            <div className="kdInfoRow">
-                              <span>{cleanerName}</span>
+                            <div className="kdInfoRow" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                              {assignedCleaners.map(c => (
+                                <span key={c.id} style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.9em', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                  {c.name}
+                                </span>
+                              ))}
                             </div>
                           </>
                         )}
@@ -1855,7 +2442,8 @@ export default function AdminScheduleTimelinePage() {
                     const store = storeId ? selectedStore : null;
                     const plan = store?.plan || store?.plan_name || '';
                     const securityBox = store?.security_box || store?.security_box_number || store?.box_number || '';
-                    
+                    const extractedSecurityCode = selectedAppt.security_code;
+
                     return (
                       <>
                         {plan && (
@@ -1866,28 +2454,48 @@ export default function AdminScheduleTimelinePage() {
                             </div>
                           </>
                         )}
-                        {securityBox && (
+                        {(securityBox || extractedSecurityCode) && (
                           <>
-                            <div className="kdSectionTitle">セキュリティボックス番号</div>
+                            <div className="kdSectionTitle" style={{ color: '#ec4899', borderLeft: '4px solid #ec4899', paddingLeft: '8px' }}>🔑 キーボックス解錠番号 (カギ所在)</div>
                             <div className="kdInfoRow">
-                              <span>{securityBox}</span>
+                              <span>{securityBox || '（顧客DBに未登録）'}</span>
                             </div>
+                            {extractedSecurityCode && extractedSecurityCode !== securityBox && (
+                              <div className="kdInfoRow" style={{ color: '#f59e0b', fontSize: '0.9em', marginTop: '4px', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 8px', borderRadius: '4px' }}>
+                                <span style={{ fontWeight: 'bold' }}>📋 カレンダーから抽出：</span>
+                                <span style={{ fontSize: '1.2em', letterSpacing: '2px' }}>{extractedSecurityCode}</span>
+                              </div>
+                            )}
                           </>
                         )}
                       </>
                     );
                   })()}
+
+                  {selectedAppt.notes && (
+                    <>
+                      <div className="kdSectionTitle" style={{ color: '#3a6cff', borderLeft: '4px solid #3a6cff', paddingLeft: '8px', marginTop: '16px' }}>
+                        📅 カレンダーからの指示事項
+                      </div>
+                      <div className="kdInfoRow" style={{ background: 'rgba(58, 108, 255, 0.05)', padding: '8px', borderRadius: '4px', whiteSpace: 'pre-wrap', maxHeight: '300px', overflowY: 'auto', fontSize: '0.9em', border: '1px dashed rgba(58, 108, 255, 0.3)' }}>
+                        {selectedAppt.notes}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="karteDockRight">
                 <div className="kdRightTop">
                   <div className="kdSectionTitle">担当</div>
                   <div className="kdMemberList">
-                    {selectedAppt.cleaner_id && (
-                      <span className="kdChip">
-                        {cleanersWithUnit.find((c) => c.id === selectedAppt.cleaner_id)?.name ?? selectedAppt.cleaner_id}
-                      </span>
-                    )}
+                    {(selectedAppt.cleaner_ids || (selectedAppt.cleaner_id ? [selectedAppt.cleaner_id] : [])).map(cid => {
+                      const c = cleanersWithUnit.find((cl) => cl.id === cid);
+                      return (
+                        <span key={cid} className="kdChip">
+                          {c?.name ?? cid}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
                 {(() => {
@@ -1997,6 +2605,133 @@ export default function AdminScheduleTimelinePage() {
             }}
           />
         )}
+
+        {filterOverlayOpen && (
+          <FilterOverlay
+            filterUnit={filterUnit}
+            setFilterUnit={setFilterUnit}
+            filterCleaner={filterCleaner}
+            setFilterCleaner={setFilterCleaner}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            filterWorkType={filterWorkType}
+            setFilterWorkType={setFilterWorkType}
+            cleanersForFilter={cleanersForFilter}
+            onClose={() => setFilterOverlayOpen(false)}
+          />
+        )}
+
+        {emailListModal.open && (
+          <EmailListModal
+            emails={emailListModal.emails || []}
+            schedules={emailListModal.schedules || []}
+            onClose={() => setEmailListModal({ open: false })}
+          />
+        )}
+
+        {unassignedModal.open && (
+          <UnassignedSchedulesModal
+            schedules={unassignedModal.schedules || []}
+            cleaners={cleanersWithUnit}
+            onClose={async () => {
+              setUnassignedModal({ open: false });
+              // モーダルを閉じた後にスケジュールを再読み込み（割り当てが完了している場合）
+              await loadSchedulesFromAPI(dateISO);
+            }}
+            onAssign={async (scheduleId, workerId, isFirst) => {
+              const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
+              const base = API_BASE.replace(/\/$/, '');
+
+              try {
+                if (isFirst) {
+                  // 最初の清掃員: 既存のスケジュールを更新
+                  const updateResponse = await fetch(`${base}/schedules/${scheduleId}`, {
+                    method: 'PUT',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      worker_id: workerId,
+                      assigned_to: workerId
+                    })
+                  });
+
+                  if (!updateResponse.ok) {
+                    throw new Error(`HTTP ${updateResponse.status}`);
+                  }
+                } else {
+                  // 2番目以降の清掃員: 新しいスケジュールを作成
+                  // まず元のスケジュール情報を取得
+                  const getResponse = await fetch(`${base}/schedules/${scheduleId}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                    },
+                  });
+
+                  if (!getResponse.ok) {
+                    throw new Error(`Failed to fetch schedule: HTTP ${getResponse.status}`);
+                  }
+
+                  const originalSchedule = await getResponse.json();
+                  const schedule = originalSchedule.schedule || originalSchedule;
+
+                  // 新しいスケジュールを作成
+                  const newScheduleData = {
+                    date: schedule.scheduled_date || schedule.date,
+                    scheduled_date: schedule.scheduled_date || schedule.date,
+                    time_slot: schedule.scheduled_time || schedule.time_slot || `${schedule.start_time || '09:00'}-${schedule.end_time || '10:00'}`,
+                    scheduled_time: schedule.scheduled_time || schedule.time_slot || `${schedule.start_time || '09:00'}-${schedule.end_time || '10:00'}`,
+                    start_time: schedule.start_time || minutesToHHMM(schedule.start_min || 540),
+                    end_time: schedule.end_time || minutesToHHMM(schedule.end_min || 600),
+                    start_min: schedule.start_min,
+                    end_min: schedule.end_min,
+                    duration_minutes: schedule.duration_minutes || 60,
+                    store_id: schedule.store_id,
+                    client_id: schedule.client_id || schedule.store_id,
+                    store_name: schedule.store_name || schedule.target_name,
+                    client_name: schedule.client_name,
+                    brand_name: schedule.brand_name,
+                    address: schedule.address,
+                    phone: schedule.phone,
+                    email: schedule.email,
+                    work_type: schedule.work_type || 'その他',
+                    work_content: schedule.work_content || schedule.memo || '',
+                    notes: schedule.notes || schedule.memo || '',
+                    status: schedule.status || 'booked',
+                    worker_id: workerId,
+                    assigned_to: workerId,
+                    origin: schedule.origin || 'manual',
+                    external_id: schedule.external_id,
+                    attendee_emails: schedule.attendee_emails || [],
+                  };
+
+                  const createResponse = await fetch(`${base}/schedules`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newScheduleData)
+                  });
+
+                  if (!createResponse.ok) {
+                    throw new Error(`Failed to create schedule: HTTP ${createResponse.status}`);
+                  }
+                }
+
+                // 最後の割り当てが完了したらスケジュールを再読み込み
+                // 注意: 複数の割り当てがある場合、各割り当てごとに再読み込みすると非効率なので、
+                // handleAssign関数内で最後に1回だけ再読み込みする方が良い
+                // しかし、現在の実装では各onAssign呼び出し後に再読み込みしている
+                // 最適化が必要な場合は、handleAssign関数を変更する必要がある
+              } catch (err) {
+                console.error('[AdminScheduleTimeline] Failed to assign worker', err);
+                throw err;
+              }
+            }}
+          />
+        )}
       </div>
     </div>
   );
@@ -2036,7 +2771,7 @@ function MisogiSupportWidget({ selectedSchedule, rollingDays, visibleSchedules, 
 
   useEffect(() => {
     if (!dragging) return;
-    
+
     const handleMove = (e) => {
       if (!dragging) return;
       const clientX = e.clientX ?? e.touches?.[0]?.clientX;
@@ -2048,16 +2783,16 @@ function MisogiSupportWidget({ selectedSchedule, rollingDays, visibleSchedules, 
         });
       }
     };
-    
+
     const handleEnd = () => {
       setDragging(false);
     };
-    
+
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleEnd);
     document.addEventListener('touchmove', handleMove, { passive: false });
     document.addEventListener('touchend', handleEnd);
-    
+
     return () => {
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleEnd);
@@ -2300,7 +3035,9 @@ function MisogiSupportWidget({ selectedSchedule, rollingDays, visibleSchedules, 
 
 /** GoogleカレンダーICS取り込みモーダル */
 function IcsImportModal({ apiBase, onClose, onSuccess }) {
+  const [importMode, setImportMode] = useState('url'); // 'url' or 'content'
   const [icsUrl, setIcsUrl] = useState('');
+  const [icsContent, setIcsContent] = useState('');
   const [fromDate, setFromDate] = useState(() => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -2321,8 +3058,12 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
   };
 
   const handleImport = async (isDryRun) => {
-    if (!icsUrl.trim()) {
+    if (importMode === 'url' && !icsUrl.trim()) {
       setError('ICS URLを入力してください');
+      return;
+    }
+    if (importMode === 'content' && !icsContent.trim()) {
+      setError('ICSの内容を入力してください');
       return;
     }
 
@@ -2336,18 +3077,25 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
         throw new Error('認証トークンが取得できませんでした');
       }
 
+      const body = {
+        from: fromDate,
+        to: toDate,
+        dry_run: isDryRun
+      };
+
+      if (importMode === 'url') {
+        body.ics_url = icsUrl.trim();
+      } else {
+        body.ics_content = icsContent.trim();
+      }
+
       const response = await fetch(`${apiBase}/admin/import/google-ics`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ics_url: icsUrl.trim(),
-          from: fromDate,
-          to: toDate,
-          dry_run: isDryRun
-        })
+        body: JSON.stringify(body)
       });
 
       const data = await response.json();
@@ -2372,11 +3120,11 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
 
   return (
     <div className="modalBackdrop" onMouseDown={onClose} role="presentation">
-      <div className="modal" onMouseDown={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '600px' }}>
+      <div className="modal" onMouseDown={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '700px' }}>
         <div className="modalHeader">
           <div>
-            <div className="modalTitle">Googleカレンダー取り込み</div>
-            <div className="muted">ICS形式のカレンダーURLからスケジュールを取り込みます</div>
+            <div className="modalTitle">カレンダー取り込み (ICS)</div>
+            <div className="muted">GoogleカレンダーのURL、またはICSファイルを直接貼り付けて取り込みます</div>
           </div>
           <button type="button" className="iconBtn" onClick={onClose} aria-label="閉じる">✕</button>
         </div>
@@ -2386,13 +3134,33 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
               {error}
             </div>
           )}
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <button
+              className={`btn ${importMode === 'url' ? 'btnPrimary' : ''}`}
+              onClick={() => setImportMode('url')}
+              style={{ flex: 1 }}
+            >
+              URLから取得
+            </button>
+            <button
+              className={`btn ${importMode === 'content' ? 'btnPrimary' : ''}`}
+              onClick={() => setImportMode('content')}
+              style={{ flex: 1 }}
+            >
+              内容を直接貼り付け
+            </button>
+          </div>
+
           {result && (
-            <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(100, 150, 255, 0.1)', borderRadius: '8px' }}>
+            <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(100, 150, 255, 0.1)', border: '1px solid rgba(100, 150, 255, 0.3)', borderRadius: '8px' }}>
               {result.dry_run ? (
                 <>
-                  <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>プレビュー結果</div>
-                  <div>見つかったイベント: {result.found}件</div>
-                  <div>期間: {result.range?.from} 〜 {result.range?.to}</div>
+                  <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#3a6cff' }}>✨ プレビュー結果</div>
+                  <div>対象イベント: {result.found}件 見つかりました</div>
+                  <div style={{ fontSize: '0.9em', color: 'var(--muted)', marginTop: '4px' }}>
+                    期間: {result.range?.from} 〜 {result.range?.to}
+                  </div>
                 </>
               ) : (
                 <>
@@ -2409,16 +3177,30 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
             </div>
           )}
           <div className="formGrid">
-            <label className="field span2">
-              <span>ICS URL（Googleカレンダーの「秘密のアドレス」）</span>
-              <input
-                type="text"
-                value={icsUrl}
-                onChange={(e) => setIcsUrl(e.target.value)}
-                placeholder="https://calendar.google.com/calendar/ical/..."
-                disabled={loading}
-              />
-            </label>
+            {importMode === 'url' ? (
+              <label className="field span2">
+                <span>ICS URL（Googleカレンダーの「秘密のアドレス」）</span>
+                <input
+                  type="text"
+                  value={icsUrl}
+                  onChange={(e) => setIcsUrl(e.target.value)}
+                  placeholder="https://calendar.google.com/calendar/ical/..."
+                  disabled={loading}
+                />
+              </label>
+            ) : (
+              <label className="field span2">
+                <span>ICSの内容（カレンダーデータ全文）</span>
+                <textarea
+                  value={icsContent}
+                  onChange={(e) => setIcsContent(e.target.value)}
+                  placeholder="BEGIN:VCALENDAR..."
+                  disabled={loading}
+                  rows={8}
+                  style={{ width: '100%', padding: '8px', background: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '4px', resize: 'vertical' }}
+                />
+              </label>
+            )}
             <label className="field">
               <span>開始日</span>
               <input
@@ -2460,7 +3242,7 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
                 type="button"
                 className="btnPrimary"
                 onClick={() => handleImport(true)}
-                disabled={loading || !icsUrl.trim()}
+                disabled={loading || (importMode === 'url' ? !icsUrl.trim() : !icsContent.trim())}
               >
                 {loading ? '処理中...' : 'プレビュー'}
               </button>
@@ -2478,7 +3260,7 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
                   type="button"
                   className="btnPrimary"
                   onClick={() => handleImport(false)}
-                  disabled={loading || !icsUrl.trim()}
+                  disabled={loading || (importMode === 'url' ? !icsUrl.trim() : !icsContent.trim())}
                 >
                   {loading ? '取り込み中...' : '取り込み実行'}
                 </button>
@@ -2491,63 +3273,102 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
   );
 }
 
-function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, blocks, conflictIds, activeScheduleId, onCardClick, onBackgroundClick, onCreate, onOpenBlockModalWithSlot, stores = [], clients = [], brands = [] }) {
-  // ゴールデンタイム主体：21:00〜翌10:00（13時間）のみ表示
-  const NIGHT_START = 21 * 60;  // 21:00
-  const NIGHT_END = 10 * 60;    // 10:00（翌日）
-  const dayStart = NIGHT_START;  // 21:00スタート
-  const dayEnd = NIGHT_END + 24 * 60; // 翌10:00（1440分後）
+function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, blocks, conflictIds, activeScheduleId, onCardClick, onBackgroundClick, onCreate, onOpenBlockModalWithSlot, stores = [], clients = [], brands = [], timelinePart = 'night', onTimelinePartChange }) {
+  // 午前/午後で分割（AM/PM）
+  // 🌙 午前パート: 00:00〜12:00（12時間）
+  // ☀️ 午後パート: 12:00〜24:00（12時間）
+  const isDayPart = timelinePart === 'day';
+  const dayStart = isDayPart ? 12 * 60 : 0;      // 午後: 12:00, 午前: 00:00
+  const dayEnd = isDayPart ? 24 * 60 : 12 * 60;  // 午後: 24:00, 午前: 12:00
   const step = 60;              // 1時間間隔
   const rows = [];
-  // 21:00, 22:00, 23:00, 0:00, 1:00, ..., 9:00, 10:00 を生成（13時間）
-  for (let t = dayStart; t <= dayEnd; t += step) {
-    const displayMin = t % (24 * 60); // 24時間表記に変換
-    rows.push(displayMin);
+
+  // 時間行を生成
+  for (let t = dayStart; t < dayEnd; t += step) {
+    rows.push(t);
   }
+
 
   const { cleaning: cleaningCols, maintenance: maintenanceCols } = timelineUnitColumns ?? { cleaning: cleaners.filter((c) => c.unit === 'cleaning'), maintenance: cleaners.filter((c) => c.unit === 'maintenance') };
 
-  // 昼イベントと夜イベントを分離
-  const { daytimeEvents, nighttimeAppointments, nighttimeBlocks } = useMemo(() => {
-    const daytime = [];
-    const nightAppts = [];
-    const nightBlocks = [];
+  // 昼イベント（再清掃案件のみ）とタイムライン表示用の案件を分離
+  const { daytimeEvents, timelineAppointments, timelineBlocks } = useMemo(() => {
+    const recleanEvents = []; // 再清掃案件のみ（イベントタグ用）
+    const timelineAppts = []; // タイムラインに表示する案件
+    const timelineBlks = [];
 
-    // 案件を昼/夜に分類
+    // 案件を分類
     for (const a of appointments) {
-      if (isDaytimeEvent(a.start_min, a.end_min)) {
-        daytime.push(a);
+      const isReclean = a.is_accident || a.work_type === '再清掃' || a.work_type === '再清掃案件';
+      const isDaytime = isDaytimeEvent(a.start_min, a.end_min);
+
+      // 上部の「清掃事故案件」リストに表示する条件
+      if (isReclean && isDaytime) {
+        recleanEvents.push(a);
+      }
+
+      // AM/PM時間帯フィルタリング
+      let overlapsTimeRange = false;
+      if (isDayPart) {
+        // 午後パート(12:00-24:00): 12:00以降に開始する案件
+        overlapsTimeRange = a.start_min >= 12 * 60;
       } else {
-        nightAppts.push(a);
+        // 午前パート(00:00-12:00): 12:00前に開始する案件
+        overlapsTimeRange = a.start_min < 12 * 60;
+      }
+      if (overlapsTimeRange) {
+        timelineAppts.push(a);
       }
     }
 
-    // ブロックを昼/夜に分類
+    // ブロックを分類
     for (const b of blocks ?? []) {
       const display = blockDisplayForDay(b, dateISO);
       if (!display) continue;
-      if (isDaytimeEvent(display.start_min, display.end_min)) {
-        // 昼イベントとして扱う（必要に応じて）
+      // AM/PM時間帯フィルタリング
+      let overlapsTimeRange = false;
+      if (isDayPart) {
+        // 午後パート(12:00-24:00)
+        overlapsTimeRange = display.start_min >= 12 * 60;
       } else {
-        nightBlocks.push({ block: b, start_min: display.start_min, end_min: display.end_min });
+        // 午前パート(00:00-12:00)
+        overlapsTimeRange = display.start_min < 12 * 60;
+      }
+      if (overlapsTimeRange) {
+        timelineBlks.push({ block: b, start_min: display.start_min, end_min: display.end_min });
       }
     }
 
     return {
-      daytimeEvents: daytime,
-      nighttimeAppointments: nightAppts,
-      nighttimeBlocks: nightBlocks
+      daytimeEvents: recleanEvents, // 再清掃案件のみ
+      timelineAppointments: timelineAppts,
+      timelineBlocks: timelineBlks
     };
-  }, [appointments, blocks, dateISO]);
+  }, [appointments, blocks, dateISO, dayStart, dayEnd]);
+
 
   const byCleanerItems = useMemo(() => {
     const map = new Map();
     for (const d of cleaners) map.set(d.id, []);
-    // 夜イベントのみを追加
-    for (const a of nighttimeAppointments) {
-      map.get(a.cleaner_id)?.push({ type: 'appointment', data: a, start_min: a.start_min, end_min: a.end_min });
+
+    // タイムラインに表示する案件を追加
+    for (const a of timelineAppointments) {
+      const cIds = a.cleaner_ids && a.cleaner_ids.length > 0 ? a.cleaner_ids : (a.cleaner_id ? [a.cleaner_id] : []);
+
+      let assigned = false;
+      for (const cId of cIds) {
+        if (map.has(cId)) {
+          map.get(cId).push({ type: 'appointment', data: a, start_min: a.start_min, end_min: a.end_min });
+          assigned = true;
+        }
+      }
+
+      // マッチする清掃員がいない場合、最初の清掃員（未割当行）に割り当て
+      if (!assigned && cleaners.length > 0) {
+        map.get(cleaners[0].id)?.push({ type: 'appointment', data: a, start_min: a.start_min, end_min: a.end_min });
+      }
     }
-    for (const b of nighttimeBlocks) {
+    for (const b of timelineBlocks) {
       if (b.block.user_id == null) {
         for (const d of cleaners) map.get(d.id)?.push({ type: 'block', block: b.block, start_min: b.start_min, end_min: b.end_min });
       } else {
@@ -2559,7 +3380,8 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
       list.sort((x, y) => x.start_min - y.start_min);
     }
     return map;
-  }, [cleaners, nighttimeAppointments, nighttimeBlocks]);
+  }, [cleaners, timelineAppointments, timelineBlocks]);
+
 
   // 全清掃員を縦に並べる（梅岡ユニット → 遠藤ユニットの順）
   const allCleaners = [...cleaningCols, ...maintenanceCols];
@@ -2572,14 +3394,10 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
   }, [allCleaners, byCleanerItems]);
 
   return (
-    <section className="timelinePC timelinePCHorizontal">
+    <section className={`timelinePC timelinePCHorizontal ${isDayPart ? 'timelinePart-day' : 'timelinePart-night'}`}>
       <div className="timelinePCContainerHorizontal">
         {/* 左側：名簿（縦並び） */}
         <div className="timelineNameListContainer">
-          {/* 昼イベントタグ列がある場合、名簿側にもスペーサーを追加 */}
-          {daytimeEvents.length > 0 && (
-            <div className="timelineNameListSpacer" style={{ height: '44px' }} />
-          )}
           <div className="timelineNameListHeader">
             <div className="nameListHeaderCell">名簿</div>
           </div>
@@ -2594,64 +3412,13 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
 
         {/* 右側：時間軸（横）とタイムライン本体 */}
         <div className="timelineTimeAreaContainer">
-          {/* 昼イベントタグ列（タイムライン最上段） */}
-          {daytimeEvents.length > 0 && (
-            <div className="daytimeEventRow">
-              <div className="daytimeEventRowInner">
-                {daytimeEvents.map((appt) => {
-                  const meta = statusMeta(appt.status);
-                  const conflict = conflictIds.has(appt.id);
-                  // 店舗情報を取得
-                  const store = appt.store_id ? stores.find((s) => String(s.id) === String(appt.store_id)) : null;
-                  const client = appt.client_id ? clients.find((c) => String(c.id) === String(appt.client_id)) : null;
-                  const brand = store?.brand_id ? brands.find((b) => String(b.id) === String(store.brand_id)) : null;
-                  
-                  // ブランド名、店舗名を取得
-                  const brandName = brand?.name || store?.brand_name || '';
-                  const storeName = store?.name || store?.store_name || appt.target_name || '';
-                  
-                  // 事前連絡タグを生成（チェックされているものだけ表示）
-                  const reminders = appt.contact_reminders || [];
-                  const reminderTags = [];
-                  if (reminders.includes('7日前')) reminderTags.push('7◯');
-                  if (reminders.includes('3日前')) reminderTags.push('3◯');
-                  if (reminders.includes('1日前')) reminderTags.push('1◯');
-                  const reminderDisplay = reminderTags.length > 0 ? reminderTags.join(' ') : '';
-                  
-                  return (
-                    <button
-                      key={appt.id}
-                      type="button"
-                      className={`daytimeChip ${meta.colorClass} ${conflict ? 'conflict' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); onCardClick(appt); }}
-                      title={`${minutesToHHMM(appt.start_min)}-${minutesToHHMM(appt.end_min)} ${appt.target_name}`}
-                    >
-                      <span className="daytimeChipIcon">☀</span>
-                      {brandName && <span className="daytimeChipBrand">{brandName}</span>}
-                      {brandName && storeName && <span>/</span>}
-                      {storeName && <span className="daytimeChipStore">{storeName}</span>}
-                      {(brandName || storeName) && <span>/</span>}
-                      <span className="daytimeChipTime">{minutesToHHMM(appt.start_min)}-{minutesToHHMM(appt.end_min)}</span>
-                      {reminderDisplay && (
-                        <>
-                          <span>/</span>
-                          <span className="daytimeChipReminders">{reminderDisplay}</span>
-                        </>
-                      )}
-                      {appt.work_type === '夜間' && <span className="daytimeChipNightIcon">🌙</span>}
-                      <span className="daytimeChipStatus">({meta.label})</span>
-                      {conflict && <span className="daytimeChipWarn">⚠</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* 時間ヘッダー（上部、横並び） */}
           <div className="timelineTimeHeaderHorizontal">
-            {rows.map((t) => (
-              <div key={t} className="timeHeaderCell">{minutesToHHMM(t)}</div>
+            {rows.map((t, idx) => (
+              <div key={`${t}-${idx}`} className="timeHeaderCell">
+                <span style={{ marginRight: '4px' }}>{isDayPart ? '☀️' : '🌙'}</span>
+                {minutesToHHMM(t)}
+              </div>
             ))}
           </div>
 
@@ -2661,6 +3428,7 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
               <CleanerRow
                 key={row.cleaner.id}
                 cleaner={row.cleaner}
+                cleaners={cleaners}
                 rows={rows}
                 dayStart={dayStart}
                 dayEnd={dayEnd}
@@ -2673,12 +3441,13 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
                 stores={stores}
                 clients={clients}
                 brands={brands}
+                isDayPart={isDayPart}
               />
             ))}
           </div>
         </div>
       </div>
-      <div className="legend">
+      <div className="legend" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <span className="legendTitle">凡例:</span>
         {STATUSES.map((s) => (
           <span key={s.key} className={`legendItem ${s.colorClass}`}>{s.label}</span>
@@ -2687,14 +3456,26 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
         <span className="legendItem blockCard">🔒 クローズ</span>
         <span className="legendItem unit-cleaning-legend">清掃</span>
         <span className="legendItem unit-maintenance-legend">メンテナンス</span>
+        {onTimelinePartChange && (
+          <div style={{ marginLeft: 'auto' }}>
+            <button
+              type="button"
+              className={`btn ${timelinePart === 'day' ? 'btnPrimary' : ''}`}
+              onClick={() => onTimelinePartChange(timelinePart === 'day' ? 'night' : 'day')}
+              title={timelinePart === 'day' ? '日勤に切り替え' : '夜勤に切り替え'}
+              style={{ minWidth: '100px', fontSize: '0.9em' }}
+            >
+              {timelinePart === 'day' ? '☀️ 夜勤 16-04' : '🌙 日勤 04-16'}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-function CleanerRow({ cleaner, rows, dayStart, dayEnd, items, conflictIds, activeScheduleId, onCardClick, onSlotClick, onSlotRightClick, stores = [], clients = [], brands = [] }) {
-  const NIGHT_START = 21 * 60; // 21:00
-  const NIGHT_DURATION = 13 * 60; // 13時間（21:00〜翌10:00）
+function CleanerRow({ cleaner, cleaners = [], rows, dayStart, dayEnd, items, conflictIds, activeScheduleId, onCardClick, onSlotClick, onSlotRightClick, stores = [], clients = [], brands = [], isDayPart = false }) {
+  const duration = (dayEnd || 1440) - (dayStart || 0);
   const rowRef = React.useRef(null);
   const [rowWidth, setRowWidth] = React.useState(0);
 
@@ -2711,21 +3492,36 @@ function CleanerRow({ cleaner, rows, dayStart, dayEnd, items, conflictIds, activ
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
-  const pxPerMin = rowWidth > 0 ? rowWidth / NIGHT_DURATION : 0;
+  const pxPerMin = rowWidth > 0 ? rowWidth / duration : 0;
+
+  // 時間をoffsetMinに変換する関数（16:00境界対応）
+  const toOffsetMin = (min) => {
+    if (isDayPart) {
+      // 夜勤パート(16:00-04:00): 16:00が0、04:00が720(12時間後)
+      if (min >= 16 * 60) {
+        return min - 16 * 60;
+      } else {
+        // 0:00-04:00は24時間足して16:00からのオフセットに
+        return min + 24 * 60 - 16 * 60;
+      }
+    } else {
+      // 日勤パート(04:00-16:00): 04:00が0
+      return min - 4 * 60;
+    }
+  };
 
   return (
     <div className="cleanerRow" ref={rowRef}>
       <div className="cleanerRowGrid">
-        {rows.map((t) => {
-          // 表示上の時間tを実際の時間（分）に変換（21:00基準のoffsetMinから元の時間に戻す）
-          const actualMin = (t < NIGHT_START) ? (t + 24 * 60) : t;
+        {rows.map((t, idx) => {
+          // 表示上の時間tはそのまま使用（dayStartから始まる連続した時間）
           return (
             <button
-              key={t}
+              key={`${t}-${idx}`}
               type="button"
               className="slotCellHorizontal"
-              onClick={(e) => { e.stopPropagation(); onSlotClick?.(cleaner.id, actualMin); }}
-              onContextMenu={(e) => { e.preventDefault(); onSlotRightClick?.(cleaner.id, actualMin); }}
+              onClick={(e) => { e.stopPropagation(); onSlotClick?.(cleaner.id, t); }}
+              onContextMenu={(e) => { e.preventDefault(); onSlotRightClick?.(cleaner.id, t); }}
               aria-label={`${minutesToHHMM(t)}に割当追加。右クリックでクローズ追加`}
             />
           );
@@ -2766,16 +3562,20 @@ function CleanerRow({ cleaner, rows, dayStart, dayEnd, items, conflictIds, activ
             const meta = statusMeta(a.status);
             const conflict = conflictIds.has(a.id);
             const isLinked = activeScheduleId != null && a.schedule_id === activeScheduleId;
-            
+
+            // 清掃員情報を取得
+            const cleaner = cleaners.find((c) => String(c.id) === String(a.cleaner_id));
+            const cleanerName = cleaner?.name || '';
+
             // 店舗情報を取得
             const store = a.store_id ? stores.find((s) => String(s.id) === String(a.store_id)) : null;
             const client = a.client_id ? clients.find((c) => String(c.id) === String(a.client_id)) : null;
             const brand = store?.brand_id ? brands.find((b) => String(b.id) === String(store.brand_id)) : null;
-            
+
             // ブランド名、店舗名を取得
             const brandName = brand?.name || store?.brand_name || '';
             const storeName = store?.name || store?.store_name || a.target_name || '';
-            
+
             // 事前連絡タグを生成（チェックされているものだけ表示）
             const reminders = a.contact_reminders || [];
             const reminderTags = [];
@@ -2783,7 +3583,10 @@ function CleanerRow({ cleaner, rows, dayStart, dayEnd, items, conflictIds, activ
             if (reminders.includes('3日前')) reminderTags.push('3◯');
             if (reminders.includes('1日前')) reminderTags.push('1◯');
             const reminderDisplay = reminderTags.length > 0 ? reminderTags.join(' ') : '';
-            
+
+            // 作業中の場合、清掃員名を表示
+            const isInProgress = a.status === 'in_progress';
+
             return (
               <button
                 key={a.id}
@@ -2807,6 +3610,11 @@ function CleanerRow({ cleaner, rows, dayStart, dayEnd, items, conflictIds, activ
                       </>
                     )}
                   </div>
+                  {isInProgress && cleanerName && (
+                    <div className="apptWorkerBadge" style={{ marginTop: '4px', fontSize: '0.85em', fontWeight: '600', color: '#f59e0b' }}>
+                      🔨 {cleanerName} 作業中
+                    </div>
+                  )}
                 </div>
               </button>
             );
@@ -2896,16 +3704,20 @@ function DayTimelineSP({ dateISO, cleaners, activeCleanerId, setActiveCleanerId,
                   const meta = statusMeta(a.status);
                   const conflict = conflictIds.has(a.id);
                   const isLinked = activeScheduleId != null && a.schedule_id === activeScheduleId;
-                  
+
+                  // 清掃員情報を取得
+                  const cleaner = cleaners.find((c) => String(c.id) === String(a.cleaner_id));
+                  const cleanerName = cleaner?.name || '';
+
                   // 店舗情報を取得
                   const store = a.store_id ? stores.find((s) => String(s.id) === String(a.store_id)) : null;
                   const client = a.client_id ? clients.find((c) => String(c.id) === String(a.client_id)) : null;
                   const brand = store?.brand_id ? brands.find((b) => String(b.id) === String(store.brand_id)) : null;
-                  
+
                   // ブランド名、店舗名を取得
                   const brandName = brand?.name || store?.brand_name || '';
                   const storeName = store?.name || store?.store_name || a.target_name || '';
-                  
+
                   // 事前連絡タグを生成（チェックされているものだけ表示）
                   const reminders = a.contact_reminders || [];
                   const reminderTags = [];
@@ -2913,7 +3725,10 @@ function DayTimelineSP({ dateISO, cleaners, activeCleanerId, setActiveCleanerId,
                   if (reminders.includes('3日前')) reminderTags.push('3◯');
                   if (reminders.includes('1日前')) reminderTags.push('1◯');
                   const reminderDisplay = reminderTags.length > 0 ? reminderTags.join(' ') : '';
-                  
+
+                  // 作業中の場合、清掃員名を表示
+                  const isInProgress = a.status === 'in_progress';
+
                   return (
                     <button
                       key={a.id}
@@ -2934,6 +3749,11 @@ function DayTimelineSP({ dateISO, cleaners, activeCleanerId, setActiveCleanerId,
                           </>
                         )}
                       </div>
+                      {isInProgress && cleanerName && (
+                        <div style={{ marginTop: '4px', fontSize: '0.85em', fontWeight: '600', color: '#f59e0b' }}>
+                          🔨 {cleanerName} 作業中
+                        </div>
+                      )}
                     </button>
                   );
                 })
@@ -2968,11 +3788,19 @@ function DayList({ dateISO, cleaners, appointments, conflictIds, onCardClick, on
           const d = cleaners.find((x) => x.id === a.cleaner_id);
           const meta = statusMeta(a.status);
           const conflict = conflictIds.has(a.id);
+          const isInProgress = a.status === 'in_progress';
           return (
             <button key={a.id} type="button" className="row body" onClick={() => onCardClick?.(a)}>
               <div>{minutesToHHMM(a.start_min)}–{minutesToHHMM(a.end_min)}</div>
               <div className="strong">{a.target_name}</div>
-              <div>{d?.name ?? '-'}</div>
+              <div>
+                {d?.name ?? '-'}
+                {isInProgress && d?.name && (
+                  <span style={{ marginLeft: '4px', fontSize: '0.85em', fontWeight: '600', color: '#f59e0b' }}>
+                    🔨 作業中
+                  </span>
+                )}
+              </div>
               <div>{a.work_type}</div>
               <div><span className={`badge ${meta.colorClass}`}>{meta.label}</span></div>
               <div>{conflict ? <span className="warn">重複⚠</span> : '-'}</div>
@@ -2996,20 +3824,92 @@ function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, co
     return map;
   }, [rollingDays, appointments]);
 
-  const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
+  // 各日の空き状況（稼働していない清掃員の数 + 最大連続空き時間）を計算
+  const availabilityData = useMemo(() => {
+    const totalStaff = cleaners.length;
+    return rollingDays.map(iso => {
+      const dayAppts = byDate.get(iso) ?? [];
+
+      // スタッフごとの予定を整理
+      const cleanerSchedules = new Map(); // Map<cleanerId, Array<{start, end}>>
+      cleaners.forEach(c => cleanerSchedules.set(String(c.id), []));
+
+      dayAppts.forEach(a => {
+        const ids = a.cleaner_ids ? a.cleaner_ids.map(String) : (a.cleaner_id ? [String(a.cleaner_id)] : []);
+        ids.forEach(id => {
+          if (cleanerSchedules.has(id)) {
+            cleanerSchedules.get(id).push({ start: a.start_min, end: a.end_min });
+          }
+        });
+      });
+
+      let overallMaxContinuousMinutes = 0;
+      let busyCount = 0;
+
+      // 各スタッフの「最大連続空き時間」を計算（実働時間 09:00 - 21:00 = 720分間を想定）
+      const WORK_DAY_START = 0; // システムの最小単位（実際は運用に合わせる、ここでは 0-1440）
+      const WORK_DAY_END = 1440;
+
+      cleanerSchedules.forEach((schList, cleanerId) => {
+        if (schList.length > 0) busyCount++;
+
+        // 予定を時間順にソート
+        const sorted = [...schList].sort((a, b) => a.start - b.start);
+
+        // 隙間を計算
+        let currentPos = WORK_DAY_START;
+        let maxGap = 0;
+
+        sorted.forEach(s => {
+          if (s.start > currentPos) {
+            maxGap = Math.max(maxGap, s.start - currentPos);
+          }
+          currentPos = Math.max(currentPos, s.end);
+        });
+
+        if (WORK_DAY_END > currentPos) {
+          maxGap = Math.max(maxGap, WORK_DAY_END - currentPos);
+        }
+
+        overallMaxContinuousMinutes = Math.max(overallMaxContinuousMinutes, maxGap);
+      });
+
+      const freeCount = Math.max(0, totalStaff - busyCount);
+      // 未稼働のスタッフがいれば、その人は丸一日（1440分）空いている
+      if (freeCount > 0) overallMaxContinuousMinutes = 1440;
+
+      return {
+        iso,
+        freeCount,
+        totalStaff,
+        isFull: freeCount === 0 && overallMaxContinuousMinutes < 60, // 1時間未満しか空きがないならFULL扱い
+        maxContinuousHours: (overallMaxContinuousMinutes / 60).toFixed(1)
+      };
+    });
+  }, [rollingDays, byDate, cleaners]);
 
   function renderDayColumn(iso, isToday) {
     const dayAppts = byDate.get(iso) ?? [];
     const isActive = iso === dateISO;
     return (
       <div key={iso} className={`weekCol ${isActive ? 'active' : ''} ${isToday ? 'todayCol' : ''}`}>
+        {isToday ? (
+          <div className="todayBadge">TODAY</div>
+        ) : (
+          (() => {
+            const diff = Math.round((new Date(iso + 'T00:00:00').getTime() - new Date(rollingDays[0] + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24));
+            if (diff === 1) return <div className="contactDayLabelOutside">1日前 連絡日</div>;
+            if (diff === 3) return <div className="contactDayLabelOutside">3日前 連絡日</div>;
+            if (diff === 7) return <div className="contactDayLabelOutside">7日前 連絡日</div>;
+            return null;
+          })()
+        )}
         <button
           type="button"
           className="weekColHead"
           onClick={() => setDateISO(iso)}
           aria-pressed={isActive}
         >
-          {isToday && <div className="todayBadge">TODAY</div>}
           <span className="weekColDate">{isoToDateLabel(iso)}</span>
           <span className="weekColCount">{dayAppts.length}件</span>
         </button>
@@ -3043,7 +3943,36 @@ function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, co
 
   return (
     <section className="weekView">
-      <div className="weekTitle">ローリング8日（今日＋7日）</div>
+      <div className="weekAvailabilityHeader">
+        <div className="availabilityTitleContainer">
+          <span className="availabilityTitleIcon">📊</span>
+          <span className="availabilityTitle">スケジュールの空き状況</span>
+          <span className="availabilitySubtitle">（稼働可能スタッフ数 / 全{cleaners.length}名）</span>
+        </div>
+        <div className="availabilityGrid">
+          <div className="availabilityTodayCell">
+            {availabilityData[0] && (
+              <div className={`av-cell ${availabilityData[0].isFull ? 'is-full' : ''}`}>
+                <div className="av-main">
+                  <span className="av-count">{availabilityData[0].freeCount}</span>
+                  <span className="av-label">名 空き</span>
+                </div>
+                <div className="av-detail">
+                  最長連続 <span className="av-highlight">{availabilityData[0].maxContinuousHours}h</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="availabilityFutureGrid">
+            {availabilityData.slice(1).map((stat, i) => (
+              <div key={stat.iso} className={`av-cell ${stat.isFull ? 'is-full' : ''}`}>
+                <span className="av-count">{stat.freeCount}名</span>
+                <span className="av-detail">{stat.maxContinuousHours}h</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       <div className="rollingWeekGrid">
         <div className="todayColumn">
           {rollingDays[0] != null && renderDayColumn(rollingDays[0], true)}
@@ -3088,6 +4017,13 @@ function ContactWeekPanel({
           const labelIso = columnLabelIsos[i] ?? iso;
           return (
             <div key={iso} className="weekCol">
+              {(() => {
+                const diff = Math.round((new Date(weekDayIsos[i] + 'T00:00:00').getTime() - new Date(weekDayIsos[0] + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24));
+                if (diff === 1) return <div className="contactDayLabelOutside">1日前 連絡日</div>;
+                if (diff === 3) return <div className="contactDayLabelOutside">3日前 連絡日</div>;
+                if (diff === 7) return <div className="contactDayLabelOutside">7日前 連絡日</div>;
+                return null;
+              })()}
               <div className="weekColHead static">
                 <span className="weekColDate">{isoToDateLabel(labelIso)}</span>
                 <span className="weekColCount">{dayAppts.length}件</span>
@@ -3226,6 +4162,12 @@ function CleaningWeekPanel({
                     const isHighlight = selectedAppointmentId === a.id;
                     const isLinked = activeScheduleId != null && (a.schedule_id ?? a.id) === activeScheduleId;
                     const lastAt = formatContactLastAt(a.contact_last_at);
+
+                    // 清掃員情報を取得
+                    const cleaner = cleaners.find((c) => String(c.id) === String(a.cleaner_id));
+                    const cleanerName = cleaner?.name || '';
+                    const isInProgress = a.status === 'in_progress';
+
                     return (
                       <button
                         key={a.id}
@@ -3237,6 +4179,11 @@ function CleaningWeekPanel({
                         <span className="weekApptTime">{minutesToHHMM(a.start_min)}</span>
                         <span className="weekApptName">{a.target_name}</span>
                         {conflict && <span className="warn">⚠</span>}
+                        {isInProgress && cleanerName && (
+                          <span style={{ fontSize: '0.85em', fontWeight: '600', color: '#f59e0b', marginLeft: '4px' }}>
+                            🔨 {cleanerName}
+                          </span>
+                        )}
                         {(a.contact_note || lastAt) && (
                           <div className="cleaningCardContact">
                             {a.contact_note && <span className="cleaningCardNote">{a.contact_note}</span>}
@@ -3313,6 +4260,7 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
   const [localBrands, setLocalBrands] = useState([]);
   const [localStores, setLocalStores] = useState([]);
   const [unifiedSearchQuery, setUnifiedSearchQuery] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(0); // 0: なし, 1: 一次確認, 2: 最終確認
   const conflict = conflictIds.has(appt.id);
 
   // 統合検索：法人名、ブランド名、店舗名を一度に検索
@@ -3320,26 +4268,26 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
     if (!unifiedSearchQuery || !unifiedSearchQuery.trim()) return [];
     if (!stores || stores.length === 0) return [];
     if (!clients || !brands) return [];
-    
+
     const query = unifiedSearchQuery.toLowerCase().trim();
     if (!query) return [];
-    
+
     const results = [];
-    
+
     stores.forEach((store) => {
       if (!store) return;
-      
+
       try {
         const storeName = (store.name || store.store_name || store.id || '').toLowerCase();
         const client = store.client_id ? (clients.find((c) => String(c.id) === String(store.client_id)) || null) : null;
         const clientName = (client?.name || client?.client_name || client?.company_name || '').toLowerCase();
         const brand = store.brand_id ? (brands.find((b) => String(b.id) === String(store.brand_id)) || null) : null;
         const brandName = (brand?.name || brand?.brand_name || '').toLowerCase();
-        
+
         // 検索対象：店舗名、法人名、ブランド名、電話番号
         const phone = (store.phone || store.tel || store.phone_number || '').toLowerCase();
         const searchText = `${storeName} ${clientName} ${brandName} ${phone}`.trim();
-        
+
         if (searchText && searchText.includes(query)) {
           results.push({
             store,
@@ -3353,14 +4301,14 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
         console.warn('[AppointmentModal] Error processing store for search:', store, error);
       }
     });
-    
+
     // 検索結果をソート（店舗名でソート）
     results.sort((a, b) => {
       const aName = (a.store?.name || a.store?.store_name || '').toLowerCase();
       const bName = (b.store?.name || b.store?.store_name || '').toLowerCase();
       return aName.localeCompare(bName);
     });
-    
+
     return results;
   }, [unifiedSearchQuery, stores, clients, brands]);
 
@@ -3394,7 +4342,7 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
   useEffect(() => {
     if (selectedBrandId && selectedClientId) {
       // 選択されたブランドに紐づく店舗を取得（法人も一致するもの）
-      const brandStores = stores.filter((s) => 
+      const brandStores = stores.filter((s) =>
         String(s.brand_id) === String(selectedBrandId) &&
         String(s.client_id) === String(selectedClientId)
       );
@@ -3545,85 +4493,85 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
                     <span>顧客新規登録</span>
                   </Link>
                 </div>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.2)', background: 'rgba(0, 0, 0, 0.2)', color: 'var(--text)' }}>
-                      <i className="fas fa-search" style={{ color: 'var(--muted)', fontSize: '14px' }}></i>
-                      <input
-                        type="text"
-                        value={unifiedSearchQuery}
-                        onChange={(e) => setUnifiedSearchQuery(e.target.value)}
-                        placeholder="法人名・ブランド名・店舗名・電話番号で検索..."
-                        style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--text)', outline: 'none', fontSize: '14px' }}
-                      />
-                      {unifiedSearchQuery && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setUnifiedSearchQuery('');
-                          }}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: '0 4px' }}
-                          aria-label="検索をクリア"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                    {unifiedSearchQuery && unifiedSearchResults.length > 0 && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', maxHeight: '400px', overflowY: 'auto', background: 'rgba(18, 22, 33, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', zIndex: 1000, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' }}>
-                        {unifiedSearchResults.map((result, idx) => {
-                          const store = result.store;
-                          const client = result.client;
-                          const brand = result.brand;
-                          
-                          return (
-                            <div
-                              key={store?.id || idx}
-                              onClick={() => {
-                                if (store) {
-                                  if (client) {
-                                    handleClientChange(client.id);
-                                  }
-                                  if (brand) {
-                                    handleBrandChange(brand.id);
-                                  }
-                                  handleStoreChange(store.id);
-                                  setUnifiedSearchQuery('');
-                                }
-                              }}
-                              style={{
-                                padding: '12px',
-                                cursor: 'pointer',
-                                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                                color: 'var(--text)',
-                                transition: 'background 0.2s'
-                              }}
-                              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
-                              onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                            >
-                              <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
-                                {store?.name || store?.store_name || store?.id || '（店舗不明）'}
-                              </div>
-                              <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '2px' }}>
-                                {brand?.name || brand?.brand_name ? `ブランド: ${brand.name || brand.brand_name}` : 'ブランド: （不明）'}
-                              </div>
-                              <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '2px' }}>
-                                {client?.name || client?.client_name ? `法人: ${client.name || client.client_name}` : '法人: （不明）'}
-                              </div>
-                              {store?.phone || store?.tel || store?.phone_number ? (
-                                <div style={{ fontSize: '12px', color: 'var(--muted)' }}>📞 {store.phone || store.tel || store.phone_number}</div>
-                              ) : null}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {unifiedSearchQuery && unifiedSearchResults.length === 0 && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', padding: '12px', background: 'rgba(18, 22, 33, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', zIndex: 1000, color: 'var(--muted)', fontSize: '14px' }}>
-                        {stores.length === 0 ? '店舗データが読み込まれていません' : '該当する店舗が見つかりません'}
-                      </div>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.2)', background: 'rgba(0, 0, 0, 0.2)', color: 'var(--text)' }}>
+                    <i className="fas fa-search" style={{ color: 'var(--muted)', fontSize: '14px' }}></i>
+                    <input
+                      type="text"
+                      value={unifiedSearchQuery}
+                      onChange={(e) => setUnifiedSearchQuery(e.target.value)}
+                      placeholder="法人名・ブランド名・店舗名・電話番号で検索..."
+                      style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--text)', outline: 'none', fontSize: '14px' }}
+                    />
+                    {unifiedSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setUnifiedSearchQuery('');
+                        }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: '0 4px' }}
+                        aria-label="検索をクリア"
+                      >
+                        ×
+                      </button>
                     )}
                   </div>
+                  {unifiedSearchQuery && unifiedSearchResults.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', maxHeight: '400px', overflowY: 'auto', background: 'rgba(18, 22, 33, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', zIndex: 1000, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' }}>
+                      {unifiedSearchResults.map((result, idx) => {
+                        const store = result.store;
+                        const client = result.client;
+                        const brand = result.brand;
+
+                        return (
+                          <div
+                            key={store?.id || idx}
+                            onClick={() => {
+                              if (store) {
+                                if (client) {
+                                  handleClientChange(client.id);
+                                }
+                                if (brand) {
+                                  handleBrandChange(brand.id);
+                                }
+                                handleStoreChange(store.id);
+                                setUnifiedSearchQuery('');
+                              }
+                            }}
+                            style={{
+                              padding: '12px',
+                              cursor: 'pointer',
+                              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: 'var(--text)',
+                              transition: 'background 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
+                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                          >
+                            <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
+                              {store?.name || store?.store_name || store?.id || '（店舗不明）'}
+                            </div>
+                            <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '2px' }}>
+                              {brand?.name || brand?.brand_name ? `ブランド: ${brand.name || brand.brand_name}` : 'ブランド: （不明）'}
+                            </div>
+                            <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '2px' }}>
+                              {client?.name || client?.client_name ? `法人: ${client.name || client.client_name}` : '法人: （不明）'}
+                            </div>
+                            {store?.phone || store?.tel || store?.phone_number ? (
+                              <div style={{ fontSize: '12px', color: 'var(--muted)' }}>📞 {store.phone || store.tel || store.phone_number}</div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {unifiedSearchQuery && unifiedSearchResults.length === 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', padding: '12px', background: 'rgba(18, 22, 33, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', zIndex: 1000, color: 'var(--muted)', fontSize: '14px' }}>
+                      {stores.length === 0 ? '店舗データが読み込まれていません' : '該当する店舗が見つかりません'}
+                    </div>
+                  )}
+                </div>
               </label>
               {selectedClientId && (
                 <div style={{ marginTop: '8px', padding: '8px 12px', borderRadius: '4px', background: 'rgba(58, 108, 255, 0.1)', border: '1px solid rgba(58, 108, 255, 0.3)', fontSize: '13px', color: 'var(--text)', gridColumn: 'span 2' }}>
@@ -3708,7 +4656,7 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
         <div className="modalFooter">
           <div className="left">
             {mode !== 'create' && (
-              <button type="button" className="btnDanger" onClick={() => onDelete(local.id)}>削除</button>
+              <button type="button" className="btnDanger" onClick={() => setShowDeleteConfirm(1)}>削除</button>
             )}
           </div>
           <div className="right">
@@ -3718,6 +4666,34 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
             </button>
           </div>
         </div>
+
+        {/* 削除確認オーバーレイ（1段階目） */}
+        {showDeleteConfirm === 1 && (
+          <div className="confirmOverlay" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2000, borderRadius: '12px', backdropFilter: 'blur(4px)' }}>
+            <div style={{ padding: '32px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.2em', fontWeight: 'bold', marginBottom: '16px', color: '#ff4d4f' }}>⚠️ 注意</div>
+              <p style={{ marginBottom: '24px', lineHeight: '1.6' }}>この操作は取り消せません。<br />本当にこのスケジュールを削除しますか？</p>
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                <button type="button" className="btn" onClick={() => setShowDeleteConfirm(0)}>キャンセル</button>
+                <button type="button" className="btnDanger" onClick={() => setShowDeleteConfirm(2)}>次へ（最終確認）</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 削除確認オーバーレイ（2段階目） */}
+        {showDeleteConfirm === 2 && (
+          <div className="confirmOverlay" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(180,0,0,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2001, borderRadius: '12px', border: '2px solid #ff4d4f' }}>
+            <div style={{ padding: '32px', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.5em', fontWeight: 'bold', marginBottom: '16px', color: '#fff' }}>🛑 最終確認</div>
+              <p style={{ marginBottom: '24px', fontWeight: 'bold', color: '#fff' }}>「{local.target_name}」の予定を完全に削除します。<br />本当によろしいですか？</p>
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                <button type="button" className="btn" onClick={() => setShowDeleteConfirm(0)} style={{ background: '#fff', color: '#000' }}>やめる</button>
+                <button type="button" className="btnDanger" style={{ padding: '12px 24px', fontSize: '1.1em', animation: 'pulse 1.5s infinite' }} onClick={() => onDelete(local.id)}>はい、削除します</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

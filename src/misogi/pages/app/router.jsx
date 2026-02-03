@@ -34,6 +34,7 @@ import SalesSchedulePage from '../shared/ui/Sales/SalesSchedulePage';
 import OfficeClientListPage from '../jobs/office/clients/OfficeClientListPage';
 import OfficeClientNewPage from '../jobs/office/clients/OfficeClientNewPage';
 import OfficeClientKartePage from '../jobs/office/clients/OfficeClientKartePage';
+import CleanerSchedulePage from '../jobs/cleaning/pages/CleanerSchedulePage';
 
 /** import.meta.glob で jobs 配下の entrance/Page.jsx を動的解決 */
 const pageModules = import.meta.glob('../jobs/*/entrance/Page.jsx');
@@ -99,6 +100,7 @@ export default function Router() {
       <Route path="/office/clients/list" element={<OfficeClientListPage />} />
       <Route path="/office/clients/new" element={<OfficeClientNewPage />} />
       <Route path="/office/clients/:storeId" element={<OfficeClientKartePage />} />
+      <Route path="/jobs/cleaning/schedule" element={<CleanerSchedulePage />} />
     </Routes>
   );
 }
