@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Visualizer from './Visualizer/Visualizer';
 import Hotbar from './Hotbar/Hotbar';
-import { useReportStyleTransition, TRANSITION_CLASS_PAGE, TRANSITION_CLASS_UI, ReportTransitionOverlay } from './ReportTransition/reportTransition.jsx';
+import { useReportStyleTransition, TRANSITION_CLASS_PAGE, TRANSITION_CLASS_UI, ReportTransitionOverlay, useFlashTransition } from './ReportTransition/reportTransition.jsx';
 import { JOBS } from '../utils/constants';
 
 const JOB_KEYS = ['sales', 'cleaning', 'office', 'dev', 'admin'];
@@ -15,15 +15,27 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig }) {
   const actions = Array.isArray(hotbarConfig) && hotbarConfig.length === 4 ? hotbarConfig : null;
   const [tab, setTab] = useState(actions?.[0]?.id ?? null);
 
+  const { startTransition: startFlashTransition } = useFlashTransition();
+
   const onHotbar = (id) => {
     const action = actions?.find((a) => a.id === id);
     setTab(id);
-    // subItemsがない場合、toプロパティがあれば遷移
-    if (!action?.subItems && action?.to) {
+
+    if (action?.to) {
       if (action.to.startsWith('http')) {
-        window.location.href = action.to;
+        // External link
+        if (action.role === 'log') {
+          // Wait for log animation (handled by Visualizer)
+        } else {
+          window.location.href = action.to;
+        }
       } else {
-        navigate(action.to);
+        // Internal link
+        if (action.role === 'log') {
+          // Wait for log animation
+        } else {
+          startFlashTransition(action.to);
+        }
       }
     }
   };

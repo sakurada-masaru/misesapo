@@ -7,7 +7,9 @@ import {
   getWorkReportsForStore,
   getUploadUrl,
 } from './salesKarteApi';
+import OfficeClientKartePanel from '../../../jobs/office/clients/OfficeClientKartePanel';
 import './sales-store-karte.css';
+import '../../../jobs/office/clients/office-client-karte-panel.css';
 
 const TEMPLATE_ENTITY = 'SALES_ENTITY_V1';
 const TEMPLATE_ACTIVITY = 'SALES_ACTIVITY_V1';
@@ -99,7 +101,7 @@ function deserializeEntity(descriptionJson, workReportItem) {
     pipeline = d.pipeline || 'new';
     note = d.note || '';
     attachments = Array.isArray(d.attachments) ? d.attachments : [];
-  } catch (_) {}
+  } catch (_) { }
   return {
     store,
     pipeline,
@@ -130,7 +132,7 @@ function deserializeActivity(descriptionJson, workReportItem) {
   let o = {};
   try {
     o = JSON.parse(descriptionJson || '{}');
-  } catch (_) {}
+  } catch (_) { }
   return {
     store_key: o.store_key || '',
     store_name: o.store_name || '',
@@ -164,7 +166,7 @@ function deserializeTodo(descriptionJson, workReportItem) {
   let o = {};
   try {
     o = JSON.parse(descriptionJson || '{}');
-  } catch (_) {}
+  } catch (_) { }
   return {
     store_key: o.store_key || '',
     store_name: o.store_name || '',
@@ -208,6 +210,7 @@ export default function SalesStoreKartePage() {
   const [activeTab, setActiveTab] = useState('entity'); // 'entity' | 'activities' | 'todos'
   const [newActivity, setNewActivity] = useState(() => emptyActivity(decodedKey, entity.store?.store_name || ''));
   const [newTodo, setNewTodo] = useState(() => emptyTodo(decodedKey, entity.store?.store_name || ''));
+  const [storeMetadata, setStoreMetadata] = useState(null);
   const fileInputRefs = useRef({});
 
   const today = new Date().toISOString().slice(0, 10);
@@ -477,6 +480,14 @@ export default function SalesStoreKartePage() {
     [todos, entity.store?.store_name, decodedKey, today, updateTodo]
   );
 
+  const headers = useCallback(
+    () => ({
+      Authorization: `Bearer ${localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}').token)}`,
+      'Content-Type': 'application/json',
+    }),
+    []
+  );
+
   useEffect(() => {
     if (!decodedKey) {
       setLoading(false);
@@ -484,8 +495,19 @@ export default function SalesStoreKartePage() {
       return;
     }
     setEntity((e) => ({ ...e, store: { ...e.store, key: decodedKey } }));
-    getWorkReportsForStore(decodedKey, 30)
-      .then((items) => {
+
+    const API_BASE = (() => {
+      if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
+        return '/api';
+      }
+      return import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    })();
+
+    Promise.all([
+      getWorkReportsForStore(decodedKey, 30),
+      fetch(`${API_BASE}/stores/${decodedKey}`, { headers: headers() }).then(res => res.ok ? res.json() : null)
+    ])
+      .then(([items, storeData]) => {
         const entityItem = items.find((i) => {
           if (i.template_id !== TEMPLATE_ENTITY) return false;
           try {
@@ -493,16 +515,37 @@ export default function SalesStoreKartePage() {
             return d.store?.key === decodedKey;
           } catch (_) { return false; }
         }) || null;
+
         const activityItems = items.filter((i) => i.template_id === TEMPLATE_ACTIVITY);
         const todoItems = items.filter((i) => i.template_id === TEMPLATE_TODO);
-        if (entityItem) setEntity(deserializeEntity(entityItem.description, entityItem));
+
+        if (entityItem) {
+          setEntity(deserializeEntity(entityItem.description, entityItem));
+        } else if (storeData) {
+          // ワークレポートがない場合、マスタ情報で初期化
+          setEntity({
+            ...emptyEntity(decodedKey),
+            store: {
+              key: decodedKey,
+              company_name: storeData.company_name || '',
+              brand_name: storeData.brand_name || '',
+              store_name: storeData.name || '',
+              address: [storeData.address1, storeData.address2].filter(Boolean).join(' '),
+              tel: storeData.phone || '',
+              contact_person: storeData.contact_person || '',
+              email: storeData.email || '',
+            }
+          });
+        }
+
         setActivities(activityItems.map((it) => deserializeActivity(it.description, it)).sort((a, b) => (b.datetime || '').localeCompare(a.datetime || '')));
         setTodos(todoItems.map((it) => deserializeTodo(it.description, it)));
+        setStoreMetadata(storeData);
         setError('');
       })
       .catch((e) => setError(e.message || 'データの取得に失敗しました'))
       .finally(() => setLoading(false));
-  }, [decodedKey]);
+  }, [decodedKey, headers]);
 
   useEffect(() => {
     setNewActivity((a) => ({ ...a, store_key: decodedKey, store_name: entity.store?.store_name || '' }));
@@ -569,6 +612,17 @@ export default function SalesStoreKartePage() {
             onClick={() => setActiveTab('todos')}
           >
             次アクション
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'cleaning'}
+            aria-controls="sales-karte-panel-cleaning"
+            id="sales-karte-tab-cleaning"
+            className={`sales-karte-tab ${activeTab === 'cleaning' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('cleaning')}
+          >
+            清掃情報
           </button>
         </div>
 
@@ -840,6 +894,24 @@ export default function SalesStoreKartePage() {
               </li>
             ))}
           </ul>
+        </section>
+
+        {/* 清掃情報パネル（お客様カルテ） */}
+        <section
+          id="sales-karte-panel-cleaning"
+          role="tabpanel"
+          aria-labelledby="sales-karte-tab-cleaning"
+          className="sales-karte-card sales-karte-cleaning"
+          hidden={activeTab !== 'cleaning'}
+          style={{ padding: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}
+        >
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: '16px' }}>
+            <OfficeClientKartePanel
+              storeId={decodedKey}
+              store={storeMetadata || entity.store}
+              isLocked={true}
+            />
+          </div>
         </section>
       </div>
     </div>

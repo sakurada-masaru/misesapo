@@ -27,6 +27,8 @@ function isFullscreenPath(pathname) {
   if (pathname === '/admin/cleaning-reports') return true;
   if (pathname === '/admin/schedule') return true;
   if (pathname === '/jobs/cleaning/schedule') return true;
+  if (pathname === '/jobs/cleaning/clients/list') return true;
+  if (/^\/jobs\/cleaning\/clients\/[^/]+$/.test(pathname)) return true;
   if (pathname.startsWith('/office/payroll/')) return true;
   if (pathname.startsWith('/office/work-reports/')) return true;
   if (pathname.startsWith('/sales/work-reports/')) return true;
@@ -55,7 +57,6 @@ export default function App() {
             <Link to="/admin/entrance">管理</Link>
             <Link to="/admin">管理 TOP</Link>
             <Link to="/admin/hr/attendance">HR Attendance</Link>
-            <Link to="/sales/store/demo">営業カルテ（店舗）</Link>
           </nav>
           <Router />
         </div>
