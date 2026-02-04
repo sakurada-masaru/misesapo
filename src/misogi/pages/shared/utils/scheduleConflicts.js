@@ -100,18 +100,18 @@ export function detectConflicts({
     const candStart = toMs(cand.start_at);
     const candEnd = toMs(cand.end_at);
 
-    const existing = byUser[userId] ?? [];
+    const existing = byUser[String(userId)] ?? [];
     for (const e of existing) {
-      if (e.id === cand.id) continue;
+      if (String(e.id) === String(cand.id)) continue;
       const eStart = toMs(e.start_at);
       const eEnd = toMs(e.end_at);
       if (overlaps(candStart, candEnd, eStart, eEnd)) {
-        const name = userIdToName[userId];
+        const name = userIdToName[String(userId)];
         conflicts.push({
-          user_id: userId,
+          user_id: String(userId),
           user_name: name,
           with_type: 'appointment',
-          with_id: e.id,
+          with_id: String(e.id),
           start_at: e.start_at,
           end_at: e.end_at,
           message: `${name ?? userId} が ${fmtTimeRange(cand.start_at, cand.end_at)} で別予定と重複しています`,
@@ -120,17 +120,17 @@ export function detectConflicts({
       }
     }
 
-    const personalBlocks = blocksByUser[userId] ?? [];
+    const personalBlocks = blocksByUser[String(userId)] ?? [];
     for (const b of personalBlocks) {
       const bStart = toMs(b.start_at);
       const bEnd = toMs(b.end_at);
       if (overlaps(candStart, candEnd, bStart, bEnd)) {
-        const name = userIdToName[userId];
+        const name = userIdToName[String(userId)];
         conflicts.push({
-          user_id: userId,
+          user_id: String(userId),
           user_name: name,
           with_type: 'block',
-          with_id: b.id,
+          with_id: String(b.id),
           start_at: b.start_at,
           end_at: b.end_at,
           message: `${name ?? userId} のクローズ（${fmtTimeRange(b.start_at, b.end_at)}）と重複しています`,
@@ -143,12 +143,12 @@ export function detectConflicts({
       const bStart = toMs(b.start_at);
       const bEnd = toMs(b.end_at);
       if (overlaps(candStart, candEnd, bStart, bEnd)) {
-        const name = userIdToName[userId];
+        const name = userIdToName[String(userId)];
         conflicts.push({
-          user_id: userId,
+          user_id: String(userId),
           user_name: name,
           with_type: 'block',
-          with_id: b.id,
+          with_id: String(b.id),
           start_at: b.start_at,
           end_at: b.end_at,
           message: `${name ?? userId} は全体クローズ（${fmtTimeRange(b.start_at, b.end_at)}）のため割当できません`,
@@ -184,16 +184,16 @@ export function detectBlockConflicts({
   if (block.user_id != null) {
     // 個人ブロック: そのユーザーの予定・ブロックと重複チェック
     for (const e of existingAppointments) {
-      if (e.assignee_id !== block.user_id) continue;
+      if (String(e.assignee_id) !== String(block.user_id)) continue;
       const eStart = toMs(e.start_at);
       const eEnd = toMs(e.end_at);
       if (overlaps(blockStart, blockEnd, eStart, eEnd)) {
-        const name = userIdToName[block.user_id];
+        const name = userIdToName[String(block.user_id)];
         conflicts.push({
-          user_id: block.user_id,
+          user_id: String(block.user_id),
           user_name: name,
           with_type: 'appointment',
-          with_id: e.id,
+          with_id: String(e.id),
           start_at: e.start_at,
           end_at: e.end_at,
           message: `${name ?? block.user_id} の既存予定（${fmtTimeRange(e.start_at, e.end_at)}）と重複しています`,
@@ -202,19 +202,19 @@ export function detectBlockConflicts({
       }
     }
     for (const b of existingBlocks) {
-      if (b.id === block.id) continue;
+      if (String(b.id) === String(block.id)) continue;
       const uid = b.user_id;
-      if (uid != null && uid !== block.user_id) continue;
+      if (uid != null && String(uid) !== String(block.user_id)) continue;
       if (uid === null) {
         const bStart = toMs(b.start_at);
         const bEnd = toMs(b.end_at);
         if (overlaps(blockStart, blockEnd, bStart, bEnd)) {
-          const name = userIdToName[block.user_id];
+          const name = userIdToName[String(block.user_id)];
           conflicts.push({
-            user_id: block.user_id,
+            user_id: String(block.user_id),
             user_name: name,
             with_type: 'block',
-            with_id: b.id,
+            with_id: String(b.id),
             start_at: b.start_at,
             end_at: b.end_at,
             message: `全体クローズ（${fmtTimeRange(b.start_at, b.end_at)}）と重複しています`,
@@ -225,12 +225,12 @@ export function detectBlockConflicts({
         const bStart = toMs(b.start_at);
         const bEnd = toMs(b.end_at);
         if (overlaps(blockStart, blockEnd, bStart, bEnd)) {
-          const name = userIdToName[block.user_id];
+          const name = userIdToName[String(block.user_id)];
           conflicts.push({
-            user_id: block.user_id,
+            user_id: String(block.user_id),
             user_name: name,
             with_type: 'block',
-            with_id: b.id,
+            with_id: String(b.id),
             start_at: b.start_at,
             end_at: b.end_at,
             message: `${name ?? block.user_id} の既存クローズ（${fmtTimeRange(b.start_at, b.end_at)}）と重複しています`,

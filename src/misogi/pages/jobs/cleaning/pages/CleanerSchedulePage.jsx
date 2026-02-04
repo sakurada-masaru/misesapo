@@ -177,7 +177,7 @@ export default function CleanerSchedulePage() {
 
         const url = `${API_BASE}/workers`;
         console.log('[CleanerSchedulePage] Fetching workers from:', url);
-        
+
         const res = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -192,10 +192,10 @@ export default function CleanerSchedulePage() {
 
         const data = await res.json();
         const workers = Array.isArray(data) ? data : (data?.items || []);
-        
+
         console.log('[CleanerSchedulePage] Workers fetched:', workers.length, 'workers');
         console.log('[CleanerSchedulePage] Looking for email:', user.email);
-        
+
         // 自分のメールアドレスでworkerを検索
         const myWorker = workers.find(w => {
           const workerEmail = w.email || w.email_address || '';
@@ -217,10 +217,10 @@ export default function CleanerSchedulePage() {
           }
         } else {
           console.warn('[CleanerSchedulePage] Worker not found for email:', user.email);
-          console.log('[CleanerSchedulePage] Available workers:', workers.map(w => ({ 
-            id: w.id, 
+          console.log('[CleanerSchedulePage] Available workers:', workers.map(w => ({
+            id: w.id,
             email: w.email || w.email_address,
-            name: w.name 
+            name: w.name
           })));
         }
       } catch (error) {
@@ -269,7 +269,7 @@ export default function CleanerSchedulePage() {
       dateFrom = r.monthStart;
       dateTo = r.monthEnd;
     }
-    
+
     console.log('[CleanerSchedulePage] Loading schedules for workerId:', targetWorkerId, 'date:', dateISO, 'view:', view, 'range:', dateFrom, dateTo);
     setLoading(true);
     try {
@@ -281,9 +281,9 @@ export default function CleanerSchedulePage() {
       }
 
       const url = `${API_BASE}/schedules?date_from=${dateFrom}&date_to=${dateTo}&worker_id=${encodeURIComponent(targetWorkerId)}&limit=1000`;
-      
+
       console.log('[CleanerSchedulePage] Fetching:', url);
-      
+
       const res = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -298,7 +298,7 @@ export default function CleanerSchedulePage() {
 
       const data = await res.json();
       const schedules = data.items || [];
-      
+
       console.log('[CleanerSchedulePage] API Response:', {
         url,
         status: res.status,
@@ -306,19 +306,19 @@ export default function CleanerSchedulePage() {
         firstSchedule: schedules[0] || null,
         targetWorkerId,
       });
-      
+
       // フロントエンド用の形式に変換
       const converted = schedules.map(s => {
         let startMin = 0;
         let endMin = 0;
-        
+
         if (s.start_time) {
           const startDate = dayjs(s.start_time);
           startMin = startDate.hour() * 60 + startDate.minute();
         } else if (s.start_min !== undefined) {
           startMin = s.start_min;
         }
-        
+
         if (s.end_time) {
           const endDate = dayjs(s.end_time);
           endMin = endDate.hour() * 60 + endDate.minute();
@@ -353,14 +353,14 @@ export default function CleanerSchedulePage() {
 
   // workerIdが設定されたらスケジュールを読み込む（日別 or 週間で範囲を変える）
   useEffect(() => {
-    console.log('[CleanerSchedulePage] useEffect for loadSchedules triggered:', { 
-      isAuthenticated, 
-      workerId, 
+    console.log('[CleanerSchedulePage] useEffect for loadSchedules triggered:', {
+      isAuthenticated,
+      workerId,
       dateISO,
       view,
       loadSchedulesExists: typeof loadSchedules === 'function'
     });
-    
+
     if (!isAuthenticated || !workerId) {
       console.log('[CleanerSchedulePage] Skipping loadSchedules:', { isAuthenticated, workerId });
       return;
@@ -378,7 +378,7 @@ export default function CleanerSchedulePage() {
       setBlocksLoading(false);
       return;
     }
-    
+
     console.log('[CleanerSchedulePage] Loading blocks for workerId:', targetWorkerId);
     setBlocksLoading(true);
     try {
@@ -394,9 +394,9 @@ export default function CleanerSchedulePage() {
       const dateFrom = dayjs(dateISO).subtract(7, 'day').format('YYYY-MM-DD');
       const dateTo = dayjs(dateISO).add(7, 'day').format('YYYY-MM-DD');
       const url = `${API_BASE}/blocks?user_id=${encodeURIComponent(targetWorkerId)}&date_from=${dateFrom}&date_to=${dateTo}&limit=1000`;
-      
+
       console.log('[CleanerSchedulePage] Fetching blocks:', url);
-      
+
       const res = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -415,10 +415,10 @@ export default function CleanerSchedulePage() {
 
       const data = await res.json();
       const blocksList = data.items || [];
-      
+
       console.log('[CleanerSchedulePage] Blocks fetched:', blocksList.length);
       setBlocks(blocksList);
-      
+
       // 成功時はlocalStorageにも保存（オフライン時のフォールバック用）
       saveJson(STORAGE_BLOCKS, blocksList);
     } catch (error) {
@@ -469,7 +469,7 @@ export default function CleanerSchedulePage() {
   useEffect(() => {
     try {
       localStorage.setItem('cleaner-schedule-karte-dock-height', String(karteDockHeight));
-    } catch (_) {}
+    } catch (_) { }
   }, [karteDockHeight]);
 
   const handleCloseKarteDock = useCallback(() => {
@@ -565,7 +565,7 @@ export default function CleanerSchedulePage() {
 
       const url = `${API_BASE}/blocks`;
       console.log('[CleanerSchedulePage] Creating block:', url, newBlock);
-      
+
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -582,22 +582,51 @@ export default function CleanerSchedulePage() {
 
       const data = await res.json();
       const createdBlock = data.block || newBlock;
-      
+
       console.log('[CleanerSchedulePage] Block created:', createdBlock);
-      
+
       // ローカル状態を更新
       setBlocks((prev) => [...prev, createdBlock]);
-      
+
       // localStorageにも保存（オフライン時のフォールバック用）
       const updatedBlocks = [...blocks, createdBlock];
       saveJson(STORAGE_BLOCKS, updatedBlocks);
-      
+
       closeBlockModal();
     } catch (error) {
       console.error('[CleanerSchedulePage] Failed to create block:', error);
       setBlockConflictError(`ブロックの作成に失敗しました: ${error.message}`);
     }
-  }, [workerId, appointments, blocks, user?.name, closeBlockModal, getToken]);
+  }, [workerId, appointments, blocks, user?.name, closeBlockModal, getToken, loadBlocks]);
+
+  // ブロック削除
+  const deleteBlock = useCallback(async (blockId) => {
+    if (!window.confirm('このブロック（クローズ）を削除しますか？')) return;
+    try {
+      const token = getToken();
+      if (!token) throw new Error('認証トークンが取得できません');
+
+      const url = `${API_BASE}/blocks/${blockId}`;
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      // ローカル状態を更新
+      setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+
+      // localStorageも更新
+      const updatedBlocks = blocks.filter((b) => b.id !== blockId);
+      saveJson(STORAGE_BLOCKS, updatedBlocks);
+    } catch (error) {
+      console.error('[CleanerSchedulePage] Failed to delete block:', error);
+      alert('削除に失敗しました');
+    }
+  }, [blocks, getToken]);
 
   // 日付変更
   const shiftDate = useCallback((days) => {
@@ -611,21 +640,22 @@ export default function CleanerSchedulePage() {
   // タイムライン用のアイテムを生成
   const timelineItems = useMemo(() => {
     const list = [];
-    
+
     // スケジュールを追加
     for (const a of appointments) {
       list.push({ type: 'appointment', data: a, start_min: a.start_min, end_min: a.end_min });
     }
-    
+
     // ブロックを追加
     for (const b of blocks) {
-      if (b.user_id !== workerId && b.user_id != null) continue;
+      // 数値・文字列の混在を考慮して String() で比較
+      if (b.user_id != null && String(b.user_id) !== String(workerId)) continue;
       const display = blockDisplayForDay(b, dateISO);
       if (display) {
         list.push({ type: 'block', block: b, start_min: display.start_min, end_min: display.end_min });
       }
     }
-    
+
     list.sort((x, y) => x.start_min - y.start_min);
     return list;
   }, [appointments, blocks, workerId, dateISO]);
@@ -662,7 +692,7 @@ export default function CleanerSchedulePage() {
     return weekDays.map((dayIso) => {
       const dayAppointments = appointments.filter((a) => (a.date || '').slice(0, 10) === dayIso);
       const dayBlocks = blocks.filter((b) => {
-        if (b.user_id !== workerId && b.user_id != null) return false;
+        if (b.user_id != null && String(b.user_id) !== String(workerId)) return false;
         const display = blockDisplayForDay(b, dayIso);
         return display != null;
       });
@@ -704,9 +734,9 @@ export default function CleanerSchedulePage() {
     return (
       <div className="cleaner-schedule-page" style={{ padding: 24, textAlign: 'center' }}>
         <p style={{ marginBottom: '16px' }}>認証が必要です</p>
-        <Link 
+        <Link
           to="/jobs/cleaning/entrance"
-          style={{ 
+          style={{
             display: 'inline-block',
             padding: '12px 24px',
             fontSize: '0.95rem',
@@ -734,9 +764,9 @@ export default function CleanerSchedulePage() {
         <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '16px' }}>
           管理者に連絡してください
         </p>
-        <Link 
+        <Link
           to="/jobs/cleaning/entrance"
-          style={{ 
+          style={{
             display: 'inline-block',
             padding: '12px 24px',
             fontSize: '0.95rem',
@@ -817,7 +847,7 @@ export default function CleanerSchedulePage() {
                 {weekDaysWithItems.map(({ dayIso, items }) => (
                   <div key={dayIso} className="weekViewDay" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '8px', minHeight: '120px' }}>
                     <div className="weekViewDayHead" style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '6px', fontWeight: 600 }}>
-                      {dayjs(dayIso).format('M/D')}({['日','月','火','水','木','金','土'][dayjs(dayIso).day()]})
+                      {dayjs(dayIso).format('M/D')}({['日', '月', '火', '水', '木', '金', '土'][dayjs(dayIso).day()]})
                     </div>
                     <div className="weekViewDayBody" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {items.length === 0 ? (
@@ -827,9 +857,17 @@ export default function CleanerSchedulePage() {
                           if (item.type === 'block') {
                             const { block, start_min, end_min } = item;
                             return (
-                              <div key={block.id} className="spAppt scheduleCard blockCard" style={{ padding: '6px 8px', fontSize: '0.8rem' }}>
+                              <div key={block.id} className="spAppt scheduleCard blockCard" style={{ padding: '6px 8px', fontSize: '0.8rem', position: 'relative' }}>
                                 <div className="spApptName">🔒 クローズ</div>
                                 <div className="spApptMeta" style={{ fontSize: '0.7rem' }}>{minutesToHHMM(start_min)}–{minutesToHHMM(end_min)}</div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }}
+                                  style={{ position: 'absolute', top: 4, right: 4, background: 'transparent', border: 'none', color: 'rgba(239, 68, 68, 0.7)', padding: 4, cursor: 'pointer' }}
+                                  title="削除"
+                                >
+                                  ×
+                                </button>
                               </div>
                             );
                           }
@@ -849,69 +887,93 @@ export default function CleanerSchedulePage() {
             </section>
           )}
           {view === 'day' && (
-          <section className="timelineSP">
-            <div className="spList">
-              <div className="spHint">
-                <span className="muted">{isoToDateLabel(dateISO)}</span>
-              </div>
-              {slotsWithItems.map((slot) => (
-              <div key={slot.t} className="spSlot">
-                <div className="spTime">{minutesToHHMM(slot.t)}</div>
-                <div className="spSlotBody">
-                  {slot.items.length === 0 ? (
-                    <button
-                      type="button"
-                      className="spEmpty"
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        openBlockModal(slot.t);
-                      }}
-                      onClick={() => {
-                        openBlockModal(slot.t);
-                      }}
-                      style={{ touchAction: 'manipulation' }}
-                    >
-                      空き（タップでブロック作成）
-                    </button>
-                  ) : (
-                    slot.items.map((item) => {
-                      if (item.type === 'block') {
-                        const { block, start_min, end_min } = item;
-                        return (
-                          <div key={block.id} className="spAppt scheduleCard blockCard">
-                            <div className="spApptRow">
-                              <div className="spApptMain">
-                                <div className="spApptName">🔒 クローズ</div>
-                                <div className="spApptMeta">
-                                  {block.reason_code === 'sleep' ? '睡眠' : 
-                                   block.reason_code === 'move' ? '移動' : 
-                                   block.reason_code === 'private' ? '私用' : 'その他'}
-                                </div>
-                              </div>
-                              <div className="spApptTime">{minutesToHHMM(start_min)}–{minutesToHHMM(end_min)}</div>
-                            </div>
-                          </div>
-                        );
-                      }
-                      const a = item.data;
-                      return (
-                        <button key={a.id} type="button" className={`spAppt scheduleCard ${selectedAppt?.id === a.id ? 'active is-linked' : ''}`} style={{ width: '100%', textAlign: 'left', cursor: 'pointer' }} onClick={() => setSelectedAppt(a)}>
-                          <div className="spApptRow">
-                            <div className="spApptMain">
-                              <div className="spApptName">{a.target_name}</div>
-                              <div className="spApptMeta">{a.work_type}</div>
-                            </div>
-                            <div className="spApptTime">{minutesToHHMM(a.start_min)}–{minutesToHHMM(a.end_min)}</div>
-                          </div>
-                        </button>
-                      );
-                    })
-                  )}
+            <section className="timelineSP">
+              <div className="spList">
+                <div className="spHint">
+                  <span className="muted">{isoToDateLabel(dateISO)}</span>
                 </div>
+                {slotsWithItems.map((slot) => (
+                  <div key={slot.t} className="spSlot">
+                    <div className="spTime">{minutesToHHMM(slot.t)}</div>
+                    <div className="spSlotBody">
+                      {slot.items.length === 0 ? (
+                        <button
+                          type="button"
+                          className="spEmpty"
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            openBlockModal(slot.t);
+                          }}
+                          onClick={() => {
+                            openBlockModal(slot.t);
+                          }}
+                          style={{ touchAction: 'manipulation' }}
+                        >
+                          空き（タップでブロック作成）
+                        </button>
+                      ) : (
+                        slot.items.map((item) => {
+                          if (item.type === 'block') {
+                            const { block, start_min, end_min } = item;
+                            return (
+                              <div key={block.id} className="spAppt scheduleCard blockCard" style={{ position: 'relative' }}>
+                                <div className="spApptRow">
+                                  <div className="spApptMain">
+                                    <div className="spApptName">🔒 クローズ</div>
+                                    <div className="spApptMeta">
+                                      {block.reason_code === 'sleep' ? '睡眠' :
+                                        block.reason_code === 'move' ? '移動' :
+                                          block.reason_code === 'private' ? '私用' : 'その他'}
+                                    </div>
+                                  </div>
+                                  <div className="spApptTime">{minutesToHHMM(start_min)}–{minutesToHHMM(end_min)}</div>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="block-delete-btn"
+                                  onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '8px',
+                                    right: '8px',
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                    color: '#ef4444',
+                                    borderRadius: '50%',
+                                    width: '24px',
+                                    height: '24px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '14px',
+                                    cursor: 'pointer'
+                                  }}
+                                  title="削除"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            );
+                          }
+                          const a = item.data;
+                          return (
+                            <button key={a.id} type="button" className={`spAppt scheduleCard ${selectedAppt?.id === a.id ? 'active is-linked' : ''}`} style={{ width: '100%', textAlign: 'left', cursor: 'pointer' }} onClick={() => setSelectedAppt(a)}>
+                              <div className="spApptRow">
+                                <div className="spApptMain">
+                                  <div className="spApptName">{a.target_name}</div>
+                                  <div className="spApptMeta">{a.work_type}</div>
+                                </div>
+                                <div className="spApptTime">{minutesToHHMM(a.start_min)}–{minutesToHHMM(a.end_min)}</div>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
           )}
 
           {blockModalOpen && (
