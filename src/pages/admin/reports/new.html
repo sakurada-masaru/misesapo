@@ -82,6 +82,16 @@
     color: #64748b;
     margin-top: 2px;
   }
+
+  /* Hide AI Assistant for this page */
+  #report-assistant-fab,
+  .report-assistant-fab,
+  #report-assistant-overlay,
+  .report-assistant-overlay,
+  #details-btn,
+  .details-btn {
+    display: none !important;
+  }
 </style>
 
 <script src="/js/data_utils.js"></script>
@@ -387,8 +397,8 @@
           <div class="submit-section" style="display: flex; gap: 8px; margin-top: 20px; padding: 0 16px 80px;">
             <button type="button" class="btn-preview" id="formal-preview-btn"
               style="flex: 1; background-color: #6b7280; color: white;">
-              <i class="fas fa-eye"></i>
-              プレビュー
+              <i class="fas fa-file-pdf"></i>
+              PDFに保存
             </button>
           </div>
         </form>
