@@ -89,7 +89,9 @@
   #report-assistant-overlay,
   .report-assistant-overlay,
   #details-btn,
-  .details-btn {
+  .details-btn,
+  #mobile-menu-button,
+  .mobile-menu-button {
     display: none !important;
   }
 </style>
@@ -259,6 +261,9 @@
             padding: 24px; 
             box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.05);
             margin-bottom: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
           ">
             <div
               style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px;">
@@ -270,10 +275,10 @@
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 16px;">
-              <div class="form-group">
+              <div class="form-group" style="min-width: 0;">
                 <label
                   style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">法人名</label>
-                <div style="position: relative;">
+                <div style="position: relative; width: 100%;">
                   <i class="fas fa-building"
                     style="position: absolute; left: 12px; top: 12px; color: #94a3b8; font-size: 0.9rem;"></i>
                   <input type="text" id="report-info-client" class="form-input" placeholder="法人名を入力"
@@ -283,10 +288,10 @@
                 </div>
               </div>
 
-              <div class="form-group">
+              <div class="form-group" style="min-width: 0;">
                 <label
                   style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">ブランド名</label>
-                <div style="position: relative;">
+                <div style="position: relative; width: 100%;">
                   <i class="fas fa-tag"
                     style="position: absolute; left: 12px; top: 12px; color: #94a3b8; font-size: 0.9rem;"></i>
                   <input type="text" id="report-info-brand" class="form-input" placeholder="ブランド名"
@@ -296,10 +301,10 @@
                 </div>
               </div>
 
-              <div class="form-group">
+              <div class="form-group" style="min-width: 0;">
                 <label
                   style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">店舗名</label>
-                <div style="position: relative;">
+                <div style="position: relative; width: 100%;">
                   <i class="fas fa-store"
                     style="position: absolute; left: 12px; top: 12px; color: #94a3b8; font-size: 0.9rem;"></i>
                   <input type="text" id="report-info-store" class="form-input" placeholder="店舗名"
@@ -309,10 +314,10 @@
                 </div>
               </div>
 
-              <div class="form-group">
+              <div class="form-group" style="min-width: 0;">
                 <label
                   style="display:block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">実施日</label>
-                <div style="position: relative;">
+                <div style="position: relative; width: 100%;">
                   <i class="fas fa-calendar-alt"
                     style="position: absolute; left: 12px; top: 12px; color: #94a3b8; font-size: 0.9rem;"></i>
                   <input type="date" id="report-info-date" class="form-input"
