@@ -65,10 +65,10 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig }) {
               window.location.href = currentAction.to;
               return;
             }
-            if (jobKey === 'sales') {
-              navigate('/sales/report-day');
+            if (currentAction?.to) {
+              navigate(currentAction.to);
             } else {
-              navigate(`/jobs/${jobKey}/report`);
+              navigate('/houkoku');
             }
           }}
         />

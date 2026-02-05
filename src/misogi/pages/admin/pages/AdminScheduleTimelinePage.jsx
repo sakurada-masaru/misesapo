@@ -764,8 +764,12 @@ function convertScheduleToAppointment(schedule) {
   const endTimeStr = schedule.end_time || schedule.endTime || '';
   const endMin = schedule.end_min ?? (endTimeStr ? hhmmToMinutes(endTimeStr) : startMin + 120);
 
-  // 店舗名の取得（複数のフィールド名に対応）
-  const targetName = schedule.target_name || schedule.store_name || schedule.storeName || schedule.summary || schedule.brand_name || '要契約確認';
+  // 店舗名の取得（ブランド名を必ず前につける）
+  const bName = schedule.brand_name || '';
+  const sName = schedule.store_name || schedule.storeName || schedule.target_name || schedule.summary || '';
+  let targetName = bName && sName ? `[${bName}] ${sName}` : (sName || bName || '要契約確認');
+  // すでに [ブランド] 形式で始まっている場合は二重につけない
+  if (bName && sName.startsWith(`[${bName}]`)) targetName = sName;
 
   // 担当者IDの取得（複数のフィールド名に対応）
   const workerId = schedule.worker_id || schedule.assigned_to || schedule.sales_id || '';
@@ -871,16 +875,21 @@ function FilterOverlay({
   setFilterStatus,
   filterWorkType,
   setFilterWorkType,
+  filterStore,
+  setFilterStore,
   cleanersForFilter,
+  stores = [],
+  brands = [],
   onClose
 }) {
-  const hasActiveFilters = filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all';
+  const hasActiveFilters = filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all' || filterStore !== 'all';
 
   const handleReset = () => {
     setFilterUnit('all');
     setFilterCleaner('all');
     setFilterStatus('all');
     setFilterWorkType('all');
+    setFilterStore('all');
   };
 
   return (
@@ -896,23 +905,38 @@ function FilterOverlay({
         <div className="modalBody">
           <div className="formGrid">
             <label className="field span2">
+              <span>現場を選択</span>
+              <select value={filterStore} onChange={(e) => setFilterStore(e.target.value)}>
+                <option value="all">全ての現場</option>
+                {stores.map(s => {
+                  const brand = brands.find(b => String(b.id) === String(s.brand_id));
+                  const bName = brand?.name || s.brand_name || '';
+                  const sName = s.name || s.store_name || '';
+                  const fullLabel = bName && sName ? `[${bName}] ${sName}` : (sName || bName || s.id);
+                  return { ...s, fullLabel };
+                }).sort((a, b) => a.fullLabel.localeCompare(b.fullLabel)).map(s => (
+                  <option key={s.id} value={s.id}>{s.fullLabel}</option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
               <span>ユニット</span>
               <select value={filterUnit} onChange={(e) => setFilterUnit(e.target.value)}>
                 <option value="all">全て</option>
-                <option value="cleaning">清掃員（梅岡ユニット）</option>
-                <option value="maintenance">メンテナンス（遠藤ユニット）</option>
+                <option value="cleaning">清掃ユニット</option>
+                <option value="maintenance">メンテユニット</option>
               </select>
             </label>
-            <label className="field span2">
+            <label className="field">
               <span>清掃員</span>
               <select value={filterCleaner} onChange={(e) => setFilterCleaner(e.target.value)}>
-                <option value="all">{filterUnit === 'all' ? '全員' : filterUnit === 'cleaning' ? '全員（清掃）' : '全員（メンテ）'}</option>
+                <option value="all">全員</option>
                 {cleanersForFilter.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
             </label>
-            <label className="field span2">
+            <label className="field">
               <span>状態</span>
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                 <option value="all">全て</option>
@@ -921,8 +945,8 @@ function FilterOverlay({
                 ))}
               </select>
             </label>
-            <label className="field span2">
-              <span>種別</span>
+            <label className="field">
+              <span>種別（プラン）</span>
               <select value={filterWorkType} onChange={(e) => setFilterWorkType(e.target.value)}>
                 <option value="all">全て</option>
                 {WORK_TYPES.map((t) => (
@@ -1326,6 +1350,7 @@ export default function AdminScheduleTimelinePage() {
   const [filterCleaner, setFilterCleaner] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterWorkType, setFilterWorkType] = useState('all');
+  const [filterStore, setFilterStore] = useState('all');
   const [timelinePart, setTimelinePart] = useState('night'); // 'day' or 'night'
   const [activeCleanerSP, setActiveCleanerSP] = useState(defaultCleaners[0]?.id ?? 'W002');
 
@@ -1373,6 +1398,8 @@ export default function AdminScheduleTimelinePage() {
   const [clients, setClients] = useState([]);
   const [stores, setStores] = useState([]);
   const [isSavingKarte, setIsSavingKarte] = useState(false);
+  const [isEditingSelectedAppt, setIsEditingSelectedAppt] = useState(false);
+  const [originalSelectedAppt, setOriginalSelectedAppt] = useState(null);
   const kartePanelRef = useRef(null);
 
   /** APIからスケジュールを読み込む関数 */
@@ -1641,12 +1668,13 @@ export default function AdminScheduleTimelinePage() {
       if (filterCleaner !== 'all' && a.cleaner_id !== filterCleaner) return false;
       if (filterStatus !== 'all' && a.status !== filterStatus) return false;
       if (filterWorkType !== 'all' && a.work_type !== filterWorkType) return false;
+      if (filterStore !== 'all' && String(a.store_id) !== String(filterStore)) return false;
       if (!q) return true;
       const cleanerName = cleanersWithUnit.find((d) => d.id === a.cleaner_id)?.name ?? '';
       const hay = `${a.target_name} ${a.work_type} ${cleanerName}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [appointments, dateISO, query, filterUnit, filterCleaner, filterStatus, filterWorkType, cleanersWithUnit, cleaningUnitIds, maintenanceUnitIds]);
+  }, [appointments, dateISO, query, filterUnit, filterCleaner, filterStatus, filterWorkType, filterStore, cleanersWithUnit, cleaningUnitIds, maintenanceUnitIds]);
 
   const weekFilteredAppointments = useMemo(() => {
     const daySet = new Set(rollingDays);
@@ -1658,12 +1686,13 @@ export default function AdminScheduleTimelinePage() {
       if (filterCleaner !== 'all' && a.cleaner_id !== filterCleaner) return false;
       if (filterStatus !== 'all' && a.status !== filterStatus) return false;
       if (filterWorkType !== 'all' && a.work_type !== filterWorkType) return false;
+      if (filterStore !== 'all' && String(a.store_id) !== String(filterStore)) return false;
       if (!q) return true;
       const cleanerName = cleanersWithUnit.find((d) => d.id === a.cleaner_id)?.name ?? '';
       const hay = `${a.target_name} ${a.work_type} ${cleanerName}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [appointments, rollingDays, query, filterUnit, filterCleaner, filterStatus, filterWorkType, cleanersWithUnit, cleaningUnitIds, maintenanceUnitIds]);
+  }, [appointments, rollingDays, query, filterUnit, filterCleaner, filterStatus, filterWorkType, filterStore, cleanersWithUnit, cleaningUnitIds, maintenanceUnitIds]);
 
   const summary = useMemo(() => {
     const total = filteredAppointments.length;
@@ -1746,7 +1775,7 @@ export default function AdminScheduleTimelinePage() {
     setSaveConflictError(null);
   }
 
-  function saveModal(updated) {
+  async function saveModal(updated) {
     setSaveConflictError(null);
 
     // 複数の清掃員が選択されている場合、各清掃員ごとに案件を作成
@@ -1757,11 +1786,14 @@ export default function AdminScheduleTimelinePage() {
       return;
     }
 
+    const token = getToken();
+    const base = API_BASE.replace(/\/$/, '');
+
     // 既存案件の更新か新規作成か
     const exists = appointments.some((p) => p.id === updated.id);
 
     if (exists) {
-      // 既存案件の更新：最初の清掃員で更新（既存の動作を維持）
+      // 既存案件の更新：最初の清掃員で更新
       const candidate = [apptToConflictShape({ ...updated, cleaner_id: cleanerIds[0], schedule_id: updated.schedule_id ?? updated.id })];
       const existingSameDay = appointments.filter(
         (p) => p.date === updated.date && p.id !== updated.id
@@ -1786,34 +1818,81 @@ export default function AdminScheduleTimelinePage() {
         return;
       }
 
-      setAppointments((prev) =>
-        prev.map((p) =>
-          p.id === updated.id
-            ? { ...updated, cleaner_id: cleanerIds[0], cleaner_ids: cleanerIds, schedule_id: updated.schedule_id ?? updated.id }
-            : p
-        )
-      );
-      closeModal();
+      try {
+        const scheduleId = updated.schedule_id || updated.id;
+        const payload = {
+          date: updated.date,
+          scheduled_date: updated.date,
+          start_time: updated.start || minutesToHHMM(updated.start_min),
+          end_time: updated.end || minutesToHHMM(updated.end_min),
+          start_min: updated.start_min,
+          end_min: updated.end_min,
+          target_name: updated.target_name,
+          store_id: updated.store_id || null,
+          client_id: updated.client_id || null,
+          brand_name: updated.brand_name || '',
+          work_type: updated.work_type || 'その他',
+          status: updated.status || 'booked',
+          worker_id: cleanerIds[0],
+          assigned_to: cleanerIds[0],
+          worker_ids: cleanerIds,
+          description: updated.memo || updated.notes || '',
+        };
+
+        const res = await fetch(`${base}/schedules/${scheduleId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        setAppointments((prev) =>
+          prev.map((p) =>
+            p.id === updated.id
+              ? { ...updated, cleaner_id: cleanerIds[0], cleaner_ids: cleanerIds, schedule_id: scheduleId }
+              : p
+          )
+        );
+        closeModal();
+      } catch (err) {
+        console.error('[AdminScheduleTimeline] Save update failed:', err);
+        setSaveConflictError(`保存に失敗しました: ${err.message}`);
+      }
     } else {
       // 新規作成：各清掃員ごとに案件を作成
-      const newAppts = cleanerIds.map((cleanerId, index) => {
-        const apptId = index === 0 ? updated.id : `new_${Date.now()}_${index}`;
+      const newApptsData = cleanerIds.map((cleanerId, index) => {
         return {
-          ...updated,
-          id: apptId,
-          cleaner_id: cleanerId,
-          cleaner_ids: cleanerIds,
-          schedule_id: index === 0 ? (updated.schedule_id ?? updated.id) : newScheduleId('sch'),
+          date: updated.date,
+          scheduled_date: updated.date,
+          start_time: updated.start || minutesToHHMM(updated.start_min),
+          end_time: updated.end || minutesToHHMM(updated.end_min),
+          start_min: updated.start_min,
+          end_min: updated.end_min,
+          target_name: updated.target_name,
+          store_id: updated.store_id || null,
+          client_id: updated.client_id || null,
+          brand_name: updated.brand_name || '',
+          work_type: updated.work_type || 'その他',
+          status: updated.status || 'booked',
+          worker_id: cleanerId,
+          assigned_to: cleanerId,
+          worker_ids: cleanerIds,
+          description: updated.memo || updated.notes || '',
+          origin: 'manual'
         };
       });
 
-      // 重複チェック：すべての候補案件をチェック
-      const candidates = newAppts.map((a) => apptToConflictShape(a));
+      // 重複チェック
+      const candidates = newApptsData.map((a, i) => ({ ...a, id: `temp_${i}` }));
       const existingSameDay = appointments.filter((p) => p.date === updated.date);
       const existingForCheck = existingSameDay.map(apptToConflictShape);
       const userIdToName = Object.fromEntries(cleanersWithUnit.map((c) => [c.id, c.name]));
       const conflicts = detectConflictsBeforeSave({
-        candidateAppointments: candidates,
+        candidateAppointments: candidates.map(apptToConflictShape),
         existingAppointments: existingForCheck,
         blocks,
         userIdToName,
@@ -1830,8 +1909,30 @@ export default function AdminScheduleTimelinePage() {
         return;
       }
 
-      setAppointments((prev) => [...prev, ...newAppts]);
-      closeModal();
+      try {
+        const createdAppts = [];
+        for (const payload of newApptsData) {
+          const res = await fetch(`${base}/schedules`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          // APIレスポンスから最新情報を取得してローカル状態に変換
+          createdAppts.push(convertScheduleToAppointment(data.item || data));
+        }
+
+        setAppointments((prev) => [...prev, ...createdAppts]);
+        closeModal();
+      } catch (err) {
+        console.error('[AdminScheduleTimeline] Save create failed:', err);
+        setSaveConflictError(`新規作成に失敗しました: ${err.message}`);
+      }
     }
   }
 
@@ -1881,7 +1982,80 @@ export default function AdminScheduleTimelinePage() {
 
   function handleCloseKarteDock() {
     setSelectedAppt(null);
+    setIsEditingSelectedAppt(false);
+    setOriginalSelectedAppt(null);
   }
+
+  const handleEditSelectedAppt = () => {
+    setOriginalSelectedAppt({ ...selectedAppt });
+    setIsEditingSelectedAppt(true);
+  };
+
+  const handleCancelSelectedApptEdit = () => {
+    if (originalSelectedAppt) {
+      setAppointments((prev) => prev.map((a) => (a.id === originalSelectedAppt.id ? originalSelectedAppt : a)));
+      setSelectedAppt(originalSelectedAppt);
+    }
+    setIsEditingSelectedAppt(false);
+    setOriginalSelectedAppt(null);
+  };
+
+  const handleSelectedApptFieldChange = (field, value) => {
+    if (!selectedAppt) return;
+    const updated = { ...selectedAppt, [field]: value };
+    if (field === 'start_time') updated.start_min = hhmmToMinutes(value);
+    if (field === 'end_time') updated.end_min = hhmmToMinutes(value);
+
+    setSelectedAppt(updated);
+    // タイムラインに即時反映
+    setAppointments((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+  };
+
+  const handleSaveSelectedApptEdit = async () => {
+    if (!selectedAppt) return;
+    setIsSavingKarte(true);
+    try {
+      const token = getToken();
+      const base = API_BASE.replace(/\/$/, '');
+      const scheduleId = selectedAppt.schedule_id || selectedAppt.id;
+
+      const payload = {
+        date: selectedAppt.date,
+        scheduled_date: selectedAppt.date,
+        start_time: selectedAppt.start_time || minutesToHHMM(selectedAppt.start_min),
+        end_time: selectedAppt.end_time || minutesToHHMM(selectedAppt.end_min),
+        start_min: selectedAppt.start_min,
+        end_min: selectedAppt.end_min,
+        work_type: selectedAppt.work_type,
+        target_name: selectedAppt.target_name,
+        store_id: selectedAppt.store_id || null,
+        worker_id: selectedAppt.cleaner_id || null,
+        assigned_to: selectedAppt.cleaner_id || null,
+        status: selectedAppt.status || 'booked',
+        description: selectedAppt.memo || selectedAppt.notes || '',
+      };
+
+      const res = await fetch(`${base}/schedules/${scheduleId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      setIsEditingSelectedAppt(false);
+      setOriginalSelectedAppt(null);
+      alert('変更を保存しました');
+    } catch (err) {
+      console.error('[AdminScheduleTimeline] Karte edit save failed:', err);
+      alert(`保存に失敗しました: ${err.message}`);
+    } finally {
+      setIsSavingKarte(false);
+    }
+  };
 
   async function handleSaveKarte() {
     if (!kartePanelRef.current) return;
@@ -2105,7 +2279,7 @@ export default function AdminScheduleTimelinePage() {
               </div>
               <button
                 type="button"
-                className={`btn ${filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all' ? 'btnPrimary' : ''}`}
+                className={`btn ${filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all' || filterStore !== 'all' ? 'btnPrimary' : ''}`}
                 onClick={() => setFilterOverlayOpen(true)}
                 title="フィルター"
               >
@@ -2113,7 +2287,7 @@ export default function AdminScheduleTimelinePage() {
                   <path d="M1.5 3a.5.5 0 0 1 .5-.5h12a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5zM3 6a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 6zm2 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5A.5.5 0 0 1 5 9zm1 3a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5z" />
                 </svg>
                 フィルター
-                {(filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all') && (
+                {(filterUnit !== 'all' || filterCleaner !== 'all' || filterStatus !== 'all' || filterWorkType !== 'all' || filterStore !== 'all') && (
                   <span style={{ marginLeft: '4px', fontSize: '0.85em' }}>●</span>
                 )}
               </button>
@@ -2174,10 +2348,8 @@ export default function AdminScheduleTimelinePage() {
                         title={`${minutesToHHMM(appt.start_min)}-${minutesToHHMM(appt.end_min)} ${appt.target_name}`}
                       >
                         <span className="daytimeChipIcon">☀</span>
-                        {brandName && <span className="daytimeChipBrand">{brandName}</span>}
-                        {brandName && storeName && <span>/</span>}
-                        {storeName && <span className="daytimeChipStore">{storeName}</span>}
-                        {(brandName || storeName) && <span>/</span>}
+                        <span className="daytimeChipStore">{appt.target_name}</span>
+                        <span>/</span>
                         <span className="daytimeChipTime">{minutesToHHMM(appt.start_min)}-{minutesToHHMM(appt.end_min)}</span>
                         {reminderDisplay && (
                           <>
@@ -2292,7 +2464,7 @@ export default function AdminScheduleTimelinePage() {
             />
           )}
           {view === 'month' && (
-            <MonthSimple dateISO={dateISO} setDateISO={setDateISO} />
+            <MonthSimple dateISO={dateISO} setDateISO={setDateISO} appointments={appointments} />
           )}
         </main>
 
@@ -2314,7 +2486,7 @@ export default function AdminScheduleTimelinePage() {
               onMouseDown={handleKarteDockResizeStart}
               onTouchStart={handleKarteDockResizeStart}
             >
-              <div className="karteDockHeaderTitle">カルテ</div>
+              <div className="karteDockHeaderTitle">スケジュール詳細 ＆ お客様カルテ</div>
               <div className="karteDockHeaderActions">
                 <button
                   type="button"
@@ -2341,155 +2513,207 @@ export default function AdminScheduleTimelinePage() {
             </div>
             <div className="karteDockInner">
               <div className="karteDockLeft">
-                <div className="kdLeftColumn">
-                  <div className="kdTitle">{selectedAppt.target_name ?? '—'}</div>
-                  <div className="kdMeta">
-                    <div>日付：{selectedAppt.date ?? '—'}</div>
-                    <div>時間：{minutesToHHMM(selectedAppt.start_min)}〜{minutesToHHMM(selectedAppt.end_min)}</div>
-                    <div>種別：{selectedAppt.work_type ?? '—'}</div>
+                <div style={{ marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div className="kdSectionTitle" style={{ fontSize: '1.1em', color: '#647fff', borderLeft: '4px solid #647fff', paddingLeft: '8px', margin: 0 }}>
+                      {isEditingSelectedAppt ? 'スケジュール詳細 (編集)' : 'スケジュール詳細'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {!isEditingSelectedAppt ? (
+                        <>
+                          <button type="button" className="btn small" style={{ padding: '4px 8px', fontSize: '0.85em' }} onClick={handleEditSelectedAppt}>編集</button>
+                          <button type="button" className="btnDanger small" style={{ padding: '4px 8px', fontSize: '0.85em' }} onClick={() => { if (window.confirm('このスケジュールを削除しますか？')) deleteAppt(selectedAppt.id); }}>削除</button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" className="btnPrimary small" style={{ padding: '4px 8px', fontSize: '0.85em' }} onClick={handleSaveSelectedApptEdit} disabled={isSavingKarte}>保存</button>
+                          <button type="button" className="btn small" style={{ padding: '4px 8px', fontSize: '0.85em' }} onClick={handleCancelSelectedApptEdit}>停止</button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  {(() => {
-                    const storeId = selectedAppt?.store_id;
-                    const store = storeId ? selectedStore : null;
-                    const client = store?.client_id ? clients.find((c) => String(c.id) === String(store.client_id)) : null;
-                    const brand = store?.brand_id ? brands.find((b) => String(b.id) === String(store.brand_id)) : null;
-                    const brandName = brand?.name || store?.brand_name || '';
-                    const storeName = store?.name || store?.store_name || '';
-                    const clientName = client?.name || client?.client_name || store?.client_name || '';
-                    const phone = store?.phone || store?.tel || store?.phone_number || client?.phone || client?.tel || client?.phone_number || '';
 
-                    return (
-                      <>
-                        {storeName && <div className="kdInfoRow"><span className="kdInfoLabel">店舗名：</span><span>{storeName}</span></div>}
-                        {brandName && <div className="kdInfoRow"><span className="kdInfoLabel">ブランド名：</span><span>{brandName}</span></div>}
-                        {clientName && <div className="kdInfoRow"><span className="kdInfoLabel">法人名：</span><span>{clientName}</span></div>}
-                        {phone && <div className="kdInfoRow"><span className="kdInfoLabel">電話番号：</span><span>{phone}</span></div>}
-                      </>
-                    );
-                  })()}
+                  {!isEditingSelectedAppt ? (
+                    <>
+                      <div className="kdTitle" style={{ fontSize: '1.4em', marginBottom: '8px' }}>{selectedAppt.target_name ?? '—'}</div>
+                      <div className="kdMeta" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div><span className="kdInfoLabel">日付：</span>{selectedAppt.date ?? '—'}</div>
+                        <div><span className="kdInfoLabel">時間：</span>{minutesToHHMM(selectedAppt.start_min)}〜{minutesToHHMM(selectedAppt.end_min)}</div>
+                        <div><span className="kdInfoLabel">プラン：</span>{selectedAppt.work_type ?? '—'}</div>
+                        <div><span className="kdInfoLabel">ID：</span><span style={{ fontFamily: 'monospace', color: 'var(--muted)' }}>{selectedAppt.schedule_id || selectedAppt.id || '—'}</span></div>
+                        {(() => {
+                          const storeId = selectedAppt?.store_id;
+                          const store = storeId ? selectedStore : null;
+                          const plan = store?.plan || store?.plan_name || '';
+                          return plan ? <div><span className="kdInfoLabel">店舗契約プラン：</span>{plan}</div> : null;
+                        })()}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="kdEditForm" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div className="kdTitle" style={{ gridColumn: 'span 2', fontSize: '1.4em', marginBottom: '4px' }}>{selectedAppt.target_name ?? '—'}</div>
+                      <label className="field" style={{ minWidth: 0 }}>
+                        <span style={{ fontSize: '11px' }}>日付</span>
+                        <input type="date" value={selectedAppt.date} onChange={(e) => handleSelectedApptFieldChange('date', e.target.value)} style={{ padding: '6px', fontSize: '0.9em' }} />
+                      </label>
+                      <div className="field" style={{ minWidth: 0 }}>
+                        <span style={{ fontSize: '11px' }}>時間</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <input type="time" value={selectedAppt.start_time || minutesToHHMM(selectedAppt.start_min)} onChange={(e) => handleSelectedApptFieldChange('start_time', e.target.value)} style={{ padding: '6px', fontSize: '0.9em', width: '45%' }} />
+                          <span>〜</span>
+                          <input type="time" value={selectedAppt.end_time || minutesToHHMM(selectedAppt.end_min)} onChange={(e) => handleSelectedApptFieldChange('end_time', e.target.value)} style={{ padding: '6px', fontSize: '0.9em', width: '45%' }} />
+                        </div>
+                      </div>
+                      <label className="field" style={{ minWidth: 0, gridColumn: 'span 2' }}>
+                        <span style={{ fontSize: '11px' }}>プラン</span>
+                        <select value={selectedAppt.work_type} onChange={(e) => handleSelectedApptFieldChange('work_type', e.target.value)} style={{ padding: '6px', fontSize: '0.9em' }}>
+                          {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  )}
                 </div>
-                <div className="kdRightColumn">
-                  {(() => {
-                    const storeId = selectedAppt?.store_id;
-                    const store = storeId ? selectedStore : null;
-                    const salesPerson = store?.sales_person || store?.sales_person_name || store?.salesPerson || '';
 
-                    return (
-                      <>
-                        {salesPerson && (
-                          <>
-                            <div className="kdSectionTitle">営業担当</div>
-                            <div className="kdInfoRow">
-                              <span>{salesPerson}</span>
-                            </div>
-                          </>
-                        )}
-                      </>
-                    );
-                  })()}
-                  <div className="kdSectionTitle">事前連絡</div>
-                  <div className="kdContactReminders">
-                    {['7日前', '3日前', '1日前'].map((reminder) => {
-                      const isChecked = (selectedAppt.contact_reminders || []).includes(reminder);
+                <div className="kdTwoColumnGrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="kdLeftColumn">
+                    {(() => {
+                      const storeId = selectedAppt?.store_id;
+                      const store = storeId ? selectedStore : null;
+                      const client = store?.client_id ? clients.find((c) => String(c.id) === String(store.client_id)) : null;
+                      const brand = store?.brand_id ? brands.find((b) => String(b.id) === String(store.brand_id)) : null;
+                      const brandName = brand?.name || store?.brand_name || '';
+                      const storeName = store?.name || store?.store_name || '';
+                      const clientName = client?.name || client?.client_name || store?.client_name || '';
+                      const phone = store?.phone || store?.tel || store?.phone_number || client?.phone || client?.tel || client?.phone_number || '';
+
                       return (
-                        <label key={reminder} className="kdReminderCheckbox">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              const currentReminders = selectedAppt.contact_reminders || [];
-                              const newReminders = e.target.checked
-                                ? [...currentReminders, reminder]
-                                : currentReminders.filter((r) => r !== reminder);
-                              setAppointments((prev) =>
-                                prev.map((a) =>
-                                  a.id === selectedAppt.id
-                                    ? { ...a, contact_reminders: newReminders }
-                                    : a
-                                )
-                              );
-                              setSelectedAppt((prev) => (prev ? { ...prev, contact_reminders: newReminders } : null));
-                            }}
-                          />
-                          <span>{reminder}</span>
-                        </label>
+                        <>
+                          <div className="kdSectionTitle">店舗情報</div>
+                          {storeName && <div className="kdInfoRow"><span className="kdInfoLabel">店舗：</span>{storeName}</div>}
+                          {brandName && <div className="kdInfoRow"><span className="kdInfoLabel">ブランド：</span>{brandName}</div>}
+                          {clientName && <div className="kdInfoRow"><span className="kdInfoLabel">法人：</span>{clientName}</div>}
+                          {phone && <div className="kdInfoRow"><span className="kdInfoLabel">電話：</span>{phone}</div>}
+                        </>
                       );
-                    })}
+                    })()}
+
+                    <div className="kdSectionTitle">清掃担当</div>
+                    <div className="kdInfoRow" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {(() => {
+                        const cleanerIds = selectedAppt?.cleaner_ids || (selectedAppt?.cleaner_id ? [selectedAppt.cleaner_id] : []);
+                        return cleanerIds.map(id => cleanersWithUnit.find(c => String(c.id) === String(id))).filter(Boolean).map(c => (
+                          <span key={c.id} style={{ background: 'rgba(100,150,255,0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.85em', border: '1px solid rgba(100,150,255,0.2)' }}>
+                            {c.name}
+                          </span>
+                        ));
+                      })()}
+                    </div>
                   </div>
-                  {(() => {
-                    const cleanerIds = selectedAppt?.cleaner_ids || (selectedAppt?.cleaner_id ? [selectedAppt.cleaner_id] : []);
-                    const assignedCleaners = cleanerIds
-                      .map(id => cleanersWithUnit.find(c => String(c.id) === String(id)))
-                      .filter(Boolean);
 
-                    return (
-                      <>
-                        {assignedCleaners.length > 0 && (
-                          <>
-                            <div className="kdSectionTitle">清掃担当</div>
-                            <div className="kdInfoRow" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                              {assignedCleaners.map(c => (
-                                <span key={c.id} style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.9em', border: '1px solid rgba(255,255,255,0.2)' }}>
-                                  {c.name}
-                                </span>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </>
-                    );
-                  })()}
-                  {(() => {
-                    const storeId = selectedAppt?.store_id;
-                    const store = storeId ? selectedStore : null;
-                    const plan = store?.plan || store?.plan_name || '';
-                    const securityBox = store?.security_box || store?.security_box_number || store?.box_number || '';
-                    const extractedSecurityCode = selectedAppt.security_code;
+                  <div className="kdRightColumn">
+                    <div className="kdSectionTitle">事前連絡</div>
+                    <div className="kdContactReminders" style={{ marginBottom: '12px' }}>
+                      {['7日前', '3日前', '1日前'].map((reminder) => {
+                        const isChecked = (selectedAppt.contact_reminders || []).includes(reminder);
+                        return (
+                          <label key={reminder} className="kdReminderCheckbox" style={{ marginRight: '10px' }}>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                const currentReminders = selectedAppt.contact_reminders || [];
+                                const newReminders = e.target.checked
+                                  ? [...currentReminders, reminder]
+                                  : currentReminders.filter((r) => r !== reminder);
+                                setAppointments((prev) =>
+                                  prev.map((a) =>
+                                    a.id === selectedAppt.id
+                                      ? { ...a, contact_reminders: newReminders }
+                                      : a
+                                  )
+                                );
+                                setSelectedAppt((prev) => (prev ? { ...prev, contact_reminders: newReminders } : null));
+                              }}
+                            />
+                            <span>{reminder}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
 
-                    return (
-                      <>
-                        {plan && (
+                    {(() => {
+                      const storeId = selectedAppt?.store_id;
+                      const store = storeId ? selectedStore : null;
+                      const securityBox = store?.security_box || store?.security_box_number || store?.box_number || '';
+                      const extractedSecurityCode = selectedAppt.security_code;
+
+                      if (securityBox || extractedSecurityCode) {
+                        return (
                           <>
-                            <div className="kdSectionTitle">プラン</div>
+                            <div className="kdSectionTitle" style={{ color: '#ec4899', borderLeft: '4px solid #ec4899', paddingLeft: '8px' }}>🔑 キーボックス</div>
                             <div className="kdInfoRow">
-                              <span>{plan}</span>
+                              <span>{securityBox || '（顧客DB未登録）'}</span>
                             </div>
-                          </>
-                        )}
-                        {(securityBox || extractedSecurityCode) && (
-                          <>
-                            <div className="kdSectionTitle" style={{ color: '#ec4899', borderLeft: '4px solid #ec4899', paddingLeft: '8px' }}>🔑 キーボックス解錠番号 (カギ所在)</div>
-                            <div className="kdInfoRow">
-                              <span>{securityBox || '（顧客DBに未登録）'}</span>
-                            </div>
-                            {extractedSecurityCode && extractedSecurityCode !== securityBox && (
-                              <div className="kdInfoRow" style={{ color: '#f59e0b', fontSize: '0.9em', marginTop: '4px', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 8px', borderRadius: '4px' }}>
-                                <span style={{ fontWeight: 'bold' }}>📋 カレンダーから抽出：</span>
-                                <span style={{ fontSize: '1.2em', letterSpacing: '2px' }}>{extractedSecurityCode}</span>
+                            {extractedSecurityCode && (
+                              <div className="kdInfoRow" style={{ color: '#f59e0b', fontSize: '0.85em', marginTop: '4px', background: 'rgba(245, 158, 11, 0.1)', padding: '4px', borderRadius: '4px' }}>
+                                <span>抽出：<b>{extractedSecurityCode}</b></span>
                               </div>
                             )}
                           </>
-                        )}
-                      </>
-                    );
-                  })()}
-
-                  {selectedAppt.notes && (
-                    <>
-                      <div className="kdSectionTitle" style={{ color: '#3a6cff', borderLeft: '4px solid #3a6cff', paddingLeft: '8px', marginTop: '16px' }}>
-                        📅 カレンダーからの指示事項
-                      </div>
-                      <div className="kdInfoRow" style={{ background: 'rgba(58, 108, 255, 0.05)', padding: '8px', borderRadius: '4px', whiteSpace: 'pre-wrap', maxHeight: '300px', overflowY: 'auto', fontSize: '0.9em', border: '1px dashed rgba(58, 108, 255, 0.3)' }}>
-                        {selectedAppt.notes}
-                      </div>
-                    </>
-                  )}
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                 </div>
+
+                {selectedAppt.notes && (
+                  <div style={{ marginTop: '12px' }}>
+                    <div className="kdSectionTitle" style={{ color: '#3a6cff', borderLeft: '4px solid #3a6cff', paddingLeft: '8px' }}>カレンダー指示事項</div>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '4px', fontSize: '0.85em', whiteSpace: 'pre-wrap', maxHeight: '120px', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      {selectedAppt.notes}
+                    </div>
+                  </div>
+                )}
+
+                {(() => {
+                  const storeId = selectedAppt.store_id;
+                  if (!storeId) return null;
+                  const storeHistory = appointments
+                    .filter(a => String(a.store_id) === String(storeId) && a.id !== selectedAppt.id)
+                    .sort((a, b) => dayjs(a.date).unix() - dayjs(b.date).unix());
+
+                  if (storeHistory.length === 0) return null;
+
+                  return (
+                    <div style={{ marginTop: '16px' }}>
+                      <div className="kdSectionTitle" style={{ color: '#f59e0b', borderLeft: '4px solid #f59e0b', paddingLeft: '8px' }}>この現場の前後予定</div>
+                      <div className="kdHistoryList" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {storeHistory.map(h => (
+                          <div
+                            key={h.id}
+                            className="kdHistoryItem"
+                            style={{ background: 'rgba(255,255,255,0.02)', padding: '6px 10px', borderRadius: '6px', fontSize: '0.85em', display: 'flex', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
+                            onClick={() => {
+                              setDateISO(h.date);
+                              setSelectedAppt(h);
+                            }}
+                          >
+                            <span>📅 {h.date}</span>
+                            <span>🕒 {minutesToHHMM(h.start_min)}〜</span>
+                            <span style={{ color: 'var(--muted)' }}>{h.work_type}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
+
               <div className="karteDockRight">
+                <div className="kdSectionTitle" style={{ fontSize: '1.1em', color: '#10b981', borderLeft: '4px solid #10b981', paddingLeft: '8px', marginBottom: '12px' }}>お客様カルテ</div>
                 <div className="kdRightTop">
-                  <div className="kdSectionTitle">担当</div>
-                  <div className="kdMemberList">
+                  <div className="kdMemberList" style={{ display: 'none' }}>
                     {(selectedAppt.cleaner_ids || (selectedAppt.cleaner_id ? [selectedAppt.cleaner_id] : [])).map(cid => {
                       const c = cleanersWithUnit.find((cl) => cl.id === cid);
                       return (
@@ -2618,7 +2842,11 @@ export default function AdminScheduleTimelinePage() {
             setFilterStatus={setFilterStatus}
             filterWorkType={filterWorkType}
             setFilterWorkType={setFilterWorkType}
+            filterStore={filterStore}
+            setFilterStore={setFilterStore}
             cleanersForFilter={cleanersForFilter}
+            stores={stores}
+            brands={brands}
             onClose={() => setFilterOverlayOpen(false)}
           />
         )}
@@ -3600,10 +3828,8 @@ function CleanerRow({ cleaner, cleaners = [], rows, dayStart, dayEnd, items, con
               >
                 <div className="apptContent">
                   <div className="apptSingleLine">
-                    {brandName && <span className="apptBrand">{brandName}</span>}
-                    {brandName && storeName && <span className="apptSeparator">/</span>}
-                    {storeName && <span className="apptStore">{storeName}</span>}
-                    {(brandName || storeName) && <span className="apptSeparator">/</span>}
+                    <span className="apptStore">{a.target_name}</span>
+                    <span className="apptSeparator">/</span>
                     <span className="apptTime">{minutesToHHMM(a.start_min)}–{minutesToHHMM(a.end_min)}</span>
                     {reminderDisplay && (
                       <>
@@ -3739,10 +3965,8 @@ function DayTimelineSP({ dateISO, cleaners, activeCleanerId, setActiveCleanerId,
                       onClick={() => onCardClick(a)}
                     >
                       <div className="spApptSingleLine">
-                        {brandName && <span className="spApptBrand">{brandName}</span>}
-                        {brandName && storeName && <span>/</span>}
-                        {storeName && <span className="spApptStore">{storeName}</span>}
-                        {(brandName || storeName) && <span>/</span>}
+                        <span className="spApptStore">{a.target_name}</span>
+                        <span>/</span>
                         <span className="spApptTime">{minutesToHHMM(a.start_min)}–{minutesToHHMM(a.end_min)}</span>
                         {reminderDisplay && (
                           <>
@@ -4205,7 +4429,7 @@ function CleaningWeekPanel({
   );
 }
 
-function MonthSimple({ dateISO, setDateISO }) {
+function MonthSimple({ dateISO, setDateISO, appointments = [] }) {
   const d = new Date(dateISO + 'T00:00:00');
   const year = d.getFullYear();
   const month = d.getMonth();
@@ -4215,6 +4439,14 @@ function MonthSimple({ dateISO, setDateISO }) {
   const cells = [];
   for (let i = 0; i < startDay; i++) cells.push(null);
   for (let day = 1; day <= daysInMonth; day++) cells.push(day);
+
+  const apptsByDate = useMemo(() => {
+    const map = new Map();
+    for (const a of appointments) {
+      map.set(a.date, (map.get(a.date) || 0) + 1);
+    }
+    return map;
+  }, [appointments]);
 
   function selectDay(day) {
     setDateISO(`${year}-${pad2(month + 1)}-${pad2(day)}`);
@@ -4231,9 +4463,26 @@ function MonthSimple({ dateISO, setDateISO }) {
           if (!day) return <div key={idx} className="monthCell blank" />;
           const iso = `${year}-${pad2(month + 1)}-${pad2(day)}`;
           const isActive = iso === dateISO;
+          const count = apptsByDate.get(iso) || 0;
+
           return (
-            <button key={idx} type="button" className={`monthCell ${isActive ? 'active' : ''}`} onClick={() => selectDay(day)}>
-              {day}
+            <button key={idx} type="button" className={`monthCell ${isActive ? 'active' : ''}`} onClick={() => selectDay(day)} style={{ position: 'relative' }}>
+              <div className="monthCellNum">{day}</div>
+              {count > 0 && (
+                <div className="monthCellCount" style={{
+                  position: 'absolute',
+                  bottom: '4px',
+                  right: '4px',
+                  background: 'rgba(68, 127, 255, 0.8)',
+                  color: 'white',
+                  fontSize: '10px',
+                  padding: '1px 4px',
+                  borderRadius: '4px',
+                  lineHeight: '1'
+                }}>
+                  {count}
+                </div>
+              )}
             </button>
           );
         })}
@@ -4264,6 +4513,19 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
   const [unifiedSearchQuery, setUnifiedSearchQuery] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(0); // 0: なし, 1: 一次確認, 2: 最終確認
   const conflict = conflictIds.has(appt.id);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!local.target_name?.trim()) return;
+    setIsSaving(true);
+    try {
+      await onSave(local);
+    } catch (err) {
+      console.error('[AppointmentModal] Save failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // 統合検索：法人名、ブランド名、店舗名を一度に検索
   const unifiedSearchResults = useMemo(() => {
@@ -4369,10 +4631,15 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
 
   const handleStoreChange = (storeId) => {
     const store = localStores.find((s) => s.id === storeId);
+    const brand = brands.find((b) => String(b.id) === String(selectedBrandId));
+    const bName = brand?.name || brand?.brand_name || store?.brand_name || '';
+    const sName = store?.name || store?.store_name || '';
+    const targetName = bName && sName ? `[${bName}] ${sName}` : (sName || bName || '');
+
     setLocal((p) => ({
       ...p,
       store_id: storeId,
-      target_name: store ? (store.name || store.store_name || '') : p.target_name
+      target_name: store ? targetName : p.target_name
     }));
   };
 
@@ -4552,7 +4819,7 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
                           >
                             <div style={{ fontWeight: '600', marginBottom: '4px', fontSize: '15px' }}>
-                              {store?.name || store?.store_name || store?.id || '（店舗不明）'}
+                              {brand?.name ? `[${brand.name}] ` : ''}{store?.name || store?.store_name || store?.id || '（店舗不明）'}
                             </div>
                             <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '2px' }}>
                               {brand?.name || brand?.brand_name ? `ブランド: ${brand.name || brand.brand_name}` : 'ブランド: （不明）'}
@@ -4582,7 +4849,13 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
                     <div style={{ marginTop: '4px' }}><strong>ブランド:</strong> {brands.find((b) => String(b.id) === String(selectedBrandId))?.name || brands.find((b) => String(b.id) === String(selectedBrandId))?.brand_name || selectedBrandId}</div>
                   )}
                   {local.store_id && (
-                    <div style={{ marginTop: '4px' }}><strong>店舗:</strong> {localStores.find((s) => String(s.id) === String(local.store_id))?.name || localStores.find((s) => String(s.id) === String(local.store_id))?.store_name || local.store_id}</div>
+                    <div style={{ marginTop: '4px' }}><strong>店舗:</strong> {(() => {
+                      const s = localStores.find((s) => String(s.id) === String(local.store_id));
+                      const b = brands.find((b) => String(b.id) === String(selectedBrandId));
+                      const bName = b?.name || b?.brand_name || '';
+                      const sName = s?.name || s?.store_name || local.store_id;
+                      return bName ? `[${bName}] ${sName}` : sName;
+                    })()}</div>
                   )}
                 </div>
               )}
@@ -4662,9 +4935,9 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
             )}
           </div>
           <div className="right">
-            <button type="button" className="btn" onClick={onClose}>閉じる</button>
-            <button type="button" className="btnPrimary" onClick={() => onSave(local)} disabled={!local.target_name?.trim()} title={!local.target_name?.trim() ? '現場名が必要です' : ''}>
-              保存
+            <button type="button" className="btn" onClick={onClose} disabled={isSaving}>閉じる</button>
+            <button type="button" className="btnPrimary" onClick={handleSave} disabled={isSaving || !local.target_name?.trim()} title={!local.target_name?.trim() ? '現場名が必要です' : ''}>
+              {isSaving ? '保存中...' : '保存'}
             </button>
           </div>
         </div>

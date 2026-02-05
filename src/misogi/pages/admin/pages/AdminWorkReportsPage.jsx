@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { getAdminWorkReports } from '../../shared/api/adminWorkReportsApi';
+import { apiFetchWorkReport } from '../../shared/api/client';
+import { useAuth } from '../../shared/auth/useAuth';
 import './admin-work-reports.css';
 
 /** 清掃・提出済みサンプル1件（管理側で表示確認用。?sample=1 で表示） */
@@ -153,19 +154,32 @@ export default function AdminWorkReportsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selected, setSelected] = useState(null);
 
+  const { getToken } = useAuth();
+
   const fetchList = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const list = await getAdminWorkReports({ from: date, to: date });
-      setRawList(Array.isArray(list) ? list : []);
+      const token = getToken() || localStorage.getItem('cognito_id_token');
+      const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
+
+      // 新API (/houkoku) から取得
+      const res = await apiFetchWorkReport(`/houkoku?date=${date}`, {
+        method: 'GET',
+        headers
+      });
+
+      const list = res?.items || [];
+      const mappedList = list.map(mapNewHoukokuToOld);
+      setRawList(mappedList);
     } catch (e) {
-      setError(e?.message || String(e) || '取得に失敗しました');
+      console.error("Fetch list failed:", e);
+      setError(e?.message || '取得に失敗しました');
       setRawList([]);
     } finally {
       setLoading(false);
     }
-  }, [date]);
+  }, [date, getToken]);
 
   useEffect(() => {
     fetchList();

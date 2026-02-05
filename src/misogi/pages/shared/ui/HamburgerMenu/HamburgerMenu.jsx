@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
+import { useAuth } from '../../auth/useAuth';
 import './hamburger-menu.css';
 
 /**
@@ -22,6 +23,7 @@ const MENU_LINKS = [
 ];
 
 export default function HamburgerMenu() {
+  const { isAuthenticated, login, logout, user } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
@@ -37,6 +39,18 @@ export default function HamburgerMenu() {
     document.addEventListener('keydown', onEscape);
     return () => document.removeEventListener('keydown', onEscape);
   }, [open, close]);
+
+  const navigate = useNavigate();
+  const handleAuthAction = () => {
+    if (isAuthenticated) {
+      logout();
+    } else {
+      navigate('/');
+    }
+    close();
+  };
+
+  const userName = user?.name || user?.displayName || user?.username || user?.email || (isAuthenticated ? 'ログイン済み' : '');
 
   return (
     <>
@@ -84,6 +98,23 @@ export default function HamburgerMenu() {
           </nav>
           <div className="hamburger-menu-footer">
             <div className="hamburger-menu-section">
+              <div className="hamburger-menu-section-title">アカウント</div>
+              <div className="hamburger-menu-section-content">
+                {isAuthenticated && (
+                  <div className="hamburger-menu-user-info">
+                    {userName}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="hamburger-menu-button"
+                  onClick={handleAuthAction}
+                >
+                  {isAuthenticated ? 'ログアウト' : 'ログイン'}
+                </button>
+              </div>
+            </div>
+            <div className="hamburger-menu-section" style={{ marginTop: '20px' }}>
               <div className="hamburger-menu-section-title">設定</div>
               <div className="hamburger-menu-section-content">
                 <ThemeToggle />

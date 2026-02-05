@@ -27,5 +27,5 @@ export const SALES_HOTBAR = [
       { id: 'schedule-view', label: 'スケジュール', path: '/sales/schedule' },
     ]
   },
-  { id: 'report', role: 'log', label: '報告' },
+  { id: 'report', role: 'log', label: '報告', to: '/houkoku' },
 ];

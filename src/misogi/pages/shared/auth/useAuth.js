@@ -59,16 +59,11 @@ export function useAuth() {
     return token;
   }, []);
 
-  /** 未認証時にサインインページへリダイレクト（returnUrl を渡すとログイン後に戻る） */
-  const login = useCallback((returnUrl) => {
-    const signinBase = import.meta.env.VITE_SIGNIN_URL ?? '';
-    const base = signinBase || (typeof window !== 'undefined' ? window.location.origin : '');
-    const path = signinBase ? '' : '/staff/signin.html';
-    const current = typeof window !== 'undefined' ? window.location.href : '';
-    const redirect = returnUrl ?? current;
-    const url = new URL(path, base);
-    url.searchParams.set('redirect', redirect);
-    if (typeof window !== 'undefined') window.location.href = url.toString();
+  /** 未認証時にポータルへ（そこでログインしてもらう方針に変更） */
+  const login = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.location.href = window.location.origin + (import.meta.env.BASE_URL || '/');
+    }
   }, []);
 
   /** ログアウト：localStorage をクリアしてサインインへ */
@@ -81,12 +76,35 @@ export function useAuth() {
     window.localStorage.removeItem('misesapo_auth');
     setUser(null);
     setIsAuthenticated(false);
-    const signinBase = import.meta.env.VITE_SIGNIN_URL ?? '';
-    const base = signinBase || window.location.origin;
-    const path = signinBase ? '' : '/staff/signin.html';
-    const url = new URL(path, base);
-    window.location.href = url.toString();
+
+    // Redirect to the application root (Portal) instead of signin.html
+    if (typeof window !== 'undefined') {
+      window.location.href = window.location.origin + (import.meta.env.BASE_URL || '/');
+    }
   }, []);
+
+  const authz = (() => {
+    if (!user) return { workerId: null, isDev: false, isAdmin: false, allowedTemplateIds: [] };
+
+    const workerId = user.worker_id || user.workerId || user.id || 'unknown';
+    const roles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
+    const dept = (user.department || user.dept || '').toUpperCase();
+
+    const isDev = workerId === 'W999';
+    const isAdmin = isDev || roles.some(r => ['ADMIN', 'OWNER', 'SUPERADMIN'].includes(r.toUpperCase()));
+
+    let allowedTemplateIds = [];
+    if (isDev || isAdmin) {
+      allowedTemplateIds = ['CLEANING_V1', 'FIELD_SALES_V1', 'ENGINEERING_V1', 'OFFICE_ADMIN_V1'];
+    } else {
+      if (dept === 'SALES') allowedTemplateIds.push('FIELD_SALES_V1');
+      else if (dept === 'ENGINEERING') allowedTemplateIds.push('ENGINEERING_V1');
+      else if (['OFFICE', 'ADMIN'].includes(dept)) allowedTemplateIds.push('OFFICE_ADMIN_V1');
+      else allowedTemplateIds.push('CLEANING_V1');
+    }
+
+    return { workerId, isDev, isAdmin, allowedTemplateIds };
+  })();
 
   return {
     user,
@@ -96,5 +114,6 @@ export function useAuth() {
     login,
     logout,
     refresh,
+    authz,
   };
 }

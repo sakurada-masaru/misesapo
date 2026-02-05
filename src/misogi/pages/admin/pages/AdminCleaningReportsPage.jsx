@@ -185,15 +185,13 @@ export default function AdminCleaningReportsPage() {
                             />
                         </div>
                         <button className="btn btn-secondary" onClick={() => fetchReports(false)} disabled={loading}>更新</button>
-                        <a
-                            href="https://misesapo.co.jp/admin/reports/new.html"
+                        <Link
+                            to="/houkoku"
                             className="btn btn-primary"
-                            target="_blank"
-                            rel="noopener noreferrer"
                             style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                             新規報告作成
-                        </a>
+                        </Link>
                         <button className="btn btn-secondary" onClick={handleGenerateTest} disabled={generating} style={{ opacity: 0.6 }}>
                             {generating ? '生成中...' : 'テストデータ生成'}
                         </button>

@@ -81,10 +81,14 @@ def verify_cognito_id_token(id_token):
             role = 'admin' if 'admin' in g_lower else ('headquarters' if 'headquarters' in g_lower else ('cleaning' if 'staff' in g_lower else 'cleaning'))
         if not role:
             role = 'cleaning'
+        department = payload.get('custom:department') or payload.get('department', '')
+        worker_id = payload.get('custom:worker_id') or payload.get('worker_id') or uid
         return {
             'uid': uid,
+            'worker_id': worker_id,
             'email': email,
             'role': role,
+            'department': department,
             'verified': True
         }
     except Exception as e:
@@ -118,10 +122,14 @@ def _get_user_info_from_event(event):
             groups = groups.split(',')
         if not role and groups and any(g.lower() == 'admin' for g in groups):
             role = 'admin'
+        department = authorizer_claims.get('custom:department') or authorizer_claims.get('department')
+        worker_id = authorizer_claims.get('custom:worker_id') or authorizer_claims.get('worker_id') or uid
         return {
             'uid': uid,
+            'worker_id': worker_id,
             'email': authorizer_claims.get('email'),
             'role': role or 'cleaning',
+            'department': department or '',
             'verified': True
         }
     auth_header = _get_auth_header(event)
@@ -308,6 +316,13 @@ def lambda_handler(event, context):
         user_info = _get_user_info_from_event(event)
         is_hr_admin = _is_hr_admin(user_info)
         return handle_admin_work_reports(event, headers, normalized_path, method, user_info, is_hr_admin)
+
+    if normalized_path.startswith('/houkoku'):
+        from universal_work_reports import handle_houkoku_reports
+        if not handle_houkoku_reports:
+            return {'statusCode': 503, 'headers': headers, 'body': json.dumps({'error': 'Service unavailable'}, ensure_ascii=False)}
+        user_info = _get_user_info_from_event(event)
+        return handle_houkoku_reports(event, headers, normalized_path, method, user_info)
 
     if normalized_path.startswith('/work-report'):
         print(f"[lambda_handler] Routing to handle_universal_worker_work_reports: path={normalized_path}, method={method}")

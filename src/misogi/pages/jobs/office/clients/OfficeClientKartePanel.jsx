@@ -76,7 +76,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
   // 自動保存: karteが変更されたら1.5秒後に自動保存（デバウンス）
   useEffect(() => {
     if (!storeId || isLocked) return;
-    
+
     // 初回ロード時は保存しない
     if (isInitialLoadRef.current) {
       isInitialLoadRef.current = false;
@@ -204,7 +204,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
           <h3 className="office-karte-panel-section-title">基本情報</h3>
           <div className="office-karte-panel-grid">
             {field('ブランド名', brandName)}
-            {field('店舗名', safeStore.name)}
+            {field('店舗名', brandName ? `[${brandName}] ${safeStore.name}` : safeStore.name)}
             {field('担当者', safeStore.contact_person || safeStore.contact_name)}
             {field('住所', address)}
             {field('電話', safeStore.phone || safeStore.tel)}

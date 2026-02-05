@@ -6,8 +6,9 @@ export const ADMIN_HOTBAR = [
     id: 'reports',
     label: '業務報告',
     subItems: [
-      { id: 'cleaning-reports', label: '清掃報告受領', path: 'https://misesapo.co.jp/admin/reports/new.html' },
+      { id: 'cleaning-reports', label: '清掃報告受領', path: '/houkoku' },
       { id: 'all-reports', label: '全報告管理', path: '/admin/work-reports' },
+      { id: 'houkoku-list', label: '新・報告一覧 (New)', path: '/admin/houkoku' },
     ]
   },
   { id: 'schedule', label: '清掃スケジュール', to: '/admin/schedule', disabled: false },

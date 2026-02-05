@@ -100,7 +100,7 @@ export default function OfficeClientListPage() {
           return { ok: false, error: e };
         }),
       ]);
-      
+
       if (storesRes.ok && !storesRes.error) {
         try {
           const data = await storesRes.json();
@@ -442,107 +442,107 @@ export default function OfficeClientListPage() {
             <div
               className="office-client-list-column-left"
               style={{
-                width: showEditPanel ? (panelView === 'karte' ? '30%' : `${leftColumnPercent}%`) : '100%',
+                width: showEditPanel ? `${leftColumnPercent}%` : '100%',
                 minWidth: showEditPanel ? 200 : undefined,
               }}
             >
-            <div style={{ flexShrink: 0, paddingBottom: 12 }}>
-              <button
-                type="button"
-                onClick={() => navigate('/office/clients/new')}
-                style={{
-                  width: '100%',
-                  padding: '10px 16px',
-                  fontSize: '0.85rem',
-                  background: 'var(--job-office)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                新規登録
-              </button>
-            </div>
-            <div className="office-client-list-table">
-              <div
-                className="office-client-list-row office-client-list-header"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 0.6fr',
-                  gap: 12,
-                  padding: '12px 16px',
-                  background: 'rgba(255,255,255,0.06)',
-                  borderRadius: '8px 8px 0 0',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'rgba(255,255,255,0.7)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderBottom: 'none',
-                }}
-              >
-                <span>ブランド名</span>
-                <span>店舗名</span>
-                <span>法人名</span>
-                <span>電話番号</span>
-                <span>メールアドレス</span>
-                <span>担当者</span>
-                <span>営業担当者</span>
-                <span>契約内容</span>
+              <div style={{ flexShrink: 0, paddingBottom: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => navigate('/office/clients/new')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 16px',
+                    fontSize: '0.85rem',
+                    background: 'var(--job-office)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  新規登録
+                </button>
               </div>
-              {filteredStores.length === 0 ? (
-                <p style={{ textAlign: 'center', opacity: 0.7, padding: 24 }}>該当する顧客がありません</p>
-              ) : (
-                filteredStores.map((store) => (
-                  <div
-                    key={store.id}
-                    role="button"
-                    tabIndex={0}
-                    className="office-client-list-row"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 0.6fr',
-                      gap: 12,
-                      padding: '12px 16px',
-                      background: selectedStoreId === store.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      borderLeftWidth: 4,
-                      borderLeftStyle: 'solid',
-                      borderLeftColor: store.status === 'active' ? '#22c55e' : 'rgba(255,255,255,0.1)',
-                      fontSize: '0.875rem',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => setSelectedStoreId(store.id)}
-                    onKeyDown={(e) => e.key === 'Enter' && setSelectedStoreId(store.id)}
-                  >
-                    <span className="office-client-list-brand" title={getBrandName(store)}>{getBrandName(store) || '—'}</span>
-                    <span title={store.name}>{store.name || '—'}</span>
-                    <span title={getClientName(store)}>{getClientName(store) || '—'}</span>
-                    <span title={store.phone}>{store.phone || '—'}</span>
-                    <span title={store.email} style={{ wordBreak: 'break-all' }}>{store.email || '—'}</span>
-                    <span title={store.contact_person}>{store.contact_person || '—'}</span>
-                    <span title={store.assigned_to}>{store.assigned_to || '—'}</span>
-                    <span className="office-client-list-contract">
-                      {getContractTag(store) ? (
-                        <span
-                          className={`office-client-list-contract-tag ${getContractTag(store) === 'スポット清掃' ? 'office-client-list-contract-tag--spot' :
-                            getContractTag(store) === '定期清掃' ? 'office-client-list-contract-tag--regular' : 'office-client-list-contract-tag--other'
-                            }`}
-                          title={store.cleaning_frequency || ''}
-                        >
-                          {getContractTag(store)}
-                        </span>
-                      ) : (
-                        '—'
-                      )}
-                    </span>
-                  </div>
-                ))
-              )}
+              <div className="office-client-list-table">
+                <div
+                  className="office-client-list-row office-client-list-header"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 0.6fr',
+                    gap: 12,
+                    padding: '12px 16px',
+                    background: 'rgba(255,255,255,0.06)',
+                    borderRadius: '8px 8px 0 0',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderBottom: 'none',
+                  }}
+                >
+                  <span>ブランド名</span>
+                  <span>店舗名</span>
+                  <span>法人名</span>
+                  <span>電話番号</span>
+                  <span>メールアドレス</span>
+                  <span>担当者</span>
+                  <span>営業担当者</span>
+                  <span>契約内容</span>
+                </div>
+                {filteredStores.length === 0 ? (
+                  <p style={{ textAlign: 'center', opacity: 0.7, padding: 24 }}>該当する顧客がありません</p>
+                ) : (
+                  filteredStores.map((store) => (
+                    <div
+                      key={store.id}
+                      role="button"
+                      tabIndex={0}
+                      className="office-client-list-row"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 0.6fr',
+                        gap: 12,
+                        padding: '12px 16px',
+                        background: selectedStoreId === store.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderLeftWidth: 4,
+                        borderLeftStyle: 'solid',
+                        borderLeftColor: store.status === 'active' ? '#22c55e' : 'rgba(255,255,255,0.1)',
+                        fontSize: '0.875rem',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => setSelectedStoreId(store.id)}
+                      onKeyDown={(e) => e.key === 'Enter' && setSelectedStoreId(store.id)}
+                    >
+                      <span className="office-client-list-brand" title={getBrandName(store)}>{getBrandName(store) || '—'}</span>
+                      <span title={store.name}>{store.name || '—'}</span>
+                      <span title={getClientName(store)}>{getClientName(store) || '—'}</span>
+                      <span title={store.phone}>{store.phone || '—'}</span>
+                      <span title={store.email} style={{ wordBreak: 'break-all' }}>{store.email || '—'}</span>
+                      <span title={store.contact_person}>{store.contact_person || '—'}</span>
+                      <span title={store.assigned_to}>{store.assigned_to || '—'}</span>
+                      <span className="office-client-list-contract">
+                        {getContractTag(store) ? (
+                          <span
+                            className={`office-client-list-contract-tag ${getContractTag(store) === 'スポット清掃' ? 'office-client-list-contract-tag--spot' :
+                              getContractTag(store) === '定期清掃' ? 'office-client-list-contract-tag--regular' : 'office-client-list-contract-tag--other'
+                              }`}
+                            title={store.cleaning_frequency || ''}
+                          >
+                            {getContractTag(store)}
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
 
             {/* リサイザー：左パネルと右パネルの間。ドラッグで幅変更。干渉しない境界 */}
             {showEditPanel && (
@@ -570,247 +570,247 @@ export default function OfficeClientListPage() {
                   background: 'transparent',
                 }}
               >
-              <div className="office-client-list-panel-actions">
-                <div className="office-client-list-panel-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  {/* タブ: 基本情報編集 | カルテ（アクティブを青で表示） */}
-                  <button
-                    type="button"
-                    onClick={() => setPanelView('edit')}
-                    disabled={isLocked}
-                    style={{
-                      padding: '10px 16px',
-                      fontSize: '0.85rem',
-                      background: panelView === 'edit' ? 'var(--job-office)' : 'rgba(255,255,255,0.08)',
-                      border: `1px solid ${panelView === 'edit' ? 'var(--job-office)' : 'rgba(255,255,255,0.15)'}`,
-                      borderRadius: '8px',
-                      color: panelView === 'edit' ? '#fff' : 'var(--fg)',
-                      cursor: isLocked ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      opacity: isLocked ? 0.5 : 1,
-                    }}
-                  >
-                    基本情報編集
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPanelView('karte')}
-                    disabled={isLocked}
-                    style={{
-                      padding: '10px 16px',
-                      fontSize: '0.85rem',
-                      background: panelView === 'karte' ? 'var(--job-office)' : 'rgba(255,255,255,0.08)',
-                      border: `1px solid ${panelView === 'karte' ? 'var(--job-office)' : 'rgba(255,255,255,0.15)'}`,
-                      borderRadius: '8px',
-                      color: panelView === 'karte' ? '#fff' : 'var(--fg)',
-                      cursor: isLocked ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      opacity: isLocked ? 0.5 : 1,
-                    }}
-                  >
-                    カルテ
-                  </button>
-                  {/* 誤操作防止: 鍵アイコン */}
-                  <button
-                    type="button"
-                    onClick={() => setIsLocked(!isLocked)}
-                    title={isLocked ? '編集を有効化' : '編集を無効化（誤操作防止）'}
-                    style={{
-                      padding: '8px 12px',
-                      fontSize: '1.1rem',
-                      background: isLocked ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.08)',
-                      border: `1px solid ${isLocked ? 'rgba(251, 191, 36, 0.5)' : 'rgba(255,255,255,0.15)'}`,
-                      borderRadius: '8px',
-                      color: isLocked ? '#fbbf24' : 'var(--fg)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minWidth: '40px',
-                    }}
-                  >
-                    {isLocked ? '🔒' : '🔓'}
-                  </button>
+                <div className="office-client-list-panel-actions">
+                  <div className="office-client-list-panel-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      {/* タブ: 基本情報編集 | カルテ（アクティブを青で表示） */}
+                      <button
+                        type="button"
+                        onClick={() => setPanelView('edit')}
+                        disabled={isLocked}
+                        style={{
+                          padding: '10px 16px',
+                          fontSize: '0.85rem',
+                          background: panelView === 'edit' ? 'var(--job-office)' : 'rgba(255,255,255,0.08)',
+                          border: `1px solid ${panelView === 'edit' ? 'var(--job-office)' : 'rgba(255,255,255,0.15)'}`,
+                          borderRadius: '8px',
+                          color: panelView === 'edit' ? '#fff' : 'var(--fg)',
+                          cursor: isLocked ? 'not-allowed' : 'pointer',
+                          fontWeight: 600,
+                          opacity: isLocked ? 0.5 : 1,
+                        }}
+                      >
+                        基本情報編集
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPanelView('karte')}
+                        disabled={isLocked}
+                        style={{
+                          padding: '10px 16px',
+                          fontSize: '0.85rem',
+                          background: panelView === 'karte' ? 'var(--job-office)' : 'rgba(255,255,255,0.08)',
+                          border: `1px solid ${panelView === 'karte' ? 'var(--job-office)' : 'rgba(255,255,255,0.15)'}`,
+                          borderRadius: '8px',
+                          color: panelView === 'karte' ? '#fff' : 'var(--fg)',
+                          cursor: isLocked ? 'not-allowed' : 'pointer',
+                          fontWeight: 600,
+                          opacity: isLocked ? 0.5 : 1,
+                        }}
+                      >
+                        カルテ
+                      </button>
+                      {/* 誤操作防止: 鍵アイコン */}
+                      <button
+                        type="button"
+                        onClick={() => setIsLocked(!isLocked)}
+                        title={isLocked ? '編集を有効化' : '編集を無効化（誤操作防止）'}
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '1.1rem',
+                          background: isLocked ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.08)',
+                          border: `1px solid ${isLocked ? 'rgba(251, 191, 36, 0.5)' : 'rgba(255,255,255,0.15)'}`,
+                          borderRadius: '8px',
+                          color: isLocked ? '#fbbf24' : 'var(--fg)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '40px',
+                        }}
+                      >
+                        {isLocked ? '🔒' : '🔓'}
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      {panelView === 'edit' && (
+                        <button
+                          type="button"
+                          onClick={handleSave}
+                          disabled={isLocked || isSubmitting || editLoading}
+                          style={{
+                            padding: '8px 20px',
+                            fontSize: '0.9rem',
+                            background: 'rgba(255,255,255,0.12)',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '8px',
+                            color: 'var(--fg)',
+                            cursor: isLocked || isSubmitting || editLoading ? 'not-allowed' : 'pointer',
+                            fontWeight: 600,
+                            opacity: isLocked ? 0.5 : 1,
+                          }}
+                        >
+                          {isSubmitting ? '保存中...' : '保存'}
+                        </button>
+                      )}
+                      {panelView === 'karte' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setKarteSaving(true);
+                            const p = kartePanelRef.current?.save?.();
+                            if (p && typeof p.finally === 'function') p.finally(() => setKarteSaving(false));
+                            else setKarteSaving(false);
+                          }}
+                          disabled={isLocked || karteSaving}
+                          style={{
+                            padding: '8px 20px',
+                            fontSize: '0.9rem',
+                            background: 'rgba(255,255,255,0.12)',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '8px',
+                            color: 'var(--fg)',
+                            cursor: isLocked || karteSaving ? 'not-allowed' : 'pointer',
+                            fontWeight: 600,
+                            opacity: isLocked ? 0.5 : 1,
+                          }}
+                        >
+                          {karteSaving ? '保存中...' : '保存'}
+                        </button>
+                      )}
+                      {panelView === 'karte' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const store = stores.find(s => String(s.id) === String(selectedStoreId)) || { id: selectedStoreId, name: form.name, contact_person: form.contact_person, phone: form.phone, email: form.email };
+                            forceCreateKarte(selectedStoreId, store);
+                            setKarteRefreshKey(k => k + 1);
+                          }}
+                          disabled={isLocked}
+                          style={{
+                            padding: '8px 14px',
+                            fontSize: '0.85rem',
+                            background: 'var(--job-office)',
+                            border: '1px solid var(--job-office)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            cursor: isLocked ? 'not-allowed' : 'pointer',
+                            fontWeight: 600,
+                            opacity: isLocked ? 0.5 : 1,
+                          }}
+                        >
+                          新規カルテ作成
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedStoreId(null); setPanelView('edit'); }}
+                        style={{
+                          padding: '8px 16px',
+                          fontSize: '0.85rem',
+                          background: 'rgba(255,255,255,0.08)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          borderRadius: '8px',
+                          color: 'var(--fg)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        閉じる
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  {panelView === 'edit' && (
-                    <button
-                      type="button"
-                      onClick={handleSave}
-                      disabled={isLocked || isSubmitting || editLoading}
-                      style={{
-                        padding: '8px 20px',
-                        fontSize: '0.9rem',
-                        background: 'rgba(255,255,255,0.12)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        borderRadius: '8px',
-                        color: 'var(--fg)',
-                        cursor: isLocked || isSubmitting || editLoading ? 'not-allowed' : 'pointer',
-                        fontWeight: 600,
-                        opacity: isLocked ? 0.5 : 1,
-                      }}
-                    >
-                      {isSubmitting ? '保存中...' : '保存'}
-                    </button>
+                <div
+                  className="office-client-list-panel-body"
+                  style={{
+                    padding: panelView === 'karte' ? 12 : 16,
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  {panelView === 'karte' ? (
+                    <OfficeClientKartePanel
+                      ref={kartePanelRef}
+                      key={karteRefreshKey}
+                      storeId={selectedStoreId}
+                      store={stores.find(s => String(s.id) === String(selectedStoreId)) || { id: selectedStoreId, name: form.name, contact_person: form.contact_person, phone: form.phone, email: form.email }}
+                      brands={brands}
+                      clients={clients}
+                      getBrandName={getBrandName}
+                      getClientName={getClientName}
+                      onBack={() => setPanelView('edit')}
+                      isLocked={isLocked}
+                    />
+                  ) : editLoading ? (
+                    <p style={{ opacity: 0.7 }}>読み込み中...</p>
+                  ) : (
+                    <form onSubmit={handleSave} className="report-page-form" style={{ display: 'flex', flexDirection: 'column', gap: 12, opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
+                      {/* リストの列順に合わせる：ブランド名・店舗名・法人名・電話・メール・担当者・営業担当者・契約内容 */}
+                      <div className="report-page-field">
+                        <label>ブランド名</label>
+                        <input type="text" name="brand_name" value={form.brand_name} onChange={handleChange} disabled={isLocked} placeholder="ブランド名を入力" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>店舗名 *</label>
+                        <input type="text" name="name" value={form.name} onChange={handleChange} disabled={isLocked} required style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>法人名</label>
+                        <input type="text" name="client_name" value={form.client_name} onChange={handleChange} disabled={isLocked} placeholder="法人名を入力" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>電話番号</label>
+                        <input type="text" name="phone" value={form.phone} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>メールアドレス</label>
+                        <input type="email" name="email" value={form.email} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>担当者</label>
+                        <input type="text" name="contact_person" value={form.contact_person} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>営業担当者</label>
+                        <input type="text" name="assigned_to" value={form.assigned_to} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>契約内容（清掃頻度）</label>
+                        <input type="text" name="cleaning_frequency" value={form.cleaning_frequency} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>URL</label>
+                        <input type="url" name="url" value={form.url} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>ステータス</label>
+                        <select name="status" value={form.status} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }}>
+                          {STATUS_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="report-page-field">
+                        <label>獲得者(ミセサポ)</label>
+                        <input type="text" name="acquired_by" value={form.acquired_by} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>紹介者</label>
+                        <input type="text" name="introducer" value={form.introducer} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>ニーズ内容</label>
+                        <textarea name="needs_notes" value={form.needs_notes} onChange={handleChange} disabled={isLocked} rows={2} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                      <div className="report-page-field">
+                        <label>実施項目</label>
+                        <textarea name="implementation_items" value={form.implementation_items} onChange={handleChange} disabled={isLocked} rows={2} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
+                      </div>
+                    </form>
                   )}
-                  {panelView === 'karte' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setKarteSaving(true);
-                        const p = kartePanelRef.current?.save?.();
-                        if (p && typeof p.finally === 'function') p.finally(() => setKarteSaving(false));
-                        else setKarteSaving(false);
-                      }}
-                      disabled={isLocked || karteSaving}
-                      style={{
-                        padding: '8px 20px',
-                        fontSize: '0.9rem',
-                        background: 'rgba(255,255,255,0.12)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        borderRadius: '8px',
-                        color: 'var(--fg)',
-                        cursor: isLocked || karteSaving ? 'not-allowed' : 'pointer',
-                        fontWeight: 600,
-                        opacity: isLocked ? 0.5 : 1,
-                      }}
-                    >
-                      {karteSaving ? '保存中...' : '保存'}
-                    </button>
-                  )}
-                  {panelView === 'karte' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const store = stores.find(s => String(s.id) === String(selectedStoreId)) || { id: selectedStoreId, name: form.name, contact_person: form.contact_person, phone: form.phone, email: form.email };
-                        forceCreateKarte(selectedStoreId, store);
-                        setKarteRefreshKey(k => k + 1);
-                      }}
-                      disabled={isLocked}
-                      style={{
-                        padding: '8px 14px',
-                        fontSize: '0.85rem',
-                        background: 'var(--job-office)',
-                        border: '1px solid var(--job-office)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        cursor: isLocked ? 'not-allowed' : 'pointer',
-                        fontWeight: 600,
-                        opacity: isLocked ? 0.5 : 1,
-                      }}
-                    >
-                      新規カルテ作成
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedStoreId(null); setPanelView('edit'); }}
-                    style={{
-                      padding: '8px 16px',
-                      fontSize: '0.85rem',
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      borderRadius: '8px',
-                      color: 'var(--fg)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    閉じる
-                  </button>
                 </div>
               </div>
-              </div>
-              <div
-                className="office-client-list-panel-body"
-                style={{
-                  padding: panelView === 'karte' ? 12 : 16,
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                {panelView === 'karte' ? (
-                  <OfficeClientKartePanel
-                    ref={kartePanelRef}
-                    key={karteRefreshKey}
-                    storeId={selectedStoreId}
-                    store={stores.find(s => String(s.id) === String(selectedStoreId)) || { id: selectedStoreId, name: form.name, contact_person: form.contact_person, phone: form.phone, email: form.email }}
-                    brands={brands}
-                    clients={clients}
-                    getBrandName={getBrandName}
-                    getClientName={getClientName}
-                    onBack={() => setPanelView('edit')}
-                    isLocked={isLocked}
-                  />
-                ) : editLoading ? (
-                  <p style={{ opacity: 0.7 }}>読み込み中...</p>
-                ) : (
-                  <form onSubmit={handleSave} className="report-page-form" style={{ display: 'flex', flexDirection: 'column', gap: 12, opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
-                    {/* リストの列順に合わせる：ブランド名・店舗名・法人名・電話・メール・担当者・営業担当者・契約内容 */}
-                    <div className="report-page-field">
-                      <label>ブランド名</label>
-                      <input type="text" name="brand_name" value={form.brand_name} onChange={handleChange} disabled={isLocked} placeholder="ブランド名を入力" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>店舗名 *</label>
-                      <input type="text" name="name" value={form.name} onChange={handleChange} disabled={isLocked} required style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>法人名</label>
-                      <input type="text" name="client_name" value={form.client_name} onChange={handleChange} disabled={isLocked} placeholder="法人名を入力" style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>電話番号</label>
-                      <input type="text" name="phone" value={form.phone} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>メールアドレス</label>
-                      <input type="email" name="email" value={form.email} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>担当者</label>
-                      <input type="text" name="contact_person" value={form.contact_person} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>営業担当者</label>
-                      <input type="text" name="assigned_to" value={form.assigned_to} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>契約内容（清掃頻度）</label>
-                      <input type="text" name="cleaning_frequency" value={form.cleaning_frequency} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>URL</label>
-                      <input type="url" name="url" value={form.url} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>ステータス</label>
-                      <select name="status" value={form.status} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }}>
-                        {STATUS_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="report-page-field">
-                      <label>獲得者(ミセサポ)</label>
-                      <input type="text" name="acquired_by" value={form.acquired_by} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>紹介者</label>
-                      <input type="text" name="introducer" value={form.introducer} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>ニーズ内容</label>
-                      <textarea name="needs_notes" value={form.needs_notes} onChange={handleChange} disabled={isLocked} rows={2} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                    <div className="report-page-field">
-                      <label>実施項目</label>
-                      <textarea name="implementation_items" value={form.implementation_items} onChange={handleChange} disabled={isLocked} rows={2} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
-                    </div>
-                  </form>
-                )}
-              </div>
-            </div>
-          )}
+            )}
           </div>
         </div>
       </div>

@@ -43,7 +43,7 @@ const ROLE_TO_ENTRANCE = {
  */
 export default function Portal() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading, refresh, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, refresh, logout, getToken } = useAuth();
   const [started, setStarted] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [nonOperatingDates, setNonOperatingDates] = useState([]);
@@ -51,12 +51,21 @@ export default function Portal() {
   const effectiveUser = user ?? { id: 'guest', name: '', role: '' };
 
   useEffect(() => {
+    if (isLoading) return;
+    const token = getToken();
+    if (!token) return; // Skip if no token (prevents 403 error in console)
+
+    const headers = { 'Authorization': `Bearer ${token}` };
     const base = API_BASE.replace(/\/$/, '');
-    fetch(`${base}/settings/portal-operating-days`, { cache: 'no-store' })
+
+    fetch(`${base}/settings/portal-operating-days`, {
+      cache: 'no-store',
+      headers
+    })
       .then((res) => (res.ok ? res.json() : { non_operating_dates: [] }))
       .then((data) => setNonOperatingDates(Array.isArray(data.non_operating_dates) ? data.non_operating_dates : []))
       .catch(() => setNonOperatingDates([]));
-  }, []);
+  }, [isLoading, getToken]);
 
   const today = typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '';
   const isNonOperatingToday = today && nonOperatingDates.includes(today);

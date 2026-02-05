@@ -18,6 +18,9 @@ import AdminWorkReportsPage from '../admin/pages/AdminWorkReportsPage';
 import AdminCleaningReportsPage from '../admin/pages/AdminCleaningReportsPage';
 import AdminScheduleTimelinePage from '../admin/pages/AdminScheduleTimelinePage';
 import AdminPortalOperatingDaysPage from '../admin/pages/AdminPortalOperatingDaysPage';
+import AdminReportNewPage from '../admin/pages/AdminReportNewPage';
+import AdminHoukokuListPage from '../admin/pages/AdminHoukokuListPage';
+import AdminHoukokuDetailPage from '../admin/pages/AdminHoukokuDetailPage';
 import HrAttendance from '../admin/pages/hr/Attendance';
 import ReportCreatePage from '../shared/ui/Report/ReportCreatePage';
 import SalesStoreKartePage from '../shared/ui/Sales/SalesStoreKartePage';
@@ -84,8 +87,12 @@ export default function Router() {
       {/* /misogi/#/admin/work-reports で確実に表示 */}
       <Route path="/admin/work-reports" element={<AdminWorkReportsPage />} />
       <Route path="/admin/cleaning-reports" element={<AdminCleaningReportsPage />} />
+      <Route path="/admin/reports/new" element={<AdminReportNewPage />} />
+      <Route path="/houkoku" element={<AdminReportNewPage />} />
       <Route path="/admin/schedule" element={<AdminScheduleTimelinePage />} />
       <Route path="/admin/portal-operating-days" element={<AdminPortalOperatingDaysPage />} />
+      <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />
+      <Route path="/admin/houkoku/:reportId" element={<AdminHoukokuDetailPage />} />
       <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
       <Route path="/sales/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
       <Route path="/office/payroll/:userId/:yyyyMm" element={<OfficePayrollMonthPage />} />

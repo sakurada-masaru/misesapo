@@ -2475,8 +2475,8 @@
 
 .admin-schedule-timeline-page .karteDockInner {
   display: grid;
-  grid-template-columns: 30% 70%;
-  gap: 12px;
+  grid-template-columns: 42% 58%;
+  gap: 16px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -2517,12 +2517,11 @@
 .admin-schedule-timeline-page .karteDockLeft {
   min-width: 0;
   overflow: auto;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 16px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-schedule-timeline-page .kdLeftColumn {
@@ -2541,8 +2540,8 @@
   min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 16px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   display: flex;
   flex-direction: column;
