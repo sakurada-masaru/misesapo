@@ -141,6 +141,22 @@ function filterAndSort(items) {
 }
 
 /**
+ * 新アーキテクチャの報告データ（report_id, payload 等）を旧画面が期待する形式（log_id, description 等）に変換
+ */
+function mapNewHoukokuToOld(item) {
+  if (!item) return {};
+  return {
+    ...item,
+    log_id: item.report_id || item.log_id,
+    created_by_name: item.user_name || item.created_by_name || item.created_by,
+    description: item.payload || item.description || {},
+    target_label: item.target_label || item.payload?.store?.name || item.payload?.header?.store_name || '—',
+    // 既存の UI が work_minutes などを直下で期待している場合
+    work_minutes: item.work_minutes ?? item.payload?.work_minutes ?? item.payload?.total_minutes
+  };
+}
+
+/**
  * 業務報告（管理）一覧
  * GET /admin/work-reports?from=YYYY-MM-DD&to=YYYY-MM-DD（管理用・全件）→ 検索 → 詳細モーダル
  */
@@ -164,7 +180,7 @@ export default function AdminWorkReportsPage() {
       const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
 
       // 新API (/houkoku) から取得
-      const res = await apiFetch(`/houkoku?date=${date}`, {
+      const res = await apiFetchWorkReport(`/houkoku?date=${date}`, {
         method: 'GET',
         headers
       });

@@ -47,6 +47,8 @@ const getTemplateIdFromServices = (services, defaultId = TEMPLATE_CLEANING) => {
         const rawName = svc.name || '';
         const name = normalize(rawName);
         if (!name) continue;
+        const list = Array.isArray(res) ? res : (res?.items || []);
+        const mappedList = list.map(mapNewHoukokuToOld);
 
         console.log("[RESOLVE] Checking service:", rawName, "->", name);
 
@@ -634,6 +636,7 @@ export default function AdminReportNewPage() {
                     template_id: targetId,
                     work_date: header.work_date,
                     user_name: header.reporter_name,
+                    state: 'submitted', // 管理一覧に表示されるように追加
                     payload: targetPayload
                 })
             });
