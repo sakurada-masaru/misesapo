@@ -12,9 +12,11 @@ export function getApiBase() {
   return import.meta.env.VITE_API_BASE ?? defaultBase;
 }
 
+const WORK_REPORT_BASE_URL = 'https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod';
+
 export function getWorkReportApiBase() {
-  // 絶対パスを直接叩くと CORS エラーになるため、本番でもプロキシ（/api-wr）を経由する設計とする
-  return workReportBase;
+  // AWS 側で CORS が有効化されたため、環境を問わず直接 AWS を叩くように統一（CORS/405 回避）
+  return WORK_REPORT_BASE_URL;
 }
 
 /**
