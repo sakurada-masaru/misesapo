@@ -92,6 +92,79 @@
             color: #666;
         }
 
+        /* ミセサポとは（強調セクション） */
+        .about-highlight {
+            margin: 150px auto 0;
+            padding: 0 24px;
+        }
+
+        .about-highlight__inner {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 32px 36px;
+            background: linear-gradient(135deg, rgba(255, 103, 156, 0.12), rgba(255, 255, 255, 0.9));
+            border: 1px solid rgba(255, 103, 156, 0.25);
+            border-radius: 20px;
+            box-shadow: 0 16px 30px rgba(255, 103, 156, 0.16);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-highlight__inner::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(255, 103, 156, 0.18), transparent 55%);
+            pointer-events: none;
+        }
+
+        .about-highlight__badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: #FF679C;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin-bottom: 16px;
+        }
+
+        .about-highlight__title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .about-highlight__lead {
+            font-size: 16px;
+            line-height: 1.9;
+            color: #555;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .about-highlight {
+                margin: 180px auto 0;
+                padding: 0 16px;
+            }
+
+            .about-highlight__inner {
+                padding: 24px 20px;
+                border-radius: 16px;
+            }
+
+            .about-highlight__title {
+                font-size: 22px;
+                color: #FF679C;
+            }
+        }
+
         /* コンセプトセクション */
         .c-top-concept {
             width: 100%;
@@ -3586,7 +3659,12 @@ justify-content: center;
 
     </section>
 
-
+    <section class="about-highlight" aria-labelledby="about-highlight-title">
+        <div class="about-highlight__inner">
+            <h2 id="about-highlight-title" class="about-highlight__title">ミセサポとは？</h2>
+            <p class="about-highlight__lead">関東エリアを中心に清掃及び店舗運営に関するトータルサポートを提供するプラットフォームサービスです。</p>
+        </div>
+    </section>
 
     <!-- サービス画像流れアニメーション -->
     <section id="service" class="section-box about-coverage-section">
@@ -3659,6 +3737,7 @@ justify-content: center;
 </section>
     
     <!-- イベント・キャンペーン -->
+
 
 
     <section id="event" class="service-sections use-sections">
@@ -3878,15 +3957,19 @@ justify-content: center;
         </div>
     </section>
 
-    <!-- ミセサポとはセクション -->
+    <!-- トピックセクション -->
     <section id="about" class="section-box about-coverage-section">
         <div class="wrapper">
             <div class="service-sections-header">
-                <p class="section-tag-label">about</p>
-                <h2 class="service-sections-title">ミセサポとは？</h2>
+                <p class="section-tag-label">topic</p>
+                <h2 class="service-sections-title">ミセサポに関するトピック</h2>
             </div>
             <div class="swiper about-coverage-swiper">
                 <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <a class="about-coverage-card" href="/lp/fan-belt.html"><img src="/images/lp/fan-belt_kv_sp.png"
+                                alt="ファンベルト"></a>
+                    </div>
                     <div class="swiper-slide">
                         <a class="about-coverage-card" href="top5.html"><img src="/images/TOP5_kv_sp.webp"
                                 alt="ご依頼数TOP5"></a>
@@ -3911,10 +3994,6 @@ justify-content: center;
                     <div class="swiper-slide">
                         <a class="about-coverage-card" href="subsidy.html"><img src="/images/subsidy_kv_sp.webp"
                                 alt="補助金"></a>
-                    </div>
-                    <div class="swiper-slide">
-                        <a class="about-coverage-card" href="zeroemi.html"><img src="/images/zeroemi_kv_sp.webp"
-                                alt="ゼロエミ"></a>
                     </div>
                 </div>
                 <div class="swiper-pagination about-coverage-pagination"></div>
@@ -4019,7 +4098,7 @@ justify-content: center;
                     <ul class="mega-menu-list">
                         <li class="mega-menu-item">
                             <a href="#about" class="mega-menu-link">
-                                <span class="mega-menu-text">ミセサポとは？</span>
+                                <span class="mega-menu-text">トピック</span>
                             </a>
                         </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
@@ -4142,13 +4221,13 @@ justify-content: center;
                         </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
                             <a href="javascript:void(0);" class="mega-menu-link">
-                                <span class="mega-menu-text">規約とポリシー</span>
+                                <span class="mega-menu-text">規約&ポリシー</span>
                                 <span class="mega-menu-arrow">▼</span>
                             </a>
                             <div class="mega-menu-submenu">
                                 <div class="mega-menu-submenu-inner">
                                     <div class="mega-menu-column">
-                                        <h3 class="mega-menu-column-title">規約とポリシー</h3>
+                                        <h3 class="mega-menu-column-title">規約&ポリシー</h3>
                                         <ul class="mega-menu-column-list">
                                             <li><a href="/privacy-policy/"><span>個人情報保護方針</span></a></li>
                                             <li><a href="/tokushoho/"><span>特定商取引法に基づく表記</span></a></li>
@@ -4221,9 +4300,9 @@ justify-content: center;
             <nav class="normal-header-nav">
                 <a href="/">TOP</a>
                 <a href="/service/service.html">対応可能サービス</a>
-                <a href="/voice">お客様の声</a>
+                <a href="/voice/">お客様の声</a>
                 <a href="mailto:info@misesapo.com">カスタマーズサポート</a>
-                <a href="/about">企業情報</a>
+                <a href="/about/">企業情報</a>
                 <a href="#event">イベント</a>
                 <!--<a href="/announcements">お知らせ</a>-->
                 <a href="/privacy-policy">規約＆ポリシー</a>
@@ -4339,7 +4418,7 @@ justify-content: center;
             </li>
             <li class="sp-menu-item sp-menu-item-has-submenu">
                 <a href="/privacy-policy/" class="sp-menu-link">
-                    <span>規約とポリシー</span>
+                    <span>規約&ポリシー</span>
                     <span class="sp-menu-arrow">▼</span>
                 </a>
                 <div class="sp-menu-submenu">
@@ -5276,7 +5355,7 @@ justify-content: center;
             });
         })();
 
-        // ミセサポとはカードスライダー
+        // トピックカードスライダー
         (function () {
             const aboutSwiper = document.querySelector('.about-coverage-swiper');
             if (!aboutSwiper || typeof Swiper === 'undefined') return;
