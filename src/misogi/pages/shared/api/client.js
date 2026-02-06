@@ -13,9 +13,8 @@ export function getApiBase() {
 }
 
 export function getWorkReportApiBase() {
-  if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') return workReportBase;
-  if (import.meta.env.DEV) return workReportBase;
-  return import.meta.env.VITE_WORK_REPORT_API_BASE ?? workReportBase;
+  // 絶対パスを直接叩くと CORS エラーになるため、本番でもプロキシ（/api-wr）を経由する設計とする
+  return workReportBase;
 }
 
 /**
@@ -38,7 +37,7 @@ export async function apiFetch(path, options = {}) {
         const j = JSON.parse(bodyText);
         bodyMessage = j?.message || j?.error || bodyMessage;
       }
-    } catch (_) {}
+    } catch (_) { }
     const err = new Error(bodyMessage);
     err.status = res.status;
     err.response = res;

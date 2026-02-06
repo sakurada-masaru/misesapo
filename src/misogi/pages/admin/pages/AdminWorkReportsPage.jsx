@@ -164,7 +164,7 @@ export default function AdminWorkReportsPage() {
       const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
 
       // 新API (/houkoku) から取得
-      const res = await apiFetchWorkReport(`/houkoku?date=${date}`, {
+      const res = await apiFetch(`/houkoku?date=${date}`, {
         method: 'GET',
         headers
       });

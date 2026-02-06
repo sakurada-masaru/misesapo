@@ -700,6 +700,8 @@ const ReportBody = styled.div`
 
 const Section = styled.section`
     margin-bottom: 32px;
+    width: 100%;
+    overflow: hidden;
 `;
 
 const SectionTitle = styled.h2`
@@ -755,6 +757,7 @@ const FieldRow = styled.div`
     justify-content: ${props => props.$layout === 'stack' ? 'flex-start' : 'space-between'};
     align-items: ${props => props.$layout === 'stack' ? 'stretch' : (props.$mode === 'edit' ? 'stretch' : 'center')};
     gap: ${props => props.$layout === 'stack' ? '8px' : '4px'};
+    width: 100%;
     
     ${props => props.$mode === 'edit' && `
         position: relative;
@@ -954,6 +957,9 @@ const TextInput = styled.input`
         background: #fff;
     `}
     
+    max-width: 100%;
+    min-width: 0;
+
     &::placeholder {
         color: #94a3b8;
         opacity: 1;
@@ -963,7 +969,23 @@ const TextInput = styled.input`
 const NumberInput = styled(TextInput)`
     width: 120px;
 `;
-const DateInput = styled(TextInput)``;
+const DateInput = styled(TextInput)`
+    &[type="date"] {
+        appearance: none;
+        -webkit-appearance: none;
+        color-scheme: dark;
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        position: relative;
+        min-height: 48px;
+    }
+    &::-webkit-calendar-picker-indicator {
+        position: absolute;
+        right: 12px;
+        filter: invert(1);
+        cursor: pointer;
+    }
+`;
 
 const TextareaInput = styled.textarea`
     width: 100%;

@@ -1113,13 +1113,13 @@ export default function AdminReportNewPage() {
 
 const PageContainer = styled.div` min-height: 100vh; background: #0f172a; color: #f8fafc; `;
 const VizContainer = styled.div` position: fixed; inset: 0; pointer-events: none; z-index: -10; opacity: 0.15; `;
-const MainContent = styled.div` position: relative; z-index: 100; max-width: 800px; margin: 0 auto; padding: 24px 16px; `;
+const MainContent = styled.div` position: relative; z-index: 100; max-width: 800px; margin: 0 auto; padding: 24px 16px; @media(max-width:600px){ padding: 12px 8px; } `;
 const ContentHeader = styled.header` display: flex; align-items: center; gap: 16px; margin-bottom: 32px; `;
 const BackLink = styled(Link)` color: #94a3b8; `;
 const ContentTitle = styled.h1` font-size: 1.5rem; font-weight: 700; `;
 const TabNav = styled.div` display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; `;
 const TabButton = styled.button` display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: ${props => props.$active ? '#3b82f6' : '#1e293b'}; color: #fff; border: 1px solid #334155; border-radius: 99px; cursor: pointer; `;
-const Card = styled.div` background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(8px); border: 1px solid #334155; border-radius: 16px; padding: 24px; margin-bottom: 24px; `;
+const Card = styled.div` background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(8px); border: 1px solid #334155; border-radius: 16px; padding: 24px; margin-bottom: 24px; @media(max-width:600px){ padding: 16px 12px; } `;
 const SectionHeader = styled.div` margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); `;
 const CardTitle = styled.h2` font-size: 1.1rem; color: #3b82f6; `;
 const FormGrid = styled.div` display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media(max-width:600px){grid - template - columns:1fr; } `;
