@@ -1,0 +1,184 @@
+{
+    "template_id": "CLEAN_GRATING_V1",
+    "title": "U字溝・グレーチング清掃 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当作業員"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "overview.store_name",
+                    "label": "店舗名",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "key": "overview.address",
+                    "label": "住所",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.location",
+                    "label": "場所（例：厨房外周/裏口等）",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.length_or_count",
+                    "label": "対象（本数/箇所など）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "label": "2. 作業前確認",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.sludge_level",
+                    "label": "堆積（泥・油・ゴミ）",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "low",
+                            "label": "少"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中"
+                        },
+                        {
+                            "value": "high",
+                            "label": "多"
+                        },
+                        {
+                            "value": "abnormal",
+                            "label": "異常"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.odor",
+                    "label": "臭気",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "weak",
+                            "label": "あり（弱）"
+                        },
+                        {
+                            "value": "strong",
+                            "label": "あり（強）"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "label": "3. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.checks",
+                    "label": "実施チェック",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work_done.opened",
+                            "label": "開口/取り外し"
+                        },
+                        {
+                            "key": "work_done.removed_sludge",
+                            "label": "堆積物除去"
+                        },
+                        {
+                            "key": "work_done.washed",
+                            "label": "洗浄"
+                        },
+                        {
+                            "key": "work_done.reinstalled",
+                            "label": "復旧"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.note",
+                    "label": "作業メモ（任意）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "result",
+            "label": "4. 作業結果",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "result.condition_after",
+                    "label": "清掃後の状態",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "good",
+                            "label": "良好"
+                        },
+                        {
+                            "value": "improved",
+                            "label": "改善"
+                        },
+                        {
+                            "value": "partial",
+                            "label": "一部残り"
+                        },
+                        {
+                            "value": "need_followup",
+                            "label": "要追加対応"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "5. 写真",
+            "type": "photos",
+            "groups": [
+                {
+                    "key": "photos.before",
+                    "label": "作業前"
+                },
+                {
+                    "key": "photos.after",
+                    "label": "作業後"
+                }
+            ]
+        }
+    ]
+}

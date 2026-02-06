@@ -1,0 +1,201 @@
+{
+    "id": "CLEAN_RANGE_HOOD_V1",
+    "name": "レンジフード洗浄 作業報告書",
+    "version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当者"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number"
+                },
+                {
+                    "key": "overview.store_name",
+                    "label": "店舗名",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.address",
+                    "label": "住所",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.witness",
+                    "label": "立会者",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "description",
+            "label": "2. 設備概要",
+            "type": "static",
+            "content": "レンジフードは、調理時に発生する油煙・臭気・熱気を排出する重要設備です。定期的な洗浄により、火災リスクや異臭の発生を防止します。"
+        },
+        {
+            "id": "precheck",
+            "label": "3. 作業前確認",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.oil_level",
+                    "label": "油汚れの付着度",
+                    "type": "radio",
+                    "options": [
+                        "少ない",
+                        "普通",
+                        "多い",
+                        "非常に多い"
+                    ]
+                },
+                {
+                    "key": "precheck.filter_status",
+                    "label": "フィルターの状態",
+                    "type": "radio",
+                    "options": [
+                        "良好",
+                        "軽度汚れ",
+                        "重度汚れ",
+                        "破損"
+                    ]
+                },
+                {
+                    "key": "precheck.fan_condition",
+                    "label": "ファンの状態",
+                    "type": "radio",
+                    "options": [
+                        "正常",
+                        "汚れあり",
+                        "異音あり",
+                        "動作不良"
+                    ]
+                },
+                {
+                    "key": "precheck.fixing_status",
+                    "label": "固定状態",
+                    "type": "radio",
+                    "options": [
+                        "良好",
+                        "緩みあり",
+                        "要修理"
+                    ]
+                },
+                {
+                    "key": "precheck.abnormal_odor",
+                    "label": "異臭の有無",
+                    "type": "radio",
+                    "options": [
+                        "なし",
+                        "あり（弱）",
+                        "あり（強）"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "label": "4. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.filter_cleaning",
+                    "label": "フィルター洗浄",
+                    "type": "checkbox_group",
+                    "options": [
+                        "実施",
+                        "未実施"
+                    ]
+                },
+                {
+                    "key": "work_done.fan_cleaning",
+                    "label": "ファン洗浄",
+                    "type": "checkbox_group",
+                    "options": [
+                        "実施",
+                        "未実施"
+                    ]
+                },
+                {
+                    "key": "work_done.hood_inside",
+                    "label": "フード内部清掃",
+                    "type": "checkbox_group",
+                    "options": [
+                        "実施",
+                        "未実施"
+                    ]
+                },
+                {
+                    "key": "work_done.degreasing",
+                    "label": "脱脂・除菌処理",
+                    "type": "checkbox_group",
+                    "options": [
+                        "実施",
+                        "未実施"
+                    ]
+                },
+                {
+                    "key": "work_done.memo",
+                    "label": "作業メモ",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "作業写真（必須）",
+            "type": "photos",
+            "required": true,
+            "min_items": 2,
+            "presets": [
+                {
+                    "label": "着手前（全景）",
+                    "key": "photos.before_wide"
+                },
+                {
+                    "label": "完了後（全景）",
+                    "key": "photos.after_wide"
+                },
+                {
+                    "label": "問題箇所（アップ）",
+                    "key": "photos.detail_dirty"
+                },
+                {
+                    "label": "改善後（アップ）",
+                    "key": "photos.detail_clean"
+                }
+            ],
+            "helper": "最低2枚（着手前・完了後）は必須です"
+        },
+        {
+            "id": "comment",
+            "label": "6. 所感・注意事項",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "comment.worker_note",
+                    "label": "作業者コメント",
+                    "type": "textarea"
+                },
+                {
+                    "key": "comment.next_suggestion",
+                    "label": "次回提案・注意点",
+                    "type": "textarea"
+                }
+            ]
+        }
+    ]
+}

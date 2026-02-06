@@ -1,0 +1,228 @@
+{
+    "template_id": "CLEAN_PIPE_PRESSURE_WASH_V1",
+    "title": "配管高圧洗浄 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当作業員"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "overview.store_name",
+                    "label": "店舗名",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "key": "overview.address",
+                    "label": "住所",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.witness_name",
+                    "label": "立会者（あれば）",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.target",
+                    "label": "対象",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "overview.target_kitchen_drain",
+                            "label": "厨房排水"
+                        },
+                        {
+                            "key": "overview.target_sink",
+                            "label": "シンク排水"
+                        },
+                        {
+                            "key": "overview.target_floor_drain",
+                            "label": "床排水"
+                        },
+                        {
+                            "key": "overview.target_other",
+                            "label": "その他"
+                        }
+                    ]
+                },
+                {
+                    "key": "overview.target_other_text",
+                    "label": "その他（任意）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "label": "2. 作業前確認",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.clog_risk",
+                    "label": "詰まり/流れの悪さ",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "suspected",
+                            "label": "疑い"
+                        },
+                        {
+                            "value": "present",
+                            "label": "あり"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.odor",
+                    "label": "悪臭",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "weak",
+                            "label": "あり（弱）"
+                        },
+                        {
+                            "value": "strong",
+                            "label": "あり（強）"
+                        }
+                    ]
+                },
+                {
+                    "key": "evaluation.within_expected",
+                    "label": "通常想定内",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": true,
+                            "label": "はい"
+                        },
+                        {
+                            "value": false,
+                            "label": "いいえ"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "label": "3. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.method",
+                    "label": "洗浄方法",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "pressure",
+                            "label": "高圧洗浄"
+                        },
+                        {
+                            "value": "chemical",
+                            "label": "薬剤併用"
+                        },
+                        {
+                            "value": "mixed",
+                            "label": "併用"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.note",
+                    "label": "作業メモ（任意）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "result",
+            "label": "4. 作業結果",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "result.flow_after",
+                    "label": "洗浄後の流れ",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "good",
+                            "label": "良好"
+                        },
+                        {
+                            "value": "improved",
+                            "label": "改善"
+                        },
+                        {
+                            "value": "partial",
+                            "label": "一部残り"
+                        },
+                        {
+                            "value": "need_followup",
+                            "label": "要追加対応"
+                        }
+                    ]
+                },
+                {
+                    "key": "result.recommendation",
+                    "label": "推奨対応（任意）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "作業写真（必須）",
+            "type": "photos",
+            "required": true,
+            "min_items": 2,
+            "presets": [
+                {
+                    "label": "詰まり前",
+                    "key": "photos.before"
+                },
+                {
+                    "label": "洗浄後",
+                    "key": "photos.after"
+                },
+                {
+                    "label": "排水状態",
+                    "key": "photos.drainage"
+                }
+            ],
+            "helper": "最低2枚（詰まり前・洗浄後）は必須です"
+        }
+    ]
+}

@@ -1,0 +1,126 @@
+{
+    "id": "PEST_RODENT_CONTROL_V1",
+    "name": "害獣駆除（ネズミ）作業報告書",
+    "sections": [
+        {
+            "id": "overview",
+            "type": "group",
+            "meta_fields": [
+                "work_date",
+                "user_name"
+            ],
+            "fields": [
+                {
+                    "key": "overview.area",
+                    "label": "対応エリア",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.trace",
+                    "label": "痕跡（糞・かじり跡など）",
+                    "type": "textarea"
+                },
+                {
+                    "key": "precheck.level",
+                    "label": "被害状況",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "label": "軽度",
+                            "value": "low"
+                        },
+                        {
+                            "label": "中度",
+                            "value": "mid"
+                        },
+                        {
+                            "label": "重度",
+                            "value": "high"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.trap",
+                    "label": "設置トラップ",
+                    "type": "textarea"
+                },
+                {
+                    "key": "work_done.block",
+                    "label": "侵入口封鎖",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "label": "実施",
+                            "value": "yes"
+                        },
+                        {
+                            "label": "未実施",
+                            "value": "no"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "after_check",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "after_check.monitor",
+                    "label": "経過観察必要性",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "label": "不要",
+                            "value": "no"
+                        },
+                        {
+                            "label": "必要",
+                            "value": "yes"
+                        }
+                    ]
+                },
+                {
+                    "key": "after_check.advice",
+                    "label": "再発防止策",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "作業写真（必須）",
+            "type": "photos",
+            "required": true,
+            "min_items": 1,
+            "presets": [
+                {
+                    "label": "罠・薬剤設置",
+                    "key": "photos.trap"
+                }
+            ],
+            "helper": "罠・薬剤設置の写真は必須です"
+        },
+        {
+            "id": "memo",
+            "type": "field",
+            "field": {
+                "key": "memo",
+                "label": "備考",
+                "type": "textarea"
+            }
+        }
+    ]
+}

@@ -1,0 +1,81 @@
+{
+    "id": "CLEAN_EXHAUST_FAN_BELT_V1",
+    "name": "排気ファン・ベルト点検清掃報告書",
+    "sections": [
+        {
+            "id": "overview",
+            "type": "group",
+            "meta_fields": [
+                "work_date",
+                "user_name"
+            ],
+            "fields": [
+                {
+                    "key": "overview.model",
+                    "label": "機器型番",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.noise",
+                    "label": "異音",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "label": "なし",
+                            "value": "no"
+                        },
+                        {
+                            "label": "あり",
+                            "value": "yes"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.belt",
+                    "label": "ベルト劣化",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "label": "良好",
+                            "value": "good"
+                        },
+                        {
+                            "label": "要交換",
+                            "value": "bad"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.adjust",
+                    "label": "調整内容",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "type": "photos"
+        },
+        {
+            "id": "memo",
+            "type": "field",
+            "field": {
+                "key": "memo",
+                "label": "備考",
+                "type": "textarea"
+            }
+        }
+    ]
+}

@@ -1,0 +1,100 @@
+{
+    "template_id": "CLEAN_KITCHEN_WALL_V1",
+    "title": "厨房壁面清掃 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当者"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number"
+                },
+                {
+                    "key": "overview.area",
+                    "label": "清掃範囲",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "check",
+            "label": "2. 状態確認",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "check.oil_level",
+                    "label": "油汚れ",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "low",
+                            "label": "少"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中"
+                        },
+                        {
+                            "value": "high",
+                            "label": "多"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work",
+            "label": "3. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work.method",
+                    "label": "清掃方法",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "value": "chemical",
+                            "label": "薬剤"
+                        },
+                        {
+                            "value": "scrub",
+                            "label": "ブラッシング"
+                        },
+                        {
+                            "value": "wipe",
+                            "label": "拭き上げ"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "type": "photos",
+            "groups": [
+                {
+                    "key": "before",
+                    "label": "前"
+                },
+                {
+                    "key": "after",
+                    "label": "後"
+                }
+            ]
+        }
+    ]
+}

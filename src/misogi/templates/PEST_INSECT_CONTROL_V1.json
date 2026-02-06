@@ -1,0 +1,125 @@
+{
+    "id": "PEST_INSECT_CONTROL_V1",
+    "name": "害虫駆除（ゴキブリ・チョウバエ）作業報告書",
+    "sections": [
+        {
+            "id": "overview",
+            "type": "group",
+            "meta_fields": [
+                "work_date",
+                "user_name"
+            ],
+            "fields": [
+                {
+                    "key": "overview.area",
+                    "label": "対応エリア",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.minutes",
+                    "label": "作業時間（分）",
+                    "type": "number"
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.place",
+                    "label": "発生場所",
+                    "type": "textarea"
+                },
+                {
+                    "key": "precheck.level",
+                    "label": "発生量",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "label": "少",
+                            "value": "low"
+                        },
+                        {
+                            "label": "中",
+                            "value": "mid"
+                        },
+                        {
+                            "label": "多",
+                            "value": "high"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.method",
+                    "label": "対応方法",
+                    "type": "textarea"
+                },
+                {
+                    "key": "work_done.drug",
+                    "label": "使用薬剤",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "after_check",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "after_check.risk",
+                    "label": "再発リスク",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "label": "低",
+                            "value": "low"
+                        },
+                        {
+                            "label": "中",
+                            "value": "mid"
+                        },
+                        {
+                            "label": "高",
+                            "value": "high"
+                        }
+                    ]
+                },
+                {
+                    "key": "after_check.advice",
+                    "label": "改善提案",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "作業写真（必須）",
+            "type": "photos",
+            "required": true,
+            "min_items": 1,
+            "presets": [
+                {
+                    "label": "罠・薬剤設置",
+                    "key": "photos.trap"
+                }
+            ],
+            "helper": "罠・薬剤設置の写真は必須です"
+        },
+        {
+            "id": "memo",
+            "type": "field",
+            "field": {
+                "key": "memo",
+                "label": "備考",
+                "type": "textarea"
+            }
+        }
+    ]
+}

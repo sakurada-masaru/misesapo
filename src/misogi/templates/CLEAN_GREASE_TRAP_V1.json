@@ -1,0 +1,462 @@
+{
+    "template_id": "CLEAN_GREASE_TRAP_V1",
+    "title": "グリストラップ清掃 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当作業員"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "overview.store_name",
+                    "label": "作業場所（店舗名）",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "key": "overview.address",
+                    "label": "住所",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.witness_name",
+                    "label": "立会者（あれば）",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.work_type",
+                    "label": "作業区分",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "periodic",
+                            "label": "定期清掃"
+                        },
+                        {
+                            "value": "spot",
+                            "label": "臨時清掃"
+                        },
+                        {
+                            "value": "first",
+                            "label": "初回清掃"
+                        }
+                    ]
+                },
+                {
+                    "key": "overview.manifest_type",
+                    "label": "マニフェスト",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "発行なし"
+                        },
+                        {
+                            "value": "issued",
+                            "label": "発行あり"
+                        }
+                    ]
+                },
+                {
+                    "key": "overview.manifest_no",
+                    "label": "マニフェスト番号（発行ありの場合）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "role",
+            "label": "2. グリストラップの役割と本作業の位置づけ",
+            "type": "static",
+            "content": "グリストラップは、厨房排水に含まれる油脂・固形残渣を分離・回収し、下水道・配管の詰まりや悪臭を防止する設備です。本作業は、通常運用における衛生維持および設備保全を目的とした清掃として実施しました。"
+        },
+        {
+            "id": "precheck",
+            "label": "3. 作業前の現場状況（着手前確認）",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.oil_level",
+                    "label": "油脂の堆積状況",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "low",
+                            "label": "少"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中"
+                        },
+                        {
+                            "value": "high",
+                            "label": "多"
+                        },
+                        {
+                            "value": "abnormal",
+                            "label": "異常"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.solids_level",
+                    "label": "固形残渣の量",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "low",
+                            "label": "少"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中"
+                        },
+                        {
+                            "value": "high",
+                            "label": "多"
+                        },
+                        {
+                            "value": "abnormal",
+                            "label": "異常"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.odor",
+                    "label": "悪臭の有無",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "weak",
+                            "label": "あり（弱）"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "あり（中）"
+                        },
+                        {
+                            "value": "strong",
+                            "label": "あり（強）"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.water_level",
+                    "label": "水位の状態",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "normal",
+                            "label": "正常"
+                        },
+                        {
+                            "value": "need_adjustment",
+                            "label": "要調整"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.baffle_plate",
+                    "label": "仕切り板の状態",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "normal",
+                            "label": "正常"
+                        },
+                        {
+                            "value": "need_adjustment",
+                            "label": "要調整"
+                        },
+                        {
+                            "value": "broken",
+                            "label": "破損"
+                        }
+                    ]
+                },
+                {
+                    "key": "evaluation.within_expected",
+                    "label": "通常想定内",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": true,
+                            "label": "はい"
+                        },
+                        {
+                            "value": false,
+                            "label": "いいえ"
+                        }
+                    ]
+                },
+                {
+                    "key": "evaluation.unexpected_possible",
+                    "label": "想定外（長期未清掃・過剰堆積等）の可能性",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": true,
+                            "label": "あり"
+                        },
+                        {
+                            "value": false,
+                            "label": "なし"
+                        }
+                    ]
+                },
+                {
+                    "key": "unexpected_reason",
+                    "label": "想定超過の場合の理由（任意）",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "unexpected_reason.fat_over_accumulation",
+                            "label": "油脂の過剰堆積"
+                        },
+                        {
+                            "key": "unexpected_reason.long_term_uncleaned",
+                            "label": "長期未清掃"
+                        },
+                        {
+                            "key": "unexpected_reason.solidified",
+                            "label": "固化・固結"
+                        },
+                        {
+                            "key": "unexpected_reason.other",
+                            "label": "その他"
+                        }
+                    ]
+                },
+                {
+                    "key": "unexpected_reason.other_text",
+                    "label": "その他（自由記述）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "label": "4. 実施した作業内容（通常清掃範囲）",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.checks",
+                    "label": "実施チェック",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work_done.solid_removed",
+                            "label": "バスケット内残渣の回収"
+                        },
+                        {
+                            "key": "work_done.oil_removed",
+                            "label": "表層油脂の回収"
+                        },
+                        {
+                            "key": "work_done.sludge_removed",
+                            "label": "油泥（スラッジ）の除去（可能範囲）"
+                        },
+                        {
+                            "key": "work_done.wall_scrubbed",
+                            "label": "側壁・仕切り板のぬめり除去"
+                        },
+                        {
+                            "key": "work_done.detergent_wash",
+                            "label": "中性洗剤・ぬるま湯による洗浄"
+                        },
+                        {
+                            "key": "work_done.recovery_and_disposal",
+                            "label": "回収物の適切な回収・処理"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.high_pressure",
+                    "label": "高圧洗浄の実施",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": false,
+                            "label": "未実施（通常清掃）"
+                        },
+                        {
+                            "value": true,
+                            "label": "実施"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.high_pressure_note",
+                    "label": "高圧洗浄の範囲（実施した場合）",
+                    "type": "text"
+                },
+                {
+                    "key": "work_done.note_text",
+                    "label": "作業内容メモ（任意）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "result",
+            "label": "5. 作業結果と所要時間",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "result.actual_minutes",
+                    "label": "実作業時間（分）",
+                    "type": "number",
+                    "min": 0
+                },
+                {
+                    "key": "result.expected_minutes_range",
+                    "label": "通常想定時間（目安）",
+                    "type": "text",
+                    "placeholder": "例：30〜60分"
+                },
+                {
+                    "key": "result.rating",
+                    "label": "今回の評価",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "within_expected",
+                            "label": "想定内"
+                        },
+                        {
+                            "value": "over_expected",
+                            "label": "想定超過"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "risk",
+            "label": "6. 注意事項・リスク共有",
+            "type": "static_plus_text",
+            "content": [
+                "・状態が著しく悪い場合、通常清掃では完全除去できないことがあります。",
+                "・油脂・汚泥は適切に回収・処理します（マニフェスト発行ありの場合は番号を記録してください）。",
+                "・清掃後も定期的な管理を行わない場合、再度堆積が進行します。"
+            ],
+            "text_key": "risk_share.note_text"
+        },
+        {
+            "id": "proposal",
+            "label": "7. 改善提案・今後の対応（任意）",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "proposal.checks",
+                    "label": "提案チェック",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "proposal.review_frequency",
+                            "label": "清掃頻度の見直し（例：月1回→月2回）"
+                        },
+                        {
+                            "key": "proposal.do_special_cleaning",
+                            "label": "初回または特別清掃の実施"
+                        },
+                        {
+                            "key": "proposal.review_pre_explanation",
+                            "label": "事前説明内容の見直し"
+                        }
+                    ]
+                },
+                {
+                    "key": "proposal.other_text",
+                    "label": "その他（自由記述）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "memo",
+            "label": "8. 作業員メモ（現場からの声）",
+            "type": "field",
+            "field": {
+                "key": "worker_memo.text",
+                "type": "textarea"
+            }
+        },
+        {
+            "id": "photos",
+            "label": "作業写真（必須）",
+            "type": "photos",
+            "required": true,
+            "min_items": 2,
+            "presets": [
+                {
+                    "label": "着手前（全景）",
+                    "key": "photos.before_wide"
+                },
+                {
+                    "label": "完了後（全景）",
+                    "key": "photos.after_wide"
+                },
+                {
+                    "label": "問題箇所（アップ）",
+                    "key": "photos.detail_dirty"
+                },
+                {
+                    "label": "改善後（アップ）",
+                    "key": "photos.detail_clean"
+                }
+            ],
+            "helper": "最低2枚（着手前・完了後）は必須です"
+        },
+        {
+            "id": "remarks",
+            "label": "10. 備考",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "remarks.report_date",
+                    "label": "報告日（任意）",
+                    "type": "date"
+                },
+                {
+                    "key": "remarks.note_text",
+                    "label": "備考（任意）",
+                    "type": "textarea"
+                }
+            ]
+        }
+    ]
+}

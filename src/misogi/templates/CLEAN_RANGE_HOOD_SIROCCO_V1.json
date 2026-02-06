@@ -1,0 +1,275 @@
+{
+    "template_id": "CLEAN_RANGE_HOOD_SIROCCO_V1",
+    "title": "レンジフード洗浄（シロッコファン） 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当作業員"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "overview.store_name",
+                    "label": "店舗名",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "key": "overview.address",
+                    "label": "住所",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.witness_name",
+                    "label": "立会者（あれば）",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.cleaning_scope",
+                    "label": "作業範囲",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "overview.scope_filter",
+                            "label": "フィルター"
+                        },
+                        {
+                            "key": "overview.scope_sirocco",
+                            "label": "シロッコファン"
+                        },
+                        {
+                            "key": "overview.scope_inside",
+                            "label": "フード内部"
+                        },
+                        {
+                            "key": "overview.scope_surface",
+                            "label": "外装拭き上げ"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "label": "2. 作業前確認",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.oil_level",
+                    "label": "油汚れの付着度",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "low",
+                            "label": "少"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中"
+                        },
+                        {
+                            "value": "high",
+                            "label": "多"
+                        },
+                        {
+                            "value": "abnormal",
+                            "label": "異常"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.noise",
+                    "label": "異音",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "normal",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "slight",
+                            "label": "少しあり"
+                        },
+                        {
+                            "value": "abnormal",
+                            "label": "あり"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.rotation",
+                    "label": "回転状態",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "ok",
+                            "label": "正常"
+                        },
+                        {
+                            "value": "weak",
+                            "label": "弱い"
+                        },
+                        {
+                            "value": "fail",
+                            "label": "不良"
+                        }
+                    ]
+                },
+                {
+                    "key": "evaluation.within_expected",
+                    "label": "通常想定内",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": true,
+                            "label": "はい"
+                        },
+                        {
+                            "value": false,
+                            "label": "いいえ"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "label": "3. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.checks",
+                    "label": "実施チェック",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work_done.power_off",
+                            "label": "電源OFF確認"
+                        },
+                        {
+                            "key": "work_done.filter_removed",
+                            "label": "フィルター取り外し"
+                        },
+                        {
+                            "key": "work_done.sirocco_removed",
+                            "label": "シロッコファン取り外し"
+                        },
+                        {
+                            "key": "work_done.degrease",
+                            "label": "脱脂洗浄"
+                        },
+                        {
+                            "key": "work_done.rinse",
+                            "label": "すすぎ/乾燥"
+                        },
+                        {
+                            "key": "work_done.reassemble",
+                            "label": "組み戻し"
+                        },
+                        {
+                            "key": "work_done.operation_check",
+                            "label": "動作確認"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.note",
+                    "label": "作業メモ（任意）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "result",
+            "label": "4. 作業結果",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "result.condition_after",
+                    "label": "清掃後の状態",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "good",
+                            "label": "良好"
+                        },
+                        {
+                            "value": "improved",
+                            "label": "改善"
+                        },
+                        {
+                            "value": "partial",
+                            "label": "一部残り（通常範囲内）"
+                        },
+                        {
+                            "value": "need_followup",
+                            "label": "要追加対応"
+                        }
+                    ]
+                },
+                {
+                    "key": "result.recommendation",
+                    "label": "次回提案/注意（任意）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "作業写真（必須）",
+            "type": "photos",
+            "required": true,
+            "min_items": 2,
+            "presets": [
+                {
+                    "label": "着手前（全景）",
+                    "key": "photos.before_wide"
+                },
+                {
+                    "label": "完了後（全景）",
+                    "key": "photos.after_wide"
+                },
+                {
+                    "label": "問題箇所（アップ）",
+                    "key": "photos.detail_dirty"
+                },
+                {
+                    "label": "改善後（アップ）",
+                    "key": "photos.detail_clean"
+                }
+            ],
+            "helper": "最低2枚（着手前・完了後）は必須です"
+        },
+        {
+            "id": "memo",
+            "label": "6. 作業員メモ",
+            "type": "field",
+            "field": {
+                "key": "worker_memo.text",
+                "type": "textarea"
+            }
+        }
+    ]
+}

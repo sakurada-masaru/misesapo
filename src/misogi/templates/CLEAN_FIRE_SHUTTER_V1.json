@@ -1,0 +1,66 @@
+{
+    "id": "CLEAN_FIRE_SHUTTER_V1",
+    "name": "防火シャッター点検清掃報告書",
+    "sections": [
+        {
+            "id": "overview",
+            "type": "group",
+            "meta_fields": [
+                "work_date",
+                "user_name"
+            ],
+            "fields": [
+                {
+                    "key": "overview.location",
+                    "label": "設置場所",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.operation",
+                    "label": "開閉動作",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "label": "正常",
+                            "value": "ok"
+                        },
+                        {
+                            "label": "不良",
+                            "value": "ng"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.clean",
+                    "label": "清掃内容",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "type": "photos"
+        },
+        {
+            "id": "memo",
+            "type": "field",
+            "field": {
+                "key": "memo",
+                "label": "備考",
+                "type": "textarea"
+            }
+        }
+    ]
+}

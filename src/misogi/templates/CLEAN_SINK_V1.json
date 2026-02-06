@@ -1,0 +1,95 @@
+{
+    "template_id": "CLEAN_SINK_V1",
+    "title": "シンク洗浄 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当者"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number"
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "label": "2. 状態",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.scale",
+                    "label": "水垢/汚れ",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "light",
+                            "label": "軽度"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中度"
+                        },
+                        {
+                            "value": "heavy",
+                            "label": "重度"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work",
+            "label": "3. 作業",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work.checks",
+                    "label": "作業内容",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work.descaling",
+                            "label": "水垢除去"
+                        },
+                        {
+                            "key": "work.disinfect",
+                            "label": "除菌"
+                        },
+                        {
+                            "key": "work.polish",
+                            "label": "研磨"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "type": "photos",
+            "groups": [
+                {
+                    "key": "before",
+                    "label": "前"
+                },
+                {
+                    "key": "after",
+                    "label": "後"
+                }
+            ]
+        }
+    ]
+}

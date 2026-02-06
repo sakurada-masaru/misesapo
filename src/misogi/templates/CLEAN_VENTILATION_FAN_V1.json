@@ -1,0 +1,431 @@
+{
+    "template_id": "CLEAN_VENTILATION_FAN_V1",
+    "title": "換気扇洗浄 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当作業員"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "overview.store_name",
+                    "label": "作業場所（店舗名）",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "key": "overview.address",
+                    "label": "住所",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.witness_name",
+                    "label": "立会者（あれば）",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.fan_type",
+                    "label": "換気扇タイプ",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "propeller",
+                            "label": "プロペラ（壁付け）"
+                        },
+                        {
+                            "value": "ceiling",
+                            "label": "天井換気扇（埋込）"
+                        },
+                        {
+                            "value": "other",
+                            "label": "その他"
+                        }
+                    ]
+                },
+                {
+                    "key": "overview.fan_type_other",
+                    "label": "その他（任意）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "role",
+            "label": "2. 設備の役割と本作業の位置づけ",
+            "type": "static",
+            "content": "換気扇は、厨房や店内の油煙・臭気・湿気を排出し、衛生環境と快適性を維持する設備です。油汚れや粉塵の堆積は風量低下・異臭・故障・火災リスクの原因となるため、定期的な洗浄が必要です。"
+        },
+        {
+            "id": "precheck",
+            "label": "3. 作業前の状態確認（着手前確認）",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.dirt_level",
+                    "label": "汚れの付着度（油・粉塵）",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "low",
+                            "label": "少"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中"
+                        },
+                        {
+                            "value": "high",
+                            "label": "多"
+                        },
+                        {
+                            "value": "abnormal",
+                            "label": "異常"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.odor",
+                    "label": "異臭の有無",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "weak",
+                            "label": "あり（弱）"
+                        },
+                        {
+                            "value": "strong",
+                            "label": "あり（強）"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.noise",
+                    "label": "作動音（異音）",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "normal",
+                            "label": "正常"
+                        },
+                        {
+                            "value": "slight",
+                            "label": "少し気になる"
+                        },
+                        {
+                            "value": "abnormal",
+                            "label": "異音あり"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.airflow",
+                    "label": "風量感（主観）",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "strong",
+                            "label": "強い"
+                        },
+                        {
+                            "value": "normal",
+                            "label": "普通"
+                        },
+                        {
+                            "value": "weak",
+                            "label": "弱い"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.damage",
+                    "label": "破損・ガタつき",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "loose",
+                            "label": "ガタつきあり"
+                        },
+                        {
+                            "value": "broken",
+                            "label": "破損あり"
+                        }
+                    ]
+                },
+                {
+                    "key": "evaluation.within_expected",
+                    "label": "通常想定内",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": true,
+                            "label": "はい"
+                        },
+                        {
+                            "value": false,
+                            "label": "いいえ"
+                        }
+                    ]
+                },
+                {
+                    "key": "evaluation.unexpected_possible",
+                    "label": "想定外（長期未清掃・過剰堆積等）の可能性",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": true,
+                            "label": "あり"
+                        },
+                        {
+                            "value": false,
+                            "label": "なし"
+                        }
+                    ]
+                },
+                {
+                    "key": "unexpected_reason",
+                    "label": "想定超過の場合の理由（任意）",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "unexpected_reason.heavy_oil",
+                            "label": "油汚れが重度"
+                        },
+                        {
+                            "key": "unexpected_reason.dust_heavy",
+                            "label": "粉塵堆積が重度"
+                        },
+                        {
+                            "key": "unexpected_reason.long_term_uncleaned",
+                            "label": "長期未清掃の可能性"
+                        },
+                        {
+                            "key": "unexpected_reason.parts_stuck",
+                            "label": "部品固着・分解困難"
+                        },
+                        {
+                            "key": "unexpected_reason.other",
+                            "label": "その他"
+                        }
+                    ]
+                },
+                {
+                    "key": "unexpected_reason.other_text",
+                    "label": "その他（自由記述）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "label": "4. 実施した作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.checks",
+                    "label": "実施チェック",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work_done.power_off_confirmed",
+                            "label": "電源OFF確認"
+                        },
+                        {
+                            "key": "work_done.cover_removed",
+                            "label": "カバー/パネルの取り外し"
+                        },
+                        {
+                            "key": "work_done.blade_cleaned",
+                            "label": "羽根（プロペラ/ファン）の洗浄"
+                        },
+                        {
+                            "key": "work_done.cover_cleaned",
+                            "label": "カバー/パネルの洗浄"
+                        },
+                        {
+                            "key": "work_done.body_wiped",
+                            "label": "本体周辺の拭き上げ"
+                        },
+                        {
+                            "key": "work_done.degreased",
+                            "label": "脱脂（洗剤洗浄）"
+                        },
+                        {
+                            "key": "work_done.reassembled",
+                            "label": "復旧（組み戻し）"
+                        },
+                        {
+                            "key": "work_done.operation_checked",
+                            "label": "動作確認（回転/風量）"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.deep_clean",
+                    "label": "分解洗浄の実施",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": false,
+                            "label": "未実施（通常洗浄）"
+                        },
+                        {
+                            "value": true,
+                            "label": "実施"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.deep_clean_note",
+                    "label": "分解範囲（実施した場合）",
+                    "type": "text"
+                },
+                {
+                    "key": "work_done.note_text",
+                    "label": "作業内容メモ（任意）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "result",
+            "label": "5. 作業結果",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "result.actual_minutes",
+                    "label": "実作業時間（分）",
+                    "type": "number",
+                    "min": 0
+                },
+                {
+                    "key": "result.condition_after",
+                    "label": "清掃後の状態",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "good",
+                            "label": "良好"
+                        },
+                        {
+                            "value": "improved",
+                            "label": "改善"
+                        },
+                        {
+                            "value": "partial",
+                            "label": "一部残り（通常範囲内）"
+                        },
+                        {
+                            "value": "need_followup",
+                            "label": "要追加対応"
+                        }
+                    ]
+                },
+                {
+                    "key": "result.recommendation",
+                    "label": "推奨対応（任意）",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "result.rec_next_schedule",
+                            "label": "次回清掃頻度の見直し"
+                        },
+                        {
+                            "key": "result.rec_part_repair",
+                            "label": "部品交換/修理の検討"
+                        },
+                        {
+                            "key": "result.rec_duct_check",
+                            "label": "ダクト側の点検/清掃提案"
+                        },
+                        {
+                            "key": "result.rec_other",
+                            "label": "その他"
+                        }
+                    ]
+                },
+                {
+                    "key": "result.recommendation_other_text",
+                    "label": "その他（自由記述）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "memo",
+            "label": "6. 作業員メモ",
+            "type": "field",
+            "field": {
+                "key": "worker_memo.text",
+                "type": "textarea"
+            }
+        },
+        {
+            "id": "photos",
+            "label": "7. 写真添付欄",
+            "type": "photos",
+            "hint": "推奨：作業前（汚れ/全景）／分解部品（任意）／作業後（全景/改善状態）",
+            "groups": [
+                {
+                    "key": "photos.before",
+                    "label": "作業前写真"
+                },
+                {
+                    "key": "photos.during",
+                    "label": "作業中写真（任意）"
+                },
+                {
+                    "key": "photos.after",
+                    "label": "作業後写真"
+                }
+            ]
+        },
+        {
+            "id": "remarks",
+            "label": "8. 備考（任意）",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "remarks.note_text",
+                    "label": "備考",
+                    "type": "textarea"
+                }
+            ]
+        }
+    ]
+}

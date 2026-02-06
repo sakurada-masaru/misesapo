@@ -1,0 +1,120 @@
+{
+    "template_id": "MAINT_FIRE_SHUTTER_V1",
+    "title": "防火シャッター点検清掃 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当者"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number"
+                },
+                {
+                    "key": "overview.location",
+                    "label": "設置場所",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "inspection",
+            "label": "2. 点検結果",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "inspection.open_close",
+                    "label": "開閉状態",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "normal",
+                            "label": "正常"
+                        },
+                        {
+                            "value": "slow",
+                            "label": "遅い"
+                        },
+                        {
+                            "value": "fail",
+                            "label": "不良"
+                        }
+                    ]
+                },
+                {
+                    "key": "inspection.rust",
+                    "label": "錆/汚れ",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "light",
+                            "label": "軽度"
+                        },
+                        {
+                            "value": "heavy",
+                            "label": "重度"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "result",
+            "label": "3. 総合評価",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "result.overall",
+                    "label": "総合評価",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "ok",
+                            "label": "問題なし"
+                        },
+                        {
+                            "value": "need_follow",
+                            "label": "要対応"
+                        }
+                    ]
+                },
+                {
+                    "key": "result.note",
+                    "label": "備考",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "type": "photos",
+            "groups": [
+                {
+                    "key": "open",
+                    "label": "開"
+                },
+                {
+                    "key": "close",
+                    "label": "閉"
+                }
+            ]
+        }
+    ]
+}

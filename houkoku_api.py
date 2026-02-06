@@ -63,6 +63,33 @@ def get_user_from_token(event):
         }
     except: return None
 
+def sanitize_payload(payload: dict) -> dict:
+    """
+    payloadからDB直下で管理する項目を削除する（二重管理防止）
+    work_date, user_name 等は houkoku テーブル直下が唯一の正
+    既存のheader構造と新しいoverview構造の両方に対応
+    """
+    if not isinstance(payload, dict):
+        return {}
+
+    # 新構造: overview
+    overview = payload.get("overview")
+    if isinstance(overview, dict):
+        overview.pop("work_date", None)
+        overview.pop("worker_name", None)
+        overview.pop("user_name", None)
+        payload["overview"] = overview
+
+    # 旧構造: header（後方互換）
+    header = payload.get("header")
+    if isinstance(header, dict):
+        header.pop("work_date", None)
+        header.pop("reporter_name", None)  # 旧名
+        header.pop("user_name", None)
+        payload["header"] = header
+
+    return payload
+
 def lambda_handler(event, context):
     try:
         path = event.get('path', '') or event.get('rawPath', '') or '/'
@@ -107,7 +134,7 @@ def handle_create(event, origin):
         'user_name': user.get('name') or user.get('email') or 'Unknown',
         'work_date': body.get('work_date') or now.strftime('%Y-%m-%d'),
         'template_id': body.get('template_id') or 'DEFAULT',
-        'payload': body.get('payload') or {},
+        'payload': sanitize_payload(body.get('payload') or {}),
         'state': 'submitted',
         'created_at': now.isoformat(),
         'updated_at': now.isoformat()
@@ -139,7 +166,7 @@ def handle_update(event, report_id, origin):
     table.update_item(
         Key={'id': report_id},
         UpdateExpression='SET payload = :p, updated_at = :u',
-        ExpressionAttributeValues={':p': body.get('payload', {}), ':u': datetime.now(JST).isoformat()}
+        ExpressionAttributeValues={':p': sanitize_payload(body.get('payload', {})), ':u': datetime.now(JST).isoformat()}
     )
     return response(200, {'id': report_id, 'message': '更新しました'}, origin)
 

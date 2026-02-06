@@ -3,12 +3,15 @@ import styled from 'styled-components';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetchWorkReport } from '../../shared/api/client';
 import { useAuth } from '../../shared/auth/useAuth';
+import TemplateRenderer from '../../../shared/components/TemplateRenderer';
+import { getTemplateById } from '../../../templates';
 
 const AdminHoukokuDetailPage = () => {
     const { reportId } = useParams();
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeStoreTab, setActiveStoreTab] = useState(0);
     const { getToken } = useAuth();
 
     useEffect(() => {
@@ -31,19 +34,55 @@ const AdminHoukokuDetailPage = () => {
     if (error) return <Container><ErrorMessage>{error}</ErrorMessage></Container>;
     if (!report) return <Container><Message>報告が見つかりません。</Message></Container>;
 
-    const payload = report.payload || {};
-    const header = payload.header || (payload.work_date ? payload : {});
-    const stores = payload.stores || [];
+    // payload が object かどうかチェック（型ガード：文字列/NULL対策）
+    const payload =
+        report?.payload && typeof report.payload === 'object' && !Array.isArray(report.payload)
+            ? report.payload
+            : {};
 
-    // 写真の集計
-    let allPhotos = [...(payload.attachments || [])];
-    stores.forEach(s => { if (s.attachments) allPhotos = [...allPhotos, ...s.attachments]; });
+    // template_id からテンプレートを取得
+    const templateId = report.template_id;
+    const template = templateId ? getTemplateById(templateId) : null;
+
+    // header/overview も型ガード（後方互換fallback用）
+    const header =
+        payload?.header && typeof payload.header === 'object' ? payload.header : {};
+    const overview =
+        payload?.overview && typeof payload.overview === 'object' ? payload.overview : {};
+    const reportMeta = {
+        id: report.id,
+        work_date: report.work_date || header.work_date || overview.work_date || null,
+        user_name: report.user_name || header.reporter_name || header.user_name || overview.worker_name || overview.user_name || null,
+        user_id: report.user_id,
+        state: report.state,
+        created_at: report.created_at,
+        updated_at: report.updated_at,
+        template_id: report.template_id,
+    };
+
+    // 旧データ用（storesがある場合のフォールバック表示）
+    const stores = payload.stores || [];
+    const activeStoreRaw = stores[activeStoreTab] || null;
+    const activeStore = activeStoreRaw ? {
+        ...(activeStoreRaw.store || {}),
+        ...activeStoreRaw,
+        // metaがあればそれもマージ
+        template_id: activeStoreRaw.template_id,
+        template_payload: activeStoreRaw.template_payload
+    } : null;
+
+    // 作業時間を計算（分）- 旧表示用
+    const calcMinutes = (start, end) => {
+        if (!start || !end) return null;
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+        return (eh * 60 + em) - (sh * 60 + sm);
+    };
 
     return (
         <Container>
             <TopBar>
                 <BackButton to="/admin/houkoku"><i className="fas fa-chevron-left"></i> 戻る</BackButton>
-                <Badge $type={report.template_id}>{getLabel(report.template_id)}</Badge>
                 <Actions>
                     <button onClick={() => window.print()}><i className="fas fa-print"></i> 印刷</button>
                     <button><i className="fas fa-share-alt"></i> 共有</button>
@@ -51,134 +90,128 @@ const AdminHoukokuDetailPage = () => {
             </TopBar>
 
             <ContentArea>
-                {/* 1. Header Hero Section */}
-                <HeroSection>
-                    <ReporterInfo>
-                        <Avatar>{report.user_name?.charAt(0)}</Avatar>
-                        <div>
-                            <ReporterName>{report.user_name}</ReporterName>
-                            <ReportDate>{new Date(report.created_at).toLocaleString('ja-JP')} 提出</ReportDate>
-                        </div>
-                    </ReporterInfo>
-                    <OverviewGrid>
-                        <StatBox>
-                            <StatLabel>作業日</StatLabel>
-                            <StatValue>{header.work_date || report.work_date}</StatValue>
-                        </StatBox>
-                        <StatBox>
-                            <StatLabel>稼働時間</StatLabel>
-                            <StatValue>{header.work_start_time || '--:--'} 〜 {header.work_end_time || '--:--'}</StatValue>
-                        </StatBox>
-                        <StatBox>
-                            <StatLabel>店舗数</StatLabel>
-                            <StatValue>{stores.length} 件</StatValue>
-                        </StatBox>
-                    </OverviewGrid>
-                </HeroSection>
-
-                {/* 2. 備考 (もしあれば) */}
-                {header.note && (
-                    <NoteCard>
-                        <SectionTitle><i className="fas fa-comment-dots"></i> 作業者からの共通備考</SectionTitle>
-                        <NoteContent>{header.note}</NoteContent>
-                    </NoteCard>
-                )}
-
-                {/* 3. 詳細データ：店舗ごと */}
-                <SectionHeader>詳細レポート項目</SectionHeader>
+                {/* 1. マルチ店舗（stores）データがある場合: 店舗タブ形式 */}
                 {stores.length > 0 ? (
-                    stores.map((item, idx) => {
-                        const s = item.store || item;
-                        const attachments = s.attachments || [];
-                        const attachmentsAfter = s.attachments_after || [];
-                        const services = s.services || [];
-                        const inspection = s.inspection || {};
+                    <>
+                        {/* タブナビゲーション */}
+                        {stores.length > 1 && (
+                            <StoreTabNav>
+                                {stores.map((item, idx) => {
+                                    const s = item.store || item;
+                                    return (
+                                        <StoreTabItem
+                                            key={idx}
+                                            $active={activeStoreTab === idx}
+                                            onClick={() => setActiveStoreTab(idx)}
+                                        >
+                                            <span>{s.name || s.store_name || `店舗 ${idx + 1}`}</span>
+                                        </StoreTabItem>
+                                    );
+                                })}
+                            </StoreTabNav>
+                        )}
 
-                        return (
-                            <StoreCard key={idx}>
-                                <StoreHeader>
-                                    <StoreTitle><i className="fas fa-store"></i> {s.name || s.store_name || `店舗 ${idx + 1}`}</StoreTitle>
-                                    <StoreTime>{s.work_start_time} - {s.work_end_time}</StoreTime>
-                                </StoreHeader>
+                        {/* 選択された店舗の報告書 */}
+                        {activeStore && (() => {
+                            const s = activeStore;
+                            const attachments = s.attachments || [];
+                            const attachmentsAfter = s.attachments_after || [];
+                            const services = s.services || [];
+                            const inspection = s.inspection || {};
+                            const workMinutes = calcMinutes(s.work_start_time, s.work_end_time);
 
-                                <StoreGrid>
-                                    <InfoPanel>
-                                        <LabelSmall>清掃箇所</LabelSmall>
-                                        <TagList>
-                                            {services.map((sv, si) => (
-                                                <Tag key={si}><i className="fas fa-check-circle"></i> {sv.name}</Tag>
-                                            ))}
-                                            {services.length === 0 && <span style={{ color: '#94a3b8' }}>記録なし</span>}
-                                        </TagList>
+                            return (
+                                <ReportDocument>
+                                    {s.template_id ? (
+                                        <TemplateRenderer
+                                            template={getTemplateById(s.template_id)}
+                                            report={{
+                                                ...reportMeta,
+                                                work_date: header.work_date || reportMeta.work_date,
+                                                // 店舗ごとの作業時間を優先して表示に反映させるための調整
+                                                start_time: s.work_start_time,
+                                                end_time: s.work_end_time
+                                            }}
+                                            payload={s.template_payload || {}}
+                                            mode="view"
+                                        />
+                                    ) : (
+                                        <>
+                                            {/* 旧レイアウト（後方互換用） */}
+                                            <ReportTitle>グリストラップ清掃 作業報告書</ReportTitle>
 
-                                        {/* 点検項目の表示 */}
-                                        {Object.keys(inspection).length > 0 && (
-                                            <>
-                                                <LabelSmall style={{ marginTop: '24px' }}>点検・調査結果</LabelSmall>
-                                                <InspectionGrid>
-                                                    {inspection.fat_level && (
-                                                        <InspectionItem>
-                                                            <div className="label">油脂堆積</div>
-                                                            <StatusBadge $level={inspection.fat_level}>{getFatLabel(inspection.fat_level)}</StatusBadge>
-                                                        </InspectionItem>
-                                                    )}
-                                                    {inspection.odor_level && (
-                                                        <InspectionItem>
-                                                            <div className="label">悪臭</div>
-                                                            <StatusBadge $level={inspection.odor_level}>{getOdorLabel(inspection.odor_level)}</StatusBadge>
-                                                        </InspectionItem>
-                                                    )}
-                                                    {inspection.assessment && (
-                                                        <InspectionItem>
-                                                            <div className="label">評価</div>
-                                                            <StatusBadge $level={inspection.assessment === 'normal' ? 'none' : 'high'}>
-                                                                {inspection.assessment === 'normal' ? '通常' : '想定外・異常'}
-                                                            </StatusBadge>
-                                                        </InspectionItem>
-                                                    )}
-                                                </InspectionGrid>
-                                            </>
-                                        )}
+                                            <Section>
+                                                <SectionTitle>1. 作業概要</SectionTitle>
+                                                <InfoList>
+                                                    <InfoRow>
+                                                        <InfoLabel>作業日：</InfoLabel>
+                                                        <InfoValue>{header.work_date || report.work_date || '—'}</InfoValue>
+                                                    </InfoRow>
+                                                    <InfoRow>
+                                                        <InfoLabel>作業時間：</InfoLabel>
+                                                        <InfoValue>{workMinutes ? `${workMinutes}分` : '—'}</InfoValue>
+                                                    </InfoRow>
+                                                    <InfoRow>
+                                                        <InfoLabel>作業場所：</InfoLabel>
+                                                        <InfoValue>{s.name || s.store_name || '—'}</InfoValue>
+                                                    </InfoRow>
+                                                    <InfoRow>
+                                                        <InfoLabel>担当作業員：</InfoLabel>
+                                                        <InfoValue>{header.reporter_name || report.user_name || '—'}</InfoValue>
+                                                    </InfoRow>
+                                                </InfoList>
+                                            </Section>
 
-                                        <LabelSmall style={{ marginTop: '24px' }}>所感・伝達事項</LabelSmall>
-                                        <ValueBlock>{s.note || s.memo || '特筆事項なし'}</ValueBlock>
-                                    </InfoPanel>
+                                            <Section>
+                                                <SectionTitle>3. 作業前の現場状況</SectionTitle>
+                                                <CheckList>
+                                                    <CheckRow>
+                                                        <CheckLabel>油脂の堆積状況：</CheckLabel>
+                                                        <CheckOptions>
+                                                            <CheckOption $checked={inspection.fat_level === 'low'}>□ 少</CheckOption>
+                                                            <CheckOption $checked={inspection.fat_level === 'middle'}>□ 中</CheckOption>
+                                                            <CheckOption $checked={inspection.fat_level === 'high'}>□ 多</CheckOption>
+                                                        </CheckOptions>
+                                                    </CheckRow>
+                                                </CheckList>
+                                            </Section>
 
-                                    <ImagePanel>
-                                        {/* Before 写真 */}
-                                        <LabelSmall>{s.photo_mode === 'execution' ? '施工写真' : '作業前 (Before)'} ({attachments.length})</LabelSmall>
-                                        <PhotoGridMini>
-                                            {attachments.map((img, i) => (
-                                                <PhotoItem key={i} href={img.url} target="_blank">
-                                                    <img src={img.url} alt="Before" />
-                                                </PhotoItem>
-                                            ))}
-                                        </PhotoGridMini>
-                                        {attachments.length === 0 && <EmptyImage><i className="fas fa-image"></i> 写真なし</EmptyImage>}
-
-                                        {/* After 写真があれば表示 */}
-                                        {attachmentsAfter.length > 0 && (
-                                            <>
-                                                <LabelSmall style={{ marginTop: '24px' }}>作業後 (After) ({attachmentsAfter.length})</LabelSmall>
-                                                <PhotoGridMini>
-                                                    {attachmentsAfter.map((img, i) => (
-                                                        <PhotoItem key={i} href={img.url} target="_blank">
-                                                            <img src={img.url} alt="After" />
-                                                        </PhotoItem>
+                                            <Section>
+                                                <SectionTitle>4. 清掃内容</SectionTitle>
+                                                <ServiceList>
+                                                    {services.map((sv, si) => (
+                                                        <ServiceItem key={si}><i className="fas fa-check"></i> {sv.name}</ServiceItem>
                                                     ))}
-                                                </PhotoGridMini>
-                                            </>
-                                        )}
-                                    </ImagePanel>
-                                </StoreGrid>
-                            </StoreCard>
-                        );
-                    })
+                                                </ServiceList>
+                                            </Section>
+
+                                            <Section>
+                                                <SectionTitle>5. 作業写真</SectionTitle>
+                                                <PhotoSection>
+                                                    <PhotoGrid>
+                                                        {attachments.map((img, i) => (
+                                                            <PhotoItem key={i} href={img.url} target="_blank"><img src={img.url} alt="Before" /></PhotoItem>
+                                                        ))}
+                                                    </PhotoGrid>
+                                                </PhotoSection>
+                                            </Section>
+
+                                            <ReportFooter>
+                                                <FooterInfo>
+                                                    <span>提出日時：{report.created_at ? new Date(report.created_at).toLocaleString('ja-JP') : '—'}</span>
+                                                    <span>作業者：{report.user_name || '—'}</span>
+                                                </FooterInfo>
+                                            </ReportFooter>
+                                        </>
+                                    )}
+                                </ReportDocument>
+                            );
+                        })()}
+                    </>
                 ) : (
                     <EmptyCard>
                         <i className="fas fa-exclamation-triangle"></i>
-                        <p>詳細な店舗データがありません。全体保存のみ、あるいは詳細の「完了チェック」が行われなかった可能性があります。</p>
-                        {/* 救済策：もし payload に何かデータがあれば RAW で出す */}
+                        <p>詳細な店舗データがありません。</p>
                         <details style={{ marginTop: 20, textAlign: 'left', width: '100%' }}>
                             <summary style={{ cursor: 'pointer', color: '#64748b' }}>未展開の生データを確認</summary>
                             <pre style={{ background: '#f1f5f9', padding: 10, borderRadius: 8, fontSize: 12, marginTop: 10, overflowX: 'auto' }}>
@@ -187,8 +220,8 @@ const AdminHoukokuDetailPage = () => {
                         </details>
                     </EmptyCard>
                 )}
-            </ContentArea>
-        </Container>
+            </ContentArea >
+        </Container >
     );
 };
 
@@ -241,7 +274,6 @@ const PhotoGridMini = styled.div` display: grid; grid-template-columns: repeat(2
 const PhotoItem = styled.a` display: block; aspect-ratio: 4/3; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; img { width: 100%; height: 100%; object-fit: cover; transition: 0.2s; } &:hover img { transform: scale(1.05); } `;
 const EmptyImage = styled.div` aspect-ratio: 16/9; background: #f1f5f9; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color:#94a3b8; font-size: 14px; i { font-size: 24px; margin-bottom: 8px; } `;
 const SectionHeader = styled.h2` font-size: 14px; font-weight: 800; color: #64748b; text-transform: uppercase; margin: 40px 0 16px; letter-spacing: 0.1em; `;
-const SectionTitle = styled.h3` font-size: 16px; font-weight: 800; margin-bottom: 16px; color: #1e293b; i { color: #f59e0b; margin-right: 8px; } `;
 const EmptyCard = styled.div` background: white; border-radius: 24px; padding: 60px; text-align: center; color: #64748b; border: 2px dashed #e2e8f0; i { font-size: 40px; color: #f59e0b; margin-bottom: 20px; } p { max-width: 400px; margin: 0 auto; line-height: 1.6; } `;
 const LoadingSpinner = styled.div` width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 100px auto 20px; @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } `;
 const Message = styled.div` text-align: center; padding: 100px; color:#94a3b8; `;
@@ -281,4 +313,266 @@ const StatusBadge = styled.span`
     }}
 `;
 
+const StoreTabNav = styled.div`
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    &::-webkit-scrollbar {
+        height: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+`;
+
+const StoreTabItem = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: 2px solid ${props => props.$active ? '#3b82f6' : '#e2e8f0'};
+    background: ${props => props.$active ? '#3b82f6' : 'white'};
+    color: ${props => props.$active ? 'white' : '#64748b'};
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    &:hover {
+        border-color: #3b82f6;
+        background: ${props => props.$active ? '#3b82f6' : '#eff6ff'};
+    }
+    i {
+        font-size: 12px;
+    }
+`;
+
+const BrandTag = styled.span`
+    margin-left: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ec4899;
+    background: #fdf2f8;
+    padding: 2px 10px;
+    border-radius: 6px;
+`;
+
+const StoreInfoBar = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+`;
+
+const InfoItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+    i {
+        color: #94a3b8;
+        font-size: 12px;
+    }
+`;
+
+// 報告書フォーマット用スタイル（外枠コンテナ）
+const ReportDocument = styled.div`
+    width: 100%;
+    margin: 0 auto;
+    @media print {
+        padding: 0;
+    }
+`;
+
+const ReportTitle = styled.h1`
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 40px 0;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #1e293b;
+    font-style: italic;
+`;
+
+const Section = styled.section`
+    margin-bottom: 32px;
+`;
+
+const SectionTitle = styled.h2`
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 16px 0;
+`;
+
+const SubSection = styled.div`
+    margin-left: 16px;
+`;
+
+const SubSectionTitle = styled.h3`
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 12px 0;
+`;
+
+const InfoList = styled.ul`
+    list-style: none;
+    margin: 0;
+    padding: 0;
+`;
+
+const InfoRow = styled.li`
+    display: flex;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px dotted #e5e7eb;
+    &:last-child {
+        border-bottom: none;
+    }
+`;
+
+const InfoLabel = styled.span`
+    font-size: 14px;
+    color: #374151;
+    min-width: 180px;
+    flex-shrink: 0;
+`;
+
+const InfoValue = styled.span`
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 500;
+`;
+
+const DescriptionText = styled.p`
+    font-size: 14px;
+    line-height: 1.8;
+    color: #374151;
+    margin: 0 0 12px 0;
+    &:last-child {
+        margin-bottom: 0;
+    }
+`;
+
+const CheckList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+`;
+
+const CheckRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+`;
+
+const CheckLabel = styled.span`
+    font-size: 14px;
+    color: #374151;
+    min-width: 160px;
+`;
+
+const CheckOptions = styled.div`
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+`;
+
+const CheckOption = styled.span`
+    font-size: 14px;
+    color: ${props => props.$checked ? '#1e293b' : '#9ca3af'};
+    font-weight: ${props => props.$checked ? '700' : '400'};
+    ${props => props.$checked && `
+        &::before {
+            content: '☑';
+            margin-right: -2px;
+        }
+        &::first-letter {
+            visibility: hidden;
+        }
+    `}
+`;
+
+const ServiceList = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+`;
+
+const ServiceItem = styled.span`
+    font-size: 14px;
+    color: #374151;
+    i {
+        color: #10b981;
+        margin-right: 6px;
+    }
+`;
+
+const PhotoSection = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+const PhotoGroup = styled.div``;
+
+const PhotoGroupTitle = styled.h4`
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0 0 12px 0;
+`;
+
+const PhotoGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+`;
+
+const EmptyPhoto = styled.div`
+    background: #f8fafc;
+    border: 1px dashed #e2e8f0;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+`;
+
+const NoteBlock = styled.div`
+    background: #f8fafc;
+    border-left: 4px solid #3b82f6;
+    padding: 16px 20px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #374151;
+    white-space: pre-wrap;
+`;
+
+const ReportFooter = styled.div`
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+`;
+
+const FooterInfo = styled.div`
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #64748b;
+`;
+
 export default AdminHoukokuDetailPage;
+

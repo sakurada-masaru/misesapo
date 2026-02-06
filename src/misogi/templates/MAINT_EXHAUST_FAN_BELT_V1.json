@@ -1,0 +1,110 @@
+{
+    "template_id": "MAINT_EXHAUST_FAN_BELT_V1",
+    "title": "排気ファン・ベルト点検清掃 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当者"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number"
+                }
+            ]
+        },
+        {
+            "id": "inspection",
+            "label": "2. 点検結果",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "inspection.belt_condition",
+                    "label": "ベルト状態",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "good",
+                            "label": "良好"
+                        },
+                        {
+                            "value": "worn",
+                            "label": "摩耗"
+                        },
+                        {
+                            "value": "need_replace",
+                            "label": "交換推奨"
+                        }
+                    ]
+                },
+                {
+                    "key": "inspection.fan_noise",
+                    "label": "異音",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "present",
+                            "label": "あり"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work",
+            "label": "3. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work.actions",
+                    "label": "対応",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work.clean",
+                            "label": "清掃"
+                        },
+                        {
+                            "key": "work.adjust",
+                            "label": "張り調整"
+                        },
+                        {
+                            "key": "work.replace",
+                            "label": "交換"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "type": "photos",
+            "groups": [
+                {
+                    "key": "inspection",
+                    "label": "点検中"
+                },
+                {
+                    "key": "result",
+                    "label": "結果"
+                }
+            ]
+        }
+    ]
+}

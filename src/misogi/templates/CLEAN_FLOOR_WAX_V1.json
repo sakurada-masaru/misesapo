@@ -1,0 +1,115 @@
+{
+    "template_id": "CLEAN_FLOOR_WAX_V1",
+    "title": "床ワックス清掃 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当作業員"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.store_name",
+                    "label": "店舗名",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "label": "2. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.area",
+                    "label": "清掃範囲",
+                    "type": "text",
+                    "placeholder": "例：客席フロア全域"
+                },
+                {
+                    "key": "work_done.checks",
+                    "label": "実施内容",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work_done.dust_removal",
+                            "label": "除塵（除塵・掃除機）"
+                        },
+                        {
+                            "key": "work_done.cleaning",
+                            "label": "洗浄（ポリッシャー等）"
+                        },
+                        {
+                            "key": "work_done.waxing",
+                            "label": "ワックス塗布（1回目）"
+                        },
+                        {
+                            "key": "work_done.waxing_2",
+                            "label": "ワックス塗布（2回目）"
+                        },
+                        {
+                            "key": "work_done.drying",
+                            "label": "乾燥確認"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "作業写真（必須）",
+            "type": "photos",
+            "required": true,
+            "min_items": 2,
+            "presets": [
+                {
+                    "label": "着手前（全景）",
+                    "key": "photos.before_wide"
+                },
+                {
+                    "label": "完了後（全景）",
+                    "key": "photos.after_wide"
+                },
+                {
+                    "label": "作業中（ポリッシャー等）",
+                    "key": "photos.during"
+                },
+                {
+                    "label": "仕上がり（アップ）",
+                    "key": "photos.detail"
+                }
+            ],
+            "helper": "最低2枚（着手前・完了後）は必須です"
+        },
+        {
+            "id": "remarks",
+            "label": "3. 備考",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "remarks.note",
+                    "label": "特記事項",
+                    "type": "textarea"
+                }
+            ]
+        }
+    ]
+}

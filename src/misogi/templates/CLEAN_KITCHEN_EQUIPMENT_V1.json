@@ -1,0 +1,117 @@
+{
+    "template_id": "CLEAN_KITCHEN_EQUIPMENT_V1",
+    "title": "厨房機器洗浄 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当者"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true
+                },
+                {
+                    "key": "overview.store_name",
+                    "label": "店舗名",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "key": "overview.equipment",
+                    "label": "対象機器（例：フライヤー等）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "precheck",
+            "label": "2. 事前確認",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.dirt_level",
+                    "label": "汚れの程度",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "low",
+                            "label": "軽度"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中度"
+                        },
+                        {
+                            "value": "high",
+                            "label": "重度"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "work",
+            "label": "3. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work.checks",
+                    "label": "実施内容",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work.disassemble",
+                            "label": "分解"
+                        },
+                        {
+                            "key": "work.degrease",
+                            "label": "脱脂洗浄"
+                        },
+                        {
+                            "key": "work.scrape",
+                            "label": "焦げ除去"
+                        },
+                        {
+                            "key": "work.reassemble",
+                            "label": "復旧"
+                        }
+                    ]
+                },
+                {
+                    "key": "work.note",
+                    "label": "作業メモ",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "4. 写真",
+            "type": "photos",
+            "groups": [
+                {
+                    "key": "photos.before",
+                    "label": "前"
+                },
+                {
+                    "key": "photos.after",
+                    "label": "後"
+                }
+            ]
+        }
+    ]
+}

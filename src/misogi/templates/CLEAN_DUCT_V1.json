@@ -1,0 +1,390 @@
+{
+    "template_id": "CLEAN_DUCT_V1",
+    "title": "ダクト洗浄（店舗内外含む） 作業報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 作業概要",
+            "type": "group",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "作業日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当作業員"
+                }
+            ],
+            "fields": [
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "overview.store_name",
+                    "label": "店舗名",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "key": "overview.address",
+                    "label": "住所",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.witness_name",
+                    "label": "立会者（あれば）",
+                    "type": "text"
+                },
+                {
+                    "key": "overview.length_m",
+                    "label": "洗浄対象長さ（m）",
+                    "type": "number",
+                    "min": 0
+                },
+                {
+                    "key": "overview.scope",
+                    "label": "対象範囲",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "overview.scope_inside",
+                            "label": "店舗内"
+                        },
+                        {
+                            "key": "overview.scope_outside",
+                            "label": "店舗外"
+                        },
+                        {
+                            "key": "overview.scope_rooftop",
+                            "label": "屋上/外部"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "role",
+            "label": "2. 設備概要",
+            "type": "static",
+            "content": "ダクトは排気経路であり、油脂・粉塵の堆積は風量低下、異臭、火災リスクの要因になります。定期洗浄により衛生と安全性を維持します。"
+        },
+        {
+            "id": "precheck",
+            "label": "3. 作業前確認",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "precheck.oil_deposit",
+                    "label": "油脂堆積の程度",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "low",
+                            "label": "少"
+                        },
+                        {
+                            "value": "medium",
+                            "label": "中"
+                        },
+                        {
+                            "value": "high",
+                            "label": "多"
+                        },
+                        {
+                            "value": "abnormal",
+                            "label": "異常"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.odor",
+                    "label": "異臭の有無",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "weak",
+                            "label": "あり（弱）"
+                        },
+                        {
+                            "value": "strong",
+                            "label": "あり（強）"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.damage_or_leak",
+                    "label": "破損/油漏れ/継手緩み",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "none",
+                            "label": "なし"
+                        },
+                        {
+                            "value": "suspected",
+                            "label": "疑いあり"
+                        },
+                        {
+                            "value": "found",
+                            "label": "あり"
+                        }
+                    ]
+                },
+                {
+                    "key": "precheck.accessibility",
+                    "label": "作業アクセス性",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "good",
+                            "label": "良好"
+                        },
+                        {
+                            "value": "limited",
+                            "label": "一部制限"
+                        },
+                        {
+                            "value": "difficult",
+                            "label": "困難"
+                        }
+                    ]
+                },
+                {
+                    "key": "evaluation.within_expected",
+                    "label": "通常想定内",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": true,
+                            "label": "はい"
+                        },
+                        {
+                            "value": false,
+                            "label": "いいえ"
+                        }
+                    ]
+                },
+                {
+                    "key": "evaluation.unexpected_possible",
+                    "label": "想定外（重度堆積/長期未清掃等）の可能性",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": true,
+                            "label": "あり"
+                        },
+                        {
+                            "value": false,
+                            "label": "なし"
+                        }
+                    ]
+                },
+                {
+                    "key": "unexpected_reason",
+                    "label": "想定超過の理由（任意）",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "unexpected_reason.heavy_oil",
+                            "label": "油脂堆積が重度"
+                        },
+                        {
+                            "key": "unexpected_reason.long_term_uncleaned",
+                            "label": "長期未清掃の可能性"
+                        },
+                        {
+                            "key": "unexpected_reason.parts_stuck",
+                            "label": "固着/点検口不足"
+                        },
+                        {
+                            "key": "unexpected_reason.other",
+                            "label": "その他"
+                        }
+                    ]
+                },
+                {
+                    "key": "unexpected_reason.other_text",
+                    "label": "その他（自由記述）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "work_done",
+            "label": "4. 作業内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "work_done.checks",
+                    "label": "実施チェック",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "work_done.safety_setup",
+                            "label": "養生/安全対策"
+                        },
+                        {
+                            "key": "work_done.access_opened",
+                            "label": "点検口/開口の確保"
+                        },
+                        {
+                            "key": "work_done.scrape",
+                            "label": "油脂除去（掻き出し）"
+                        },
+                        {
+                            "key": "work_done.degrease",
+                            "label": "脱脂洗浄"
+                        },
+                        {
+                            "key": "work_done.wipe",
+                            "label": "拭き上げ"
+                        },
+                        {
+                            "key": "work_done.reassemble",
+                            "label": "復旧"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.method",
+                    "label": "洗浄方法",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "manual",
+                            "label": "手作業（拭き/掻き出し）"
+                        },
+                        {
+                            "value": "chemical",
+                            "label": "薬剤洗浄"
+                        },
+                        {
+                            "value": "pressure",
+                            "label": "高圧洗浄"
+                        },
+                        {
+                            "value": "mixed",
+                            "label": "併用"
+                        }
+                    ]
+                },
+                {
+                    "key": "work_done.note",
+                    "label": "作業メモ（任意）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "result",
+            "label": "5. 作業結果",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "result.condition_after",
+                    "label": "清掃後の状態",
+                    "type": "radio",
+                    "required": true,
+                    "options": [
+                        {
+                            "value": "good",
+                            "label": "良好"
+                        },
+                        {
+                            "value": "improved",
+                            "label": "改善"
+                        },
+                        {
+                            "value": "partial",
+                            "label": "一部残り（通常範囲内）"
+                        },
+                        {
+                            "value": "need_followup",
+                            "label": "要追加対応"
+                        }
+                    ]
+                },
+                {
+                    "key": "result.recommendation",
+                    "label": "推奨対応（任意）",
+                    "type": "checkbox_group",
+                    "options": [
+                        {
+                            "key": "result.rec_next_schedule",
+                            "label": "次回頻度見直し"
+                        },
+                        {
+                            "key": "result.rec_repair",
+                            "label": "補修/交換の検討"
+                        },
+                        {
+                            "key": "result.rec_hood_fan_check",
+                            "label": "フード/ファン側点検提案"
+                        },
+                        {
+                            "key": "result.rec_other",
+                            "label": "その他"
+                        }
+                    ]
+                },
+                {
+                    "key": "result.rec_other_text",
+                    "label": "その他（自由記述）",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "memo",
+            "label": "6. 作業員メモ",
+            "type": "field",
+            "field": {
+                "key": "worker_memo.text",
+                "type": "textarea"
+            }
+        },
+        {
+            "id": "photos",
+            "label": "作業写真（必須）",
+            "type": "photos",
+            "required": true,
+            "min_items": 2,
+            "presets": [
+                {
+                    "label": "着手前（全景）",
+                    "key": "photos.before_wide"
+                },
+                {
+                    "label": "完了後（全景）",
+                    "key": "photos.after_wide"
+                },
+                {
+                    "label": "問題箇所（アップ）",
+                    "key": "photos.detail_dirty"
+                },
+                {
+                    "label": "改善後（アップ）",
+                    "key": "photos.detail_clean"
+                }
+            ],
+            "helper": "最低2枚（着手前・完了後）は必須です"
+        }
+    ]
+}

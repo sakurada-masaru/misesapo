@@ -1290,12 +1290,14 @@ function overlaps(aStart, aEnd, bStart, bEnd) {
 
 /** ページ内 appointment（date + start_min/end_min）を scheduleConflicts 用の shape に変換 */
 function apptToConflictShape(appt) {
-  const startAt = `${appt.date}T${pad2(Math.floor(appt.start_min / 60))}:${pad2(appt.start_min % 60)}:00`;
-  const endAt = `${appt.date}T${pad2(Math.floor(appt.end_min / 60))}:${pad2(appt.end_min % 60)}:00`;
+  if (!appt) return null;
+  const dateOnly = (appt.date || '').slice(0, 10);
+  const startAt = `${dateOnly}T${pad2(Math.floor(appt.start_min / 60))}:${pad2(appt.start_min % 60)}:00`;
+  const endAt = `${dateOnly}T${pad2(Math.floor(appt.end_min / 60))}:${pad2(appt.end_min % 60)}:00`;
   return {
     id: appt.id,
     schedule_id: appt.schedule_id ?? appt.id,
-    assignee_id: appt.cleaner_id,
+    assignee_id: appt.cleaner_id || appt.worker_id || appt.assigned_to,
     start_at: startAt,
     end_at: endAt,
     title: appt.target_name,
@@ -1397,16 +1399,97 @@ export default function AdminScheduleTimelinePage() {
   const [brands, setBrands] = useState([]);
   const [clients, setClients] = useState([]);
   const [stores, setStores] = useState([]);
+  const [houkokuSaveError, setHoukokuSaveError] = useState(null);
+  const kartePanelRef = useRef(null);
+
+  /** 16:00を境に業務日付を算出する関数 */
+  const calculateBizDate = (isoStartAt) => {
+    const d = dayjs(isoStartAt);
+    const hour = d.hour();
+    // 16:00 (16時) 以降なら翌日扱い
+    if (hour >= 16) {
+      return d.add(1, 'day').format('YYYY-MM-DD');
+    }
+    return d.format('YYYY-MM-DD');
+  };
+
+  /** 報告書の下書きを自動起票する関数 */
+  const createHoukokuDrafts = async (scheduleData, workerIds) => {
+    const token = getToken();
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${String(token).trim()}`
+    };
+    const base = API_BASE.replace(/\/$/, '');
+
+    // scheduleData.start_at から業務日付を取得
+    const bizDate = calculateBizDate(scheduleData.start_at);
+    const results = [];
+
+    for (const wId of workerIds) {
+      if (!wId || wId === '__unassigned__') continue;
+
+      const houkokuId = `${scheduleData.schedule_id || scheduleData.id}#${wId}#${bizDate}`;
+      const payload = {
+        id: houkokuId,
+        type: scheduleData.work_type || 'regular',
+        state: 'draft',
+        schedule_id: scheduleData.schedule_id || scheduleData.id,
+        proposal_id: scheduleData.proposal_id || null,
+        worker_id: wId,
+        biz_date: bizDate,
+        store_id: scheduleData.store_id || null,
+        customer_id: scheduleData.client_id || null,
+        services: scheduleData.services || [],
+        planned_start_at: scheduleData.start_at,
+        planned_end_at: scheduleData.end_at,
+        meta: {
+          auto_generated: true,
+          generated_at: new Date().toISOString()
+        }
+      };
+
+      try {
+        const res = await fetch(`${base}/houkoku`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(payload)
+        });
+        // 409 (Conflict) は既に存在するので成功とみなす
+        if (!res.ok && res.status !== 409) {
+          throw new Error(`Houkoku API Error: ${res.status}`);
+        }
+        results.push({ worker_id: wId, success: true });
+      } catch (err) {
+        console.error(`[HoukokuDraft] Failed for ${wId}:`, err);
+        results.push({ worker_id: wId, success: false, error: err.message });
+      }
+    }
+
+    const fails = results.filter(r => !r.success);
+    if (fails.length > 0) {
+      setHoukokuSaveError({
+        schedule: scheduleData,
+        workerIds: workerIds,
+        message: '一部の清掃員の報告書起票に失敗しました。'
+      });
+    } else {
+      setHoukokuSaveError(null);
+    }
+  };
+
   const [isSavingKarte, setIsSavingKarte] = useState(false);
   const [isEditingSelectedAppt, setIsEditingSelectedAppt] = useState(false);
   const [originalSelectedAppt, setOriginalSelectedAppt] = useState(null);
-  const kartePanelRef = useRef(null);
+
+  /** 報告書の下書きを自動起票する関数（実装済み） */
+  // ... (関数本体は定義済み)
 
   /** APIからスケジュールを読み込む関数 */
   const loadSchedulesFromAPI = useCallback((targetDateISO = dateISO) => {
     setIsLoadingSchedules(true);
 
-    const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
+    const token = getToken(); // 常に最新のトークンを取得
     const base = API_BASE.replace(/\/$/, '');
 
     // 日付範囲を計算（選択日付の前後30日）
@@ -1414,40 +1497,27 @@ export default function AdminScheduleTimelinePage() {
     const dateFrom = selectedDate.subtract(30, 'day').format('YYYY-MM-DD');
     const dateTo = selectedDate.add(30, 'day').format('YYYY-MM-DD');
 
-    const url = `${base}/schedules?date_from=${dateFrom}&date_to=${dateTo}&limit=2000`;
+    const schedulesUrl = `${base}/schedules?date_from=${dateFrom}&date_to=${dateTo}&limit=2000`;
+    const headers = token ? { 'Authorization': `Bearer ${String(token).trim()}` } : {};
 
-    return fetch(url, {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      cache: 'no-store'
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
+    // 予定の取得のみを行う（休み機能は一時停止）
+    return fetch(schedulesUrl, { headers, cache: 'no-store' })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data) => {
-        // APIレスポンスの形式に対応（items配列または直接配列）
-        const schedules = Array.isArray(data) ? data : (data?.items || []);
-        const converted = schedules
-          .map(convertScheduleToAppointment)
-          .map(ensureContactFields);
-
-        setAppointments(converted);
-        setIsLoadingSchedules(false);
-        return converted;
+      .then(data => {
+        const list = Array.isArray(data) ? data : (data?.items || []);
+        const converted = list.map(convertScheduleToAppointment).map(ensureContactFields);
+        if (converted.length > 0) {
+          setAppointments(converted);
+        }
       })
       .catch((err) => {
-        console.warn('[AdminScheduleTimeline] Failed to load schedules from API, falling back to localStorage', err);
-        // フォールバック: localStorageから読み込み
-        const raw = loadJson(STORAGE_APPOINTMENTS, null);
-        if (raw && Array.isArray(raw) && raw.length > 0) {
-          setAppointments(raw.map(ensureContactFields));
-        } else {
-          setAppointments(makeSeedAppointments(targetDateISO));
-        }
+        console.warn('[AdminScheduleTimeline] API Load failed:', err);
+      })
+      .finally(() => {
         setIsLoadingSchedules(false);
-        throw err;
       });
   }, [dateISO]);
 
@@ -1788,16 +1858,53 @@ export default function AdminScheduleTimelinePage() {
 
     const token = getToken();
     const base = API_BASE.replace(/\/$/, '');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token.trim()}`;
+
+    // 通用ペイロード作成用関数
+    const createPayload = (workerId) => {
+      // 古い文字列（updated.start）が残っている場合でも、常に最新の数値(start_min)から生成し直す
+      const startStr = minutesToHHMM(updated.start_min);
+      const endStr = minutesToHHMM(updated.end_min);
+      const timeSlot = `${startStr}-${endStr}`;
+
+      return {
+        cleaner_id: workerId,
+        date: updated.date,
+        scheduled_date: updated.date,
+        start_time: startStr,
+        end_time: endStr,
+        time_slot: timeSlot,
+        scheduled_time: timeSlot,
+        start_min: updated.start_min,
+        end_min: updated.end_min,
+        start_at: `${updated.date}T${startStr}:00`,
+        end_at: `${updated.date}T${endStr}:00`,
+        duration_minutes: (updated.end_min - updated.start_min) || 60,
+        target_name: updated.target_name,
+        store_name: updated.target_name,
+        store_id: updated.store_id || null,
+        client_id: updated.client_id || null,
+        brand_name: updated.brand_name || '',
+        work_type: updated.work_type || 'その他',
+        status: updated.status || 'booked',
+        worker_id: workerId,
+        assigned_to: workerId,
+        worker_ids: cleanerIds,
+        description: updated.memo || '',
+        notes: updated.memo || '',
+        memo: updated.memo || '',
+        origin: updated.origin || 'manual'
+      };
+    };
 
     // 既存案件の更新か新規作成か
     const exists = appointments.some((p) => p.id === updated.id);
 
     if (exists) {
-      // 既存案件の更新：最初の清掃員で更新
       const candidate = [apptToConflictShape({ ...updated, cleaner_id: cleanerIds[0], schedule_id: updated.schedule_id ?? updated.id })];
-      const existingSameDay = appointments.filter(
-        (p) => p.date === updated.date && p.id !== updated.id
-      );
+      // 日付の頭10文字(YYYY-MM-DD)で比較するように修正
+      const existingSameDay = appointments.filter((p) => (p.date || '').slice(0, 10) === updated.date.slice(0, 10) && p.id !== updated.id);
       const existingForCheck = existingSameDay.map(apptToConflictShape);
       const userIdToName = Object.fromEntries(cleanersWithUnit.map((c) => [c.id, c.name]));
       const conflicts = detectConflictsBeforeSave({
@@ -1808,126 +1915,107 @@ export default function AdminScheduleTimelinePage() {
       });
 
       if (conflicts.length > 0) {
-        setSaveConflictError(
-          `409 Conflict（重複のため保存できません）\n${conflicts.map((c) => c.message).join('\n')}`
-        );
+        setSaveConflictError(`重複のため保存できません\n${conflicts.map((c) => c.message).join('\n')}`);
         setConflictOverlayVisible(true);
-        setTimeout(() => {
-          setConflictOverlayVisible(false);
-        }, 3000);
+        setTimeout(() => setConflictOverlayVisible(false), 3000);
         return;
       }
 
       try {
         const scheduleId = updated.schedule_id || updated.id;
-        const payload = {
-          date: updated.date,
-          scheduled_date: updated.date,
-          start_time: updated.start || minutesToHHMM(updated.start_min),
-          end_time: updated.end || minutesToHHMM(updated.end_min),
-          start_min: updated.start_min,
-          end_min: updated.end_min,
-          target_name: updated.target_name,
-          store_id: updated.store_id || null,
-          client_id: updated.client_id || null,
-          brand_name: updated.brand_name || '',
-          work_type: updated.work_type || 'その他',
-          status: updated.status || 'booked',
-          worker_id: cleanerIds[0],
-          assigned_to: cleanerIds[0],
-          worker_ids: cleanerIds,
-          description: updated.memo || updated.notes || '',
-        };
+        const payload = createPayload(cleanerIds[0]);
+        console.log('[AdminScheduleTimeline] Saving update schedule payload:', payload);
 
         const res = await fetch(`${base}/schedules/${scheduleId}`, {
           method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
+          headers,
           body: JSON.stringify(payload)
         });
 
+        if (res.status === 409) {
+          const conflictData = await res.json().catch(() => ({}));
+          let message = conflictData.message || conflictData.error || "他のスケジュールやクローズ（休み）と重複しています。";
+
+          // サーバーのエラーコードを日本語に翻訳
+          if (message === 'worker_unavailable' || message === 'WORKER_UNAVAILABLE') {
+            message = "担当者が対応不可の時間帯です（稼働時間外、または休みと重なっています）。";
+          }
+          throw new Error(message);
+        }
+
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        setAppointments((prev) =>
-          prev.map((p) =>
-            p.id === updated.id
-              ? { ...updated, cleaner_id: cleanerIds[0], cleaner_ids: cleanerIds, schedule_id: scheduleId }
-              : p
-          )
-        );
+        // 保存成功後に再読み込みして同期を確実にする
+        await loadSchedulesFromAPI(updated.date);
+
+        // 報告書の下書きを自動起票
+        createHoukokuDrafts({ ...payload, schedule_id: scheduleId }, cleanerIds);
+
         closeModal();
       } catch (err) {
         console.error('[AdminScheduleTimeline] Save update failed:', err);
         setSaveConflictError(`保存に失敗しました: ${err.message}`);
       }
     } else {
-      // 新規作成：各清掃員ごとに案件を作成
-      const newApptsData = cleanerIds.map((cleanerId, index) => {
-        return {
-          date: updated.date,
-          scheduled_date: updated.date,
-          start_time: updated.start || minutesToHHMM(updated.start_min),
-          end_time: updated.end || minutesToHHMM(updated.end_min),
-          start_min: updated.start_min,
-          end_min: updated.end_min,
-          target_name: updated.target_name,
-          store_id: updated.store_id || null,
-          client_id: updated.client_id || null,
-          brand_name: updated.brand_name || '',
-          work_type: updated.work_type || 'その他',
-          status: updated.status || 'booked',
-          worker_id: cleanerId,
-          assigned_to: cleanerId,
-          worker_ids: cleanerIds,
-          description: updated.memo || updated.notes || '',
-          origin: 'manual'
-        };
-      });
+      // 新規作成
+      const newApptsData = cleanerIds.map((cid) => createPayload(cid));
 
       // 重複チェック
-      const candidates = newApptsData.map((a, i) => ({ ...a, id: `temp_${i}` }));
-      const existingSameDay = appointments.filter((p) => p.date === updated.date);
+      const candidates = newApptsData.map((a, i) => apptToConflictShape({ ...a, id: `temp_${i}` }));
+      // 日付の頭10文字(YYYY-MM-DD)で比較するように修正
+      const existingSameDay = appointments.filter((p) => (p.date || '').slice(0, 10) === updated.date.slice(0, 10));
       const existingForCheck = existingSameDay.map(apptToConflictShape);
+
+      console.log('[AdminScheduleTimeline] Save Create - Diagnostic:', {
+        candidates,
+        existingCount: existingForCheck.length,
+        blocksCount: blocks.length,
+        existingForCheck
+      });
+
       const userIdToName = Object.fromEntries(cleanersWithUnit.map((c) => [c.id, c.name]));
       const conflicts = detectConflictsBeforeSave({
-        candidateAppointments: candidates.map(apptToConflictShape),
+        candidateAppointments: candidates,
         existingAppointments: existingForCheck,
         blocks,
         userIdToName,
       });
 
       if (conflicts.length > 0) {
-        setSaveConflictError(
-          `409 Conflict（重複のため保存できません）\n${conflicts.map((c) => c.message).join('\n')}`
-        );
+        setSaveConflictError(`重複のため保存できません\n${conflicts.map((c) => c.message).join('\n')}`);
         setConflictOverlayVisible(true);
-        setTimeout(() => {
-          setConflictOverlayVisible(false);
-        }, 3000);
+        setTimeout(() => setConflictOverlayVisible(false), 3000);
         return;
       }
 
       try {
-        const createdAppts = [];
         for (const payload of newApptsData) {
+          console.log('[AdminScheduleTimeline] Saving new schedule payload:', payload);
           const res = await fetch(`${base}/schedules`, {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
+            headers,
             body: JSON.stringify(payload)
           });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
 
-          // APIレスポンスから最新情報を取得してローカル状態に変換
-          createdAppts.push(convertScheduleToAppointment(data.item || data));
+          if (res.status === 409) {
+            const conflictData = await res.json().catch(() => ({}));
+            let message = conflictData.message || conflictData.error || "他のスケジュールやクローズ（休み）と重複しています。";
+
+            // サーバーのエラーコードを日本語に翻訳
+            if (message === 'worker_unavailable' || message === 'WORKER_UNAVAILABLE') {
+              message = "担当者が対応不可の時間帯です（稼働時間外、または休みと重なっています）。";
+            }
+            throw new Error(message);
+          }
+
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          // 報告書の下書きを自動起票
+          createHoukokuDrafts(payload, [payload.cleaner_id]);
         }
 
-        setAppointments((prev) => [...prev, ...createdAppts]);
+        // 保存成功後に再読み込みして同期を確実にする
+        await loadSchedulesFromAPI(updated.date);
         closeModal();
       } catch (err) {
         console.error('[AdminScheduleTimeline] Save create failed:', err);
@@ -2200,6 +2288,41 @@ export default function AdminScheduleTimelinePage() {
               <div style={{ fontSize: '0.75em', color: 'var(--muted)', marginTop: '4px' }}>
                 清掃サイクル『🌙：04:00~』『☀️:16:00~』16:00以降は次の日案件
               </div>
+              {houkokuSaveError && (
+                <div style={{
+                  marginTop: '8px',
+                  padding: '8px 12px',
+                  backgroundColor: '#fee2e2',
+                  border: '1px solid #ef4444',
+                  borderRadius: '4px',
+                  fontSize: '0.85em',
+                  color: '#b91c1c',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <span>⚠️ {houkokuSaveError.message}</span>
+                  <button
+                    onClick={() => createHoukokuDrafts(houkokuSaveError.schedule, houkokuSaveError.workerIds)}
+                    style={{
+                      padding: '2px 8px',
+                      backgroundColor: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    再実行
+                  </button>
+                  <button
+                    onClick={() => setHoukokuSaveError(null)}
+                    style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    閉じる
+                  </button>
+                </div>
+              )}
             </div>
             <div className="headerActions">
               {view === 'week' ? (
@@ -2775,6 +2898,7 @@ export default function AdminScheduleTimelinePage() {
             onDelete={deleteAppt}
             conflictIds={conflictIds}
             saveConflictError={saveConflictError}
+            dateISO={dateISO}
             clients={clients}
             stores={stores}
             brands={brands}
@@ -3522,10 +3646,9 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
   const { cleaning: cleaningCols, maintenance: maintenanceCols } = timelineUnitColumns ?? { cleaning: cleaners.filter((c) => c.unit === 'cleaning'), maintenance: cleaners.filter((c) => c.unit === 'maintenance') };
 
   // 昼イベント（再清掃案件のみ）とタイムライン表示用の案件を分離
-  const { daytimeEvents, timelineAppointments, timelineBlocks } = useMemo(() => {
+  const { daytimeEvents, timelineAppointments } = useMemo(() => {
     const recleanEvents = []; // 再清掃案件のみ（イベントタグ用）
     const timelineAppts = []; // タイムラインに表示する案件
-    const timelineBlks = [];
 
     // 案件を分類
     for (const a of appointments) {
@@ -3551,30 +3674,11 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
       }
     }
 
-    // ブロックを分類
-    for (const b of blocks ?? []) {
-      const display = blockDisplayForDay(b, dateISO);
-      if (!display) continue;
-      // AM/PM時間帯フィルタリング
-      let overlapsTimeRange = false;
-      if (isDayPart) {
-        // 午後パート(12:00-24:00)
-        overlapsTimeRange = display.start_min >= 12 * 60;
-      } else {
-        // 午前パート(00:00-12:00)
-        overlapsTimeRange = display.start_min < 12 * 60;
-      }
-      if (overlapsTimeRange) {
-        timelineBlks.push({ block: b, start_min: display.start_min, end_min: display.end_min });
-      }
-    }
-
     return {
       daytimeEvents: recleanEvents, // 再清掃案件のみ
-      timelineAppointments: timelineAppts,
-      timelineBlocks: timelineBlks
+      timelineAppointments: timelineAppts
     };
-  }, [appointments, blocks, dateISO, dayStart, dayEnd]);
+  }, [appointments, dateISO, dayStart, dayEnd]);
 
 
   const byCleanerItems = useMemo(() => {
@@ -3598,22 +3702,14 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
         map.get(cleaners[0].id)?.push({ type: 'appointment', data: a, start_min: a.start_min, end_min: a.end_min });
       }
     }
-    for (const b of timelineBlocks) {
-      if (b.block.user_id == null) {
-        for (const d of cleaners) map.get(d.id)?.push({ type: 'block', block: b.block, start_min: b.start_min, end_min: b.end_min });
-      } else {
-        const list = map.get(b.block.user_id);
-        if (list) list.push({ type: 'block', block: b.block, start_min: b.start_min, end_min: b.end_min });
-      }
-    }
     for (const [, list] of map.entries()) {
       list.sort((x, y) => x.start_min - y.start_min);
     }
     return map;
-  }, [cleaners, timelineAppointments, timelineBlocks]);
+  }, [cleaners, timelineAppointments]);
 
 
-  // 全清掃員を縦に並べる（梅岡ユニット → 遠藤ユニットの順）
+  // 全清掃員を縦に並める（梅岡ユニット → 遠藤ユニットの順）
   const allCleaners = [...cleaningCols, ...maintenanceCols];
   const allCleanerRows = useMemo(() => {
     return allCleaners.map((c) => ({
@@ -3683,7 +3779,6 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
           <span key={s.key} className={`legendItem ${s.colorClass}`}>{s.label}</span>
         ))}
         <span className="legendItem s-conflict">重複⚠</span>
-        <span className="legendItem blockCard">🔒 クローズ</span>
         <span className="legendItem unit-cleaning-legend">清掃</span>
         <span className="legendItem unit-maintenance-legend">メンテナンス</span>
         {onTimelinePartChange && (
@@ -4496,7 +4591,7 @@ const APPOINTMENT_MODAL_TABS = [
   { key: 'memo', label: 'メモ' },
 ];
 
-function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, conflictIds, saveConflictError, clients = [], stores = [], brands = [], onClientChange, apiBase }) {
+function AppointmentModal({ dateISO, cleaners, appt, mode, onClose, onSave, onDelete, conflictIds, saveConflictError, clients = [], stores = [], brands = [], onClientChange, apiBase }) {
   const [local, setLocal] = useState(() => {
     const ensured = ensureContactFields(appt);
     // cleaner_idsが存在しない場合はcleaner_idから作成
@@ -4573,6 +4668,7 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
       return aName.localeCompare(bName);
     });
 
+    console.log('[AppointmentModal] Unified search results:', results.length, 'query:', query);
     return results;
   }, [unifiedSearchQuery, stores, clients, brands]);
 
@@ -4648,11 +4744,9 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
   }
 
   function safeTimeChange(startHHMM, endHHMM) {
-    let start = hhmmToMinutes(startHHMM);
-    let end = hhmmToMinutes(endHHMM);
-    start = clamp(start, 0, 24 * 60);
-    end = clamp(end, 0, 24 * 60);
-    if (end <= start) end = start + 15;
+    if (!startHHMM || !endHHMM) return;
+    const start = hhmmToMinutes(startHHMM);
+    const end = hhmmToMinutes(endHHMM);
     setLocal((p) => ({ ...p, start_min: start, end_min: end }));
   }
 
@@ -4799,12 +4893,24 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
                             onClick={() => {
                               if (store) {
                                 if (client) {
-                                  handleClientChange(client.id);
+                                  setSelectedClientId(client.id);
                                 }
                                 if (brand) {
-                                  handleBrandChange(brand.id);
+                                  setSelectedBrandId(brand.id);
                                 }
-                                handleStoreChange(store.id);
+
+                                // 即座に名称を確定させる
+                                const bName = brand?.name || brand?.brand_name || '';
+                                const sName = store?.name || store?.store_name || '';
+                                const targetName = bName && sName ? `[${bName}] ${sName}` : (sName || bName || '');
+
+                                setLocal((p) => ({
+                                  ...p,
+                                  client_id: client?.id || p.client_id,
+                                  brand_id: brand?.id || p.brand_id,
+                                  store_id: store.id,
+                                  target_name: targetName
+                                }));
                                 setUnifiedSearchQuery('');
                               }
                             }}
@@ -4894,11 +5000,11 @@ function AppointmentModal({ cleaners, appt, mode, onClose, onSave, onDelete, con
               </div>
               <label className="field">
                 <span>開始</span>
-                <input type="time" value={minutesToHHMM(local.start_min)} onChange={(e) => safeTimeChange(e.target.value, minutesToHHMM(local.end_min))} step={1800} />
+                <input type="time" value={minutesToHHMM(local.start_min)} onChange={(e) => safeTimeChange(e.target.value, minutesToHHMM(local.end_min))} step={60} />
               </label>
               <label className="field">
                 <span>終了</span>
-                <input type="time" value={minutesToHHMM(local.end_min)} onChange={(e) => safeTimeChange(minutesToHHMM(local.start_min), e.target.value)} step={1800} />
+                <input type="time" value={minutesToHHMM(local.end_min)} onChange={(e) => safeTimeChange(minutesToHHMM(local.start_min), e.target.value)} step={60} />
               </label>
               <label className="field">
                 <span>種別</span>
