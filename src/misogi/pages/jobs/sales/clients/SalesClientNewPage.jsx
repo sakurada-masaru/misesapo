@@ -11,6 +11,7 @@ export default function SalesClientNewPage() {
     const navigate = useNavigate();
     const { startTransition } = useFlashTransition();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successData, setSuccessData] = useState(null); // { inviteLink: string }
     const [formData, setFormData] = useState({
         company_name: '',
         store_name: '',
@@ -63,9 +64,9 @@ export default function SalesClientNewPage() {
 
             if (response.ok) {
                 const result = await response.json();
-                const inviteLink = `${window.location.origin}/registration/customer-complete.html?token=${result.id}`;
-                alert(`リードを登録しました！\n\n招待リンク:\n${inviteLink}`);
-                startTransition('/jobs/sales/entrance');
+                const inviteLink = `${window.location.origin}/misogi/#/registration/onboarding/${result.id}`;
+                setSuccessData({ inviteLink });
+                // startTransition('/jobs/sales/entrance'); // 自動遷移させず成功画面を見せる
             } else {
                 throw new Error('登録に失敗しました');
             }
@@ -210,6 +211,62 @@ export default function SalesClientNewPage() {
                     </a>
                 </p>
             </div>
+
+            {/* 成功モーダル */}
+            {successData && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 1000,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.8)', padding: '20px'
+                }}>
+                    <div style={{
+                        background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '24px', padding: '32px', maxWidth: '480px', width: '100%',
+                        textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                    }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🎉</div>
+                        <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>リード登録完了</h2>
+                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '24px' }}>
+                            リードの登録が完了しました。<br />以下の招待リンクをお客様へお送りください。
+                        </p>
+
+                        <div style={{
+                            background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px',
+                            border: '1px solid rgba(255,255,255,0.1)', wordBreak: 'break-all',
+                            fontSize: '0.8rem', textAlign: 'left', marginBottom: '20px',
+                            color: 'var(--job-sales)', fontWeight: 600
+                        }}>
+                            {successData.inviteLink}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(successData.inviteLink);
+                                    alert('リンクをコピーしました');
+                                }}
+                                style={{
+                                    flex: 1, padding: '12px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.05)', color: '#fff',
+                                    border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer'
+                                }}
+                            >
+                                リンクをコピー
+                            </button>
+                            <button
+                                onClick={() => startTransition('/jobs/sales/entrance')}
+                                style={{
+                                    flex: 1, padding: '12px', borderRadius: '12px',
+                                    background: 'var(--job-sales)', color: '#fff',
+                                    border: 'none', cursor: 'pointer', fontWeight: 600
+                                }}
+                            >
+                                完了
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

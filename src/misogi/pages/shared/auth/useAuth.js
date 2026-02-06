@@ -88,22 +88,34 @@ export function useAuth() {
 
     const workerId = user.worker_id || user.workerId || user.id || 'unknown';
     const roles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
-    const dept = (user.department || user.dept || '').toUpperCase();
+    const email = (user.email || user.attributes?.email || '').trim().toLowerCase();
+
+    // 部署 (dept) の判定：属性、ロール、ID、メールから推測
+    let dept = (user.department || user.dept || user.role || '').trim().toUpperCase();
+
+    // 特例：今野様のアカウントは最優先で営業部署として扱う
+    if (email === 'konno@misesapo.co.jp' || user.id === 'konno' || user.worker_id === 'W006') {
+      dept = 'SALES';
+    }
+
+    // 名前の名寄せ
+    if (['STAFF', 'CLEANING'].includes(dept)) dept = 'CLEANING';
+    if (['SALES', 'FIELD_SALES'].includes(dept)) dept = 'SALES';
 
     const isDev = workerId === 'W999';
     const isAdmin = isDev || roles.some(r => ['ADMIN', 'OWNER', 'SUPERADMIN'].includes(r.toUpperCase()));
 
     let allowedTemplateIds = [];
     if (isDev || isAdmin) {
-      allowedTemplateIds = ['CLEANING_V1', 'FIELD_SALES_V1', 'ENGINEERING_V1', 'OFFICE_ADMIN_V1'];
+      allowedTemplateIds = ['CLEANING_V1', 'SALES_ACTIVITY_REPORT_V1', 'ENGINEERING_V1', 'OFFICE_ADMIN_V1'];
     } else {
-      if (dept === 'SALES') allowedTemplateIds.push('FIELD_SALES_V1');
+      if (dept === 'SALES') allowedTemplateIds.push('SALES_ACTIVITY_REPORT_V1');
       else if (dept === 'ENGINEERING') allowedTemplateIds.push('ENGINEERING_V1');
       else if (['OFFICE', 'ADMIN'].includes(dept)) allowedTemplateIds.push('OFFICE_ADMIN_V1');
       else allowedTemplateIds.push('CLEANING_V1');
     }
 
-    return { workerId, isDev, isAdmin, allowedTemplateIds };
+    return { workerId, isDev, isAdmin, dept, allowedTemplateIds };
   })();
 
   return {

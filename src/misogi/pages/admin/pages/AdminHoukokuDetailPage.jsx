@@ -248,7 +248,7 @@ const getOdorLabel = (lvl) => {
 const Container = styled.div` background: #f0f2f5; min-height: 100vh; padding-bottom: 60px; font-family: 'Inter', sans-serif; `;
 const TopBar = styled.div` background: white; padding: 12px 24px; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; `;
 const BackButton = styled(Link)` text-decoration: none; color: #1e293b; font-weight: 700; margin-right: 20px; font-size: 14px; &:hover { color:#3b82f6; } `;
-const Badge = styled.div` background: ${props => props.$type?.includes('CLEANING') ? '#10b981' : '#3b82f6'}; color: white; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; `;
+const Badge = styled.div` background: ${props => props.$type?.includes('SALES') ? '#3b82f6' : '#10b981'}; color: white; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; `;
 const Actions = styled.div` margin-left: auto; display: flex; gap: 8px; button { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; &:hover { background:#f8fafc; } } `;
 const ContentArea = styled.div` max-width: 1000px; margin: 32px auto; padding: 0 20px; `;
 const HeroSection = styled.div` background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border-radius: 24px; padding: 40px; display: flex; gap: 40px; align-items: center; margin-bottom: 24px; `;

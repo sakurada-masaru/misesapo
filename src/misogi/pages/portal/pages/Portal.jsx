@@ -43,7 +43,7 @@ const ROLE_TO_ENTRANCE = {
  */
 export default function Portal() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading, refresh, logout, getToken } = useAuth();
+  const { user, isAuthenticated, isLoading, refresh, logout, getToken, authz } = useAuth();
   const [started, setStarted] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [nonOperatingDates, setNonOperatingDates] = useState([]);
@@ -52,8 +52,14 @@ export default function Portal() {
 
   useEffect(() => {
     if (isLoading) return;
+    const { isAdmin, isDev } = authz || {};
     const token = getToken();
-    if (!token) return; // Skip if no token (prevents 403 error in console)
+
+    // 不要な 403 エラーを防ぐため、権限がない場合は設定取得をスキップ
+    if (!token || (!isAdmin && !isDev)) {
+      setNonOperatingDates([]);
+      return;
+    }
 
     const headers = { 'Authorization': `Bearer ${token}` };
     const base = API_BASE.replace(/\/$/, '');

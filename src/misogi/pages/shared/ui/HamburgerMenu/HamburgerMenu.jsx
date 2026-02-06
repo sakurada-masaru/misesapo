@@ -11,19 +11,19 @@ import './hamburger-menu.css';
  * 「管理」の遷移先はポータルではなく管理エントランス（/admin/entrance）。
  */
 const MENU_LINKS = [
-  { to: '/', label: 'Portal（トップ）' },
-  { to: '/jobs/sales/entrance', label: '営業' },
-  { to: '/jobs/cleaning/entrance', label: '清掃' },
-  { to: '/jobs/office/entrance', label: '事務' },
-  { to: '/jobs/dev/entrance', label: '開発' },
-  { to: '/admin/entrance', label: '管理' }, // 遷移先は管理エントランス（ポータルではない）
-  { to: '/admin', label: '管理 TOP' },
-  { to: '/admin/hr/attendance', label: 'HR Attendance' },
-  { to: '/sales/store/demo', label: '営業カルテ（店舗）' },
+  { to: '/', label: 'Portal（トップ）', dept: 'ANY' },
+  { to: '/jobs/sales/entrance', label: '営業 / コンシェルジュ', dept: 'SALES' },
+  { to: '/jobs/cleaning/entrance', label: '清掃', dept: 'CLEANING' },
+  { to: '/jobs/office/entrance', label: '事務', dept: 'OFFICE' },
+  { to: '/jobs/dev/entrance', label: '開発', dept: 'ENGINEERING' },
+  { to: '/admin/entrance', label: '管理', dept: 'ADMIN' },
+  { to: '/admin', label: '管理 TOP', dept: 'ADMIN' },
+  { to: '/admin/hr/attendance', label: 'HR Attendance', dept: 'ADMIN' },
+  { to: '/sales/store/demo', label: '営業カルテ（店舗）', dept: 'SALES' },
 ];
 
 export default function HamburgerMenu() {
-  const { isAuthenticated, login, logout, user } = useAuth();
+  const { isAuthenticated, login, logout, user, authz } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
@@ -51,6 +51,31 @@ export default function HamburgerMenu() {
   };
 
   const userName = user?.name || user?.displayName || user?.username || user?.email || (isAuthenticated ? 'ログイン済み' : '');
+
+  // 所属部署によるリンクのフィルタリング
+  const filteredLinks = MENU_LINKS.filter(link => {
+    if (link.dept === 'ANY') return true;
+
+    const userDept = authz?.dept || '';
+
+    // 特定の部署に所属している場合、管理関連以外の他部署リンクは出さない（adminでも適用）
+    if (['SALES', 'CLEANING', 'ENGINEERING', 'OFFICE'].includes(userDept)) {
+      if (link.dept !== 'ANY' && link.dept !== 'ADMIN' && link.dept !== userDept) {
+        return false;
+      }
+    }
+
+    // 管理者・開発者は原則全リンクOK（ただし上記部署フィルタがかかっていない場合）
+    if (authz?.isAdmin || authz?.isDev) return true;
+
+    if (link.dept === 'SALES') return userDept === 'SALES';
+    if (link.dept === 'ENGINEERING') return userDept === 'ENGINEERING';
+    if (link.dept === 'OFFICE' || link.dept === 'ADMIN') return ['OFFICE', 'ADMIN', 'ADMINISTRATION'].includes(userDept);
+    if (link.dept === 'CLEANING') {
+      return !['SALES', 'ENGINEERING', 'OFFICE', 'ADMIN', 'ADMINISTRATION'].includes(userDept);
+    }
+    return false;
+  });
 
   return (
     <>
@@ -90,7 +115,7 @@ export default function HamburgerMenu() {
             </button>
           </div>
           <nav className="hamburger-menu-nav">
-            {MENU_LINKS.map(({ to, label }) => (
+            {filteredLinks.map(({ to, label }) => (
               <Link key={to} to={to} className="hamburger-menu-link" onClick={close}>
                 {label}
               </Link>

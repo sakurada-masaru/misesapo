@@ -117,13 +117,16 @@ const TemplateRenderer = ({ template, payload, report, onChange, onPayloadChange
     }
 
     const handlePayloadChange = (keyPath, value) => {
-        if (mode !== 'edit' || !handleChange) return;
-        // 親が (key, value) を求めている場合と (newPayload) を求めている場合がある
-        // setNestedValue を使っている既存の TemplateRenderer は newPayload を返していたが、
-        // AdminReportNewPage の handleSalesPayloadChange は (key, value) を期待している。
-        // ここを分岐させるか、親の実装に合わせる必要がある。
-        // 今のコンテキストでは AdminReportNewPage から呼ばれており (key, value) が期待されている。
-        handleChange(keyPath, value);
+        if (mode !== 'edit') return;
+
+        if (onChange) {
+            // AdminReportNewPage の handleSalesPayloadChange 等、(key, value) を受け取る場合
+            onChange(keyPath, value);
+        } else if (onPayloadChange) {
+            // 清掃報告等、(newPayload) オブジェクト全体を受け取る場合
+            const next = setNestedValue(currentPayload, keyPath, value);
+            onPayloadChange(next);
+        }
     };
 
     return (
@@ -238,6 +241,7 @@ const GroupSection = ({ section, report, payload, onChange, mode }) => {
                                         value={val}
                                         onChange={e => onChange(mf.key, e.target.value)}
                                         readOnly
+                                        $mode={mode}
                                         style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)' }}
                                     />
                                 </FieldRow>
@@ -275,12 +279,13 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
     const isEdit = mode === 'edit';
     const inputId = `field-${field.key.replace(/\./g, '-')}`;
     const isRequired = field.required;
+    const layout = field.layout || (field.type === 'textarea' || field.type === 'checkbox_group' || field.type === 'radio' ? 'stack' : 'default');
 
     // checkbox_group の場合
     if (field.type === 'checkbox_group') {
         const values = Array.isArray(value) ? value : [];
         return (
-            <FieldRow $block $mode={mode}>
+            <FieldRow $block $mode={mode} $layout="stack">
                 <FieldLabel as="label" $mode={mode} htmlFor={`${inputId}-0`} $required={isRequired}>{field.label}</FieldLabel>
                 <ChoiceList $mode={mode}>
                     {field.options?.map((opt, i) => {
@@ -305,11 +310,15 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
                         return (
                             <ChoiceRow
                                 key={opt.key || String(optValue)}
+                                type="button"
                                 $mode={mode}
                                 id={itemId}
                                 name={opt.key || field.key}
                                 className={isChecked ? 'is-active' : ''}
-                                onClick={() => isEdit && handleToggle()}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    isEdit && handleToggle();
+                                }}
                                 disabled={!isEdit}
                             >
                                 <span>{optLabel}</span>
@@ -324,7 +333,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
     // radio の場合
     if (field.type === 'radio') {
         return (
-            <FieldRow $block $mode={mode}>
+            <FieldRow $block $mode={mode} $layout="stack">
                 <FieldLabel as="label" $mode={mode} htmlFor={`${inputId}-0`} $required={isRequired}>{field.label}</FieldLabel>
                 <ChoiceList $mode={mode}>
                     {field.options?.map((opt, i) => {
@@ -335,11 +344,15 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
                         return (
                             <ChoiceRow
                                 key={String(optValue)}
+                                type="button"
                                 $mode={mode}
                                 id={itemId}
                                 name={field.key}
                                 className={isSelected ? 'is-active' : ''}
-                                onClick={() => isEdit && onChange(field.key, optValue)}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    isEdit && onChange(field.key, optValue);
+                                }}
                                 disabled={!isEdit}
                             >
                                 <span>{optLabel}</span>
@@ -354,7 +367,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
     // textarea の場合
     if (field.type === 'textarea') {
         return (
-            <FieldRow $block>
+            <FieldRow $block $mode={mode} $layout="stack">
                 <FieldLabel as="label" $mode={mode} htmlFor={inputId} $required={isRequired}>{field.label}</FieldLabel>
                 {isEdit ? (
                     <TextareaInput
@@ -363,6 +376,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
                         value={value || ''}
                         onChange={(e) => onChange(field.key, e.target.value)}
                         placeholder={field.placeholder || ''}
+                        $mode={mode}
                     />
                 ) : (
                     <TextareaValue>{value || '—'}</TextareaValue>
@@ -374,7 +388,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
     // number の場合
     if (field.type === 'number') {
         return (
-            <FieldRow>
+            <FieldRow $layout={layout} $mode={mode}>
                 <FieldLabel as="label" $mode={mode} htmlFor={inputId} $required={isRequired}>{field.label}</FieldLabel>
                 {isEdit ? (
                     <NumberInput
@@ -386,6 +400,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
                         min={field.min}
                         max={field.max}
                         placeholder={field.placeholder || ''}
+                        $mode={mode}
                     />
                 ) : (
                     <FieldValue>{value ?? '—'}</FieldValue>
@@ -397,7 +412,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
     // date の場合
     if (field.type === 'date') {
         return (
-            <FieldRow>
+            <FieldRow $layout={layout} $mode={mode}>
                 <FieldLabel as="label" $mode={mode} htmlFor={inputId} $required={isRequired}>{field.label}</FieldLabel>
                 {isEdit ? (
                     <DateInput
@@ -406,6 +421,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
                         type="date"
                         value={value || ''}
                         onChange={(e) => onChange(field.key, e.target.value)}
+                        $mode={mode}
                     />
                 ) : (
                     <FieldValue>{value || '—'}</FieldValue>
@@ -416,7 +432,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
 
     // text（デフォルト）
     return (
-        <FieldRow>
+        <FieldRow $layout={layout} $mode={mode}>
             <FieldLabel as="label" $mode={mode} htmlFor={inputId} $required={isRequired}>{field.label}</FieldLabel>
             {isEdit ? (
                 <TextInput
@@ -426,6 +442,7 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
                     value={value || ''}
                     onChange={(e) => onChange(field.key, e.target.value)}
                     placeholder={field.placeholder || ''}
+                    $mode={mode}
                 />
             ) : (
                 <FieldValue>{value ?? '—'}</FieldValue>
@@ -491,6 +508,7 @@ const StaticPlusTextSection = ({ section, payload, onChange, mode }) => {
                         value={textValue || ''}
                         onChange={(e) => onChange(section.text_key, e.target.value)}
                         placeholder="補足があれば入力"
+                        $mode={mode}
                     />
                 </div>
             ) : (
@@ -632,7 +650,8 @@ const MobileCanvas = styled.div`
 const ReportHeader = styled.header`
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 5;
+    pointer-events: none;
     padding: 16px;
     background: ${props => props.$mode === 'edit' ? 'rgba(15, 23, 42, 0.85)' : '#ffffff'};
     backdrop-filter: ${props => props.$mode === 'edit' ? 'blur(10px)' : 'none'};
@@ -666,6 +685,9 @@ const ReportTitle = styled.h1`
 const ReportBody = styled.div`
     padding: 16px;
     flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    
     /* スクロールバー非表示（任意） */
     &::-webkit-scrollbar {
         width: 4px;
@@ -729,9 +751,17 @@ const FieldList = styled.div`
 
 const FieldRow = styled.div`
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: ${props => props.$layout === 'stack' ? 'column' : (props.$mode === 'edit' ? 'column' : 'row')};
+    justify-content: ${props => props.$layout === 'stack' ? 'flex-start' : 'space-between'};
+    align-items: ${props => props.$layout === 'stack' ? 'stretch' : (props.$mode === 'edit' ? 'stretch' : 'center')};
+    gap: ${props => props.$layout === 'stack' ? '8px' : '4px'};
     
+    ${props => props.$mode === 'edit' && `
+        position: relative;
+        z-index: 10;
+        pointer-events: auto;
+    `}
+
     ${props => props.$mode !== 'edit' && `
         padding: 12px 0;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -817,6 +847,9 @@ const ChoiceRow = styled.button`
         color: #f8fafc;
         font-size: 15px;
         cursor: pointer;
+        pointer-events: auto;
+        position: relative;
+        z-index: 10;
         
         &::after {
             content: '';
@@ -937,16 +970,25 @@ const TextareaInput = styled.textarea`
     min-height: 120px;
     padding: 14px 16px;
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.03);
     color: inherit;
     font-size: 15px;
-    line-height: 1.6;
-    resize: none;
+    transition: border-color 0.2s;
     
-    &:focus {
-        outline: none;
-        border-color: #3b82f6;
+    ${props => props.$mode === 'edit' ? `
+        color: #f8fafc;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        &:focus { border-color: #3b82f6; outline: none; }
+    ` : `
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        &:focus { outline: none; border-color: #3b82f6; }
+    `}
+    
+    &::placeholder {
+        color: #94a3b8;
+        opacity: 1;
     }
 `;
 
@@ -1113,6 +1155,7 @@ const EmptyPhoto = styled.div`
 const ReportFooter = styled.footer`
     position: sticky;
     bottom: 0;
+    z-index: 5;
     padding: 16px;
     background: rgba(15, 23, 42, 0.92);
     backdrop-filter: blur(10px);

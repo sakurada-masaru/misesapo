@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTransition';
 import Visualizer from '../../../shared/ui/Visualizer/Visualizer';
+import { useAuth } from '../../../shared/auth/useAuth';
 import '../../../shared/styles/components.css';
 
 /**
@@ -16,7 +17,9 @@ export default function SalesClientListPage() {
     const [filter, setFilter] = useState('all');
     const [prefFilter, setPrefFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [listScope, setListScope] = useState('personal'); // 営業モードではデフォルト「個人」に
     const { startTransition } = useFlashTransition();
+    const { user, getToken } = useAuth();
 
     const API_BASE = '/api';
 
@@ -28,8 +31,7 @@ export default function SalesClientListPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = localStorage.getItem('cognito_id_token') ||
-                    JSON.parse(localStorage.getItem('misesapo_auth') || '{}').token;
+                const token = getToken();
 
                 const headers = {
                     'Authorization': `Bearer ${token}`,
@@ -89,6 +91,13 @@ export default function SalesClientListPage() {
                 }
             }
             if (prefFilter !== 'all' && store.pref !== prefFilter) return false;
+
+            // 個人フィルター: 営業 / コンシェルジュ (assigned_to) に自分の名前が含まれているもの
+            if (listScope === 'personal') {
+                const myName = user?.name || user?.displayName || user?.nickname || user?.username || '';
+                if (!myName || !store.assigned_to || !store.assigned_to.includes(myName)) return false;
+            }
+
             if (searchQuery) {
                 const keywords = searchQuery.toLowerCase().split(/[\s　]+/).filter(Boolean);
                 if (keywords.length > 0) {
@@ -102,7 +111,7 @@ export default function SalesClientListPage() {
             }
             return true;
         });
-    }, [stores, clients, brands, filter, prefFilter, searchQuery]);
+    }, [stores, clients, brands, filter, prefFilter, searchQuery, listScope, user]);
 
     if (loading) {
         return (
@@ -157,6 +166,44 @@ export default function SalesClientListPage() {
                         }}
                     >
                         顧客登録
+                    </button>
+                </div>
+
+                {/* スコープ切り替え (マスター/個人) */}
+                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '24px', padding: 3, marginBottom: 20, border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <button
+                        onClick={() => setListScope('master')}
+                        style={{
+                            flex: 1,
+                            padding: '10px',
+                            borderRadius: '21px',
+                            border: 'none',
+                            background: listScope === 'master' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                            color: listScope === 'master' ? '#fff' : 'rgba(255,255,255,0.4)',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        顧客一覧（マスター）
+                    </button>
+                    <button
+                        onClick={() => setListScope('personal')}
+                        style={{
+                            flex: 1,
+                            padding: '10px',
+                            borderRadius: '21px',
+                            border: 'none',
+                            background: listScope === 'personal' ? 'var(--job-sales)' : 'transparent',
+                            color: listScope === 'personal' ? '#fff' : 'rgba(255,255,255,0.4)',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        顧客一覧（個人）
                     </button>
                 </div>
 

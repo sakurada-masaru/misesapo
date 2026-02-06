@@ -4,6 +4,7 @@ import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTr
 import Visualizer from '../../../shared/ui/Visualizer/Visualizer';
 import OfficeClientKartePanel from './OfficeClientKartePanel';
 import { forceCreateKarte } from './karteStorage';
+import { useAuth } from '../../../shared/auth/useAuth';
 import '../../../shared/styles/components.css';
 import './office-client-list.css';
 import './office-client-karte-panel.css';
@@ -58,12 +59,15 @@ export default function OfficeClientListPage() {
   const mainContainerRef = useRef(null);
   const kartePanelRef = useRef(null);
 
+  const { user, authz } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const [stores, setStores] = useState([]);
   const [clients, setClients] = useState([]);
   const [brands, setBrands] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [listScope, setListScope] = useState('master'); // 'master' or 'personal'
 
   const [selectedStoreId, setSelectedStoreId] = useState(null);
   const [panelView, setPanelView] = useState('edit'); // 'edit' | 'karte'（右パネルで編集フォームとカルテを切替）
@@ -232,6 +236,7 @@ export default function OfficeClientListPage() {
       const container = listContainerRef.current;
       if (!container) return;
       const rect = container.getBoundingClientRect();
+      // コンテナ全体に対するマウス位置の割合を計算
       const percent = ((moveEvent.clientX - rect.left) / rect.width) * 100;
       const next = Math.max(20, Math.min(80, percent));
       setLeftColumnPercent(next);
@@ -280,6 +285,15 @@ export default function OfficeClientListPage() {
         if (statusFilter === '契約作業中' && status !== 'contract_in_progress') return false;
         if (statusFilter === '現場一時停止' && status !== 'suspended') return false;
       }
+
+      // 個人フィルター: 営業 / コンシェルジュ (assigned_to) に自分の名前が含まれているもの
+      if (listScope === 'personal') {
+        const myName = user?.name || user?.displayName || user?.nickname || user?.username || '';
+        if (!myName || !store.assigned_to) return false;
+        // 名前が含まれているかチェック (大文字小文字などを考慮せず、そのままの部分一致)
+        if (!store.assigned_to.includes(myName)) return false;
+      }
+
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const clientName = getClientName(store).toLowerCase();
@@ -297,7 +311,7 @@ export default function OfficeClientListPage() {
       }
       return true;
     });
-  }, [stores, clients, brands, searchQuery, statusFilter]);
+  }, [stores, clients, brands, searchQuery, statusFilter, listScope, user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -408,7 +422,45 @@ export default function OfficeClientListPage() {
               style={{ width: '100%', padding: '12px 16px', background: 'transparent', color: 'var(--fg)', border: 'none', fontSize: '0.95rem', outline: 'none' }}
             />
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
+            {/* スコープ切り替え (マスター/個人) */}
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '20px', padding: 2, marginRight: 8, border: '1px solid rgba(255,255,255,0.1)' }}>
+              <button
+                type="button"
+                onClick={() => setListScope('master')}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '18px',
+                  border: 'none',
+                  background: listScope === 'master' ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  color: listScope === 'master' ? '#fff' : 'rgba(255,255,255,0.4)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                マスター
+              </button>
+              <button
+                type="button"
+                onClick={() => setListScope('personal')}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '18px',
+                  border: 'none',
+                  background: listScope === 'personal' ? 'var(--job-sales)' : 'transparent',
+                  color: listScope === 'personal' ? '#fff' : 'rgba(255,255,255,0.4)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                個人
+              </button>
+            </div>
+
             {['all', '稼働中', '契約作業中', '現場一時停止'].map((f) => (
               <button
                 key={f}
@@ -433,7 +485,11 @@ export default function OfficeClientListPage() {
         </div>
 
         {/* メインコンテンツ：画面上部に至ったらそれ以上上にスクロールしない */}
-        <div ref={mainContainerRef} className="office-client-list-main-container">
+        <div ref={mainContainerRef} className="office-client-list-main-container" style={{ position: 'relative' }}>
+          {/* リサイズ中のオーバーレイ (iframe上のマウスイベントを捕捉するため) */}
+          {resizing && (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 9999, cursor: 'col-resize', background: 'transparent' }} />
+          )}
           <div
             ref={listContainerRef}
             className={`office-client-list-two-columns ${showEditPanel ? 'office-client-list-two-columns--with-panel' : ''} ${panelView === 'karte' ? 'office-client-list-two-columns--karte' : ''}`}
@@ -444,6 +500,7 @@ export default function OfficeClientListPage() {
               style={{
                 width: showEditPanel ? `${leftColumnPercent}%` : '100%',
                 minWidth: showEditPanel ? 200 : undefined,
+                flex: showEditPanel ? '0 0 auto' : '1 1 0%',
               }}
             >
               <div style={{ flexShrink: 0, paddingBottom: 12 }}>
@@ -488,7 +545,7 @@ export default function OfficeClientListPage() {
                   <span>電話番号</span>
                   <span>メールアドレス</span>
                   <span>担当者</span>
-                  <span>営業担当者</span>
+                  <span>営業 / コンシェルジュ</span>
                   <span>契約内容</span>
                 </div>
                 {filteredStores.length === 0 ? (
@@ -525,6 +582,7 @@ export default function OfficeClientListPage() {
                       <span title={store.contact_person}>{store.contact_person || '—'}</span>
                       <span title={store.assigned_to}>{store.assigned_to || '—'}</span>
                       <span className="office-client-list-contract">
+
                         {getContractTag(store) ? (
                           <span
                             className={`office-client-list-contract-tag ${getContractTag(store) === 'スポット清掃' ? 'office-client-list-contract-tag--spot' :
@@ -771,7 +829,7 @@ export default function OfficeClientListPage() {
                         <input type="text" name="contact_person" value={form.contact_person} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                       </div>
                       <div className="report-page-field">
-                        <label>営業担当者</label>
+                        <label>営業 / コンシェルジュ</label>
                         <input type="text" name="assigned_to" value={form.assigned_to} onChange={handleChange} disabled={isLocked} style={{ width: '100%', padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'var(--fg)' }} />
                       </div>
                       <div className="report-page-field">

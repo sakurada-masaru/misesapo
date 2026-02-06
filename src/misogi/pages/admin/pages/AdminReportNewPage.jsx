@@ -38,13 +38,38 @@ const SERVICE_TO_TEMPLATE = {
 // サービス名からtemplate_idを取得（マッチしなければデフォルトを返す）
 const getTemplateIdFromServices = (services, defaultId = TEMPLATE_CLEANING) => {
     if (!services || services.length === 0) return defaultId;
-    // 最初にマッチしたサービスのtemplate_idを使う
+
+    // 正規化関数 (名寄せ: 空白削除)
+    const normalize = s => (s || "").replace(/\s+/g, "").replace(/　/g, "");
+
+    // 最初にマッチしたサービスのtemplate_idを使うが、部分一致の場合は最長一致を優先する
     for (const svc of services) {
-        const name = svc.name || '';
-        if (SERVICE_TO_TEMPLATE[name]) {
-            return SERVICE_TO_TEMPLATE[name];
+        const rawName = svc.name || '';
+        const name = normalize(rawName);
+        if (!name) continue;
+
+        console.log("[RESOLVE] Checking service:", rawName, "->", name);
+
+        // 1. 完全一致 (正規化後) を最優先
+        for (const [key, id] of Object.entries(SERVICE_TO_TEMPLATE)) {
+            const normalizedKey = normalize(key);
+            if (name === normalizedKey) {
+                console.log("[RESOLVE] Match (Exact):", name, "->", id);
+                return id;
+            }
+        }
+
+        // 2. 部分一致 (キーがサービス名に含まれる場合。例: キー「グリストラップ」が「グリストラップ清掃」に含まれる)
+        for (const [key, id] of Object.entries(SERVICE_TO_TEMPLATE)) {
+            const normalizedKey = normalize(key);
+            if (normalizedKey.length > 2 && name.includes(normalizedKey)) {
+                console.log("[RESOLVE] Match (Partial):", name, "matches key", normalizedKey, "->", id);
+                return id;
+            }
         }
     }
+
+    console.log("[RESOLVE] No match found. Defaulting to:", defaultId);
     return defaultId;
 };
 
@@ -133,15 +158,39 @@ export default function AdminReportNewPage() {
     const [activeTemplate, setActiveTemplate] = useState(TEMPLATE_CLEANING);
     const [showPreview, setShowPreview] = useState(false); // プレビュー状態
 
-    // Initial Active Tab based on permissions
-    // Initial Active Tab based on permissions - DISABLED for now to allow all
-    // useEffect(() => {
-    //     if (!authLoading && authz.allowedTemplateIds.length > 0) {
-    //         if (!authz.allowedTemplateIds.includes(activeTemplate)) {
-    //             setActiveTemplate(authz.allowedTemplateIds[0]);
-    //         }
-    //     }
-    // }, [authLoading, authz.allowedTemplateIds, activeTemplate]);
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const typeParam = queryParams.get('type');
+
+    // パラメータとテンプレートIDの紐付け
+    const typeToTemplate = {
+        'cleaning': TEMPLATE_CLEANING,
+        'sales': TEMPLATE_SALES,
+        'engineering': TEMPLATE_ENGINEERING,
+        'office': TEMPLATE_OFFICE
+    };
+    const lockedTemplate = typeParam ? typeToTemplate[typeParam.toLowerCase()] : null;
+
+    // 初期表示タブの決定
+    useEffect(() => {
+        if (!authLoading) {
+            if (lockedTemplate) {
+                setActiveTemplate(lockedTemplate);
+            } else if (authz.allowedTemplateIds.length > 0) {
+                if (!authz.allowedTemplateIds.includes(activeTemplate)) {
+                    setActiveTemplate(authz.allowedTemplateIds[0]);
+                }
+            }
+        }
+    }, [authLoading, authz.allowedTemplateIds, lockedTemplate, activeTemplate]);
+
+    // タブ表示判定
+    const checkPermission = (tid) => {
+        if (lockedTemplate) return tid === lockedTemplate;
+        if (!authz.allowedTemplateIds || authz.allowedTemplateIds.length === 0) return true;
+        return authz.allowedTemplateIds.includes(tid);
+    };
+
 
     // --- State: Cleaning ---
     const [header, setHeader] = useState({
@@ -188,7 +237,7 @@ export default function AdminReportNewPage() {
     });
 
     const [isSaving, setIsSaving] = useState(false);
-    const [statusMessage, setStatusMessage] = useState(null); // { type: 'success' | 'error', text: string }
+    const [statusMessage, setStatusMessage] = useState(null); // {type: 'success' | 'error', text: string }
     const [saveError, setSaveError] = useState('');
 
     // --- State: Service Master Modal ---
@@ -211,9 +260,6 @@ export default function AdminReportNewPage() {
 
             if (name && !header.reporter_name) {
                 setHeader(prev => ({ ...prev, reporter_name: name }));
-            }
-            if (activeTemplate === TEMPLATE_CLEANING && email === 'konno@misesapo.co.jp') {
-                setActiveTemplate(TEMPLATE_SALES);
             }
 
             // 営業テンプレートの初期値設定
@@ -291,7 +337,7 @@ export default function AdminReportNewPage() {
                     if (Array.isArray(reports)) {
                         const dayItem = reports.find(r => r.template_id === TEMPLATE_DAY);
                         if (dayItem) {
-                            const d = JSON.parse(dayItem.description || '{}');
+                            const d = JSON.parse(dayItem.description || '{ }');
                             setHeader({
                                 work_date: dayItem.work_date,
                                 reporter_name: d.reporter_name || user?.name || '',
@@ -551,7 +597,31 @@ export default function AdminReportNewPage() {
 
     // テンプレートモードでの提出
     const handleTemplateSubmit = async () => {
-        if (isSaving || !selectedTemplateId) return;
+        if (isSaving) return;
+
+        let targetId = null;
+        let targetPayload = {};
+
+        if (activeTemplate === TEMPLATE_CLEANING) {
+            targetId = currentStore?.template_id;
+            targetPayload = currentStore?.template_payload || {};
+        } else if (activeTemplate === TEMPLATE_SALES) {
+            targetId = TEMPLATE_SALES;
+            targetPayload = sales;
+        } else if (activeTemplate === TEMPLATE_ENGINEERING) {
+            targetId = TEMPLATE_ENGINEERING;
+            targetPayload = eng;
+        } else if (activeTemplate === TEMPLATE_OFFICE) {
+            targetId = TEMPLATE_OFFICE;
+            targetPayload = office;
+        }
+
+        if (!targetId) {
+            setStatusMessage({ type: 'error', text: 'テンプレートが選択されていません' });
+            setTimeout(() => setStatusMessage(null), 3000);
+            return;
+        }
+
         setIsSaving(true);
 
         try {
@@ -561,15 +631,21 @@ export default function AdminReportNewPage() {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                    template_id: selectedTemplateId,
+                    template_id: targetId,
                     work_date: header.work_date,
-                    payload: templatePayload
+                    user_name: header.reporter_name,
+                    payload: targetPayload
                 })
             });
             setStatusMessage({ type: 'success', text: '報告を送信しました' });
             // リセット
-            setSelectedTemplateId(null);
-            setTemplatePayload({});
+            if (activeTemplate === TEMPLATE_SALES) {
+                setSales({});
+            } else if (activeTemplate === TEMPLATE_CLEANING) {
+                // 清掃の場合は該当店舗をリセットするか、confirmedにするか等の処理が必要だが、一旦簡易リセット
+                updateStore(activeStoreIdx, { template_payload: {}, template_id: null });
+            }
+            setShowPreview(false);
             setTimeout(() => setStatusMessage(null), 3000);
         } catch (e) {
             console.error("Template submission failed:", e);
@@ -732,18 +808,26 @@ export default function AdminReportNewPage() {
                 </ContentHeader>
 
                 <TabNav>
-                    <TabButton $active={activeTemplate === TEMPLATE_CLEANING} onClick={() => setActiveTemplate(TEMPLATE_CLEANING)}>
-                        <i className="fas fa-broom"></i><span>清掃</span>
-                    </TabButton>
-                    <TabButton $active={activeTemplate === TEMPLATE_SALES} onClick={() => setActiveTemplate(TEMPLATE_SALES)}>
-                        <i className="fas fa-briefcase"></i><span>営業</span>
-                    </TabButton>
-                    <TabButton $active={activeTemplate === TEMPLATE_ENGINEERING} onClick={() => setActiveTemplate(TEMPLATE_ENGINEERING)}>
-                        <i className="fas fa-code"></i><span>開発</span>
-                    </TabButton>
-                    <TabButton $active={activeTemplate === TEMPLATE_OFFICE} onClick={() => setActiveTemplate(TEMPLATE_OFFICE)}>
-                        <i className="fas fa-file-invoice"></i><span>事務</span>
-                    </TabButton>
+                    {checkPermission(TEMPLATE_CLEANING) && (
+                        <TabButton $active={activeTemplate === TEMPLATE_CLEANING} onClick={() => setActiveTemplate(TEMPLATE_CLEANING)}>
+                            <i className="fas fa-broom"></i><span>清掃</span>
+                        </TabButton>
+                    )}
+                    {checkPermission(TEMPLATE_SALES) && (
+                        <TabButton $active={activeTemplate === TEMPLATE_SALES} onClick={() => setActiveTemplate(TEMPLATE_SALES)}>
+                            <i className="fas fa-briefcase"></i><span>営業 / コンシェルジュ</span>
+                        </TabButton>
+                    )}
+                    {checkPermission(TEMPLATE_ENGINEERING) && (
+                        <TabButton $active={activeTemplate === TEMPLATE_ENGINEERING} onClick={() => setActiveTemplate(TEMPLATE_ENGINEERING)}>
+                            <i className="fas fa-code"></i><span>開発</span>
+                        </TabButton>
+                    )}
+                    {checkPermission(TEMPLATE_OFFICE) && (
+                        <TabButton $active={activeTemplate === TEMPLATE_OFFICE} onClick={() => setActiveTemplate(TEMPLATE_OFFICE)}>
+                            <i className="fas fa-file-invoice"></i><span>事務</span>
+                        </TabButton>
+                    )}
                 </TabNav>
 
                 {activeTemplate === TEMPLATE_CLEANING && (
@@ -834,9 +918,14 @@ export default function AdminReportNewPage() {
                                         ].map((t, idx) => (
                                             <TemplateSelectButton
                                                 key={t.id}
+                                                type="button"
                                                 id={idx === 0 ? 'template-select-0' : undefined}
                                                 $selected={currentStore.template_id === t.id}
-                                                onClick={() => updateStore(activeStoreIdx, { template_id: t.id, enabled: true })}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    console.log("[SERVICE CLICK]", t.label, t.id);
+                                                    updateStore(activeStoreIdx, { template_id: t.id, enabled: true });
+                                                }}
                                                 style={{ padding: '12px 4px' }}
                                             >
                                                 <i className={`fas ${t.icon}`} style={{ fontSize: 16 }}></i>
@@ -909,7 +998,7 @@ export default function AdminReportNewPage() {
                                 onFileRemove={handleSalesFileRemove}
                             />
                             <ButtonRow>
-                                <ActionButton $variant="primary" style={{ flex: 1 }} onClick={() => handleHoukokuSubmit(TEMPLATE_SALES)} disabled={isSaving}>提出</ActionButton>
+                                <ActionButton $variant="primary" style={{ flex: 1 }} onClick={() => setShowPreview(true)} disabled={isSaving}>プレビュー</ActionButton>
                                 <ActionButton $variant="secondary" onClick={handleReset}>リセット</ActionButton>
                             </ButtonRow>
                         </Card>
@@ -991,6 +1080,29 @@ export default function AdminReportNewPage() {
                     )
                 }
 
+                {showPreview && (
+                    <PreviewOverlay onClick={() => setShowPreview(false)}>
+                        <PreviewContent onClick={e => e.stopPropagation()}>
+                            <PreviewHeader>
+                                <h3>レポート・プレビュー</h3>
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <ActionButton $variant="primary" onClick={handleTemplateSubmit} disabled={isSaving}>
+                                        {isSaving ? '送信中...' : '確定して送信'}
+                                    </ActionButton>
+                                    <CloseBtn onClick={() => setShowPreview(false)}><i className="fas fa-times"></i></CloseBtn>
+                                </div>
+                            </PreviewHeader>
+                            <div style={{ padding: 20, overflowY: 'auto', flex: 1 }}>
+                                <TemplateRenderer
+                                    template={getTemplateById(activeTemplate === TEMPLATE_CLEANING ? currentStore?.template_id : activeTemplate)}
+                                    payload={activeTemplate === TEMPLATE_CLEANING ? (currentStore?.template_payload || {}) : (activeTemplate === TEMPLATE_SALES ? sales : (activeTemplate === TEMPLATE_ENGINEERING ? eng : office))}
+                                    mode="preview"
+                                />
+                            </div>
+                        </PreviewContent>
+                    </PreviewOverlay>
+                )}
+
                 <div style={{ marginTop: 32, textAlign: 'center' }}>
                     <Link to="/portal" style={{ color: '#64748b', textDecoration: 'none' }}>ポータルに戻る</Link>
                 </div>
@@ -1000,8 +1112,8 @@ export default function AdminReportNewPage() {
 }
 
 const PageContainer = styled.div` min-height: 100vh; background: #0f172a; color: #f8fafc; `;
-const VizContainer = styled.div` position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.15; `;
-const MainContent = styled.div` position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 24px 16px; `;
+const VizContainer = styled.div` position: fixed; inset: 0; pointer-events: none; z-index: -10; opacity: 0.15; `;
+const MainContent = styled.div` position: relative; z-index: 100; max-width: 800px; margin: 0 auto; padding: 24px 16px; `;
 const ContentHeader = styled.header` display: flex; align-items: center; gap: 16px; margin-bottom: 32px; `;
 const BackLink = styled(Link)` color: #94a3b8; `;
 const ContentTitle = styled.h1` font-size: 1.5rem; font-weight: 700; `;
@@ -1010,41 +1122,64 @@ const TabButton = styled.button` display: flex; align-items: center; gap: 8px; p
 const Card = styled.div` background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(8px); border: 1px solid #334155; border-radius: 16px; padding: 24px; margin-bottom: 24px; `;
 const SectionHeader = styled.div` margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); `;
 const CardTitle = styled.h2` font-size: 1.1rem; color: #3b82f6; `;
-const FormGrid = styled.div` display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media(max-width:600px){ grid-template-columns:1fr; } `;
+const FormGrid = styled.div` display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media(max-width:600px){grid - template - columns:1fr; } `;
 const Field = styled.div` grid-column: ${props => props.$full ? '1 / -1' : 'span 1'}; `;
 const Label = styled.label` display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; `;
-const Input = styled.input` width: 100%; background: #1e293b; border: 1px solid #334155; color: #fff; padding: 10px; border-radius: 8px; `;
-const FormTextarea = styled.textarea` width: 100%; height: 100px; background: #1e293b; border: 1px solid #334155; color: #fff; padding: 10px; border-radius: 8px; `;
+const Input = styled.input`
+    width: 100%;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    &::placeholder {
+        color: ${props => props.$mode === 'edit' ? '#94a3b8' : '#475569'};
+        opacity: 1;
+    }
+`;
+const FormTextarea = styled.textarea`
+    width: 100%;
+    height: 100px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    &::placeholder {
+        color: ${props => props.$mode === 'edit' ? '#94a3b8' : '#475569'};
+        opacity: 1;
+    }
+`;
 const ButtonRow = styled.div` display: flex; gap: 12px; margin-top: 24px; `;
-const ActionButton = styled.button` padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; background: ${props => props.$variant === 'primary' ? '#3b82f6' : '#334155'}; color: #fff; border: none; &:disabled{ opacity: 0.5; } `;
+const ActionButton = styled.button` padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; background: ${props => props.$variant === 'primary' ? '#3b82f6' : '#334155'}; color: #fff; border: none; &:disabled{opacity: 0.5; } `;
 const StoreTabNav = styled.div` display: flex; gap: 4px; margin-bottom: 16px; `;
 const StoreTabItem = styled.div` flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: ${props => props.$active ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)'}; border: 1px solid ${props => props.$active ? '#3b82f6' : '#334155'}; border-radius: 8px; cursor: pointer; `;
 const UploadZone = styled.div` border: 2px dashed #334155; padding: 20px; text-align: center; color: #94a3b8; border-radius: 12px; cursor: pointer; `;
 const AttachmentList = styled.div` display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; margin-top: 12px; `;
-const AttachmentCard = styled.div` position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; img { width: 100%; height: 100%; object-fit: cover; } `;
+const AttachmentCard = styled.div` position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; img {width: 100%; height: 100%; object-fit: cover; } `;
 const RemoveBtn = styled.button` position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; `;
 
 const Checkbox = styled.input`
-    width: 20px;
-    height: 20px;
-    accent-color: #3b82f6;
-    cursor: pointer;
-`;
+                width: 20px;
+                height: 20px;
+                accent-color: #3b82f6;
+                cursor: pointer;
+                `;
 
 const SuggestionList = styled.div`
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    margin-top: 4px;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 100;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-`;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #1e293b;
+                border: 1px solid #334155;
+                border-radius: 8px;
+                margin-top: 4px;
+                max-height: 200px;
+                overflow-y: auto;
+                z-index: 100;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                `;
 
 const SuggestionItem = styled.div`
     padding: 10px 16px;
@@ -1055,10 +1190,10 @@ const SuggestionItem = styled.div`
 `;
 
 const ScheduleList = styled.div`
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-`;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 12px;
+                `;
 
 const ScheduleItem = styled.div`
     background: rgba(59, 130, 246, 0.1);
@@ -1074,17 +1209,17 @@ const ScheduleItem = styled.div`
 `;
 
 const StatusOverlay = styled.div`
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(4px);
-    animation: fadeIn 0.3s ease-out;
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-`;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0,0,0,0.4);
+                backdrop-filter: blur(4px);
+                animation: fadeIn 0.3s ease-out;
+                @keyframes fadeIn {from {opacity: 0; } to {opacity: 1; } }
+                `;
 
 const StatusContent = styled.div`
     background: ${props => props.$type === 'success' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'};
@@ -1098,162 +1233,162 @@ const StatusContent = styled.div`
     gap: 16px;
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    
+
     i { font-size: 48px; }
     span { font-size: 20px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 `;
 
 const PreviewOverlay = styled.div`
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(8px);
-    z-index: 2000;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-`;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.85);
+                backdrop-filter: blur(8px);
+                z-index: 2000;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                `;
 
 const PreviewContent = styled.div`
-    background: #f8fafc;
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    border-radius: 24px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.1);
-`;
+                background: #f8fafc;
+                width: 100%;
+                max-width: 600px;
+                max-height: 90vh;
+                border-radius: 24px;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+                border: 1px solid rgba(255,255,255,0.1);
+                `;
 
 const PreviewHeader = styled.div`
-    padding: 20px 24px;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    h3 { margin: 0; font-size: 18px; color: #1e293b; }
-`;
+                padding: 20px 24px;
+                background: white;
+                border-bottom: 1px solid #e2e8f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                h3 {margin: 0; font-size: 18px; color: #1e293b; }
+                `;
 
 const CloseBtn = styled.button`
-    background: #f1f5f9;
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 14px;
-    color: #64748b;
-    &:hover { background: #e2e8f0; color: #1e293b; }
-`;
+                background: #f1f5f9;
+                border: none;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 14px;
+                color: #64748b;
+                &:hover {background: #e2e8f0; color: #1e293b; }
+                `;
 
 const PreviewInner = styled.div`
-    padding: 24px;
-    overflow-y: auto;
-    flex: 1;
-`;
+                padding: 24px;
+                overflow-y: auto;
+                flex: 1;
+                `;
 
 const PreviewLabel = styled.div`
-    font-size: 12px;
-    color: #3b82f6;
-    font-weight: 800;
-    margin-bottom: 20px;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-`;
+                font-size: 12px;
+                color: #3b82f6;
+                font-weight: 800;
+                margin-bottom: 20px;
+                text-align: center;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                `;
 
 const PreviewCard = styled.div`
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    border: 1px solid #e2e8f0;
-    color: #334155;
-`;
+                background: white;
+                border-radius: 16px;
+                padding: 20px;
+                margin-bottom: 16px;
+                border: 1px solid #e2e8f0;
+                color: #334155;
+                `;
 
 const CategoryTab = styled.button`
-    padding: 6px 16px;
-    border-radius: 20px;
-    border: 1px solid ${props => props.$active ? '#3b82f6' : '#334155'};
-    background: ${props => props.$active ? '#3b82f6' : 'transparent'};
-    color: ${props => props.$active ? '#fff' : '#94a3b8'};
-    font-size: 0.8rem;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s;
+                padding: 6px 16px;
+                border-radius: 20px;
+                border: 1px solid ${props => props.$active ? '#3b82f6' : '#334155'};
+                background: ${props => props.$active ? '#3b82f6' : 'transparent'};
+                color: ${props => props.$active ? '#fff' : '#94a3b8'};
+                font-size: 0.8rem;
+                cursor: pointer;
+                white-space: nowrap;
+                transition: all 0.2s;
     &:hover { border-color: #3b82f6; color: #fff; }
-`;
+                `;
 
 const ServiceItemCard = styled.div`
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid #334155;
-    border-radius: 12px;
-    padding: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    &:hover {
-        background: rgba(59, 130, 246, 0.1);
-        border-color: #3b82f6;
-        transform: translateY(-2px);
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid #334155;
+                border-radius: 12px;
+                padding: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+                &:hover {
+                    background: rgba(59, 130, 246, 0.1);
+                border-color: #3b82f6;
+                transform: translateY(-2px);
     }
-`;
+                `;
 
 // 店舗切り替えタブ
 const StoreTabs = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 24px;
-    padding: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-`;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 24px;
+                padding: 6px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 16px;
+                `;
 
 const MobileStage = styled.div`
-    max-width: 800px;
-    margin: 0 auto;
-    width: 100%;
-`;
+                max-width: 800px;
+                margin: 0 auto;
+                width: 100%;
+                `;
 
 const CompactCard = styled.div`
-    background: rgba(30, 41, 59, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 24px;
-`;
+                background: rgba(30, 41, 59, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: 20px;
+                padding: 24px;
+                margin-bottom: 24px;
+                `;
 
 const StoreTab = styled.button`
-    flex: 1;
-    min-width: 100px;
-    height: 54px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid ${props => props.$active ? '#3b82f6' : 'rgba(255,255,255,0.05)'};
-    background: ${props => props.$active ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.02)'};
-    color: ${props => props.$active ? '#3b82f6' : '#94a3b8'};
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    padding: 0 12px;
-    &:hover { background: rgba(59, 130, 246, 0.05); }
-`;
+                flex: 1;
+                min-width: 100px;
+                height: 54px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid ${props => props.$active ? '#3b82f6' : 'rgba(255,255,255,0.05)'};
+                background: ${props => props.$active ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.02)'};
+                color: ${props => props.$active ? '#3b82f6' : '#94a3b8'};
+                border-radius: 12px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                position: relative;
+                padding: 0 12px;
+                &:hover {background: rgba(59, 130, 246, 0.05); }
+                `;
 
 const TemplateSelectGrid = styled.div`
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 10px;
-`;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 10px;
+                `;
 
 const TemplateSelectButton = styled.button`
     display: flex;
@@ -1267,5 +1402,9 @@ const TemplateSelectButton = styled.button`
     color: ${props => props.$selected ? '#3b82f6' : '#94a3b8'};
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+
     &:hover { border-color: #3b82f6; color: #3b82f6; }
 `;
