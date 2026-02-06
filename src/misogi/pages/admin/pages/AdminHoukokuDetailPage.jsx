@@ -61,13 +61,16 @@ const AdminHoukokuDetailPage = () => {
     };
 
     // 旧データ用（storesがある場合のフォールバック表示）
-    const stores = payload.stores || [];
+    // もし stores がなければ、payload 自体を単一の store item として扱う（営業報告書などはこれに該当）
+    const stores = Array.isArray(payload.stores) && payload.stores.length > 0
+        ? payload.stores
+        : [payload]; // 自身を配列に入れる
     const activeStoreRaw = stores[activeStoreTab] || null;
     const activeStore = activeStoreRaw ? {
         ...(activeStoreRaw.store || {}),
         ...activeStoreRaw,
         // metaがあればそれもマージ
-        template_id: activeStoreRaw.template_id,
+        template_id: activeStoreRaw.template_id || report.template_id,
         template_payload: activeStoreRaw.template_payload
     } : null;
 

@@ -1,0 +1,195 @@
+{
+    "id": "SALES_ACTIVITY_REPORT_V1",
+    "template_id": "SALES_ACTIVITY_REPORT_V1",
+    "title": "営業活動報告書",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "basic_info",
+            "type": "group",
+            "label": "1. 基本情報",
+            "meta_fields": [
+                {
+                    "key": "work_date",
+                    "label": "活動日"
+                },
+                {
+                    "key": "user_name",
+                    "label": "担当営業"
+                }
+            ]
+        },
+        {
+            "id": "lead_status",
+            "type": "group",
+            "label": "2. リード獲得状況",
+            "fields": [
+                {
+                    "key": "lead.new_count",
+                    "label": "新規リード数",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "lead.source",
+                    "label": "主な獲得経路",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "referral",
+                            "label": "紹介"
+                        },
+                        {
+                            "value": "visit",
+                            "label": "飛び込み"
+                        },
+                        {
+                            "value": "web",
+                            "label": "WEB"
+                        },
+                        {
+                            "value": "existing",
+                            "label": "既存顧客"
+                        },
+                        {
+                            "value": "other",
+                            "label": "その他"
+                        }
+                    ]
+                },
+                {
+                    "key": "lead.memo",
+                    "label": "補足",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "deal_status",
+            "type": "group",
+            "label": "3. 商談状況",
+            "fields": [
+                {
+                    "key": "deal.total",
+                    "label": "対応商談数",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "deal.stage",
+                    "label": "主な進捗状況",
+                    "type": "radio",
+                    "options": [
+                        {
+                            "value": "first_contact",
+                            "label": "初回接触"
+                        },
+                        {
+                            "value": "proposing",
+                            "label": "提案中"
+                        },
+                        {
+                            "value": "quoting",
+                            "label": "見積提出"
+                        },
+                        {
+                            "value": "negotiating",
+                            "label": "交渉中"
+                        },
+                        {
+                            "value": "closing",
+                            "label": "クロージング"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "results",
+            "type": "group",
+            "label": "4. 成果・結果",
+            "fields": [
+                {
+                    "key": "result.contract_count",
+                    "label": "成約件数",
+                    "type": "number",
+                    "required": true,
+                    "min": 0
+                },
+                {
+                    "key": "result.contract_amount",
+                    "label": "成約金額（円）",
+                    "type": "number",
+                    "min": 0
+                },
+                {
+                    "key": "result.lost_reason",
+                    "label": "失注理由（あれば）",
+                    "type": "textarea"
+                }
+            ]
+        },
+        {
+            "id": "activities",
+            "type": "group",
+            "label": "5. 活動内容",
+            "fields": [
+                {
+                    "key": "action.visit_count",
+                    "label": "訪問件数",
+                    "type": "number",
+                    "min": 0
+                },
+                {
+                    "key": "action.call_count",
+                    "label": "架電件数",
+                    "type": "number",
+                    "min": 0
+                },
+                {
+                    "key": "action.main_activity",
+                    "label": "主な活動内容",
+                    "type": "textarea",
+                    "required": true
+                }
+            ]
+        },
+        {
+            "id": "reflection",
+            "type": "group",
+            "label": "6. 所感・次アクション",
+            "fields": [
+                {
+                    "key": "reflection.good",
+                    "label": "うまくいった点",
+                    "type": "textarea"
+                },
+                {
+                    "key": "reflection.issue",
+                    "label": "課題・問題点",
+                    "type": "textarea"
+                },
+                {
+                    "key": "reflection.next",
+                    "label": "明日の行動予定",
+                    "type": "textarea",
+                    "required": true
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "7. 訪問証跡・名刺・現場写真（任意）",
+            "type": "photos",
+            "required": false,
+            "presets": [
+                {
+                    "label": "写真資料",
+                    "key": "photos.sales"
+                }
+            ]
+        }
+    ]
+}

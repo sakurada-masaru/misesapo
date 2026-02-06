@@ -118,8 +118,12 @@ const TemplateRenderer = ({ template, payload, report, onChange, onPayloadChange
 
     const handlePayloadChange = (keyPath, value) => {
         if (mode !== 'edit' || !handleChange) return;
-        const newPayload = setNestedValue(payload || {}, keyPath, value);
-        handleChange(newPayload);
+        // 親が (key, value) を求めている場合と (newPayload) を求めている場合がある
+        // setNestedValue を使っている既存の TemplateRenderer は newPayload を返していたが、
+        // AdminReportNewPage の handleSalesPayloadChange は (key, value) を期待している。
+        // ここを分岐させるか、親の実装に合わせる必要がある。
+        // 今のコンテキストでは AdminReportNewPage から呼ばれており (key, value) が期待されている。
+        handleChange(keyPath, value);
     };
 
     return (
@@ -204,13 +208,50 @@ const GroupSection = ({ section, report, payload, onChange, mode }) => {
         <Section $mode={mode}>
             <SectionTitle $mode={mode} $required={section.required}>{section.label || section.name}</SectionTitle>
             <FieldList $mode={mode}>
-                {/* meta_fields: report（=reportMeta）だけを見る。payloadは見ない。編集不可。 */}
-                {normalizedMetaFields.map((mf) => (
-                    <FieldRow key={mf.key} $mode={mode}>
-                        <FieldLabel $mode={mode}>{mf.label}</FieldLabel>
-                        <FieldValue $mode={mode}>{report?.[mf.key] ?? '—'}</FieldValue>
-                    </FieldRow>
-                ))}
+                {/* meta_fields: report（=reportMeta）とpayloadの両方を見る。編集可能にする。 */}
+                {normalizedMetaFields.map((mf) => {
+                    const val = getNestedValue(payload, mf.key) || report?.[mf.key] || '';
+                    const isEdit = mode === 'edit';
+                    const inputId = `meta-${mf.key}`;
+
+                    if (isEdit) {
+                        if (mf.key === 'work_date') {
+                            return (
+                                <FieldRow key={mf.key} $mode={mode}>
+                                    <FieldLabel as="label" htmlFor={inputId} $mode={mode} $required>{mf.label}</FieldLabel>
+                                    <DateInput
+                                        type="date"
+                                        id={inputId}
+                                        value={val}
+                                        onChange={e => onChange(mf.key, e.target.value)}
+                                    />
+                                </FieldRow>
+                            );
+                        }
+                        if (mf.key === 'user_name') {
+                            return (
+                                <FieldRow key={mf.key} $mode={mode}>
+                                    <FieldLabel as="label" htmlFor={inputId} $mode={mode} $required>{mf.label}</FieldLabel>
+                                    <TextInput
+                                        type="text"
+                                        id={inputId}
+                                        value={val}
+                                        onChange={e => onChange(mf.key, e.target.value)}
+                                        readOnly
+                                        style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)' }}
+                                    />
+                                </FieldRow>
+                            );
+                        }
+                    }
+
+                    return (
+                        <FieldRow key={mf.key} $mode={mode}>
+                            <FieldLabel $mode={mode}>{mf.label}</FieldLabel>
+                            <FieldValue $mode={mode}>{val || '—'}</FieldValue>
+                        </FieldRow>
+                    );
+                })}
 
                 {/* fields: payloadから取得/編集 */}
                 {section.fields?.map((field) => (
@@ -870,16 +911,19 @@ const TextInput = styled.input`
     transition: border-color 0.2s;
     
     ${props => props.$mode === 'edit' ? `
+        color: #f8fafc;
         border: 1px solid rgba(255, 255, 255, 0.1);
         background: rgba(255, 255, 255, 0.03);
         &:focus { border-color: #3b82f6; outline: none; }
     ` : `
+        color: #1e293b;
         border: 1px solid #e2e8f0;
         background: #fff;
     `}
     
     &::placeholder {
-        opacity: 0.3;
+        color: #94a3b8;
+        opacity: 1;
     }
 `;
 

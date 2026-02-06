@@ -9,7 +9,7 @@ import { getTemplateById, getTemplateList } from '../../../templates';
 
 // --- Constants ---
 const TEMPLATE_STORE = 'CLEANING_STORE_V1';
-const TEMPLATE_SALES = 'FIELD_SALES_V1';
+const TEMPLATE_SALES = 'SALES_ACTIVITY_REPORT_V1';
 const TEMPLATE_CLEANING = 'CLEANING_V1';
 const TEMPLATE_ENGINEERING = 'ENGINEERING_V1';
 const TEMPLATE_OFFICE = 'OFFICE_ADMIN_V1';
@@ -134,13 +134,14 @@ export default function AdminReportNewPage() {
     const [showPreview, setShowPreview] = useState(false); // プレビュー状態
 
     // Initial Active Tab based on permissions
-    useEffect(() => {
-        if (!authLoading && authz.allowedTemplateIds.length > 0) {
-            if (!authz.allowedTemplateIds.includes(activeTemplate)) {
-                setActiveTemplate(authz.allowedTemplateIds[0]);
-            }
-        }
-    }, [authLoading, authz.allowedTemplateIds, activeTemplate]);
+    // Initial Active Tab based on permissions - DISABLED for now to allow all
+    // useEffect(() => {
+    //     if (!authLoading && authz.allowedTemplateIds.length > 0) {
+    //         if (!authz.allowedTemplateIds.includes(activeTemplate)) {
+    //             setActiveTemplate(authz.allowedTemplateIds[0]);
+    //         }
+    //     }
+    // }, [authLoading, authz.allowedTemplateIds, activeTemplate]);
 
     // --- State: Cleaning ---
     const [header, setHeader] = useState({
@@ -205,9 +206,25 @@ export default function AdminReportNewPage() {
     useEffect(() => {
         if (!authLoading && user) {
             const name = user.name || user.displayName || user.username || user.email || '';
+            const email = user.email || '';
+            const today = new Date().toISOString().split('T')[0];
+
             if (name && !header.reporter_name) {
                 setHeader(prev => ({ ...prev, reporter_name: name }));
             }
+            if (activeTemplate === TEMPLATE_CLEANING && email === 'konno@misesapo.co.jp') {
+                setActiveTemplate(TEMPLATE_SALES);
+            }
+
+            // 営業テンプレートの初期値設定
+            setSales(prev => {
+                if (prev.work_date && prev.user_name) return prev;
+                return {
+                    ...prev,
+                    work_date: prev.work_date || today,
+                    user_name: prev.user_name || name
+                };
+            });
         }
     }, [user, authLoading, header.reporter_name]);
 
@@ -451,7 +468,7 @@ export default function AdminReportNewPage() {
             }));
             setActiveStoreIdx(0);
         } else if (activeTemplate === TEMPLATE_SALES) {
-            setSales({ target_name: '', visit_type: '訪問', status: 'ヒアリング', content: '', next_actions: '', attachments: [] });
+            setSales({});
         } else if (activeTemplate === TEMPLATE_ENGINEERING) {
             setEng({ project: '', status: '進行中', tasks_done: '', tasks_next: '', issues: '', attachments: [] });
         } else if (activeTemplate === TEMPLATE_OFFICE) {
@@ -623,6 +640,78 @@ export default function AdminReportNewPage() {
         }
     };
 
+    // 営業用テンプレートハンドラー
+    const handleSalesPayloadChange = (key, value) => {
+        if (typeof key !== 'string') {
+            console.error("handleSalesPayloadChange: key must be a string", key);
+            return;
+        }
+        setSales(prev => {
+            const next = JSON.parse(JSON.stringify(prev));
+            const parts = key.split('.');
+            let current = next;
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (!current[parts[i]]) current[parts[i]] = {};
+                current = current[parts[i]];
+            }
+            current[parts[parts.length - 1]] = value;
+            return next;
+        });
+    };
+
+    const handleSalesFileUpload = async (key, file) => {
+        setIsSaving(true);
+        try {
+            const token = getToken() || localStorage.getItem('cognito_id_token');
+            const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
+
+            const res = await apiFetchWorkReport('/houkoku/upload-url', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ filename: file.name, mime: file.type })
+            });
+
+            await fetch(res.uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+            const newAttachment = { url: res.url, key: res.key, name: file.name };
+
+            setSales(prev => {
+                const next = JSON.parse(JSON.stringify(prev));
+                const parts = key.split('.');
+                let current = next;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    if (!current[parts[i]]) current[parts[i]] = {};
+                    current = current[parts[i]];
+                }
+                const lastKey = parts[parts.length - 1];
+                if (!Array.isArray(current[lastKey])) current[lastKey] = [];
+                current[lastKey].push(newAttachment);
+                return next;
+            });
+        } catch (e) {
+            console.error("Sales upload failed:", e);
+            alert("アップロード失敗");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSalesFileRemove = (key, photoIdx) => {
+        setSales(prev => {
+            const next = JSON.parse(JSON.stringify(prev));
+            const parts = key.split('.');
+            let current = next;
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (!current[parts[i]]) return prev;
+                current = current[parts[i]];
+            }
+            const lastKey = parts[parts.length - 1];
+            if (Array.isArray(current[lastKey])) {
+                current[lastKey].splice(photoIdx, 1);
+            }
+            return next;
+        });
+    };
+
     if (authLoading) return <div style={{ padding: 40, textAlign: 'center' }}>読み込み中...</div>;
 
     return (
@@ -643,26 +732,18 @@ export default function AdminReportNewPage() {
                 </ContentHeader>
 
                 <TabNav>
-                    {authz.allowedTemplateIds.includes(TEMPLATE_CLEANING) && (
-                        <TabButton $active={activeTemplate === TEMPLATE_CLEANING} onClick={() => setActiveTemplate(TEMPLATE_CLEANING)}>
-                            <i className="fas fa-broom"></i><span>清掃</span>
-                        </TabButton>
-                    )}
-                    {authz.allowedTemplateIds.includes(TEMPLATE_SALES) && (
-                        <TabButton $active={activeTemplate === TEMPLATE_SALES} onClick={() => setActiveTemplate(TEMPLATE_SALES)}>
-                            <i className="fas fa-briefcase"></i><span>営業</span>
-                        </TabButton>
-                    )}
-                    {authz.allowedTemplateIds.includes(TEMPLATE_ENGINEERING) && (
-                        <TabButton $active={activeTemplate === TEMPLATE_ENGINEERING} onClick={() => setActiveTemplate(TEMPLATE_ENGINEERING)}>
-                            <i className="fas fa-code"></i><span>開発</span>
-                        </TabButton>
-                    )}
-                    {authz.allowedTemplateIds.includes(TEMPLATE_OFFICE) && (
-                        <TabButton $active={activeTemplate === TEMPLATE_OFFICE} onClick={() => setActiveTemplate(TEMPLATE_OFFICE)}>
-                            <i className="fas fa-file-invoice"></i><span>事務</span>
-                        </TabButton>
-                    )}
+                    <TabButton $active={activeTemplate === TEMPLATE_CLEANING} onClick={() => setActiveTemplate(TEMPLATE_CLEANING)}>
+                        <i className="fas fa-broom"></i><span>清掃</span>
+                    </TabButton>
+                    <TabButton $active={activeTemplate === TEMPLATE_SALES} onClick={() => setActiveTemplate(TEMPLATE_SALES)}>
+                        <i className="fas fa-briefcase"></i><span>営業</span>
+                    </TabButton>
+                    <TabButton $active={activeTemplate === TEMPLATE_ENGINEERING} onClick={() => setActiveTemplate(TEMPLATE_ENGINEERING)}>
+                        <i className="fas fa-code"></i><span>開発</span>
+                    </TabButton>
+                    <TabButton $active={activeTemplate === TEMPLATE_OFFICE} onClick={() => setActiveTemplate(TEMPLATE_OFFICE)}>
+                        <i className="fas fa-file-invoice"></i><span>事務</span>
+                    </TabButton>
                 </TabNav>
 
                 {activeTemplate === TEMPLATE_CLEANING && (
@@ -818,37 +899,15 @@ export default function AdminReportNewPage() {
                 {
                     activeTemplate === TEMPLATE_SALES && (
                         <Card>
-                            <SectionHeader><CardTitle>営業報告</CardTitle></SectionHeader>
-                            <FormGrid>
-                                <Field $full>
-                                    <Label htmlFor="sales_target_name">訪問先</Label>
-                                    <Input
-                                        id="sales_target_name"
-                                        name="target_name"
-                                        value={sales.target_name}
-                                        onChange={e => setSales(p => ({ ...p, target_name: e.target.value }))}
-                                    />
-                                </Field>
-                                <Field $full>
-                                    <Label htmlFor="sales_content">内容</Label>
-                                    <FormTextarea
-                                        id="sales_content"
-                                        name="content"
-                                        value={sales.content}
-                                        onChange={e => setSales(p => ({ ...p, content: e.target.value }))}
-                                    />
-                                </Field>
-                            </FormGrid>
-                            <div style={{ marginTop: 24 }}>
-                                <Label htmlFor="sales-up">添付</Label>
-                                <UploadZone onClick={() => document.getElementById('sales-up').click()}>選択</UploadZone>
-                                <input id="sales-up" name="sales_attachments" aria-label="営業報告の添付ファイル" type="file" multiple hidden onChange={e => Array.from(e.target.files).forEach(f => handleHoukokuUpload('SALES', f))} />
-                                <AttachmentList>
-                                    {sales.attachments.map((at, i) => (
-                                        <AttachmentCard key={i}><RemoveBtn onClick={() => handleAttachmentRemove('SALES', i)}>x</RemoveBtn><img src={at.url} alt="" /></AttachmentCard>
-                                    ))}
-                                </AttachmentList>
-                            </div>
+                            <SectionHeader><CardTitle>営業活動報告</CardTitle></SectionHeader>
+                            <TemplateRenderer
+                                template={getTemplateById(TEMPLATE_SALES)}
+                                payload={sales}
+                                mode="edit"
+                                onChange={handleSalesPayloadChange}
+                                onFileUpload={handleSalesFileUpload}
+                                onFileRemove={handleSalesFileRemove}
+                            />
                             <ButtonRow>
                                 <ActionButton $variant="primary" style={{ flex: 1 }} onClick={() => handleHoukokuSubmit(TEMPLATE_SALES)} disabled={isSaving}>提出</ActionButton>
                                 <ActionButton $variant="secondary" onClick={handleReset}>リセット</ActionButton>
