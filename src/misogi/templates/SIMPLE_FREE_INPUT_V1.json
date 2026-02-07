@@ -1,0 +1,67 @@
+{
+    "template_id": "SIMPLE_FREE_INPUT_V1",
+    "title": "簡易報告（自由入力）",
+    "schema_version": 1,
+    "sections": [
+        {
+            "id": "overview",
+            "label": "1. 基本情報",
+            "type": "group",
+            "meta_fields": [
+                "work_date",
+                "user_name"
+            ],
+            "fields": [
+                {
+                    "key": "overview.store_name",
+                    "label": "店舗名",
+                    "type": "text",
+                    "required": true,
+                    "placeholder": "店舗名を入力してください"
+                },
+                {
+                    "key": "overview.work_minutes",
+                    "label": "作業時間（分）",
+                    "type": "number",
+                    "required": true,
+                    "placeholder": "作業にかかった時間（分）"
+                }
+            ]
+        },
+        {
+            "id": "content",
+            "label": "2. 報告内容",
+            "type": "group",
+            "fields": [
+                {
+                    "key": "content.service_content",
+                    "label": "サービス内容",
+                    "type": "textarea",
+                    "required": true,
+                    "placeholder": "どのような作業を行いましたか？"
+                },
+                {
+                    "key": "content.notes",
+                    "label": "感想・注意点",
+                    "type": "textarea",
+                    "placeholder": "気づいたことや、次回への引継ぎ事項などがあれば入力してください"
+                }
+            ]
+        },
+        {
+            "id": "photos",
+            "label": "4. 写真",
+            "type": "photos",
+            "groups": [
+                {
+                    "key": "photos.before",
+                    "label": "作業前"
+                },
+                {
+                    "key": "photos.after",
+                    "label": "作業後"
+                }
+            ]
+        }
+    ]
+}

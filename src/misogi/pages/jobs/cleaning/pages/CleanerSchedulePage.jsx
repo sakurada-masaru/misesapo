@@ -153,7 +153,7 @@ export default function CleanerSchedulePage() {
       navigate('/');
       return;
     }
-    if (user && user.role !== 'cleaning' && user.role !== 'staff') {
+    if (user && user.role !== 'cleaning' && user.role !== 'staff' && user.role !== 'admin') {
       navigate('/');
       return;
     }

@@ -864,7 +864,33 @@ export default function AdminReportNewPage() {
                             </FormGrid>
                         </CompactCard>
 
-                        {/* 2. 店舗選択（タブ） */}
+                        {/* 2. スケジュールからの選択 */}
+                        {schedules.length > 0 && (
+                            <CompactCard style={{ marginBottom: 16 }}>
+                                <SectionHeader style={{ border: 'none', marginBottom: 12 }}>
+                                    <CardTitle style={{ fontSize: '0.9rem' }}>本日の予定から選択</CardTitle>
+                                </SectionHeader>
+                                <ScheduleList>
+                                    {schedules.map((sch, i) => (
+                                        <ScheduleItem key={i} onClick={() => handleApplySchedule(sch)}>
+                                            <div style={{ fontSize: '0.7rem', opacity: 0.7, marginBottom: 4 }}>
+                                                {sch.start_time || '時間不明'} 〜
+                                            </div>
+                                            <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                                                {sch.target_name || sch.store_name}
+                                            </div>
+                                            {sch.brand_name && (
+                                                <div style={{ fontSize: '0.7rem', color: '#3b82f6', marginTop: 2 }}>
+                                                    {sch.brand_name}
+                                                </div>
+                                            )}
+                                        </ScheduleItem>
+                                    ))}
+                                </ScheduleList>
+                            </CompactCard>
+                        )}
+
+                        {/* 3. 店舗選択（タブ） */}
                         <div style={{ marginBottom: 24 }}>
                             <StoreTabs>
                                 {stores.map((s, i) => (
@@ -918,6 +944,7 @@ export default function AdminReportNewPage() {
                                             { id: 'PEST_INSECT_CONTROL_V1', label: '害虫駆除', icon: 'fa-bug' },
                                             { id: 'PEST_RODENT_CONTROL_V1', label: 'ネズミ駆除', icon: 'fa-paw' },
                                             { id: 'CLEAN_FLOOR_WAX_V1', label: '床ワックス', icon: 'fa-magic' },
+                                            { id: 'SIMPLE_FREE_INPUT_V1', label: '自由入力', icon: 'fa-edit' },
                                         ].map((t, idx) => (
                                             <TemplateSelectButton
                                                 key={t.id}
@@ -968,8 +995,9 @@ export default function AdminReportNewPage() {
                                             </Label>
                                         </div>
                                         <ButtonRow style={{ marginTop: 0 }}>
-                                            <ActionButton $variant="secondary" style={{ flex: 1, height: 48 }} onClick={handleReset}>
+                                            <ActionButton $variant="secondary" style={{ flex: 1, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={handleReset}>
                                                 <i className="fas fa-undo"></i>
+                                                <span>リセット</span>
                                             </ActionButton>
                                             <ActionButton $variant="primary" style={{ flex: 3, height: 48, borderRadius: 14 }} onClick={() => handleHoukokuSubmit(TEMPLATE_CLEANING)} disabled={isSaving}>
                                                 <i className="fas fa-paper-plane" style={{ marginRight: 8 }}></i>
@@ -982,7 +1010,13 @@ export default function AdminReportNewPage() {
                         ) : (
                             <div style={{ marginTop: 20, textAlign: 'center', padding: 60, border: '2px dashed #334155', borderRadius: 24, color: '#475569' }}>
                                 <i className="fas fa-hand-pointer" style={{ fontSize: 32, marginBottom: 16, opacity: 0.3 }}></i>
-                                <div style={{ fontSize: '0.9rem' }}>店舗とサービスを選択してください</div>
+                                <div style={{ fontSize: '0.8rem', lineHeight: 1.6, color: '#94a3b8', maxWidth: 400, margin: '0 auto', textAlign: 'left' }}>
+                                    現在、現場の皆さんの利便性向上を目指すため報告内容の選定を行なっています。<br />
+                                    上記にサービス項目がない場合に限り、実施サービスを選択の『自由入力』を選択し作業報告を行ってください。<br />
+                                    各実施サービスの報告テンプレート内の『備考』に、ご意見ご要望がございましたら、今後の開発の参考にさせていただきます。<br />
+                                    皆様の声でシステムは日々進化しております。<br />
+                                    本日もお仕事ご苦労様です。
+                                </div>
                             </div>
                         )}
                     </MobileStage>
