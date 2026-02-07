@@ -1,0 +1,21 @@
+{
+    "name": "MISOGI 管理システム",
+    "short_name": "MISOGI",
+    "start_url": "/misogi/#/",
+    "scope": "/misogi/",
+    "display": "standalone",
+    "background_color": "#0B1220",
+    "theme_color": "#0B1220",
+    "icons": [
+        {
+            "src": "/misogi/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/misogi/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

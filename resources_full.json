@@ -1,0 +1,887 @@
+{
+    "items": [
+        {
+            "id": "053kp2",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "workers",
+            "path": "/workers",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "08bb5o",
+            "parentId": "xvqv9o",
+            "pathPart": "pdf",
+            "path": "/admin/work-reports/bulk/export/pdf",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "0hd0ut",
+            "parentId": "nyrgpo",
+            "pathPart": "{report_id}",
+            "path": "/reports/{report_id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "0l0v43",
+            "parentId": "0wyuat",
+            "pathPart": "{id}",
+            "path": "/estimates/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "0n8pms",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "attendance",
+            "path": "/attendance",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "0nbc69",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "announcements",
+            "path": "/announcements",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "0wyuat",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "estimates",
+            "path": "/estimates",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "1dfrgp",
+            "parentId": "opo46x",
+            "pathPart": "{task_id}",
+            "path": "/tasks/{task_id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "28vryj",
+            "parentId": "5hdtr1",
+            "pathPart": "bulk",
+            "path": "/admin/work-reports/bulk",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "3b0w8g",
+            "parentId": "h3wqjl",
+            "pathPart": "clock-in",
+            "path": "/staff/nfc/clock-in",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "3jhdzj",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "brands",
+            "path": "/brands",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "4m29ce",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "kartes",
+            "path": "/kartes",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "4pxoac",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "line",
+            "path": "/line",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "4qtpk8ee5m",
+            "path": "/",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "4vapao",
+            "parentId": "j6w6en",
+            "pathPart": "{id}",
+            "path": "/work-report/{id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "PATCH": {}
+            }
+        },
+        {
+            "id": "55y4iu",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "stores",
+            "path": "/stores",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "5alp10",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "training-videos",
+            "path": "/training-videos",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "5hdtr1",
+            "parentId": "bliytx",
+            "pathPart": "work-reports",
+            "path": "/admin/work-reports",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "69dfds",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "wiki",
+            "path": "/wiki",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "6czl91",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "upload-url",
+            "path": "/upload-url",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "6ht4p5",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "schedules",
+            "path": "/schedules",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "6nplyx",
+            "parentId": "ungxp8",
+            "pathPart": "{worker_id}",
+            "path": "/admin/attendance/users/{worker_id}",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "6q0jo4",
+            "parentId": "3jhdzj",
+            "pathPart": "{id}",
+            "path": "/brands/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "6yuyz4",
+            "parentId": "0n8pms",
+            "pathPart": "requests",
+            "path": "/attendance/requests",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "6yyj8c",
+            "parentId": "nc4ulf",
+            "pathPart": "{id}",
+            "path": "/clients/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "8zbvzs",
+            "parentId": "bf5mdv",
+            "pathPart": "{id}",
+            "path": "/todos/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "98okpp",
+            "parentId": "z9rzw8",
+            "pathPart": "report-images",
+            "path": "/staff/report-images",
+            "resourceMethods": {
+                "DELETE": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "9jdjrn",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "analytics",
+            "path": "/analytics",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "9uy2ky",
+            "parentId": "9x4cwa",
+            "pathPart": "summary",
+            "path": "/admin/attendance/monthly/summary",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "9x4cwa",
+            "parentId": "l5dz8t",
+            "pathPart": "monthly",
+            "path": "/admin/attendance/monthly",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "a7fceb",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "google-calendar",
+            "path": "/google-calendar",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "ah58hz",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "services",
+            "path": "/services",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "b6mn7y",
+            "parentId": "0n8pms",
+            "pathPart": "{id}",
+            "path": "/attendance/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "b95jyi",
+            "parentId": "0n8pms",
+            "pathPart": "errors",
+            "path": "/attendance/errors",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "bf5mdv",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "todos",
+            "path": "/todos",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "bliytx",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "admin",
+            "path": "/admin",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "bz7aag",
+            "parentId": "28vryj",
+            "pathPart": "state",
+            "path": "/admin/work-reports/bulk/state",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "d6kif7",
+            "parentId": "iv92r9",
+            "pathPart": "draft",
+            "path": "/cleaning-manual/draft",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "evjjcg",
+            "parentId": "qy0d97",
+            "pathPart": "store-info",
+            "path": "/extract/store-info",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "flb0h4",
+            "parentId": "6ht4p5",
+            "pathPart": "{schedule_id}",
+            "path": "/schedules/{schedule_id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "flfv6q",
+            "parentId": "9x4cwa",
+            "pathPart": "users",
+            "path": "/admin/attendance/monthly/users",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "g6ze48",
+            "parentId": "mrv3lc",
+            "pathPart": "pdf",
+            "path": "/admin/work-reports/{id}/export/pdf",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "gruvh7",
+            "parentId": "hcyigs",
+            "pathPart": "availability",
+            "path": "/workers/me/availability",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "gunvd4",
+            "parentId": "6nplyx",
+            "pathPart": "detail",
+            "path": "/admin/attendance/users/{worker_id}/detail",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "h3wqjl",
+            "parentId": "z9rzw8",
+            "pathPart": "nfc",
+            "path": "/staff/nfc",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "hcyigs",
+            "parentId": "053kp2",
+            "pathPart": "me",
+            "path": "/workers/me",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "i6cd6m",
+            "parentId": "nblyag",
+            "pathPart": "process",
+            "path": "/ai/process",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "irq8ev",
+            "parentId": "053kp2",
+            "pathPart": "{id}",
+            "path": "/workers/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "iv92r9",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "cleaning-manual",
+            "path": "/cleaning-manual",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "j6w6en",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "work-report",
+            "path": "/work-report",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "PATCH": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "jltoof",
+            "parentId": "bliytx",
+            "pathPart": "cognito",
+            "path": "/admin/cognito",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "jxs0ox",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "chat",
+            "path": "/chat",
+            "resourceMethods": {
+                "ANY": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "kh4phm",
+            "parentId": "jltoof",
+            "pathPart": "users",
+            "path": "/admin/cognito/users",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "krhwel",
+            "parentId": "t5rbwx",
+            "pathPart": "{event_id}",
+            "path": "/google-calendar/events/{event_id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "kvjsrd",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "daily-reports",
+            "path": "/daily-reports",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "l5dz8t",
+            "parentId": "bliytx",
+            "pathPart": "attendance",
+            "path": "/admin/attendance",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "m7nz3i",
+            "parentId": "xdfxeq",
+            "pathPart": "approve",
+            "path": "/stores/{store_id}/approve",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "mrv3lc",
+            "parentId": "v8dq0o",
+            "pathPart": "export",
+            "path": "/admin/work-reports/{id}/export",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "n0ashy",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "users",
+            "path": "/users",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "nblyag",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "ai",
+            "path": "/ai",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "nc4ulf",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "clients",
+            "path": "/clients",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "ni8wm8",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "upload",
+            "path": "/upload",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "nyrgpo",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "reports",
+            "path": "/reports",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "o903v5",
+            "parentId": "6yuyz4",
+            "pathPart": "{id}",
+            "path": "/attendance/requests/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "opo46x",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "tasks",
+            "path": "/tasks",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "puyr2x",
+            "parentId": "4pxoac",
+            "pathPart": "pass",
+            "path": "/line/pass",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "qy0d97",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "extract",
+            "path": "/extract",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "t5rbwx",
+            "parentId": "a7fceb",
+            "pathPart": "events",
+            "path": "/google-calendar/events",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "trrsgm",
+            "parentId": "kvjsrd",
+            "pathPart": "{id}",
+            "path": "/daily-reports/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "umfhf9",
+            "parentId": "ah58hz",
+            "pathPart": "{service_id}",
+            "path": "/services/{service_id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "ungxp8",
+            "parentId": "l5dz8t",
+            "pathPart": "users",
+            "path": "/admin/attendance/users",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "v8dq0o",
+            "parentId": "5hdtr1",
+            "pathPart": "{id}",
+            "path": "/admin/work-reports/{id}",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "ve8lc1",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "holidays",
+            "path": "/holidays",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "vqg6gb",
+            "parentId": "4m29ce",
+            "pathPart": "{id}",
+            "path": "/kartes/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "vvjsuv",
+            "parentId": "ve8lc1",
+            "pathPart": "{id}",
+            "path": "/holidays/{id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "wpqf6b",
+            "parentId": "h3wqjl",
+            "pathPart": "tag",
+            "path": "/staff/nfc/tag",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "x1fe4p",
+            "parentId": "4pxoac",
+            "pathPart": "status",
+            "path": "/line/status",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "x1wxpd",
+            "parentId": "a7fceb",
+            "pathPart": "sync",
+            "path": "/google-calendar/sync",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "xdfxeq",
+            "parentId": "55y4iu",
+            "pathPart": "{store_id}",
+            "path": "/stores/{store_id}",
+            "resourceMethods": {
+                "DELETE": {},
+                "GET": {},
+                "OPTIONS": {},
+                "PUT": {}
+            }
+        },
+        {
+            "id": "xvqv9o",
+            "parentId": "28vryj",
+            "pathPart": "export",
+            "path": "/admin/work-reports/bulk/export",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "yl1t6m",
+            "parentId": "z9rzw8",
+            "pathPart": "reports",
+            "path": "/staff/reports",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {},
+                "POST": {}
+            }
+        },
+        {
+            "id": "yvv7gz",
+            "parentId": "l5dz8t",
+            "pathPart": "board",
+            "path": "/admin/attendance/board",
+            "resourceMethods": {
+                "GET": {},
+                "OPTIONS": {}
+            }
+        },
+        {
+            "id": "z6dmgg",
+            "parentId": "v8dq0o",
+            "pathPart": "state",
+            "path": "/admin/work-reports/{id}/state",
+            "resourceMethods": {
+                "OPTIONS": {},
+                "PATCH": {}
+            }
+        },
+        {
+            "id": "z9rzw8",
+            "parentId": "4qtpk8ee5m",
+            "pathPart": "staff",
+            "path": "/staff",
+            "resourceMethods": {
+                "OPTIONS": {}
+            }
+        }
+    ]
+}

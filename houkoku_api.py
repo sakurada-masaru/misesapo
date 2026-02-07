@@ -78,6 +78,7 @@ def sanitize_payload(payload: dict) -> dict:
         overview.pop("work_date", None)
         overview.pop("worker_name", None)
         overview.pop("user_name", None)
+        overview.pop("store_id", None)
         payload["overview"] = overview
 
     # 旧構造: header（後方互換）
@@ -86,6 +87,7 @@ def sanitize_payload(payload: dict) -> dict:
         header.pop("work_date", None)
         header.pop("reporter_name", None)  # 旧名
         header.pop("user_name", None)
+        header.pop("store_id", None)
         payload["header"] = header
 
     return payload
@@ -127,6 +129,19 @@ def handle_create(event, origin):
     if not user: return response(401, {'error': 'Unauthorized'}, origin)
     body = json.loads(event.get('body') or '{}')
     now = datetime.now(JST)
+    
+    # store_id extraction logic
+    body_payload = body.get('payload') or {}
+    store_id = body.get('store_id')
+    if not store_id:
+        overview = body_payload.get('overview')
+        if isinstance(overview, dict):
+            store_id = overview.get('store_id')
+        if not store_id:
+            header = body_payload.get('header')
+            if isinstance(header, dict):
+                store_id = header.get('store_id')
+
     new_id = f"HK-{now.strftime('%Y%m%d')}-{user['user_id'][:8]}-{uuid.uuid4().hex[:8]}"
     item = {
         'id': new_id,
@@ -134,11 +149,14 @@ def handle_create(event, origin):
         'user_name': user.get('name') or user.get('email') or 'Unknown',
         'work_date': body.get('work_date') or now.strftime('%Y-%m-%d'),
         'template_id': body.get('template_id') or 'DEFAULT',
-        'payload': sanitize_payload(body.get('payload') or {}),
+        'payload': sanitize_payload(body_payload),
         'state': 'submitted',
         'created_at': now.isoformat(),
         'updated_at': now.isoformat()
     }
+    if store_id:
+        item['store_id'] = store_id
+        
     table.put_item(Item=item)
     return response(200, {'id': new_id, 'message': '保存しました'}, origin)
 

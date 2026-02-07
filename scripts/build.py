@@ -1081,6 +1081,25 @@ def build_all() -> List[str]:
         cname_dst = PUBLIC / "CNAME"
         shutil.copy(cname_src, cname_dst)
         outputs.append(str(cname_dst))
+
+    # Finally copy PWA files from src/misogi/pwa -> public/misogi
+    pwa_src = SRC / "misogi" / "pwa"
+    if pwa_src.exists():
+        pwa_dst = PUBLIC / "misogi"
+        ensure_dir(pwa_dst)
+        print(f"[build] Copying PWA files from {pwa_src} to {pwa_dst}")
+        for p in pwa_src.rglob("*"):
+            if p.name.startswith(".") or p.is_dir():
+                continue
+            rel = p.relative_to(pwa_src)
+            dst = pwa_dst / rel
+            ensure_dir(dst)
+            try:
+                shutil.copy(p, dst)
+                outputs.append(str(dst))
+            except Exception as e:
+                print(f"[build:warn] Skipping PWA asset {p.name} due to error: {e}")
+
     return outputs
 
 

@@ -1,0 +1,13 @@
+HTTP/2 401 
+date: Sat, 07 Feb 2026 14:24:08 GMT
+content-type: application/json
+content-length: 44
+x-amzn-requestid: e9892b22-67b9-4874-a03c-0285668f266f
+access-control-allow-origin: *
+access-control-allow-headers: Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,Accept,Origin,X-Requested-With
+x-amzn-errortype: UnauthorizedException
+x-amz-apigw-id: YaipZGREtjMEs-g=
+access-control-allow-methods: GET,PUT,POST,PATCH,DELETE,OPTIONS
+access-control-allow-credentials: true
+
+{"message":"The incoming token has expired"}

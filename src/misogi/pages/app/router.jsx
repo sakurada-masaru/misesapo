@@ -36,6 +36,7 @@ import SalesLeadsPage from '../shared/ui/Sales/SalesLeadsPage';
 import SalesLeadNewPage from '../shared/ui/Sales/SalesLeadNewPage';
 import SalesLeadDetailPage from '../shared/ui/Sales/SalesLeadDetailPage';
 import SalesSchedulePage from '../shared/ui/Sales/SalesSchedulePage';
+import OfficeStoreDetailPage from '../jobs/office/stores/OfficeStoreDetailPage';
 import OfficeClientListPage from '../jobs/office/clients/OfficeClientListPage';
 import OfficeClientNewPage from '../jobs/office/clients/OfficeClientNewPage';
 import OfficeClientKartePage from '../jobs/office/clients/OfficeClientKartePage';
@@ -114,6 +115,7 @@ export default function Router() {
       <Route path="/office/clients/list" element={<OfficeClientListPage />} />
       <Route path="/office/clients/new" element={<OfficeClientNewPage />} />
       <Route path="/office/clients/:storeId" element={<OfficeClientKartePage />} />
+      <Route path="/office/stores/:storeId" element={<OfficeStoreDetailPage />} />
       <Route path="/jobs/cleaning/schedule" element={<CleanerSchedulePage />} />
       <Route path="/jobs/cleaning/clients/list" element={<CleanerClientListPage />} />
       <Route path="/jobs/cleaning/clients/:storeId" element={<CleanerClientKartePage />} />
