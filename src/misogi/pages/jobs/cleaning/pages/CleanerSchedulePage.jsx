@@ -85,37 +85,164 @@ function blockDisplayForDay(block, dateISO) {
   return { start_min, end_min };
 }
 
-/** 月間カレンダー（日付クリックでその日に移動） */
-function MonthSimple({ dateISO, setDateISO }) {
-  const d = new Date(dateISO + 'T00:00:00');
-  const year = d.getFullYear();
-  const month = d.getMonth();
-  const first = new Date(year, month, 1);
-  const startDay = first.getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+/** 月間カレンダー：事前申告・シフト管理ツール */
+function MonthSimple({ dateISO, setDateISO, appointments, blocks, workerId, onToggleFullDayOff }) {
+  const d = dayjs(dateISO);
+  const year = d.year();
+  const month = d.month();
+  const daysInMonth = d.daysInMonth();
+  const firstDay = d.startOf('month').day();
+
   const cells = [];
-  for (let i = 0; i < startDay; i++) cells.push(null);
+  for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let day = 1; day <= daysInMonth; day++) cells.push(day);
-  function selectDay(day) {
-    setDateISO(`${year}-${pad2(month + 1)}-${pad2(day)}`);
-  }
+
   return (
-    <section className="monthView">
-      <div className="monthTitle">{year}/{month + 1}</div>
-      <div className="monthGrid">
-        {['日', '月', '火', '水', '木', '金', '土'].map((w) => (
-          <div key={w} className="monthHead">{w}</div>
+    <section className="monthPreReport" style={{ padding: '0 8px 32px' }}>
+      <div style={{ marginBottom: 20, fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 600 }}>
+        📆 【来月の稼働予定：事前申告】<br />
+        <span style={{ fontSize: '1.2rem', color: 'var(--text)' }}>{year}年 {month + 1}月</span>
+      </div>
+
+      <div className="monthGrid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(7, 1fr)',
+        gap: '4px',
+        background: 'var(--card-border)',
+        padding: '1px',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        border: '1px solid var(--card-border)'
+      }}>
+        {['日', '月', '火', '水', '木', '金', '土'].map((w, i) => (
+          <div key={w} style={{
+            background: 'var(--panel)',
+            padding: '8px 0',
+            textAlign: 'center',
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+            color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : 'var(--muted)'
+          }}>{w}</div>
         ))}
         {cells.map((day, idx) => {
-          if (!day) return <div key={idx} className="monthCell blank" />;
-          const iso = `${year}-${pad2(month + 1)}-${pad2(day)}`;
-          const isActive = iso === dateISO;
+          if (!day) return <div key={idx} style={{ background: 'var(--bg)', opacity: 0.1 }} />;
+
+          const currentIso = dayjs(`${year}-${month + 1}-${day}`, 'YYYY-M-D').format('YYYY-MM-DD');
+          const isSelected = currentIso === dateISO;
+          const dayItems = appointments.filter(a => a.date === currentIso);
+          const dayBlocks = blocks.filter(b => {
+            const display = blockDisplayForDay(b, currentIso);
+            return !!display;
+          });
+
+          const isFullDayOff = dayBlocks.some(b => {
+            const d = blockDisplayForDay(b, currentIso);
+            return d && d.start_min <= 5 && d.end_min >= 1435; // バッファを持たせる
+          });
+
           return (
-            <button key={idx} type="button" className={`monthCell ${isActive ? 'active' : ''}`} onClick={() => selectDay(day)}>
-              {day}
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setDateISO(currentIso)}
+              style={{
+                aspectRatio: '1/1.2',
+                background: isSelected ? 'rgba(59, 130, 246, 0.1)' : 'var(--panel)',
+                border: 'none',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                padding: '8px 4px',
+                cursor: 'pointer',
+                outline: isSelected ? '2px solid #3b82f6' : 'none',
+                zIndex: isSelected ? 1 : 0
+              }}
+            >
+              <div style={{
+                fontSize: '0.9rem',
+                fontWeight: isSelected ? '800' : '500',
+                color: isFullDayOff ? '#ef4444' : 'var(--text)',
+                marginBottom: 4
+              }}>{day}</div>
+
+              {isFullDayOff ? (
+                <div style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 'bold' }}>休み</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%', alignItems: 'center' }}>
+                  {dayItems.length > 0 && (
+                    <div style={{
+                      width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6'
+                    }} title={`${dayItems.length}件の予定`} />
+                  )}
+                  {dayBlocks.length > 0 && !isFullDayOff && (
+                    <div style={{
+                      width: '12px', height: '2px', background: '#f59e0b', borderRadius: '1px'
+                    }} title="一部ブロックあり" />
+                  )}
+                </div>
+              )}
             </button>
           );
         })}
+      </div>
+
+      <div style={{ marginTop: 24, background: 'var(--panel)', borderRadius: '16px', padding: '20px', border: '1px solid var(--line)' }}>
+        <div style={{ fontWeight: 600, marginBottom: 12 }}>{dayjs(dateISO).format('M月D日')} の申告</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <button
+            type="button"
+            className="btn"
+            style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              color: '#ef4444',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              fontSize: '0.8rem'
+            }}
+            onClick={() => onToggleFullDayOff(dateISO, 'full')}
+          >
+            ❌ 終日休み
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              color: '#f59e0b',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+              fontSize: '0.8rem'
+            }}
+            onClick={() => onToggleFullDayOff(dateISO, 'am')}
+          >
+            🌅 午前休み
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              color: '#3b82f6',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              fontSize: '0.8rem'
+            }}
+            onClick={() => onToggleFullDayOff(dateISO, 'pm')}
+          >
+            🌇 午後休み
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{ fontSize: '0.8rem' }}
+            onClick={() => { setView('day'); }}
+          >
+            🕓 詳細設定
+          </button>
+        </div>
+        <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: 12, textAlign: 'center' }}>
+          ※カレンダーで日付を選んで「休み」を登録してください。<br />
+          ここで登録した休みは管理者のスケジュール表に自動反映されます。
+        </p>
       </div>
     </section>
   );
@@ -286,7 +413,7 @@ export default function CleanerSchedulePage() {
 
       const res = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${String(token).trim()}`,
         },
       });
 
@@ -399,7 +526,7 @@ export default function CleanerSchedulePage() {
 
       const res = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${String(token).trim()}`,
         },
       });
 
@@ -505,11 +632,12 @@ export default function CleanerSchedulePage() {
     document.addEventListener('touchend', handleEnd);
   }, [karteDockHeight]);
 
+
   // ブロック作成モーダルを開く
-  const openBlockModal = useCallback((startMin) => {
+  const openBlockModal = useCallback((startMin, endMin) => {
     const dayEnd = 24 * 60;
     const start = startMin ?? 9 * 60;
-    const end = Math.min(start + 60, dayEnd);
+    const end = endMin ?? Math.min(start + 60, dayEnd);
     setBlockConflictError(null);
     setBlockModalStartAt(`${dateISO}T${minutesToHHMM(start)}`);
     setBlockModalEndAt(`${dateISO}T${minutesToHHMM(end)}`);
@@ -569,7 +697,7 @@ export default function CleanerSchedulePage() {
       const res = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${String(token).trim()}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(newBlock),
@@ -599,6 +727,48 @@ export default function CleanerSchedulePage() {
     }
   }, [workerId, appointments, blocks, user?.name, closeBlockModal, getToken, loadBlocks]);
 
+  // 休み申告ハンドラー（月間から1タップ用）
+  const handleToggleFullDayOff = useCallback(async (iso, mode = 'full') => {
+    if (!workerId) return;
+
+    let start_at = `${iso}T00:00:00`;
+    let end_at = `${iso}T23:59:00`;
+    let label = '終日休み';
+
+    if (mode === 'am') {
+      end_at = `${iso}T12:00:00`;
+      label = '午前休み';
+    } else if (mode === 'pm') {
+      start_at = `${iso}T12:00:00`;
+      label = '午後休み';
+    }
+
+    const isAlreadyOff = blocks.some(b => {
+      if (b.user_id != null && String(b.user_id) !== String(workerId)) return false;
+      const d = blockDisplayForDay(b, iso);
+      if (!d) return false;
+      // 重複チェック（簡易的：対象時間の50%以上が既に埋まっていたら警告）
+      const blockStart = dayjs(start_at).hour() * 60 + dayjs(start_at).minute();
+      const blockEnd = dayjs(end_at).hour() * 60 + dayjs(end_at).minute();
+      return d.start_min <= blockStart + 5 && d.end_min >= blockEnd - 5;
+    });
+
+    if (isAlreadyOff) {
+      alert(`既に${label}時間帯が含まれるブロックが存在します。`);
+      return;
+    }
+
+    if (!window.confirm(`${dayjs(iso).format('M/D')} を${label}として登録しますか？`)) return;
+
+    await createBlock({
+      start_at,
+      end_at,
+      reason_code: 'private',
+      reason_note: `事前申告：${label}`
+    });
+    alert('登録しました');
+  }, [workerId, blocks, createBlock]);
+
   // ブロック削除
   const deleteBlock = useCallback(async (blockId) => {
     if (!window.confirm('このブロック（クローズ）を削除しますか？')) return;
@@ -610,7 +780,7 @@ export default function CleanerSchedulePage() {
       const res = await fetch(url, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${String(token).trim()}`,
         },
       });
 
@@ -637,46 +807,55 @@ export default function CleanerSchedulePage() {
     setDateISO(dayjs(dateISO).add(delta, 'month').format('YYYY-MM-DD'));
   }, [dateISO]);
 
-  // タイムライン用のアイテムを生成
+  // タイムライン用のアイテムを生成 (ACに則り、Gapを自動生成)
   const timelineItems = useMemo(() => {
-    const list = [];
+    const rawEvents = [];
 
-    // スケジュールを追加
+    // 1. スケジュールを追加
     for (const a of appointments) {
-      list.push({ type: 'appointment', data: a, start_min: a.start_min, end_min: a.end_min });
+      rawEvents.push({ type: 'appointment', data: a, start_min: a.start_min, end_min: a.end_min });
     }
 
-    // ブロックを追加
+    // 2. ブロックを追加
     for (const b of blocks) {
-      // 数値・文字列の混在を考慮して String() で比較
       if (b.user_id != null && String(b.user_id) !== String(workerId)) continue;
       const display = blockDisplayForDay(b, dateISO);
       if (display) {
-        list.push({ type: 'block', block: b, start_min: display.start_min, end_min: display.end_min });
+        rawEvents.push({ type: 'block', block: b, start_min: display.start_min, end_min: display.end_min });
       }
     }
 
-    list.sort((x, y) => x.start_min - y.start_min);
-    return list;
+    // 開始順にソート
+    rawEvents.sort((x, y) => x.start_min - y.start_min);
+
+    // 3. 隙間 (Gap) を計算して挿入
+    const normalized = [];
+    let currentMin = 0; // 0:00
+
+    rawEvents.forEach((event, idx) => {
+      // 15分以上の隙間があればGapを挿入
+      if (event.start_min > currentMin + 15) {
+        normalized.push({
+          type: 'gap',
+          start_min: currentMin,
+          end_min: event.start_min
+        });
+      }
+      normalized.push(event);
+      currentMin = Math.max(currentMin, event.end_min);
+    });
+
+    // 24時までの残りの隙間
+    if (currentMin < 24 * 60 - 15) {
+      normalized.push({
+        type: 'gap',
+        start_min: currentMin,
+        end_min: 24 * 60 - 1
+      });
+    }
+
+    return normalized;
   }, [appointments, blocks, workerId, dateISO]);
-
-  // 時間スロットを生成（0:00〜24:00、1時間間隔）
-  const timeSlots = useMemo(() => {
-    const slots = [];
-    for (let t = 0; t <= 24 * 60; t += 60) {
-      slots.push(t);
-    }
-    return slots;
-  }, []);
-
-  // スロットごとのアイテムをマッピング
-  const slotsWithItems = useMemo(() => {
-    const byStart = new Map();
-    for (const item of timelineItems) {
-      byStart.set(item.start_min, (byStart.get(item.start_min) ?? []).concat(item));
-    }
-    return timeSlots.map((t) => ({ t, items: byStart.get(t) ?? [] }));
-  }, [timelineItems, timeSlots]);
 
   // 週間表示用：その週の7日分の日付と、日付ごとの予定
   const weekDays = useMemo(() => {
@@ -839,139 +1018,179 @@ export default function CleanerSchedulePage() {
 
         <main className="main">
           {view === 'month' && (
-            <MonthSimple dateISO={dateISO} setDateISO={setDateISO} />
+            <MonthSimple
+              dateISO={dateISO}
+              setDateISO={setDateISO}
+              appointments={appointments}
+              blocks={blocks}
+              workerId={workerId}
+              onToggleFullDayOff={handleToggleFullDayOff}
+            />
           )}
           {view === 'week' && (
-            <section className="weekView" style={{ padding: '0 8px 24px' }}>
-              <div className="weekViewGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', minWidth: 0 }}>
-                {weekDaysWithItems.map(({ dayIso, items }) => (
-                  <div key={dayIso} className="weekViewDay" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '8px', minHeight: '120px' }}>
-                    <div className="weekViewDayHead" style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '6px', fontWeight: 600 }}>
-                      {dayjs(dayIso).format('M/D')}({['日', '月', '火', '水', '木', '金', '土'][dayjs(dayIso).day()]})
+            <section className="weekSummary" style={{ padding: '0 8px 32px' }}>
+              <div style={{ marginBottom: 16, fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 600 }}>
+                📅 【週間：予定の俯瞰】<br />
+                <span style={{ fontSize: '1.2rem', color: 'var(--text)' }}>今週の負荷状況</span>
+              </div>
+              <div className="weekList" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {weekDaysWithItems.map(({ dayIso, items }) => {
+                  const jobCount = items.filter(i => i.type === 'appointment').length;
+                  const blockCount = items.filter(i => i.type === 'block').length;
+                  const isToday = dayIso === dayjs().format('YYYY-MM-DD');
+
+                  return (
+                    <div
+                      key={dayIso}
+                      onClick={() => { setDateISO(dayIso); setView('day'); }}
+                      style={{
+                        background: isToday ? 'rgba(59, 130, 246, 0.05)' : 'var(--card-bg)',
+                        border: isToday ? '2px solid #3b82f6' : '1px solid var(--card-border)',
+                        borderRadius: '16px',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <div style={{ width: '48px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>{['日', '月', '火', '水', '木', '金', '土'][dayjs(dayIso).day()]}</div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{dayjs(dayIso).format('D')}</div>
+                        </div>
+                        <div>
+                          {jobCount > 0 ? (
+                            <div style={{ fontWeight: 600, fontSize: '1rem' }}>{jobCount} 件の現場</div>
+                          ) : (
+                            <div style={{ opacity: 0.5, fontSize: '1rem' }}>予定なし</div>
+                          )}
+                          {blockCount > 0 && <div style={{ fontSize: '0.8rem', color: '#3b82f6' }}>{blockCount} 件のブロック済</div>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {Array.from({ length: jobCount }).map((_, i) => (
+                          <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}></div>
+                        ))}
+                        {jobCount === 0 && <i className="fas fa-chevron-right" style={{ opacity: 0.2 }}></i>}
+                      </div>
                     </div>
-                    <div className="weekViewDayBody" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {items.length === 0 ? (
-                        <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>予定なし</span>
-                      ) : (
-                        items.map((item) => {
-                          if (item.type === 'block') {
-                            const { block, start_min, end_min } = item;
-                            return (
-                              <div key={block.id} className="spAppt scheduleCard blockCard" style={{ padding: '6px 8px', fontSize: '0.8rem', position: 'relative' }}>
-                                <div className="spApptName">🔒 クローズ</div>
-                                <div className="spApptMeta" style={{ fontSize: '0.7rem' }}>{minutesToHHMM(start_min)}–{minutesToHHMM(end_min)}</div>
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }}
-                                  style={{ position: 'absolute', top: 4, right: 4, background: 'transparent', border: 'none', color: 'rgba(239, 68, 68, 0.7)', padding: 4, cursor: 'pointer' }}
-                                  title="削除"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            );
-                          }
-                          const a = item.data;
-                          return (
-                            <button key={a.id} type="button" className={`spAppt scheduleCard ${selectedAppt?.id === a.id ? 'active' : ''}`} style={{ padding: '6px 8px', fontSize: '0.8rem', textAlign: 'left', cursor: 'pointer', border: '1px solid var(--line)', borderRadius: 12 }} onClick={() => setSelectedAppt(a)}>
-                              <div className="spApptName" style={{ fontWeight: 600 }}>{a.target_name}</div>
-                              <div className="spApptMeta" style={{ fontSize: '0.7rem' }}>{a.work_type} {minutesToHHMM(a.start_min)}–{minutesToHHMM(a.end_min)}</div>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
           {view === 'day' && (
-            <section className="timelineSP">
-              <div className="spList">
-                <div className="spHint">
-                  <span className="muted">{isoToDateLabel(dateISO)}</span>
+            <section className="agendaView">
+              <div className="agendaList" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px 8px' }}>
+                <div style={{ marginBottom: 8, fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 600 }}>
+                  📅 【日次：今日の予定】<br />
+                  <span style={{ fontSize: '1.2rem', color: 'var(--text)' }}>{dayjs(dateISO).format('M/D')}({['日', '月', '火', '水', '木', '金', '土'][dayjs(dateISO).day()]})</span>
                 </div>
-                {slotsWithItems.map((slot) => (
-                  <div key={slot.t} className="spSlot">
-                    <div className="spTime">{minutesToHHMM(slot.t)}</div>
-                    <div className="spSlotBody">
-                      {slot.items.length === 0 ? (
-                        <button
-                          type="button"
-                          className="spEmpty"
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            openBlockModal(slot.t);
-                          }}
-                          onClick={() => {
-                            openBlockModal(slot.t);
-                          }}
-                          style={{ touchAction: 'manipulation' }}
-                        >
-                          空き（タップでブロック作成）
-                        </button>
-                      ) : (
-                        slot.items.map((item) => {
-                          if (item.type === 'block') {
-                            const { block, start_min, end_min } = item;
-                            return (
-                              <div key={block.id} className="spAppt scheduleCard blockCard" style={{ position: 'relative' }}>
-                                <div className="spApptRow">
-                                  <div className="spApptMain">
-                                    <div className="spApptName">🔒 クローズ</div>
-                                    <div className="spApptMeta">
-                                      {block.reason_code === 'sleep' ? '睡眠' :
-                                        block.reason_code === 'move' ? '移動' :
-                                          block.reason_code === 'private' ? '私用' : 'その他'}
-                                    </div>
-                                  </div>
-                                  <div className="spApptTime">{minutesToHHMM(start_min)}–{minutesToHHMM(end_min)}</div>
-                                </div>
-                                <button
-                                  type="button"
-                                  className="block-delete-btn"
-                                  onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }}
-                                  style={{
-                                    position: 'absolute',
-                                    top: '8px',
-                                    right: '8px',
-                                    background: 'rgba(239, 68, 68, 0.1)',
-                                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                                    color: '#ef4444',
-                                    borderRadius: '50%',
-                                    width: '24px',
-                                    height: '24px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '14px',
-                                    cursor: 'pointer'
-                                  }}
-                                  title="削除"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            );
-                          }
-                          const a = item.data;
-                          return (
-                            <button key={a.id} type="button" className={`spAppt scheduleCard ${selectedAppt?.id === a.id ? 'active is-linked' : ''}`} style={{ width: '100%', textAlign: 'left', cursor: 'pointer' }} onClick={() => setSelectedAppt(a)}>
-                              <div className="spApptRow">
-                                <div className="spApptMain">
-                                  <div className="spApptName">{a.target_name}</div>
-                                  <div className="spApptMeta">{a.work_type}</div>
-                                </div>
-                                <div className="spApptTime">{minutesToHHMM(a.start_min)}–{minutesToHHMM(a.end_min)}</div>
-                              </div>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
+
+                {timelineItems.length > 0 ? (
+                  timelineItems.map((item, idx) => {
+                    if (item.type === 'gap') {
+                      const durationH = Math.floor((item.end_min - item.start_min) / 60);
+                      const durationM = (item.end_min - item.start_min) % 60;
+                      return (
+                        <div key={`gap-${idx}`} className="agendaGap" style={{ padding: '8px 4px', borderLeft: '2px dashed var(--line)', marginLeft: '12px' }}>
+                          <button
+                            type="button"
+                            className="quickBlockBtn"
+                            onClick={() => openBlockModal(item.start_min, item.end_min)}
+                            style={{
+                              background: 'rgba(255,255,255,0.03)',
+                              border: '1px solid var(--line)',
+                              borderRadius: '8px',
+                              padding: '8px 12px',
+                              fontSize: '0.8rem',
+                              color: 'var(--muted)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <i className="fas fa-plus-circle" style={{ fontSize: '1rem', color: '#3b82f6' }}></i>
+                            <span>空き（{durationH > 0 ? `${durationH}時間` : ''}${durationM > 0 ? `${durationM}分` : ''}）をブロック</span>
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    if (item.type === 'block') {
+                      const { block, start_min, end_min } = item;
+                      return (
+                        <div key={block.id} className="agendaItem blockCard" style={{ display: 'flex', gap: '12px', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px', padding: '16px', position: 'relative' }}>
+                          <div className="agendaTime" style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#3b82f6', width: '60px', flexShrink: 0 }}>
+                            {minutesToHHMM(start_min)}
+                          </div>
+                          <div className="agendaBody" style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 600, fontSize: '1rem', color: '#3b82f6' }}>
+                              🚫 {
+                                block.reason_code === 'sleep' ? '睡眠' :
+                                  block.reason_code === 'move' ? '移動' :
+                                    block.reason_code === 'private' ? '私用' : 'その他'
+                              }
+                            </div>
+                            <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: 4 }}>
+                              {minutesToHHMM(start_min)} – {minutesToHHMM(end_min)}
+                              {block.reason_note && ` | ${block.reason_note}`}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); deleteBlock(block.id); }}
+                            style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer' }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    const a = item.data;
+                    return (
+                      <div
+                        key={a.id}
+                        className={`agendaItem scheduleCard ${selectedAppt?.id === a.id ? 'active' : ''}`}
+                        onClick={() => setSelectedAppt(a)}
+                        style={{
+                          display: 'flex', gap: '12px', background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: '16px', padding: '20px', cursor: 'pointer',
+                          boxShadow: selectedAppt?.id === a.id ? '0 0 0 2px #3b82f6, 0 8px 16px rgba(0,0,0,0.1)' : 'var(--shadow)'
+                        }}
+                      >
+                        <div className="agendaTime" style={{ fontWeight: 'bold', fontSize: '1rem', width: '60px', flexShrink: 0, color: 'var(--text)' }}>
+                          {minutesToHHMM(a.start_min)}
+                        </div>
+                        <div className="agendaBody" style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: 4 }}>{a.target_name}</div>
+                          <div style={{ fontSize: '0.85rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px' }}>{a.work_type}</span>
+                            <span>{minutesToHHMM(a.start_min)} – {minutesToHHMM(a.end_min)}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <i className="fas fa-chevron-right" style={{ opacity: 0.3 }}></i>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--muted)' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: 16 }}>🍃</div>
+                    <p>本日の予定はありません。</p>
+                    <button
+                      type="button"
+                      className="btn btnPrimary"
+                      onClick={() => openBlockModal(9 * 60)}
+                      style={{ marginTop: 16 }}
+                    >
+                      全休・休みとして登録
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
             </section>
           )}
@@ -1057,6 +1276,23 @@ export default function CleanerSchedulePage() {
           )}
         </main>
       </div>
+      {user?.role === 'admin' && (
+        <div style={{
+          margin: '20px',
+          padding: '16px',
+          background: 'rgba(0,0,0,0.5)',
+          borderRadius: '12px',
+          fontSize: '0.8rem',
+          color: '#aaa',
+          border: '1px dashed #444'
+        }}>
+          <div>🛠 Admin Debug Info (Only visible to admin)</div>
+          <div>Login Email: {user.email}</div>
+          <div>Detected Worker ID: {workerId || 'NONE'}</div>
+          <div>Appointments: {appointments.length} items</div>
+          <div>Blocks: {blocks.length} items</div>
+        </div>
+      )}
     </div>
   );
 }

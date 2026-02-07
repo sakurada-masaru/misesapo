@@ -2106,7 +2106,15 @@ export default function AdminScheduleTimelinePage() {
       const token = getToken();
       const base = API_BASE.replace(/\/$/, '');
       const scheduleId = selectedAppt.schedule_id || selectedAppt.id;
+      const cleanerIds = selectedAppt.cleaner_ids || (selectedAppt.cleaner_id ? [selectedAppt.cleaner_id] : []);
 
+      if (cleanerIds.length === 0) {
+        alert('清掃員を1人以上選択してください');
+        setIsSavingKarte(false);
+        return;
+      }
+
+      // 最初の清掃員で既存のスケジュールを更新
       const payload = {
         date: selectedAppt.date,
         scheduled_date: selectedAppt.date,
@@ -2117,11 +2125,14 @@ export default function AdminScheduleTimelinePage() {
         work_type: selectedAppt.work_type,
         target_name: selectedAppt.target_name,
         store_id: selectedAppt.store_id || null,
-        worker_id: selectedAppt.cleaner_id || null,
-        assigned_to: selectedAppt.cleaner_id || null,
+        worker_id: cleanerIds[0],
+        assigned_to: cleanerIds[0],
+        worker_ids: cleanerIds,
         status: selectedAppt.status || 'booked',
         description: selectedAppt.memo || selectedAppt.notes || '',
       };
+
+      console.log('[AdminScheduleTimeline] Saving update via KarteDock:', payload);
 
       const res = await fetch(`${base}/schedules/${scheduleId}`, {
         method: 'PUT',
@@ -2133,6 +2144,24 @@ export default function AdminScheduleTimelinePage() {
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      // 2番目以降の清掃員がいる場合、新規作成（AppointmentModal.saveModalのロジックと同様）
+      if (cleanerIds.length > 1) {
+        for (let i = 1; i < cleanerIds.length; i++) {
+          const extraPayload = { ...payload, worker_id: cleanerIds[i], assigned_to: cleanerIds[i] };
+          await fetch(`${base}/schedules`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(extraPayload),
+          });
+        }
+      }
+
+      // 最新状態を再読み込み
+      await loadSchedulesFromAPI(selectedAppt.date);
 
       setIsEditingSelectedAppt(false);
       setOriginalSelectedAppt(null);
@@ -2693,6 +2722,67 @@ export default function AdminScheduleTimelinePage() {
                           {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </label>
+                      <div className="field" style={{ gridColumn: 'span 2' }}>
+                        <span style={{ fontSize: '11px' }}>担当作業員 (追加・変更)</span>
+                        <div style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                          padding: '12px',
+                          background: 'rgba(255,255,255,0.03)',
+                          borderRadius: '12px',
+                          border: '1px solid var(--line)',
+                          maxHeight: '140px',
+                          overflowY: 'auto'
+                        }}>
+                          {cleanersWithUnit.map(c => {
+                            const currentIds = selectedAppt.cleaner_ids || (selectedAppt.cleaner_id ? [selectedAppt.cleaner_id] : []);
+                            const isSelected = currentIds.some(id => String(id) === String(c.id));
+                            return (
+                              <label key={c.id} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '4px 10px',
+                                background: isSelected ? 'rgba(100,140,255,0.1)' : 'transparent',
+                                borderRadius: '16px',
+                                border: `1px solid ${isSelected ? 'rgba(100,140,255,0.3)' : 'var(--line)'}`,
+                                cursor: 'pointer',
+                                fontSize: '0.85em',
+                                color: isSelected ? '#a0c0ff' : 'var(--text)',
+                                transition: 'all 0.2s'
+                              }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={(e) => {
+                                    const newIds = e.target.checked
+                                      ? [...currentIds.map(String), String(c.id)]
+                                      : currentIds.map(String).filter(id => id !== String(c.id));
+
+                                    if (newIds.length === 0) {
+                                      alert('少なくとも1人の作業員を選択してください');
+                                      return;
+                                    }
+
+                                    const updated = {
+                                      ...selectedAppt,
+                                      cleaner_id: newIds[0],
+                                      cleaner_ids: newIds
+                                    };
+                                    setSelectedAppt(updated);
+                                    setAppointments(prev => prev.map(a => a.id === updated.id ? updated : a));
+                                  }}
+                                />
+                                {c.name}
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '4px' }}>
+                          ※複数選択して保存すると、人数分の割り当てが新規作成されます。
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
