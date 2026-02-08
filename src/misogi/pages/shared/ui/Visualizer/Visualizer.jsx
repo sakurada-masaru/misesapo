@@ -100,6 +100,7 @@ export default function Visualizer({
     <div
       ref={containerRef}
       className={`visualizer-container${active ? ' active' : ''} viz-mode-${mode}${mode === 'log' ? ' log-freeze' : ''} ${className}`.trim()}
+      id="misogi-visualizer"
       data-mode={mode}
       role="img"
       aria-label="M.I.S.O.G.I ビジュアライザー"
@@ -109,14 +110,14 @@ export default function Visualizer({
       style={Object.keys(containerStyle).length ? containerStyle : undefined}
     >
       <div className="circle-text-container viz-ring">
-          <svg viewBox="0 0 200 200" className="circle-svg" width={200} height={200}>
-            <path id={pathId} d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
-            <text>
-              <textPath href={`#${pathId}`}>
-                Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
-              </textPath>
-            </text>
-          </svg>
+        <svg viewBox="0 0 200 200" className="circle-svg" width={200} height={200}>
+          <path id={pathId} d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+          <text>
+            <textPath href={`#${pathId}`}>
+              Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
+            </textPath>
+          </text>
+        </svg>
       </div>
       <div className="core-circle" />
       {(showRing || mode === 'status') && (

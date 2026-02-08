@@ -5,7 +5,7 @@
  * @returns {{ user: object | null, isAuthenticated: boolean, isLoading: boolean, getToken: fn, login: fn, logout: fn }}
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getCognitoIdToken, getCognitoUser } from './cognitoStorage';
 
 /** JWT の exp（秒）を読む。無効なら null */
@@ -83,8 +83,8 @@ export function useAuth() {
     }
   }, []);
 
-  const authz = (() => {
-    if (!user) return { workerId: null, isDev: false, isAdmin: false, allowedTemplateIds: [] };
+  const authz = useMemo(() => {
+    if (!user) return { workerId: null, isDev: false, isAdmin: false, dept: null, allowedTemplateIds: [] };
 
     const workerId = user.worker_id || user.workerId || user.id || 'unknown';
     const roles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
@@ -116,7 +116,7 @@ export function useAuth() {
     }
 
     return { workerId, isDev, isAdmin, dept, allowedTemplateIds };
-  })();
+  }, [user]);
 
   return {
     user,

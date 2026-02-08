@@ -20,6 +20,7 @@ const MENU_LINKS = [
   { to: '/admin', label: '管理 TOP', dept: 'ADMIN' },
   { to: '/admin/hr/attendance', label: 'HR Attendance', dept: 'ADMIN' },
   { to: '/sales/store/demo', label: '営業カルテ（店舗）', dept: 'SALES' },
+  { to: '/flow-guide', label: '業務フロー', dept: 'ANY' },
 ];
 
 export default function HamburgerMenu() {

@@ -659,8 +659,11 @@ export default function CleanerSchedulePage() {
       return;
     }
 
+    const uid = String(workerId);
     const newBlock = {
-      user_id: workerId,
+      user_id: uid,
+      worker_id: uid,
+      assigned_to: uid,
       start_at: payload.start_at,
       end_at: payload.end_at,
       type: 'personal_close',

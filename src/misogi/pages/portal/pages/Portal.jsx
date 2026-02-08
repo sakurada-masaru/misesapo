@@ -55,23 +55,35 @@ export default function Portal() {
     const { isAdmin, isDev } = authz || {};
     const token = getToken();
 
-    // 不要な 403 エラーを防ぐため、権限がない場合は設定取得をスキップ
-    if (!token || (!isAdmin && !isDev)) {
-      setNonOperatingDates([]);
+    // ログインしていない、またはトークンがない場合は取得しない（403回避）
+    // また、一般ユーザー（清掃員など）は設定取得の権限がないためスキップ
+    if (!isAuthenticated || !token || (!isAdmin && !isDev)) {
+      // すでに空なら何もしない（無限ループ防止）
+      setNonOperatingDates(prev => prev.length === 0 ? prev : []);
       return;
     }
 
-    const headers = { 'Authorization': `Bearer ${token}` };
+    const headers = { 'Authorization': `Bearer ${String(token).trim()}` };
     const base = API_BASE.replace(/\/$/, '');
 
     fetch(`${base}/settings/portal-operating-days`, {
       cache: 'no-store',
       headers
     })
-      .then((res) => (res.ok ? res.json() : { non_operating_dates: [] }))
-      .then((data) => setNonOperatingDates(Array.isArray(data.non_operating_dates) ? data.non_operating_dates : []))
-      .catch(() => setNonOperatingDates([]));
-  }, [isLoading, getToken]);
+      .then((res) => {
+        // 403 Forbidden の場合は、単に空として扱う（管理権限不足など）
+        if (res.status === 403) return { non_operating_dates: [] };
+        return res.ok ? res.json() : { non_operating_dates: [] };
+      })
+      .then((data) => {
+        const nextDates = Array.isArray(data.non_operating_dates) ? data.non_operating_dates : [];
+        // 値が同じなら更新しない
+        setNonOperatingDates(prev => JSON.stringify(prev) === JSON.stringify(nextDates) ? prev : nextDates);
+      })
+      .catch(() => {
+        setNonOperatingDates(prev => prev.length === 0 ? prev : []);
+      });
+  }, [isLoading, isAuthenticated, getToken, authz]);
 
   const today = typeof window !== 'undefined' ? new Date().toISOString().slice(0, 10) : '';
   const isNonOperatingToday = today && nonOperatingDates.includes(today);

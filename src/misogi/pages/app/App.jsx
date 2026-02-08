@@ -34,6 +34,7 @@ function isFullscreenPath(pathname) {
   if (pathname.startsWith('/office/work-reports/')) return true;
   if (pathname.startsWith('/sales/work-reports/')) return true;
   if (pathname.startsWith('/registration/onboarding/')) return true;
+  if (pathname === '/flow-guide') return true;
   return false;
 }
 

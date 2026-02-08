@@ -44,6 +44,7 @@ import CleanerSchedulePage from '../jobs/cleaning/pages/CleanerSchedulePage';
 import CleanerClientListPage from '../jobs/cleaning/pages/CleanerClientListPage';
 import CleanerClientKartePage from '../jobs/cleaning/pages/CleanerClientKartePage';
 import CustomerOnboardingPage from '../registration/CustomerOnboardingPage';
+import FlowGuidePage from '../FlowGuidePage';
 
 /** import.meta.glob で jobs 配下の entrance/Page.jsx を動的解決 */
 const pageModules = import.meta.glob('../jobs/*/entrance/Page.jsx');
@@ -120,6 +121,7 @@ export default function Router() {
       <Route path="/jobs/cleaning/clients/list" element={<CleanerClientListPage />} />
       <Route path="/jobs/cleaning/clients/:storeId" element={<CleanerClientKartePage />} />
       <Route path="/registration/onboarding/:storeId" element={<CustomerOnboardingPage />} />
+      <Route path="/flow-guide" element={<FlowGuidePage />} />
     </Routes>
   );
 }

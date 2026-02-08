@@ -1501,17 +1501,23 @@ export default function AdminScheduleTimelinePage() {
     const headers = token ? { 'Authorization': `Bearer ${String(token).trim()}` } : {};
 
     // 予定の取得のみを行う（休み機能は一時停止）
-    return fetch(schedulesUrl, { headers, cache: 'no-store' })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        const list = Array.isArray(data) ? data : (data?.items || []);
-        const converted = list.map(convertScheduleToAppointment).map(ensureContactFields);
-        if (converted.length > 0) {
-          setAppointments(converted);
-        }
+    const blocksUrl = `${base}/blocks?date_from=${dateFrom}&date_to=${dateTo}&limit=2000`;
+
+    // 予定とブロックを並行して取得
+    return Promise.all([
+      fetch(schedulesUrl, { headers, cache: 'no-store' }).then(res => res.ok ? res.json() : Promise.reject(new Error(`Schedules HTTP ${res.status}`))),
+      fetch(blocksUrl, { headers, cache: 'no-store' }).then(res => res.ok ? res.json() : Promise.reject(new Error(`Blocks HTTP ${res.status}`)))
+    ])
+      .then(([sData, bData]) => {
+        // スケジュールの処理
+        const sList = Array.isArray(sData) ? sData : (sData?.items || []);
+        const converted = sList.map(convertScheduleToAppointment).map(ensureContactFields);
+        setAppointments(converted);
+
+        // ブロックの処理
+        const bList = Array.isArray(bData) ? bData : (bData?.items || []);
+        setBlocks(bList);
+        saveJson(STORAGE_BLOCKS, bList);
       })
       .catch((err) => {
         console.warn('[AdminScheduleTimeline] API Load failed:', err);
@@ -2239,10 +2245,12 @@ export default function AdminScheduleTimelinePage() {
     setBlockConflictError(null);
   }
 
-  function createBlock(payload) {
+  async function createBlock(payload) {
+    const uid = String(payload.user_id);
     const newBlock = {
-      id: `block_${Date.now()}`,
-      user_id: payload.user_id,
+      user_id: uid,
+      worker_id: uid,
+      assigned_to: uid,
       start_at: payload.start_at,
       end_at: payload.end_at,
       type: payload.type,
@@ -2250,20 +2258,54 @@ export default function AdminScheduleTimelinePage() {
       reason_note: payload.reason_note ?? null,
       visibility: payload.visibility ?? 'admin_only',
     };
+
     const existingAppointmentsForCheck = appointments.map(apptToConflictShape);
     const userIdToName = Object.fromEntries(cleanersWithUnit.map((c) => [c.id, c.name]));
     const conflicts = detectBlockConflicts({
-      block: newBlock,
+      block: { ...newBlock, id: `temp_${Date.now()}` },
       existingAppointments: existingAppointmentsForCheck,
       existingBlocks: blocks,
       userIdToName,
     });
+
     if (conflicts.length > 0) {
-      setBlockConflictError(`409 Conflict（重複のため登録できません）\n${conflicts.map((c) => c.message).join('\n')}`);
+      setBlockConflictError(`重複のため登録できません\n${conflicts.map((c) => c.message).join('\n')}`);
       return;
     }
-    setBlocks((prev) => [...prev, newBlock]);
-    closeBlockModal();
+
+    try {
+      const token = getToken();
+      const base = API_BASE.replace(/\/$/, '');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) headers['Authorization'] = `Bearer ${String(token).trim()}`;
+
+      const res = await fetch(`${base}/blocks`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(newBlock),
+      });
+
+      if (!res.ok) {
+        const errTxt = await res.text();
+        throw new Error(`HTTP ${res.status}: ${errTxt}`);
+      }
+
+      const resData = await res.json();
+      const createdBlock = resData.block || { ...newBlock, id: resData.id };
+
+      console.log('[AdminScheduleTimeline] Block created:', createdBlock);
+      setBlocks((prev) => [...prev, createdBlock]);
+
+      // 最新状態を再読み込みして同期
+      await loadSchedulesFromAPI(dayjs(payload.start_at).format('YYYY-MM-DD'));
+
+      closeBlockModal();
+    } catch (err) {
+      console.error('[AdminScheduleTimeline] Create block failed:', err);
+      setBlockConflictError(`ブロック作成に失敗しました: ${err.message}`);
+    }
   }
 
   function saveContact(appointmentId, { contact_note, contact_status }) {
