@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%233b82f6'/><text x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif'>M</text></svg>" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%233b82f6'/><text x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif'>M</text></svg>" />
   <title>MISOGI V2</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0B1220" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="/misogi/icons/icon-192.png" />
   <!-- 既存サインイン (src/pages/staff/signin.html) と同様の Cognito 環境 -->
   <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
   <script>
     window.CognitoConfig = {
       region: 'ap-northeast-1',
@@ -16,20 +24,21 @@
     };
   </script>
   <script>
-    (function(){
+    (function () {
       var s = localStorage.getItem('misogi-v2-theme');
       if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s);
       else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.setAttribute('data-theme', 'light');
     })();
   </script>
-  <script type="module" crossorigin src="/misogi/assets/index-Dkl4RV5z.js"></script>
-  <link rel="stylesheet" crossorigin href="/misogi/assets/index-CZkwBHcz.css">
+  <script type="module" crossorigin src="/misogi/assets/index-W-tmZSnr.js"></script>
+  <link rel="stylesheet" crossorigin href="/misogi/assets/index-8yO2VbcR.css">
 </head>
+
 <body>
   <div id="root"></div>
   <script>
-    (function(){
-      setTimeout(function(){
+    (function () {
+      setTimeout(function () {
         var root = document.getElementById('root');
         if (root && !root.innerHTML.trim()) {
           root.innerHTML = '<div style="padding:2rem;color:var(--fg);font-family:sans-serif">' +
@@ -41,4 +50,5 @@
     })();
   </script>
 </body>
+
 </html>

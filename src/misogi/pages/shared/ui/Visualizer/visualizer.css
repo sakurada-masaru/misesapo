@@ -80,7 +80,7 @@
   height: 220px;
   opacity: 1;
 }
-.visualizer-container .circle-svg { width: 200px; height: 200px; font-size: 10px; font-family: var(--font-family-base); }
+.visualizer-container .circle-svg { width: 200px; height: 200px; font-size: 8.8px; font-family: var(--font-family-base); overflow: visible; }
 .visualizer-container .circle-svg path { fill: none; stroke: none; }
 .visualizer-container .circle-svg text {
   fill: var(--fg);

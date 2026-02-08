@@ -112,8 +112,8 @@ export default function Visualizer({
       <div className="circle-text-container viz-ring">
         <svg viewBox="0 0 200 200" className="circle-svg" width={200} height={200}>
           <path id={pathId} d="M 100, 100 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
-          <text>
-            <textPath href={`#${pathId}`}>
+          <text textLength="439.82" lengthAdjust="spacingAndGlyphs">
+            <textPath href={`#${pathId}`} startOffset="0%">
               Misesapo Intelligent System for Operational Guidance &amp; interface • M.I.S.O.G.I •
             </textPath>
           </text>

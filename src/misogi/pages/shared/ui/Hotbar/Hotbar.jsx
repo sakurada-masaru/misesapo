@@ -1,29 +1,77 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './hotbar.css';
 import FlowGuideDrawer from '../../../../flow/FlowGuideDrawer';
 import VisualizerBubble from '../VisualizerBubble/VisualizerBubble';
+import EXHotbar from './EXHotbar';
+import { ROLES, ISSUES, FLOW_RULES, ROLE_ALLOWED_ISSUES, BASE_STEPS } from '../../../../flow/flowData';
+import { useAuth } from '../../auth/useAuth';
 
 /**
  * アクションボタン。ジョブごとに内容は変えるが、仕組みは機能呼び出しだけ。
- * action.disabled === true のときはボタン無効（onChange は呼ばない）。
  */
-export default function Hotbar({ actions, active, onChange }) {
+export default function Hotbar({ actions = [], active, onChange }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const userName = user?.name || user?.displayName || user?.username || user?.id || 'ユーザー';
   const [flowOpen, setFlowOpen] = useState(false);
   const [bubbleOpen, setBubbleOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState(null);
 
-  const openFlow = () => {
-    const el = document.getElementById('misogi-visualizer');
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      setAnchorRect(rect);
-      setBubbleOpen(true);
+  // 会話フロー用ステート（補助的なドロワー用）
+  const [flowStep, setFlowStep] = useState('none');
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [currentStepId, setCurrentStepId] = useState(16);
+
+  const isFlowGuidePage = location.pathname === '/flow-guide';
+
+  const navigateToFlow = () => {
+    if (isFlowGuidePage) {
+      navigate('/');
     } else {
-      setFlowOpen(true);
+      navigate('/flow-guide');
     }
   };
 
-  // リサイズ/スクロールで追従
+  const handleRoleSelect = (role) => {
+    setSelectedRole(role);
+    setFlowStep('issue');
+  };
+
+  const handleIssueSelect = (issue) => {
+    setSelectedIssue(issue);
+    setFlowStep('result');
+  };
+
+  const resetFlow = () => {
+    setFlowStep('role');
+    setSelectedRole(null);
+    setSelectedIssue(null);
+  };
+
+  const exOptions = useMemo(() => {
+    if (flowStep === 'role') return ROLES.map(r => ({ key: r.key, label: r.label, data: r }));
+    if (flowStep === 'issue' && selectedRole) {
+      const allowed = ROLE_ALLOWED_ISSUES[selectedRole.key] || [];
+      return ISSUES.filter(i => allowed.includes(i.key)).map(i => ({ key: i.key, label: i.label, data: i }));
+    }
+    if (flowStep === 'result') return [{ key: 'reset', label: '最初から', action: resetFlow }];
+    return [];
+  }, [flowStep, selectedRole]);
+
+  const bubbleText = useMemo(() => {
+    if (flowStep === 'role') return `お疲れ様です ${userName} 様\n現在のあなたの役割を教えてください。`;
+    if (flowStep === 'issue') return `${userName} 様、了解しました。何かお困りごとはありますか？`;
+    if (flowStep === 'result') {
+      const rule = FLOW_RULES[currentStepId]?.[selectedIssue.key];
+      if (!rule) return "確認しましたが、ルールが見当たりませんでした。";
+      return `【${rule.title}】\n\n推奨アクション：\n${rule.actions.map(a => `・${a}`).join('\n')}`;
+    }
+    return "";
+  }, [flowStep, userName, selectedIssue, currentStepId]);
+
   useEffect(() => {
     if (!bubbleOpen) return;
     const update = () => {
@@ -37,8 +85,6 @@ export default function Hotbar({ actions, active, onChange }) {
       window.removeEventListener('scroll', update, true);
     };
   }, [bubbleOpen]);
-
-  if (!actions?.length) return null;
 
   return (
     <>
@@ -57,22 +103,33 @@ export default function Hotbar({ actions, active, onChange }) {
             </button>
           );
         })}
+        {/* メインの導線：専用画面へ */}
         <button
           type="button"
-          className="hotbar-btn"
+          className={`hotbar-btn ${isFlowGuidePage ? 'active' : ''}`}
           style={{ borderStyle: 'dashed' }}
-          onClick={openFlow}
+          onClick={navigateToFlow}
         >
-          📘 業務フロー
+          {isFlowGuidePage ? '🏠 ポータルへ' : '📘 業務フロー'}
         </button>
       </div>
+
+      <EXHotbar
+        visible={bubbleOpen}
+        options={exOptions}
+        onSelect={(opt) => {
+          if (opt.action) opt.action();
+          else if (flowStep === 'role') handleRoleSelect(opt.data);
+          else if (flowStep === 'issue') handleIssueSelect(opt.data);
+        }}
+      />
 
       <FlowGuideDrawer
         open={flowOpen}
         onClose={() => setFlowOpen(false)}
-        defaultRoleKey={null}
-        defaultStepId={16}
-        defaultIssueKey={null}
+        defaultRoleKey={selectedRole?.key || null}
+        defaultStepId={currentStepId}
+        defaultIssueKey={selectedIssue?.key || null}
       />
 
       <VisualizerBubble
@@ -80,13 +137,11 @@ export default function Hotbar({ actions, active, onChange }) {
         anchorRect={anchorRect}
         placement="bottom"
         title="MISOGI / 業務フロー"
-        text={
-          "現在の状況に合わせて、最適なフローをガイドします。\n\n" +
-          "立場を選択してください：\n" +
-          "・業務委託者（清掃員）\n・OP（オペレーター）\n・事務/管理\n・営業\n・経理\n\n" +
-          "※詳細はドロワー版で確認できます。"
-        }
-        onClose={() => setBubbleOpen(false)}
+        text={bubbleText}
+        onClose={() => {
+          setBubbleOpen(false);
+          setFlowStep('none');
+        }}
         onOpenDetail={() => {
           setBubbleOpen(false);
           setFlowOpen(true);

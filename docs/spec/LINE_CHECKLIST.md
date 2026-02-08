@@ -21,3 +21,9 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 ---
 
 ※ 本番リリースの手順は `docs/spec/RUNBOOK_RELEASE.md` を参照。
+
+## FlowGuide Change Checklist (2026-02-08)
+
+- [x] `src/misogi/pages/FlowGuideScreen.jsx` で `flowData.js` / `messageTemplates.js` を単一参照
+- [x] 役割表示を `判断:現場 / 顧客窓口:営業 / 調整:OP` に統一
+- [x] 深夜帯（00:00-08:59）は応急対応、09:00以降に正式調整へ切替表示を実装

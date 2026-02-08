@@ -1,1 +1,0 @@
-import{j as e,J as l}from"./index-Dkl4RV5z.js";const o=[{id:"site",role:"target",label:"店舗"},{id:"quality",role:"status",label:"進捗"},{id:"flow",role:"plan",label:"予定",to:"/jobs/cleaning/schedule"},{id:"photo",role:"log",label:"報告"}];function a(){return e.jsx(l,{job:"cleaning",hotbarConfig:o})}export{a as default};

@@ -1,1 +1,0 @@
-import{j as e,J as t}from"./index-Dkl4RV5z.js";const l=[{id:"issue",role:"target",label:"Issue"},{id:"state",role:"status",label:"進捗"},{id:"sprint",role:"plan",label:"予定"},{id:"log",role:"log",label:"報告"}];function a(){return e.jsx(t,{job:"dev",hotbarConfig:l})}export{a as default};
