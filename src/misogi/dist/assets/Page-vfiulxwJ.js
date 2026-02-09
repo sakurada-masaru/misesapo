@@ -1,1 +1,0 @@
-import{j as e,J as o}from"./index-jsd-pEZ8.js";const t=[{id:"issue",role:"target",label:"Issue"},{id:"state",role:"status",label:"進捗"},{id:"sprint",role:"plan",label:"予定"},{id:"log",role:"log",label:"報告",to:"/houkoku"}];function a(){return e.jsx(o,{job:"dev",hotbarConfig:t})}export{a as default};

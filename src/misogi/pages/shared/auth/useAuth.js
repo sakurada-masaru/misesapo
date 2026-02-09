@@ -99,15 +99,26 @@ export function useAuth() {
     }
 
     // 名前の名寄せ
-    if (['STAFF', 'CLEANING'].includes(dept)) dept = 'CLEANING';
-    if (['SALES', 'FIELD_SALES'].includes(dept)) dept = 'SALES';
+    if (['STAFF', 'CLEANING', '清掃'].includes(dept)) dept = 'CLEANING';
+    if (['SALES', 'FIELD_SALES', '営業'].includes(dept)) dept = 'SALES';
 
     const isDev = workerId === 'W999';
     const isAdmin = isDev || roles.some(r => ['ADMIN', 'OWNER', 'SUPERADMIN'].includes(r.toUpperCase()));
 
+    // 特例：平様のアカウントも営業部署として扱う
+    if (email === 'taira@misesapo.co.jp' || user.id === 'W008') {
+      dept = 'SALES';
+    }
+
     let allowedTemplateIds = [];
     if (isDev || isAdmin) {
-      allowedTemplateIds = ['CLEANING_V1', 'SALES_ACTIVITY_REPORT_V1', 'ENGINEERING_V1', 'OFFICE_ADMIN_V1'];
+      // 管理者の場合、すべてのテンプレートを許可するが、
+      // 自身の部署 (dept) が SALES なら SALES を先頭にする
+      if (dept === 'SALES') {
+        allowedTemplateIds = ['SALES_ACTIVITY_REPORT_V1', 'CLEANING_V1', 'ENGINEERING_V1', 'OFFICE_ADMIN_V1'];
+      } else {
+        allowedTemplateIds = ['CLEANING_V1', 'SALES_ACTIVITY_REPORT_V1', 'ENGINEERING_V1', 'OFFICE_ADMIN_V1'];
+      }
     } else {
       if (dept === 'SALES') allowedTemplateIds.push('SALES_ACTIVITY_REPORT_V1');
       else if (dept === 'ENGINEERING') allowedTemplateIds.push('ENGINEERING_V1');

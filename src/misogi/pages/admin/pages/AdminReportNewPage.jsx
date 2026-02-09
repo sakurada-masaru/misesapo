@@ -503,8 +503,8 @@ export default function AdminReportNewPage() {
         }
     };
 
-    const handleReset = () => {
-        if (!window.confirm('入力内容をリセットしてもよろしいですか？')) return;
+    const handleReset = (withConfirm = true) => {
+        if (withConfirm && !window.confirm('入力内容をリセットしてもよろしいですか？')) return;
 
         if (activeTemplate === TEMPLATE_CLEANING) {
             setStores([emptyStore(true), emptyStore(false), emptyStore(false)]);
@@ -586,7 +586,7 @@ export default function AdminReportNewPage() {
                 })
             });
             setStatusMessage({ type: 'success', text: '報告を送信しました' });
-            handleReset(); // 送信成功後にフォームをリセット
+            handleReset(false); // 送信成功後は確認なしでリセット
             setTimeout(() => setStatusMessage(null), 3000); // 3秒後に自動で消す
         } catch (e) {
             console.error("Submission failed:", e);
@@ -1001,7 +1001,7 @@ export default function AdminReportNewPage() {
                                             </ActionButton>
                                             <ActionButton $variant="primary" style={{ flex: 3, height: 48, borderRadius: 14 }} onClick={() => handleHoukokuSubmit(TEMPLATE_CLEANING)} disabled={isSaving}>
                                                 <i className="fas fa-paper-plane" style={{ marginRight: 8 }}></i>
-                                                まとめて報告を送信
+                                                提出する
                                             </ActionButton>
                                         </ButtonRow>
                                     </div>
