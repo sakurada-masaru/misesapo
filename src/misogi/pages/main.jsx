@@ -26,7 +26,18 @@ if (!rootEl) {
 }
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
+  window.addEventListener("load", async () => {
+    if (import.meta.env.DEV) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((reg) => reg.unregister()));
+        console.log("SW unregistered in dev mode");
+      } catch (err) {
+        console.log("SW unregister failed:", err);
+      }
+      return;
+    }
+
     navigator.serviceWorker
       .register("/misogi/sw.js")
       .then((reg) => console.log("SW registered:", reg.scope))

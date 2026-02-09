@@ -12,182 +12,55 @@
                 {
                     "key": "work_date",
                     "label": "活動日"
-                },
-                {
-                    "key": "user_name",
-                    "label": "担当営業"
                 }
             ]
         },
         {
-            "id": "lead_status",
+            "id": "activity_time",
             "type": "group",
-            "label": "2. リード獲得状況",
+            "label": "2. 活動時間",
             "fields": [
                 {
-                    "key": "lead.new_count",
-                    "label": "新規リード数",
+                    "key": "activity.minutes",
+                    "label": "活動時間（分）",
                     "type": "number",
-                    "required": true,
                     "min": 0
-                },
+                }
+            ]
+        },
+        {
+            "id": "today_result",
+            "type": "group",
+            "label": "3. 本日の成果",
+            "fields": [
                 {
-                    "key": "lead.source",
-                    "label": "主な獲得経路",
-                    "type": "radio",
-                    "options": [
-                        {
-                            "value": "referral",
-                            "label": "紹介"
-                        },
-                        {
-                            "value": "visit",
-                            "label": "飛び込み"
-                        },
-                        {
-                            "value": "web",
-                            "label": "WEB"
-                        },
-                        {
-                            "value": "existing",
-                            "label": "既存顧客"
-                        },
-                        {
-                            "value": "other",
-                            "label": "その他"
-                        }
-                    ]
-                },
-                {
-                    "key": "lead.memo",
-                    "label": "補足",
+                    "key": "result.today",
+                    "label": "本日の成果",
                     "type": "textarea"
                 }
             ]
         },
         {
-            "id": "deal_status",
+            "id": "tomorrow_plan",
             "type": "group",
-            "label": "3. 商談状況",
+            "label": "4. 明日の予定",
             "fields": [
                 {
-                    "key": "deal.total",
-                    "label": "対応商談数",
-                    "type": "number",
-                    "required": true,
-                    "min": 0
-                },
-                {
-                    "key": "deal.stage",
-                    "label": "主な進捗状況",
-                    "type": "radio",
-                    "options": [
-                        {
-                            "value": "first_contact",
-                            "label": "初回接触"
-                        },
-                        {
-                            "value": "proposing",
-                            "label": "提案中"
-                        },
-                        {
-                            "value": "quoting",
-                            "label": "見積提出"
-                        },
-                        {
-                            "value": "negotiating",
-                            "label": "交渉中"
-                        },
-                        {
-                            "value": "closing",
-                            "label": "クロージング"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "id": "results",
-            "type": "group",
-            "label": "4. 成果・結果",
-            "fields": [
-                {
-                    "key": "result.contract_count",
-                    "label": "成約件数",
-                    "type": "number",
-                    "required": true,
-                    "min": 0
-                },
-                {
-                    "key": "result.contract_amount",
-                    "label": "成約金額（円）",
-                    "type": "number",
-                    "min": 0
-                },
-                {
-                    "key": "result.lost_reason",
-                    "label": "失注理由（あれば）",
+                    "key": "plan.tomorrow",
+                    "label": "明日の予定",
                     "type": "textarea"
                 }
             ]
         },
         {
-            "id": "activities",
+            "id": "concerns",
             "type": "group",
-            "label": "5. 活動内容",
+            "label": "5. 気になった点",
             "fields": [
                 {
-                    "key": "action.visit_count",
-                    "label": "訪問件数",
-                    "type": "number",
-                    "min": 0
-                },
-                {
-                    "key": "action.call_count",
-                    "label": "架電件数",
-                    "type": "number",
-                    "min": 0
-                },
-                {
-                    "key": "action.main_activity",
-                    "label": "主な活動内容",
-                    "type": "textarea",
-                    "required": true
-                }
-            ]
-        },
-        {
-            "id": "reflection",
-            "type": "group",
-            "label": "6. 所感・次アクション",
-            "fields": [
-                {
-                    "key": "reflection.good",
-                    "label": "うまくいった点",
+                    "key": "concern.notes",
+                    "label": "気になった点",
                     "type": "textarea"
-                },
-                {
-                    "key": "reflection.issue",
-                    "label": "課題・問題点",
-                    "type": "textarea"
-                },
-                {
-                    "key": "reflection.next",
-                    "label": "明日の行動予定",
-                    "type": "textarea",
-                    "required": true
-                }
-            ]
-        },
-        {
-            "id": "photos",
-            "label": "7. 訪問証跡・名刺・現場写真（任意）",
-            "type": "photos",
-            "required": false,
-            "presets": [
-                {
-                    "label": "写真資料",
-                    "key": "photos.sales"
                 }
             ]
         }

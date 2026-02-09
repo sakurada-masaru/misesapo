@@ -849,6 +849,13 @@ except Exception as _e:
     print(f"CRITICAL: Table initialization failed: {str(_e)}")
     traceback.print_exc()
 
+# YOTEI v2 tables (new schedule domain)
+# boto3.resource.Table() does not validate existence here, so this is safe even before table creation.
+YOTEI_SCHEDULES_TABLE = dynamodb.Table('yotei')
+YOTEI_DISPATCH_TABLE = dynamodb.Table('yotei-dispatch')
+UGOKI_TABLE = dynamodb.Table('ugoki')
+YAKUSOKU_TABLE = dynamodb.Table('yakusoku')
+
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
@@ -1392,6 +1399,69 @@ def lambda_handler(event, context):
                 'headers': headers,
                 'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
             }
+        elif normalized_path == '/yotei':
+            # YOTEI v2 schedules
+            if method == 'GET':
+                return yotei_get_schedules(event, headers)
+            elif method == 'POST':
+                return yotei_create_schedule(event, headers)
+        elif normalized_path == '/yotei/dispatch':
+            # YOTEI v2 dispatch list
+            if method == 'GET':
+                return yotei_get_dispatch(event, headers)
+        elif normalized_path.startswith('/yotei/dispatch/'):
+            # YOTEI v2 dispatch upsert/patch
+            dispatch_id = normalized_path.split('/')[-1]
+            if method == 'PUT':
+                return yotei_put_dispatch(dispatch_id, event, headers)
+            elif method == 'PATCH':
+                return yotei_patch_dispatch(dispatch_id, event, headers)
+        elif normalized_path.startswith('/yotei/'):
+            # YOTEI v2 schedule detail
+            schedule_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return yotei_get_schedule_detail(schedule_id, headers)
+            elif method == 'PUT':
+                return yotei_update_schedule(schedule_id, event, headers)
+            elif method == 'DELETE':
+                return yotei_delete_schedule(schedule_id, headers)
+        elif normalized_path == '/ugoki':
+            # UGOKI v2 status management
+            if method == 'GET':
+                return ugoki_get_list(event, headers)
+        elif normalized_path.startswith('/ugoki/'):
+            # UGOKI v2 status detail/patch/start/done
+            parts = normalized_path.split('/')
+            yotei_id = parts[2]
+            action = parts[3] if len(parts) > 3 else None
+            
+            if action == 'start' and method == 'POST':
+                event['body'] = json.dumps({'jotai': 'shinkou'})
+                return ugoki_patch_status(yotei_id, event, headers)
+            elif action == 'done' and method == 'POST':
+                event['body'] = json.dumps({'jotai': 'kanryou'})
+                return ugoki_patch_status(yotei_id, event, headers)
+            elif not action:
+                if method == 'GET':
+                    return ugoki_get_detail(yotei_id, headers)
+                elif method == 'PATCH':
+                    return ugoki_patch_status(yotei_id, event, headers)
+        elif normalized_path == '/me/yotei':
+            if method == 'GET':
+                return worker_me_yotei(event, headers)
+        elif normalized_path == '/yakusoku':
+            if method == 'GET':
+                return yakusoku_get_list(event, headers)
+            elif method == 'POST':
+                return yakusoku_create(event, headers)
+        elif normalized_path.startswith('/yakusoku/'):
+            yakusoku_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return yakusoku_get_detail(yakusoku_id, event, headers)
+            elif method == 'PUT':
+                return yakusoku_update(yakusoku_id, event, headers)
+            elif method == 'DELETE':
+                return yakusoku_delete(yakusoku_id, event, headers)
         elif normalized_path == '/schedules':
             # スケジュールデータの読み書き
             if method == 'GET':
@@ -4877,6 +4947,1014 @@ def delete_report(report_id, event, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
+
+
+# ----------------------------
+# YOTEI v2: schedules/dispatch
+# ----------------------------
+def _yotei_parse_body(event):
+    if event.get('isBase64Encoded'):
+        raw = base64.b64decode(event.get('body') or b'')
+        text = raw.decode('utf-8') if isinstance(raw, (bytes, bytearray)) else str(raw or '')
+    else:
+        raw = event.get('body', '') or ''
+        text = raw if isinstance(raw, str) else raw.decode('utf-8')
+    return json.loads(text) if text else {}
+
+
+def _yotei_normalize_datetime_parts(payload):
+    scheduled_date = payload.get('scheduled_date') or payload.get('date')
+    start_time = payload.get('start_time')
+    end_time = payload.get('end_time')
+
+    time_slot = payload.get('time_slot') or payload.get('scheduled_time')
+    if time_slot and (not start_time or not end_time) and isinstance(time_slot, str) and '-' in time_slot:
+        parts = [x.strip() for x in time_slot.split('-', 1)]
+        if len(parts) == 2:
+            start_time = start_time or parts[0]
+            end_time = end_time or parts[1]
+
+    start_at = payload.get('start_at')
+    end_at = payload.get('end_at')
+
+    if not scheduled_date and start_at:
+        try:
+            scheduled_date = str(start_at).split('T')[0]
+        except Exception:
+            pass
+
+    if not start_at and scheduled_date and start_time:
+        start_at = f"{scheduled_date}T{start_time}:00"
+    if not end_at and scheduled_date and end_time:
+        end_at = f"{scheduled_date}T{end_time}:00"
+
+    return scheduled_date, start_time, end_time, start_at, end_at
+
+
+def _yotei_collect_conflicts(worker_id, start_at, end_at, exclude_schedule_id=None):
+    if not worker_id or not start_at or not end_at:
+        return []
+
+    try:
+        # 重複判定は jotai=yuko のみ対象
+        response = YOTEI_SCHEDULES_TABLE.scan(
+            FilterExpression=(
+                (Attr('sagyouin_id').eq(worker_id) | Attr('worker_id').eq(worker_id))
+                & Attr('jotai').eq('yuko')
+                & Attr('start_at').lt(end_at)
+                & Attr('end_at').gt(start_at)
+            ),
+            Limit=2000
+        )
+        items = response.get('Items', [])
+    except Exception as e:
+        print(f"[yotei] conflict scan failed: {str(e)}")
+        items = []
+
+    conflicts = []
+    for item in items:
+        sid = item.get('id')
+        if exclude_schedule_id and str(sid) == str(exclude_schedule_id):
+            continue
+        conflicts.append({
+            'id': sid,
+            'worker_id': worker_id,
+            'start_at': item.get('start_at'),
+            'end_at': item.get('end_at')
+        })
+    return conflicts
+
+
+def _yotei_normalize_status(raw_status):
+    s = str(raw_status or '').strip().lower()
+    if s in ('cancelled', 'torikeshi'):
+        return 'torikeshi'
+    return 'yuko'
+
+
+def _yotei_normalize_item_status(item):
+    if not isinstance(item, dict):
+        return item
+    normalized = dict(item)
+    s = _yotei_normalize_status(item.get('jotai') or item.get('status'))
+    normalized['jotai'] = s
+    # 互換性のための内部フィールドのみ残し、外部向けは jotai に統一
+    
+    # UIの期待値に合わせる
+    if 'tenpo_name' not in normalized:
+        normalized['tenpo_name'] = item.get('store_name') or item.get('target_name') or ''
+    if 'sagyouin_name' not in normalized:
+        normalized['sagyouin_name'] = item.get('worker_name') or item.get('staff_name') or ''
+    if 'tenpo_id' not in normalized:
+        normalized['tenpo_id'] = item.get('store_id') or ''
+    if 'sagyouin_id' not in normalized:
+        normalized['sagyouin_id'] = item.get('worker_id') or item.get('assigned_to') or ''
+        
+    return normalized
+
+
+def yotei_create_schedule(event, headers):
+    try:
+        body = _yotei_parse_body(event)
+        schedule_id = body.get('schedule_id') or body.get('id') or f"YOT-{uuid.uuid4().hex[:12]}"
+        worker_id = body.get('sagyouin_id') or body.get('worker_id') or body.get('assigned_to') or body.get('cleaner_id')
+
+        scheduled_date, start_time, end_time, start_at, end_at = _yotei_normalize_datetime_parts(body)
+        yakusoku_id = body.get('yakusoku_id')
+        
+        if not scheduled_date or not worker_id or not start_at or not end_at or not yakusoku_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'scheduled_date, worker_id, start_at, end_at, and yakusoku_id are required'}, ensure_ascii=False)
+            }
+
+        conflicts = _yotei_collect_conflicts(worker_id, start_at, end_at)
+        if conflicts:
+            return {
+                'statusCode': 409,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'yotei_conflict',
+                    'message': '指定時間に重複があります',
+                    'conflicts': conflicts
+                }, ensure_ascii=False, default=str)
+            }
+
+        now = datetime.utcnow().isoformat() + 'Z'
+        jotai_value = _yotei_normalize_status(body.get('jotai') or body.get('status'))
+        
+        # worker_id -> sagyouin_id, store_id -> tenpo_id への移行
+        sagyouin_id = body.get('sagyouin_id') or worker_id
+        tenpo_id = body.get('tenpo_id') or body.get('store_id')
+
+        item = {
+            'id': schedule_id,
+            'schedule_id': schedule_id,
+            'created_at': now,
+            'updated_at': now,
+            'date': scheduled_date,
+            'scheduled_date': scheduled_date,
+            'start_time': start_time,
+            'end_time': end_time,
+            'time_slot': body.get('time_slot') or body.get('scheduled_time') or (f"{start_time}-{end_time}" if start_time and end_time else None),
+            'scheduled_time': body.get('scheduled_time') or body.get('time_slot') or (f"{start_time}-{end_time}" if start_time and end_time else None),
+            'start_min': body.get('start_min'),
+            'end_min': body.get('end_min'),
+            'start_at': start_at,
+            'end_at': end_at,
+            'duration_minutes': body.get('duration_minutes', 60),
+            'store_id': tenpo_id,
+            'tenpo_id': tenpo_id,
+            'client_id': body.get('client_id'),
+            'brand_name': body.get('brand_name', ''),
+            'store_name': body.get('store_name') or body.get('target_name') or '',
+            'target_name': body.get('target_name') or body.get('store_name') or '',
+            'work_type': body.get('work_type') or body.get('order_type') or 'その他',
+            'yakusoku_id': body.get('yakusoku_id'),
+            'status': jotai_value,
+            'jotai': jotai_value,
+            'worker_id': sagyouin_id,
+            'sagyouin_id': sagyouin_id,
+            'assigned_to': sagyouin_id,
+            'worker_ids': body.get('worker_ids') or [sagyouin_id],
+            'description': body.get('description') or body.get('notes') or body.get('memo') or '',
+            'notes': body.get('notes') or body.get('description') or body.get('memo') or '',
+            'memo': body.get('memo') or body.get('description') or body.get('notes') or '',
+            'origin': body.get('origin') or 'manual',
+        }
+        item = {k: v for k, v in item.items() if v is not None}
+
+        YOTEI_SCHEDULES_TABLE.put_item(
+            Item=item,
+            ConditionExpression='attribute_not_exists(id)'
+        )
+        
+        # UGOKI の初期化
+        try:
+            UGOKI_TABLE.put_item(
+                Item={
+                    'yotei_id': schedule_id,
+                    'jotai': 'mikanryo',
+                    'jokyo': 'mikanryo',
+                    'updated_at': now,
+                    'sagyouin_id': sagyouin_id,
+                    'tenpo_id': tenpo_id
+                },
+                ConditionExpression='attribute_not_exists(yotei_id)'
+            )
+        except Exception as ue:
+            print(f"[yotei] failed to init ugoki: {str(ue)}")
+
+        return {
+            'statusCode': 201,
+            'headers': headers,
+            'body': json.dumps({'id': schedule_id, 'schedule_id': schedule_id}, ensure_ascii=False)
+        }
+    except YOTEI_SCHEDULES_TABLE.meta.client.exceptions.ConditionalCheckFailedException:
+        return {
+            'statusCode': 409,
+            'headers': headers,
+            'body': json.dumps({'error': 'duplicate_schedule_id'}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"[yotei] create schedule failed: {str(e)}")
+        traceback.print_exc()
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to create yotei schedule', 'message': str(e)}, ensure_ascii=False)
+        }
+
+
+def yotei_get_schedules(event, headers):
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        date = query_params.get('date')
+        date_from = query_params.get('date_from')
+        date_to = query_params.get('date_to')
+        worker_id = query_params.get('worker_id') or query_params.get('assigned_to')
+        store_id = query_params.get('store_id')
+        status = query_params.get('status')
+        limit = int(query_params.get('limit', 2000))
+
+        filters = []
+        if status:
+            normalized_status = _yotei_normalize_status(status)
+            filters.append((Attr('jotai').eq(normalized_status) | Attr('status').eq(normalized_status)))
+        
+        if worker_id:
+            filters.append((Attr('sagyouin_id').eq(worker_id) | Attr('worker_id').eq(worker_id) | Attr('assigned_to').eq(worker_id)))
+        if store_id:
+            filters.append((Attr('tenpo_id').eq(store_id) | Attr('store_id').eq(store_id)))
+        if date:
+            filters.append((Attr('scheduled_date').eq(date) | Attr('date').eq(date)))
+        elif date_from and date_to:
+            filters.append((Attr('scheduled_date').between(date_from, date_to) | Attr('date').between(date_from, date_to)))
+        elif date_from:
+            filters.append((Attr('scheduled_date').gte(date_from) | Attr('date').gte(date_from)))
+        elif date_to:
+            filters.append((Attr('scheduled_date').lte(date_to) | Attr('date').lte(date_to)))
+
+        if filters:
+            filter_expr = filters[0]
+            for expr in filters[1:]:
+                filter_expr = filter_expr & expr
+            response = YOTEI_SCHEDULES_TABLE.scan(FilterExpression=filter_expr, Limit=limit)
+        else:
+            response = YOTEI_SCHEDULES_TABLE.scan(Limit=limit)
+
+        items = [_yotei_normalize_item_status(i) for i in response.get('Items', [])]
+        
+        # yakusoku 情報を JOIN
+        yakusoku_ids = list(set([i['yakusoku_id'] for i in items if i.get('yakusoku_id')]))
+        if yakusoku_ids:
+            yak_map = {}
+            for k in range(0, len(yakusoku_ids), 100):
+                batch_keys = [{'yakusoku_id': yid} for yid in yakusoku_ids[k:k+100]]
+                batch_res = dynamodb.batch_get_item(RequestItems={'yakusoku': {'Keys': batch_keys}})
+                for yitem in batch_res.get('Responses', {}).get('yakusoku', []):
+                    yak_map[yitem['yakusoku_id']] = yitem
+            for i in items:
+                if i.get('yakusoku_id') in yak_map:
+                    i['yakusoku'] = yak_map[i['yakusoku_id']]
+
+        items = sorted(items, key=lambda x: (str(x.get('scheduled_date') or x.get('date') or ''), str(x.get('start_at') or x.get('scheduled_time') or '')))
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'items': items, 'count': len(items), 'has_more': 'LastEvaluatedKey' in response}, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"[yotei] get schedules failed: {str(e)}")
+        traceback.print_exc()
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to get yotei schedules', 'message': str(e)}, ensure_ascii=False)
+        }
+
+
+def yotei_get_schedule_detail(schedule_id, headers):
+    try:
+        response = YOTEI_SCHEDULES_TABLE.get_item(Key={'id': schedule_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'schedule not found'}, ensure_ascii=False)
+            }
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(_yotei_normalize_item_status(response['Item']), ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to get yotei schedule', 'message': str(e)}, ensure_ascii=False)
+        }
+
+
+def yotei_update_schedule(schedule_id, event, headers):
+    try:
+        current = YOTEI_SCHEDULES_TABLE.get_item(Key={'id': schedule_id}).get('Item')
+        if not current:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'schedule not found'}, ensure_ascii=False)
+            }
+
+        body = _yotei_parse_body(event)
+        merged = {**current, **body}
+        worker_id = merged.get('sagyouin_id') or merged.get('worker_id') or merged.get('assigned_to') or merged.get('cleaner_id')
+        scheduled_date, start_time, end_time, start_at, end_at = _yotei_normalize_datetime_parts(merged)
+        if not scheduled_date or not worker_id or not start_at or not end_at:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'scheduled_date, worker_id, start_at, end_at are required'}, ensure_ascii=False)
+            }
+
+        conflicts = _yotei_collect_conflicts(worker_id, start_at, end_at, exclude_schedule_id=schedule_id)
+        if conflicts:
+            return {
+                'statusCode': 409,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'yotei_conflict',
+                    'message': '指定時間に重複があります',
+                    'conflicts': conflicts
+                }, ensure_ascii=False, default=str)
+            }
+
+        now = datetime.utcnow().isoformat() + 'Z'
+        jotai_value = _yotei_normalize_status(merged.get('jotai') or merged.get('status'))
+        sagyouin_id = merged.get('sagyouin_id') or worker_id
+        tenpo_id = merged.get('tenpo_id') or merged.get('store_id')
+
+        updated_item = {
+            **current,
+            **body,
+            'id': schedule_id,
+            'schedule_id': schedule_id,
+            'worker_id': sagyouin_id,
+            'sagyouin_id': sagyouin_id,
+            'assigned_to': sagyouin_id,
+            'store_id': tenpo_id,
+            'tenpo_id': tenpo_id,
+            'date': scheduled_date,
+            'scheduled_date': scheduled_date,
+            'start_time': start_time,
+            'end_time': end_time,
+            'start_at': start_at,
+            'end_at': end_at,
+            'status': jotai_value,
+            'jotai': jotai_value,
+            'updated_at': now,
+        }
+        if start_time and end_time:
+            slot = f"{start_time}-{end_time}"
+            updated_item['time_slot'] = body.get('time_slot') or slot
+            updated_item['scheduled_time'] = body.get('scheduled_time') or slot
+        updated_item = {k: v for k, v in updated_item.items() if v is not None}
+        YOTEI_SCHEDULES_TABLE.put_item(Item=updated_item)
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success', 'id': schedule_id}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"[yotei] update schedule failed: {str(e)}")
+        traceback.print_exc()
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to update yotei schedule', 'message': str(e)}, ensure_ascii=False)
+        }
+
+
+def yotei_delete_schedule(schedule_id, headers):
+    try:
+        existing = YOTEI_SCHEDULES_TABLE.get_item(Key={'id': schedule_id}).get('Item')
+        if not existing:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'schedule not found'}, ensure_ascii=False)
+            }
+        now = datetime.utcnow().isoformat() + 'Z'
+        YOTEI_SCHEDULES_TABLE.update_item(
+            Key={'id': schedule_id},
+            UpdateExpression='SET #jotai = :jotai, #status = :status, updated_at = :updated_at',
+            ExpressionAttributeNames={'#jotai': 'jotai', '#status': 'status'},
+            ExpressionAttributeValues={
+                ':jotai': 'torikeshi',
+                ':status': 'torikeshi',
+                ':updated_at': now
+            }
+        )
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success', 'id': schedule_id, 'torikeshi': True}, ensure_ascii=False)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to delete yotei schedule', 'message': str(e)}, ensure_ascii=False)
+        }
+
+
+def yotei_get_dispatch(event, headers):
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        worker_id = query_params.get('worker_id')
+        biz_date = query_params.get('biz_date')
+        limit = int(query_params.get('limit', 500))
+
+        filters = []
+        if worker_id:
+            filters.append(Attr('worker_id').eq(worker_id))
+        if biz_date:
+            filters.append(Attr('biz_date').eq(biz_date))
+
+        if filters:
+            filter_expr = filters[0]
+            for expr in filters[1:]:
+                filter_expr = filter_expr & expr
+            response = YOTEI_DISPATCH_TABLE.scan(FilterExpression=filter_expr, Limit=limit)
+        else:
+            response = YOTEI_DISPATCH_TABLE.scan(Limit=limit)
+        items = response.get('Items', [])
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'items': items, 'count': len(items)}, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to get yotei dispatch', 'message': str(e)}, ensure_ascii=False)
+        }
+
+
+def yotei_put_dispatch(dispatch_id, event, headers):
+    try:
+        body = _yotei_parse_body(event)
+        now = datetime.utcnow().isoformat() + 'Z'
+        item = {
+            'id': dispatch_id,
+            'schedule_id': body.get('schedule_id'),
+            'worker_id': body.get('worker_id'),
+            'store_id': body.get('store_id'),
+            'category': body.get('category', 'CLEAN'),
+            'status': body.get('status', 'todo'),
+            'biz_date': body.get('biz_date'),
+            'updated_at': body.get('updated_at') or now,
+            'meta': body.get('meta', {}),
+        }
+        item = {k: v for k, v in item.items() if v is not None}
+        YOTEI_DISPATCH_TABLE.put_item(Item=item)
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success', 'id': dispatch_id}, ensure_ascii=False)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to put yotei dispatch', 'message': str(e)}, ensure_ascii=False)
+        }
+
+
+def ugoki_get_list(event, headers):
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        date_str = query_params.get('date') or datetime.utcnow().strftime('%Y-%m-%d')
+        worker_id = query_params.get('worker_id') or query_params.get('sagyouin_id')
+
+        # 1. 当日の yotei を取得
+        filters = [Attr('scheduled_date').eq(date_str), Attr('jotai').eq('yuko')]
+        if worker_id:
+            filters.append(Attr('sagyouin_id').eq(worker_id) | Attr('worker_id').eq(worker_id))
+        
+        filter_expr = filters[0]
+        for f in filters[1:]:
+            filter_expr = filter_expr & f
+            
+        yotei_res = YOTEI_SCHEDULES_TABLE.scan(FilterExpression=filter_expr)
+        yotei_items = yotei_res.get('Items', [])
+        
+        if not yotei_items:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'date': date_str, 'items': []}, ensure_ascii=False)
+            }
+            
+        # 2. 対応する ugoki レコードを BatchGet
+        yotei_ids = [y['id'] for y in yotei_items]
+        ugoki_items = []
+        for i in range(0, len(yotei_ids), 100):
+            batch = yotei_ids[i:i+100]
+            res = dynamodb.batch_get_item(
+                RequestItems={
+                    'ugoki': {
+                        'Keys': [{'yotei_id': yid} for yid in batch]
+                    }
+                }
+            )
+            ugoki_items.extend(res.get('Responses', {}).get('ugoki', []))
+            
+        ugoki_map = {item['yotei_id']: item for item in ugoki_items}
+        
+        # 3. マージ & フラット化 (UIの期待値に合わせる)
+        results = []
+        now_ms = int(datetime.utcnow().timestamp() * 1000)
+        for y in yotei_items:
+            u = ugoki_map.get(y['id'], {
+                'yotei_id': y['id'],
+                'jotai': 'mikanryo',
+                'jokyo': 'mikanryo',
+                'sagyouin_id': y.get('sagyouin_id'),
+                'tenpo_id': y.get('tenpo_id')
+            })
+            
+            # 必須項目をトップレベルに配置
+            item = {
+                'id': y['id'],
+                'yotei_id': y['id'],
+                'start_at': y.get('start_at') or '',
+                'end_at': y.get('end_at') or '',
+                'tenpo_id': y.get('tenpo_id') or '',
+                'tenpo_name': y.get('tenpo_name') or y.get('store_name') or y.get('target_name') or '',
+                'sagyouin_id': y.get('sagyouin_id') or y.get('worker_id') or '',
+                'sagyouin_name': y.get('sagyouin_name') or y.get('worker_name') or y.get('staff_name') or '',
+                'work_type': y.get('work_type') or 'その他',
+                'yotei_jotai': y.get('jotai') or 'yuko',
+                
+                # ugokiプロパティ (jotaiに一本化)
+                'jotai': u.get('jotai') or u.get('jokyo') or 'mikanryo',
+                'updated_at': u.get('updated_at') or '',
+                'started_at': u.get('started_at') or '',
+                'reason_code': u.get('reason_code') or '',
+                'reason_note': u.get('reason_note') or u.get('admin_reason') or '',
+                
+                # 互換性・デバッグ用
+                'ugoki': u
+            }
+            results.append(item)
+            
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'date': date_str,
+                'items': sorted(results, key=lambda x: str(x.get('start_at') or ''))
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"[ugoki] get list failed: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to get ugoki list', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def ugoki_get_detail(yotei_id, headers):
+    try:
+        res = UGOKI_TABLE.get_item(Key={'yotei_id': yotei_id})
+        item = res.get('Item')
+        if not item:
+            y_res = YOTEI_SCHEDULES_TABLE.get_item(Key={'id': yotei_id})
+            y_item = y_res.get('Item')
+            if not y_item:
+                return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'yotei not found'})}
+            item = {
+                'yotei_id': yotei_id,
+                'jotai': 'mikanryo',
+                'jokyo': 'mikanryo',
+                'sagyouin_id': y_item.get('sagyouin_id'),
+                'tenpo_id': y_item.get('tenpo_id')
+            }
+        
+        item['jokyo'] = item.get('jokyo') or item.get('jotai')
+        item['jotai'] = item.get('jotai') or item.get('jokyo')
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(item, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to get ugoki detail', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def ugoki_patch_status(yotei_id, event, headers):
+    try:
+        user_info = _get_user_info_from_event(event) or {}
+        uid = user_info.get('uid')
+        role = user_info.get('role', 'worker')
+        is_admin = role in ('admin', 'headquarters')
+        
+        body = _yotei_parse_body(event)
+        new_jotai = body.get('jotai') or body.get('jokyo')
+        override = body.get('override')
+        reason_note = body.get('reason_note') or body.get('note')
+        reason = body.get('reason') or body.get('admin_reason') or reason_note
+        reason_code = body.get('reason_code')
+        
+        if not new_jotai:
+             return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'jotai or jokyo is required'})}
+
+        if new_jotai not in ('mikanryo', 'shinkou', 'kanryou'):
+            return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'invalid status'})}
+            
+        # 1. 現状取得
+        res = UGOKI_TABLE.get_item(Key={'yotei_id': yotei_id})
+        current_item = res.get('Item')
+        curr_jotai = current_item.get('jotai', 'mikanryo') if current_item else 'mikanryo'
+        
+        # 2. 状態遷移バリデーション
+        allowed = False
+        if is_admin:
+            allowed = True
+            if not reason and (new_jotai == 'mikanryo' or (curr_jotai == 'kanryou' and new_jotai != 'kanryou')):
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'admin requires reason for backward transition'})}
+        else:
+            if curr_jotai == 'mikanryo' and new_jotai == 'shinkou':
+                allowed = True
+            elif curr_jotai == 'shinkou' and new_jotai == 'kanryou':
+                allowed = True
+                
+        if not allowed:
+            return {
+                'statusCode': 403, 
+                'headers': headers, 
+                'body': json.dumps({'error': f'transition from {curr_jotai} to {new_jotai} not allowed for your role'})
+            }
+            
+        # 3. Yotei情報取得
+        y_res = YOTEI_SCHEDULES_TABLE.get_item(Key={'id': yotei_id})
+        y_item = y_res.get('Item')
+        if not y_item:
+            return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'base yotei not found'})}
+
+        # 4. 更新
+        now = datetime.utcnow().isoformat() + 'Z'
+        if not current_item:
+            current_item = {
+                'yotei_id': yotei_id,
+                'sagyouin_id': y_item.get('sagyouin_id'),
+                'tenpo_id': y_item.get('tenpo_id'),
+                'han_id': y_item.get('han_id'),
+                'started_at': now if new_jotai == 'shinkou' else None
+            }
+        
+        if curr_jotai == 'mikanryo' and new_jotai == 'shinkou':
+            current_item['started_at'] = now
+            
+        current_item.update({
+            'jotai': new_jotai,
+            'updated_at': now,
+            'last_updated_by': uid or 'system',
+        })
+        
+        if is_admin:
+            if override:
+                current_item['override'] = override
+            if reason:
+                current_item['admin_reason'] = reason
+            if reason_note:
+                current_item['reason_note'] = reason_note
+            if reason_code:
+                current_item['reason_code'] = reason_code
+
+        UGOKI_TABLE.put_item(Item=current_item)
+        
+        # 5. Step 4: houkoku連動 (完了時)
+        report_id = None
+        if new_jotai == 'kanryou' and curr_jotai != 'kanryou':
+            try:
+                report_id = _create_houkoku_draft(y_item)
+                
+                # yakusoku 消化カウント
+                yak_id = y_item.get('yakusoku_id')
+                if yak_id:
+                    month_key = (y_item.get('scheduled_date') or '').split('-')[:2] # YYYY-MM
+                    if len(month_key) == 2:
+                        m_key = "-".join(month_key)
+                        try:
+                            # consumption_count が未定義なら空Mapで初期化してから加算
+                            YAKUSOKU_TABLE.update_item(
+                                Key={'yakusoku_id': yak_id},
+                                UpdateExpression="SET consumption_count = if_not_exists(consumption_count, :empty), updated_at = :now",
+                                ExpressionAttributeValues={':empty': {}, ':now': now}
+                            )
+                            YAKUSOKU_TABLE.update_item(
+                                Key={'yakusoku_id': yak_id},
+                                UpdateExpression="SET consumption_count.#m = if_not_exists(consumption_count.#m, :zero) + :one, updated_at = :now",
+                                ExpressionAttributeNames={'#m': m_key},
+                                ExpressionAttributeValues={':zero': 0, ':one': 1, ':now': now}
+                            )
+                        except Exception as ye:
+                            print(f"[ugoki] yakusoku count increment failed: {str(ye)}")
+            except Exception as e:
+                print(f"[ugoki] error creating report draft: {str(e)}")
+                
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'status': 'success', 'jotai': new_jotai, 'yotei_id': yotei_id, 'report_id': report_id}, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"[ugoki] patch failed: {str(e)}")
+        traceback.print_exc()
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': 'Failed to update ugoki', 'message': str(e)}, ensure_ascii=False)
+        }
+
+def _create_houkoku_draft(y_item):
+    """
+    完了時に報告書下書きを自動作成 (staff-reports)
+    冪等性を確保：同一 yotei_id の下書きが既に存在する場合は何もしない
+    """
+    target_table = dynamodb.Table('staff-reports')
+    yotei_id = y_item.get('id')
+    
+    # 既存の報告書をチェック (yotei_id でフィルター)
+    existing = target_table.scan(
+        FilterExpression=Attr('yotei_id').eq(yotei_id),
+        Limit=1,
+        ProjectionExpression='report_id'
+    ).get('Items', [])
+    
+    if existing:
+        return existing[0].get('report_id')
+        
+    now_ts = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    report_id = f"REP-AUTO-{yotei_id}"
+    
+    item = {
+        'report_id': report_id,
+        'created_at': now_ts,
+        'yotei_id': yotei_id,
+        'status': 'draft',
+        'staff_id': y_item.get('sagyouin_id'),
+        'worker_id': y_item.get('sagyouin_id'),
+        'store_id': y_item.get('tenpo_id'),
+        'store_name': y_item.get('tenpo_name') or y_item.get('store_name') or y_item.get('target_name'),
+        'cleaning_date': y_item.get('scheduled_date'),
+        'yakusoku_id': y_item.get('yakusoku_id'),
+        'updated_at': now_ts,
+        'origin': 'ugoki_auto'
+    }
+    item = {k: v for k, v in item.items() if v is not None}
+    
+    try:
+        target_table.put_item(
+            Item=item,
+            ConditionExpression='attribute_not_exists(report_id)'
+        )
+        return report_id
+    except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
+        return report_id # Concurrent request already created it
+    except Exception as e:
+        print(f"[ugoki] error creating report draft: {str(e)}")
+        return None
+
+# --- YAKUSOKU handlers ---
+
+def yakusoku_get_list(event, headers):
+    try:
+        user_info = _get_user_info_from_event(event)
+        if not user_info:
+            return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+        role = user_info.get('role')
+        if not _is_master_role(role):
+            return {
+                'statusCode': 403, 
+                'headers': headers, 
+                'body': json.dumps({
+                    'error': 'Forbidden', 
+                    'reason': 'role_not_allowed', 
+                    'role': role, 
+                    'required': ['admin', 'headquarters']
+                }, ensure_ascii=False)
+            }
+
+        qp = event.get('queryStringParameters') or {}
+        client_id = qp.get('client_id')
+        tenpo_id = qp.get('tenpo_id')
+        
+        filters = [Attr('status').ne('deleted')]
+        if client_id: filters.append(Attr('client_id').eq(client_id))
+        if tenpo_id: filters.append(Attr('tenpo_id').eq(tenpo_id))
+        
+        filter_expr = filters[0]
+        for f in filters[1:]: filter_expr = filter_expr & f
+            
+        res = YAKUSOKU_TABLE.scan(FilterExpression=filter_expr)
+        items = res.get('Items', [])
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps({'items': items}, default=str, ensure_ascii=False)}
+    except Exception as e:
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
+def yakusoku_get_detail(yakusoku_id, event, headers):
+    try:
+        user_info = _get_user_info_from_event(event)
+        if not user_info:
+            return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+        role = user_info.get('role')
+        if not _is_master_role(role):
+            return {
+                'statusCode': 403, 
+                'headers': headers, 
+                'body': json.dumps({
+                    'error': 'Forbidden', 
+                    'reason': 'role_not_allowed', 
+                    'role': role, 
+                    'required': ['admin', 'headquarters']
+                }, ensure_ascii=False)
+            }
+
+        res = YAKUSOKU_TABLE.get_item(Key={'yakusoku_id': yakusoku_id})
+        item = res.get('Item')
+        if not item or item.get('status') == 'deleted':
+            return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'not found'})}
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps(item, default=str, ensure_ascii=False)}
+    except Exception as e:
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
+def yakusoku_create(event, headers):
+    try:
+        user_info = _get_user_info_from_event(event)
+        if not user_info:
+            return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+        role = user_info.get('role')
+        if not _is_master_role(role):
+            return {
+                'statusCode': 403, 
+                'headers': headers, 
+                'body': json.dumps({
+                    'error': 'Forbidden', 
+                    'reason': 'role_not_allowed', 
+                    'role': role, 
+                    'required': ['admin', 'headquarters']
+                }, ensure_ascii=False)
+            }
+
+        body = _yotei_parse_body(event)
+        yid = body.get('yakusoku_id') or f"YAK-{uuid.uuid4().hex[:12]}"
+        now = datetime.utcnow().isoformat() + 'Z'
+        item = {
+            'yakusoku_id': yid,
+            'client_id': body.get('client_id'),
+            'tenpo_id': body.get('tenpo_id'),
+            'type': body.get('type', 'teiki'),
+            'recurrence_rule': body.get('recurrence_rule', {}),
+            'monthly_quota': body.get('monthly_quota'),
+            'consumption_count': {},
+            'price': body.get('price'),
+            'start_date': body.get('start_date'),
+            'end_date': body.get('end_date'),
+            'status': body.get('status', 'active'),
+            'memo': body.get('memo', ''),
+            'created_at': now,
+            'updated_at': now
+        }
+        YAKUSOKU_TABLE.put_item(Item=item)
+        return {'statusCode': 201, 'headers': headers, 'body': json.dumps(item, default=str, ensure_ascii=False)}
+    except Exception as e:
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
+def yakusoku_update(yakusoku_id, event, headers):
+    try:
+        user_info = _get_user_info_from_event(event)
+        if not user_info:
+            return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+        role = user_info.get('role')
+        if not _is_master_role(role):
+            return {
+                'statusCode': 403, 
+                'headers': headers, 
+                'body': json.dumps({
+                    'error': 'Forbidden', 
+                    'reason': 'role_not_allowed', 
+                    'role': role, 
+                    'required': ['admin', 'headquarters']
+                }, ensure_ascii=False)
+            }
+
+        body = _yotei_parse_body(event)
+        now = datetime.utcnow().isoformat() + 'Z'
+        res = YAKUSOKU_TABLE.get_item(Key={'yakusoku_id': yakusoku_id})
+        item = res.get('Item')
+        if not item: return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'not found'})}
+        
+        for f in ['client_id', 'tenpo_id', 'type', 'recurrence_rule', 'monthly_quota', 'price', 'start_date', 'end_date', 'status', 'memo']:
+            if f in body: item[f] = body[f]
+        item['updated_at'] = now
+        YAKUSOKU_TABLE.put_item(Item=item)
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps(item, default=str, ensure_ascii=False)}
+    except Exception as e:
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
+def yakusoku_delete(yakusoku_id, event, headers):
+    try:
+        user_info = _get_user_info_from_event(event)
+        if not user_info:
+            return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)}
+        role = user_info.get('role')
+        if not _is_master_role(role):
+            return {
+                'statusCode': 403, 
+                'headers': headers, 
+                'body': json.dumps({
+                    'error': 'Forbidden', 
+                    'reason': 'role_not_allowed', 
+                    'role': role, 
+                    'required': ['admin', 'headquarters']
+                }, ensure_ascii=False)
+            }
+
+        now = datetime.utcnow().isoformat() + 'Z'
+        YAKUSOKU_TABLE.update_item(
+            Key={'yakusoku_id': yakusoku_id},
+            UpdateExpression='SET #s = :s, updated_at = :u',
+            ExpressionAttributeNames={'#s': 'status'},
+            ExpressionAttributeValues={':s': 'deleted', ':u': now}
+        )
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps({'status': 'success'})}
+    except Exception as e:
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
+# --- Mobile Worker Handlers ---
+
+def worker_me_yotei(event, headers):
+    try:
+        user_info = _get_user_info_from_event(event)
+        if not user_info:
+            return {'statusCode': 401, 'headers': headers, 'body': json.dumps({'error': 'Unauthorized'})}
+        
+        worker_id = user_info.get('uid')
+        
+        # 営業日（Shift基準）の算出
+        # 16:00 - 04:00 を一つの日付とする
+        # 0:00 - 4:00 の間は、前日の日付を biz_date とする
+        now = datetime.now(timezone(timedelta(hours=9)))
+        if now.hour < 4:
+            biz_date = (now - timedelta(days=1)).strftime('%Y-%m-%d')
+        else:
+            biz_date = now.strftime('%Y-%m-%d')
+            
+        # yotei を取得
+        res = YOTEI_SCHEDULES_TABLE.scan(
+            FilterExpression=(
+                (Attr('sagyouin_id').eq(worker_id) | Attr('worker_id').eq(worker_id)) &
+                Attr('scheduled_date').eq(biz_date) &
+                Attr('jotai').ne('torikeshi')
+            )
+        )
+        items = [_yotei_normalize_item_status(i) for i in res.get('Items', [])]
+        
+        # ugoki 情報を JOIN
+        yotei_ids = [i['id'] for i in items]
+        ugoki_map = {}
+        if yotei_ids:
+            for k in range(0, len(yotei_ids), 100):
+                batch_keys = [{'yotei_id': yid} for yid in yotei_ids[k:k+100]]
+                batch_res = dynamodb.batch_get_item(RequestItems={'ugoki': {'Keys': batch_keys}})
+                for uitem in batch_res.get('Responses', {}).get('ugoki', []):
+                    ugoki_map[uitem['yotei_id']] = uitem
+        
+        for i in items:
+            u = ugoki_map.get(i['id'])
+            i['ugoki'] = {
+                'jotai': u.get('jotai') if u else 'mikanryo',
+                'updated_at': u.get('updated_at') if u else ''
+            }
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'biz_date': biz_date, 'items': items}, default=str, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"[worker_me] failed: {str(e)}")
+        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
+
 
 def create_schedule(event, headers):
     """

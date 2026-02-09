@@ -6,7 +6,6 @@ import { useAuth } from '../../auth/useAuth';
 import { getApiBase } from '../../api/client';
 import { getAuthHeaders } from '../../auth/cognitoStorage';
 import { putWorkReport, patchWorkReport, getWorkReportByDate, getWorkReportById, getUploadUrl, uploadPutToS3 } from './salesDayReportApi';
-import StoreSearchField from './StoreSearchField';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -25,12 +24,6 @@ const MAX_ATTACHMENTS = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'pdf', 'xlsx', 'docx', 'heic'];
 
-const TOUCH_TYPES = [
-  { value: 'visit', label: '訪問' },
-  { value: 'call', label: '電話' },
-  { value: 'email', label: 'メール' },
-  { value: 'other', label: 'その他' },
-];
 
 function getToday() {
   return new Date().toISOString().slice(0, 10);
@@ -184,19 +177,9 @@ export default function SalesDayReportPage() {
   /** 提出成功後にサーバーで読めない場合の警告（保存が別テーブル等で反映されていない） */
   const [shareVerifyError, setShareVerifyError] = useState(null);
   const [pdfGenerating, setPdfGenerating] = useState(false);
-  const [storeList, setStoreList] = useState([]);
   const fileInputRefs = useRef({});
   const saveSuccessTimerRef = useRef(null);
   const reportContentRef = useRef(null);
-
-  useEffect(() => {
-    const base = getApiBase().replace(/\/$/, '');
-    const headers = getAuthHeaders();
-    fetch(`${base}/stores`, { headers: { ...headers, 'Content-Type': 'application/json' }, cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : { items: [] }))
-      .then((data) => setStoreList(Array.isArray(data.items) ? data.items : []))
-      .catch(() => setStoreList([]));
-  }, []);
 
   const updateHeader = useCallback((next) => setHeader((h) => (typeof next === 'function' ? next(h) : { ...h, ...next })), []);
 
@@ -337,14 +320,13 @@ export default function SalesDayReportPage() {
 
   const validateHeader = useCallback(() => {
     if (!header.work_date?.trim()) return '作業日は必須です';
-    if (Number(header.total_minutes) <= 0) return '合計作業時間（分）を入力してください';
+    if (Number(header.total_minutes) < 0) return '合計作業時間（分）は0以上で入力してください';
     return '';
   }, [header.work_date, header.total_minutes]);
 
   const validateCaseSubmit = useCallback((c) => {
-    if (!c.store_name?.trim()) return '店舗名は必須です';
-    if (!c.summary?.trim()) return '要約は必須です';
-    if (!c.next_due?.trim() && !c.next_title?.trim()) return '次アクションの期限または内容のどちらかは必須です';
+    // 営業テンプレートは現場負担を下げるため、案件カード提出時の必須入力を設けない。
+    // 未入力項目はサーバ保存時の既存フォールバック（target_label等）で吸収する。
     return '';
   }, []);
 
@@ -814,30 +796,12 @@ export default function SalesDayReportPage() {
           <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 600 }}>業務報告</h1>
         </div>
 
-        {/* 報告者（証跡） */}
-        <section className="sales-day-reporter" aria-label="報告者">
-          {user?.name ? (
-            <p className="sales-day-reporter-label">報告者：<span className="sales-day-reporter-name">{user.name}</span></p>
-          ) : (
-            <div className="sales-day-field">
-              <label htmlFor="sales-day-reporter-name">報告者名（証跡のため表示・保存されます）</label>
-              <input
-                id="sales-day-reporter-name"
-                type="text"
-                value={header.reporter_name || ''}
-                onChange={(e) => updateHeader({ reporter_name: e.target.value })}
-                placeholder="氏名を入力"
-              />
-            </div>
-          )}
-        </section>
-
-        {/* 日次サマリ */}
+        {/* 日次サマリ（簡易版） */}
         <section className="sales-day-report-card sales-day-header">
-          <h2>日次サマリ</h2>
+          <h2>日次サマリ（簡易）</h2>
           <div className="sales-day-fields">
             <div className="sales-day-field">
-              <label>作業日（必須）</label>
+              <label>活動日（必須）</label>
               <input
                 type="date"
                 value={header.work_date}
@@ -845,7 +809,7 @@ export default function SalesDayReportPage() {
               />
             </div>
             <div className="sales-day-field">
-              <label>合計作業時間（分）（必須）</label>
+              <label>活動時間（分）</label>
               <input
                 type="number"
                 min={0}
@@ -854,70 +818,21 @@ export default function SalesDayReportPage() {
               />
             </div>
             <div className="sales-day-field">
-              <label>業務開始時間（任意）</label>
-              <input
-                type="time"
-                value={header.work_start_time || ''}
-                onChange={(e) => updateHeader({ work_start_time: e.target.value })}
-              />
-            </div>
-            <div className="sales-day-field">
-              <label>業務終了時間（任意）</label>
-              <input
-                type="time"
-                value={header.work_end_time || ''}
-                onChange={(e) => updateHeader({ work_end_time: e.target.value })}
-              />
-            </div>
-            <div className="sales-day-field">
-              <label>本日の成果（summary）</label>
+              <label>本日の成果</label>
               <textarea value={header.summary} onChange={(e) => updateHeader({ summary: e.target.value })} rows={2} />
             </div>
             <div className="sales-day-field">
-              <label>課題（issues）</label>
-              <textarea value={header.issues} onChange={(e) => updateHeader({ issues: e.target.value })} rows={2} />
-            </div>
-            <div className="sales-day-field">
-              <label>明日の最優先（top_priority）</label>
+              <label>明日の予定</label>
               <input type="text" value={header.top_priority} onChange={(e) => updateHeader({ top_priority: e.target.value })} />
             </div>
-          </div>
-          <div className="sales-day-attachments">
-            <h3>補助資料添付（日次）</h3>
-            <input
-              ref={(el) => { fileInputRefs.current.header = el; }}
-              type="file"
-              multiple
-              accept=".jpg,.jpeg,.png,.pdf,.xlsx,.docx,.heic"
-              className="sales-day-file-input"
-              onChange={(e) => handleAttachmentSelect('header', 0, e.target.files, header.attachments?.length || 0, null)}
-            />
-            <button
-              type="button"
-              className="btn btn-sm"
-              disabled={isUploading('header', 0) || (header.attachments?.length || 0) >= MAX_ATTACHMENTS}
-              onClick={() => fileInputRefs.current.header?.click()}
-            >
-              {isUploading('header', 0) ? 'アップロード中...' : 'ファイルを追加'}
-            </button>
-            <p className="sales-day-attachments-hint">最大 {MAX_ATTACHMENTS} 件・1ファイル 10MB まで</p>
-            {(header.attachments?.length || 0) > 0 && (
-              <ul className="sales-day-attachment-list">
-                {(header.attachments || []).map((att, ai) => (
-                  <li key={ai} className="sales-day-attachment-row">
-                    <span className="sales-day-attachment-name" title={att.name}>{att.name}</span>
-                    <span className="sales-day-attachment-size">{formatFileSize(att.size)}</span>
-                    {att.url && <a href={att.url} target="_blank" rel="noopener noreferrer" className="sales-day-attachment-open">開く</a>}
-                    <button type="button" className="sales-day-attachment-remove" onClick={() => removeAttachment('header', 0, ai)} title="削除">×</button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {attachmentErrors.header && <p className="sales-day-error">{attachmentErrors.header}</p>}
+            <div className="sales-day-field">
+              <label>気になった点</label>
+              <textarea value={header.issues} onChange={(e) => updateHeader({ issues: e.target.value })} rows={2} />
+            </div>
           </div>
           <div className="sales-day-actions">
             <button type="button" className="btn" onClick={handleHeaderSave} disabled={headerSaving}>
-              {headerSaving ? '保存中...' : '日次サマリを下書き保存'}
+              {headerSaving ? '保存中...' : '下書き保存'}
             </button>
             <button
               type="button"
@@ -940,108 +855,6 @@ export default function SalesDayReportPage() {
           {headerSaveSuccess && <p className="sales-day-success" role="status">保存しました</p>}
           {headerError && <p className="sales-day-error">{headerError}</p>}
           {headerSubmitError && <p className="sales-day-error">{headerSubmitError}</p>}
-        </section>
-
-        {/* 案件カード */}
-        <section className="sales-day-report-card sales-day-cases">
-          <h2>案件カード</h2>
-          <button type="button" className="btn btn-sm" onClick={addCase}>+ 案件を追加</button>
-          <div className="sales-day-case-list">
-            {cases.map((c, index) => (
-              <div key={index} className="sales-day-case-card">
-                <span className="sales-day-case-badge" title={!c.saved?.log_id ? '未保存' : c.saved.state === 'submitted' ? '提出済' : '下書き'}>
-                  {badgeSymbol(c.saved)}
-                </span>
-                <div className="sales-day-fields">
-                  <div className="sales-day-field">
-                    <label>店舗名（必須）</label>
-                    <StoreSearchField
-                      stores={storeList}
-                      value={c.store_name}
-                      storeKey={c.store_key}
-                      onChange={(o) => updateCase(index, o)}
-                      placeholder="法人名・ブランド名・店舗名で検索"
-                    />
-                  </div>
-                  <div className="sales-day-field">
-                    <label>store_key（任意）</label>
-                    <input type="text" value={c.store_key} onChange={(e) => updateCase(index, { store_key: e.target.value })} placeholder="空でも可" />
-                  </div>
-                  <div className="sales-day-field">
-                    <label>接触種別</label>
-                    <select value={c.touch_type} onChange={(e) => updateCase(index, { touch_type: e.target.value })}>
-                      {TOUCH_TYPES.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="sales-day-field">
-                    <label>要約（必須）</label>
-                    <input type="text" value={c.summary} onChange={(e) => updateCase(index, { summary: e.target.value })} />
-                  </div>
-                  <div className="sales-day-field">
-                    <label>詳細（任意）</label>
-                    <textarea value={c.detail} onChange={(e) => updateCase(index, { detail: e.target.value })} rows={2} />
-                  </div>
-                  <div className="sales-day-field row">
-                    <label>次アクション</label>
-                    <input type="date" placeholder="期限" value={c.next_due} onChange={(e) => updateCase(index, { next_due: e.target.value })} />
-                    <input type="text" placeholder="内容" value={c.next_title} onChange={(e) => updateCase(index, { next_title: e.target.value })} />
-                  </div>
-                  <div className="sales-day-field">
-                    <label>pipeline_after（任意）</label>
-                    <input type="text" value={c.pipeline_after} onChange={(e) => updateCase(index, { pipeline_after: e.target.value })} />
-                  </div>
-                  <div className="sales-day-field">
-                    <label>作業時間（分）（任意）</label>
-                    <input type="number" min={0} value={c.work_minutes || ''} onChange={(e) => updateCase(index, { work_minutes: e.target.value })} />
-                  </div>
-                </div>
-                <div className="sales-day-attachments">
-                  <h3>補助資料添付（案件）</h3>
-                  <input
-                    ref={(el) => { fileInputRefs.current[`case-${index}`] = el; }}
-                    type="file"
-                    multiple
-                    accept=".jpg,.jpeg,.png,.pdf,.xlsx,.docx,.heic"
-                    className="sales-day-file-input"
-                    onChange={(e) => handleAttachmentSelect('case', index, e.target.files, c.attachments?.length || 0, c.store_key)}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    disabled={isUploading('case', index) || (c.attachments?.length || 0) >= MAX_ATTACHMENTS}
-                    onClick={() => fileInputRefs.current[`case-${index}`]?.click()}
-                  >
-                    {isUploading('case', index) ? 'アップロード中...' : 'ファイルを追加'}
-                  </button>
-                  {(c.attachments?.length || 0) > 0 && (
-                    <ul className="sales-day-attachment-list small">
-                      {(c.attachments || []).map((att, ai) => (
-                        <li key={ai} className="sales-day-attachment-row">
-                          <span className="sales-day-attachment-name" title={att.name}>{att.name}</span>
-                          {att.url && <a href={att.url} target="_blank" rel="noopener noreferrer">開く</a>}
-                          <button type="button" className="sales-day-attachment-remove" onClick={() => removeAttachment('case', index, ai)}>×</button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {attachmentErrors[`case-${index}`] && <p className="sales-day-error">{attachmentErrors[`case-${index}`]}</p>}
-                </div>
-                <div className="sales-day-actions">
-                  <button type="button" className="btn" onClick={() => handleCaseSave(index)} disabled={caseSaving[index]}>
-                    {caseSaving[index] ? '保存中...' : 'この案件を下書き保存'}
-                  </button>
-                  <button type="button" className="btn btn-primary" onClick={() => handleCaseSubmit(index)} disabled={caseSaving[index]}>
-                    この案件を提出
-                  </button>
-                </div>
-                {caseSaveSuccess[index] && <p className="sales-day-success" role="status">保存しました</p>}
-                {caseErrors[index] && <p className="sales-day-error">{caseErrors[index]}</p>}
-                {submitErrors[index] && <p className="sales-day-error">{submitErrors[index]}</p>}
-              </div>
-            ))}
-          </div>
         </section>
 
         {shareUrl && (

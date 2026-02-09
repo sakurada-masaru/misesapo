@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { detectConflicts as detectConflictsBeforeSave, detectBlockConflicts } from '../../shared/utils/scheduleConflicts';
+import { detectConflicts as detectConflictsBeforeSave } from '../../shared/utils/scheduleConflicts';
 import { newScheduleId } from '../../shared/utils/scheduleId';
-import BlockCreateModal from '../../shared/ui/BlockCreateModal/BlockCreateModal';
 import Visualizer from '../../shared/ui/Visualizer/Visualizer';
 import OfficeClientKartePanel from '../../jobs/office/clients/OfficeClientKartePanel';
 import '../../shared/styles/components.css';
@@ -17,7 +16,6 @@ import '../../jobs/office/clients/office-client-karte-panel.css';
 
 const STORAGE_APPOINTMENTS = 'admin-schedule-appointments';
 const STORAGE_CLEANERS = 'admin-schedule-cleaners';
-const STORAGE_BLOCKS = 'admin-schedule-blocks';
 
 /** workers API 用ベース（localhost は /api、本番は VITE_API_BASE または prod） */
 const API_BASE =
@@ -26,11 +24,16 @@ const API_BASE =
     : (import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 const STATUSES = [
-  { key: 'booked', label: '予約', colorClass: 's-booked' },
-  { key: 'checked_in', label: '受付済', colorClass: 's-checkedin' },
-  { key: 'in_progress', label: '作業中', colorClass: 's-inprogress' },
+  { key: 'planned', label: '予定', colorClass: 's-booked' },
+  { key: 'torikeshi', label: '取消', colorClass: 's-cancelled' },
+];
+
+/** 実行状態（dispatch）: 予定状態と分離して管理 */
+const DISPATCH_STATUSES = [
+  { key: 'todo', label: '未着手', colorClass: 's-booked' },
+  { key: 'enroute', label: '移動中', colorClass: 's-checkedin' },
+  { key: 'working', label: '作業中', colorClass: 's-inprogress' },
   { key: 'done', label: '完了', colorClass: 's-done' },
-  { key: 'cancelled', label: 'キャンセル', colorClass: 's-cancelled' },
 ];
 
 const WORK_TYPES = [
@@ -193,7 +196,7 @@ async function createRandomAppointments(cleaners, dateISO, setAppointments, clie
   }
 
   const workTypes = ['定期', '特別', '入念', '検査対応', '夜間'];
-  const statuses = ['booked', 'checked_in', 'in_progress', 'done'];
+  const statuses = ['planned'];
   const times = [9 * 60, 10 * 60, 11 * 60, 13 * 60, 14 * 60, 15 * 60, 16 * 60]; // 9:00, 10:00, ...
 
   const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
@@ -319,7 +322,7 @@ async function createGoldenTimeAppointments(cleaners, dateISO, appointments, set
   }
 
   const workTypes = ['定期', '特別', '入念', '検査対応', '夜間'];
-  const statuses = ['booked', 'checked_in', 'in_progress', 'done'];
+  const statuses = ['planned'];
   // ゴールデンタイム：21:00〜翌10:00の開始時刻（平均4時間の作業時間を考慮）
   const goldenTimes = [
     21 * 60,  // 21:00
@@ -682,7 +685,7 @@ async function createDaytimeAppointment(cleaners, dateISO, appointments, setAppo
       end_min: endTime,
       target_name: targetName,
       work_type: '定期清掃（1ヶ月）',
-      status: 'booked',
+      status: 'planned',
       memo: '',
       created_at: Date.now(),
       contact_note: '',
@@ -710,12 +713,12 @@ function clearAllAppointments(setAppointments) {
 
 function makeSeedAppointments(dateISO) {
   const seed = [
-    { cleaner_id: 'c1', start: '09:00', end: '09:30', target_name: 'A店', work_type: '定期', status: 'booked' },
+    { cleaner_id: 'c1', start: '09:00', end: '09:30', target_name: 'A店', work_type: '定期', status: 'planned' },
     { cleaner_id: 'c1', start: '10:00', end: '10:30', target_name: 'B店', work_type: '特別', status: 'checked_in' },
     { cleaner_id: 'c2', start: '09:30', end: '10:00', target_name: 'C店', work_type: '定期', status: 'in_progress' },
-    { cleaner_id: 'c2', start: '10:15', end: '10:45', target_name: 'D店', work_type: '入念', status: 'booked' },
+    { cleaner_id: 'c2', start: '10:15', end: '10:45', target_name: 'D店', work_type: '入念', status: 'planned' },
     { cleaner_id: 'c3', start: '13:00', end: '13:30', target_name: 'E店', work_type: '定期', status: 'done' },
-    { cleaner_id: 'c4', start: '15:00', end: '15:30', target_name: 'F店', work_type: '夜間', status: 'cancelled' },
+    { cleaner_id: 'c4', start: '15:00', end: '15:30', target_name: 'F店', work_type: '夜間', status: 'torikeshi' },
   ];
   return seed.map((x, idx) => {
     const id = `a_${dateISO}_${idx}`;
@@ -742,13 +745,21 @@ function makeSeedAppointments(dateISO) {
 function ensureContactFields(appt) {
   return {
     ...appt,
+    status: normalizeYoteiStatus(appt.status),
     schedule_id: appt.schedule_id ?? appt.id,
     contact_note: appt.contact_note ?? '',
     contact_last_at: appt.contact_last_at ?? null,
     contact_status: appt.contact_status ?? 'pending',
     contact_reminders: appt.contact_reminders ?? [], // 事前連絡リマインダー（例：['7日前', '3日前', '1日前']）
     cleaner_ids: appt.cleaner_ids || (appt.cleaner_id ? [appt.cleaner_id] : []), // 複数清掃員対応
+    dispatch_status: appt.dispatch_status ?? normalizeDispatchStatusFromSchedule(appt.status),
   };
+}
+
+function normalizeYoteiStatus(status) {
+  const s = String(status || '').trim().toLowerCase();
+  if (s === 'torikeshi' || s === 'cancelled') return 'torikeshi';
+  return 'planned';
 }
 
 /** DynamoDBのスケジュールデータをフロントエンド形式に変換 */
@@ -785,7 +796,8 @@ function convertScheduleToAppointment(schedule) {
     end: endTimeStr || minutesToHHMM(endMin),
     target_name: targetName,
     work_type: schedule.work_type || schedule.order_type || 'その他',
-    status: schedule.status || 'booked',
+    status: normalizeYoteiStatus(schedule.status),
+    dispatch_status: normalizeDispatchStatusFromSchedule(schedule.status || 'planned'),
     memo: schedule.description || schedule.memo || schedule.notes || '',
     location: schedule.location || schedule.address || '',
     store_id: schedule.store_id || null,
@@ -1270,7 +1282,30 @@ function UnassignedSchedulesModal({ schedules, cleaners, onClose, onAssign }) {
 }
 
 function statusMeta(statusKey) {
-  return STATUSES.find((s) => s.key === statusKey) ?? STATUSES[0];
+  return STATUSES.find((s) => s.key === normalizeYoteiStatus(statusKey)) ?? STATUSES[0];
+}
+
+function dispatchStatusMeta(statusKey) {
+  return DISPATCH_STATUSES.find((s) => s.key === statusKey) ?? DISPATCH_STATUSES[0];
+}
+
+function normalizeDispatchStatusFromSchedule(scheduleStatus) {
+  if (scheduleStatus === 'done') return 'done';
+  if (scheduleStatus === 'in_progress') return 'working';
+  if (scheduleStatus === 'checked_in') return 'enroute';
+  return 'todo';
+}
+
+function categoryFromWorkType(workType = '') {
+  const t = String(workType);
+  if (t.includes('害虫') || t.includes('駆除') || t.includes('ゴキブリ') || t.includes('ネズミ')) return 'PEST';
+  if (t.includes('メンテ') || t.includes('修理') || t.includes('工事') || t.includes('補修') || t.includes('排水')) return 'MAINT';
+  return 'CLEAN';
+}
+
+function executionStatusMetaFromAppt(appt) {
+  const status = appt?.dispatch_status || normalizeDispatchStatusFromSchedule(appt?.status);
+  return dispatchStatusMeta(status);
 }
 
 function contactStatusMeta(key) {
@@ -1387,7 +1422,6 @@ export default function AdminScheduleTimelinePage() {
   });
   const [isLoadingSchedules, setIsLoadingSchedules] = useState(true);
 
-  const [blocks, setBlocks] = useState(() => loadJson(STORAGE_BLOCKS, []));
   /** カルテDock に表示する案件（カードクリックで設定）。ハイライトは selectedAppt?.schedule_id で行う */
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [karteDockHeight, setKarteDockHeight] = useState(() => {
@@ -1412,6 +1446,12 @@ export default function AdminScheduleTimelinePage() {
     }
     return d.format('YYYY-MM-DD');
   };
+
+  const upsertDispatchStatus = useCallback(async ({ scheduleId, workerId, storeId, workType, isoStartAt, status }) => {
+    // Phase1: /yotei のみをI/Oの正とするため、dispatch API への保存は行わない。
+    // 将来の ugoki フェーズで再有効化する。
+    return Promise.resolve({ scheduleId, workerId, storeId, workType, isoStartAt, status });
+  }, []);
 
   /** 報告書の下書きを自動起票する関数 */
   const createHoukokuDrafts = async (scheduleData, workerIds) => {
@@ -1497,27 +1537,16 @@ export default function AdminScheduleTimelinePage() {
     const dateFrom = selectedDate.subtract(30, 'day').format('YYYY-MM-DD');
     const dateTo = selectedDate.add(30, 'day').format('YYYY-MM-DD');
 
-    const schedulesUrl = `${base}/schedules?date_from=${dateFrom}&date_to=${dateTo}&limit=2000`;
+    const schedulesUrl = `${base}/yotei?date_from=${dateFrom}&date_to=${dateTo}&limit=2000`;
     const headers = token ? { 'Authorization': `Bearer ${String(token).trim()}` } : {};
 
-    // 予定の取得のみを行う（休み機能は一時停止）
-    const blocksUrl = `${base}/blocks?date_from=${dateFrom}&date_to=${dateTo}&limit=2000`;
-
-    // 予定とブロックを並行して取得
-    return Promise.all([
-      fetch(schedulesUrl, { headers, cache: 'no-store' }).then(res => res.ok ? res.json() : Promise.reject(new Error(`Schedules HTTP ${res.status}`))),
-      fetch(blocksUrl, { headers, cache: 'no-store' }).then(res => res.ok ? res.json() : Promise.reject(new Error(`Blocks HTTP ${res.status}`)))
-    ])
-      .then(([sData, bData]) => {
-        // スケジュールの処理
+    // blocks は一旦機能停止。schedules のみ取得する。
+    return fetch(schedulesUrl, { headers, cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`Schedules HTTP ${res.status}`))))
+      .then((sData) => {
         const sList = Array.isArray(sData) ? sData : (sData?.items || []);
         const converted = sList.map(convertScheduleToAppointment).map(ensureContactFields);
         setAppointments(converted);
-
-        // ブロックの処理
-        const bList = Array.isArray(bData) ? bData : (bData?.items || []);
-        setBlocks(bList);
-        saveJson(STORAGE_BLOCKS, bList);
       })
       .catch((err) => {
         console.warn('[AdminScheduleTimeline] API Load failed:', err);
@@ -1534,9 +1563,6 @@ export default function AdminScheduleTimelinePage() {
   useEffect(() => {
     saveJson(STORAGE_CLEANERS, cleaners);
   }, [cleaners]);
-  useEffect(() => {
-    saveJson(STORAGE_BLOCKS, blocks);
-  }, [blocks]);
 
   useEffect(() => {
     localStorage.setItem('admin-schedule-karte-dock-height', String(karteDockHeight));
@@ -1800,11 +1826,6 @@ export default function AdminScheduleTimelinePage() {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [saveConflictError, setSaveConflictError] = useState(null);
   const [conflictOverlayVisible, setConflictOverlayVisible] = useState(false);
-  const [blockModalOpen, setBlockModalOpen] = useState(false);
-  const [blockModalUserId, setBlockModalUserId] = useState(null);
-  const [blockModalInitialStartAt, setBlockModalInitialStartAt] = useState(null);
-  const [blockModalInitialEndAt, setBlockModalInitialEndAt] = useState(null);
-  const [blockConflictError, setBlockConflictError] = useState(null);
   const [icsImportModal, setIcsImportModal] = useState({ open: false });
   const [unassignedModal, setUnassignedModal] = useState({ open: false });
   const [emailListModal, setEmailListModal] = useState({ open: false });
@@ -1831,7 +1852,8 @@ export default function AdminScheduleTimelinePage() {
         end_min: end,
         target_name: '',
         work_type: '定期清掃（1ヶ月）',
-        status: 'booked',
+        status: 'planned',
+        dispatch_status: 'todo',
         memo: '',
         created_at: Date.now(),
         contact_note: '',
@@ -1875,6 +1897,7 @@ export default function AdminScheduleTimelinePage() {
       const timeSlot = `${startStr}-${endStr}`;
 
       return {
+        schedule_id: updated.schedule_id || updated.id,
         cleaner_id: workerId,
         date: updated.date,
         scheduled_date: updated.date,
@@ -1893,7 +1916,8 @@ export default function AdminScheduleTimelinePage() {
         client_id: updated.client_id || null,
         brand_name: updated.brand_name || '',
         work_type: updated.work_type || 'その他',
-        status: updated.status || 'booked',
+        status: normalizeYoteiStatus(updated.status),
+        dispatch_status: updated.dispatch_status || normalizeDispatchStatusFromSchedule(updated.status),
         worker_id: workerId,
         assigned_to: workerId,
         worker_ids: cleanerIds,
@@ -1916,7 +1940,7 @@ export default function AdminScheduleTimelinePage() {
       const conflicts = detectConflictsBeforeSave({
         candidateAppointments: candidate,
         existingAppointments: existingForCheck,
-        blocks,
+        blocks: [],
         userIdToName,
       });
 
@@ -1932,7 +1956,7 @@ export default function AdminScheduleTimelinePage() {
         const payload = createPayload(cleanerIds[0]);
         console.log('[AdminScheduleTimeline] Saving update schedule payload:', payload);
 
-        const res = await fetch(`${base}/schedules/${scheduleId}`, {
+        const res = await fetch(`${base}/yotei/${scheduleId}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify(payload)
@@ -1946,10 +1970,28 @@ export default function AdminScheduleTimelinePage() {
           if (message === 'worker_unavailable' || message === 'WORKER_UNAVAILABLE') {
             message = "担当者が対応不可の時間帯です（稼働時間外、または休みと重なっています）。";
           }
+          if (message === 'yotei_conflict' || message === 'YOTEI_CONFLICT') {
+            message = "担当者の予定が重複しています。時間帯を変更してください。";
+          }
           throw new Error(message);
         }
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        // 実行状態（dispatch）を同期
+        const dispatchStatus = updated.dispatch_status || normalizeDispatchStatusFromSchedule(updated.status);
+        await Promise.all(
+          cleanerIds.map((cid) => upsertDispatchStatus({
+            scheduleId,
+            workerId: cid,
+            storeId: updated.store_id,
+            workType: updated.work_type,
+            isoStartAt: `${updated.date}T${minutesToHHMM(updated.start_min)}:00`,
+            status: dispatchStatus,
+          }).catch((e) => {
+            console.warn('[AdminScheduleTimeline] dispatch sync failed (update):', e);
+          }))
+        );
 
         // 保存成功後に再読み込みして同期を確実にする
         await loadSchedulesFromAPI(updated.date);
@@ -1975,7 +2017,7 @@ export default function AdminScheduleTimelinePage() {
       console.log('[AdminScheduleTimeline] Save Create - Diagnostic:', {
         candidates,
         existingCount: existingForCheck.length,
-        blocksCount: blocks.length,
+        blocksCount: 0,
         existingForCheck
       });
 
@@ -1983,7 +2025,7 @@ export default function AdminScheduleTimelinePage() {
       const conflicts = detectConflictsBeforeSave({
         candidateAppointments: candidates,
         existingAppointments: existingForCheck,
-        blocks,
+        blocks: [],
         userIdToName,
       });
 
@@ -1997,7 +2039,7 @@ export default function AdminScheduleTimelinePage() {
       try {
         for (const payload of newApptsData) {
           console.log('[AdminScheduleTimeline] Saving new schedule payload:', payload);
-          const res = await fetch(`${base}/schedules`, {
+          const res = await fetch(`${base}/yotei`, {
             method: 'POST',
             headers,
             body: JSON.stringify(payload)
@@ -2005,16 +2047,44 @@ export default function AdminScheduleTimelinePage() {
 
           if (res.status === 409) {
             const conflictData = await res.json().catch(() => ({}));
+            console.warn('[AdminScheduleTimeline] Schedule create 409 conflict detail:', conflictData);
             let message = conflictData.message || conflictData.error || "他のスケジュールやクローズ（休み）と重複しています。";
+            const detail = Array.isArray(conflictData.conflicts) && conflictData.conflicts.length > 0
+              ? `\n${conflictData.conflicts.map((c) => {
+                  const who = c.worker_id || '担当者';
+                  const range = c.start_at && c.end_at ? `${c.start_at} - ${c.end_at}` : '';
+                  const cid = c.id ? ` (${c.id})` : '';
+                  return `- ${who}${cid} / ${range}`.trim();
+                }).join('\n')}`
+              : '';
 
             // サーバーのエラーコードを日本語に翻訳
             if (message === 'worker_unavailable' || message === 'WORKER_UNAVAILABLE') {
               message = "担当者が対応不可の時間帯です（稼働時間外、または休みと重なっています）。";
             }
-            throw new Error(message);
+            if (message === 'yotei_conflict' || message === 'YOTEI_CONFLICT') {
+              message = "担当者の予定が重複しています。時間帯を変更してください。";
+            }
+            throw new Error(`${message}${detail}`);
           }
 
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          const created = await res.json().catch(() => ({}));
+          const createdScheduleId = created?.id || created?.schedule_id || payload.schedule_id || payload.id;
+          const dispatchStatus = payload.dispatch_status || normalizeDispatchStatusFromSchedule(payload.status);
+          if (createdScheduleId) {
+            await upsertDispatchStatus({
+              scheduleId: createdScheduleId,
+              workerId: payload.worker_id,
+              storeId: payload.store_id,
+              workType: payload.work_type,
+              isoStartAt: payload.start_at,
+              status: dispatchStatus,
+            }).catch((e) => {
+              console.warn('[AdminScheduleTimeline] dispatch sync failed (create):', e);
+            });
+          }
 
           // 報告書の下書きを自動起票
           createHoukokuDrafts(payload, [payload.cleaner_id]);
@@ -2046,7 +2116,7 @@ export default function AdminScheduleTimelinePage() {
     try {
       const token = getToken();
       const base = API_BASE.replace(/\/$/, '');
-      const response = await fetch(`${base}/schedules/${scheduleId}`, {
+      const response = await fetch(`${base}/yotei/${scheduleId}`, {
         method: 'DELETE',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
@@ -2134,13 +2204,14 @@ export default function AdminScheduleTimelinePage() {
         worker_id: cleanerIds[0],
         assigned_to: cleanerIds[0],
         worker_ids: cleanerIds,
-        status: selectedAppt.status || 'booked',
+        status: normalizeYoteiStatus(selectedAppt.status),
+        dispatch_status: selectedAppt.dispatch_status || normalizeDispatchStatusFromSchedule(selectedAppt.status),
         description: selectedAppt.memo || selectedAppt.notes || '',
       };
 
       console.log('[AdminScheduleTimeline] Saving update via KarteDock:', payload);
 
-      const res = await fetch(`${base}/schedules/${scheduleId}`, {
+      const res = await fetch(`${base}/yotei/${scheduleId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -2151,11 +2222,25 @@ export default function AdminScheduleTimelinePage() {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+      const dispatchStatus = payload.dispatch_status || normalizeDispatchStatusFromSchedule(payload.status);
+      await Promise.all(
+        cleanerIds.map((cid) => upsertDispatchStatus({
+          scheduleId,
+          workerId: cid,
+          storeId: selectedAppt.store_id,
+          workType: selectedAppt.work_type,
+          isoStartAt: `${selectedAppt.date}T${minutesToHHMM(selectedAppt.start_min)}:00`,
+          status: dispatchStatus,
+        }).catch((e) => {
+          console.warn('[AdminScheduleTimeline] dispatch sync failed (karte edit):', e);
+        }))
+      );
+
       // 2番目以降の清掃員がいる場合、新規作成（AppointmentModal.saveModalのロジックと同様）
       if (cleanerIds.length > 1) {
         for (let i = 1; i < cleanerIds.length; i++) {
           const extraPayload = { ...payload, worker_id: cleanerIds[i], assigned_to: cleanerIds[i] };
-          await fetch(`${base}/schedules`, {
+          await fetch(`${base}/yotei`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -2225,88 +2310,7 @@ export default function AdminScheduleTimelinePage() {
     document.addEventListener('touchend', handleEnd);
   }
 
-  /** スロット右クリックでブロック作成モーダルを開く。startMin はその日の分（0–1440）。 */
-  function openBlockModalWithSlot(userId, startMin) {
-    const dayEnd = 24 * 60;
-    const start = startMin ?? 9 * 60;
-    const end = Math.min(start + 60, dayEnd);
-    setBlockConflictError(null);
-    setBlockModalUserId(userId);
-    setBlockModalInitialStartAt(`${dateISO}T${minutesToHHMM(start)}`);
-    setBlockModalInitialEndAt(`${dateISO}T${minutesToHHMM(end)}`);
-    setBlockModalOpen(true);
-  }
-
-  function closeBlockModal() {
-    setBlockModalOpen(false);
-    setBlockModalUserId(null);
-    setBlockModalInitialStartAt(null);
-    setBlockModalInitialEndAt(null);
-    setBlockConflictError(null);
-  }
-
-  async function createBlock(payload) {
-    const uid = String(payload.user_id);
-    const newBlock = {
-      user_id: uid,
-      worker_id: uid,
-      assigned_to: uid,
-      start_at: payload.start_at,
-      end_at: payload.end_at,
-      type: payload.type,
-      reason_code: payload.reason_code ?? 'other',
-      reason_note: payload.reason_note ?? null,
-      visibility: payload.visibility ?? 'admin_only',
-    };
-
-    const existingAppointmentsForCheck = appointments.map(apptToConflictShape);
-    const userIdToName = Object.fromEntries(cleanersWithUnit.map((c) => [c.id, c.name]));
-    const conflicts = detectBlockConflicts({
-      block: { ...newBlock, id: `temp_${Date.now()}` },
-      existingAppointments: existingAppointmentsForCheck,
-      existingBlocks: blocks,
-      userIdToName,
-    });
-
-    if (conflicts.length > 0) {
-      setBlockConflictError(`重複のため登録できません\n${conflicts.map((c) => c.message).join('\n')}`);
-      return;
-    }
-
-    try {
-      const token = getToken();
-      const base = API_BASE.replace(/\/$/, '');
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      if (token) headers['Authorization'] = `Bearer ${String(token).trim()}`;
-
-      const res = await fetch(`${base}/blocks`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(newBlock),
-      });
-
-      if (!res.ok) {
-        const errTxt = await res.text();
-        throw new Error(`HTTP ${res.status}: ${errTxt}`);
-      }
-
-      const resData = await res.json();
-      const createdBlock = resData.block || { ...newBlock, id: resData.id };
-
-      console.log('[AdminScheduleTimeline] Block created:', createdBlock);
-      setBlocks((prev) => [...prev, createdBlock]);
-
-      // 最新状態を再読み込みして同期
-      await loadSchedulesFromAPI(dayjs(payload.start_at).format('YYYY-MM-DD'));
-
-      closeBlockModal();
-    } catch (err) {
-      console.error('[AdminScheduleTimeline] Create block failed:', err);
-      setBlockConflictError(`ブロック作成に失敗しました: ${err.message}`);
-    }
-  }
+  // blocks 機能は一時停止中（再開時に専用仕様で復帰）
 
   function saveContact(appointmentId, { contact_note, contact_status }) {
     const now = new Date().toISOString();
@@ -2357,7 +2361,7 @@ export default function AdminScheduleTimelinePage() {
                 {view === 'week' ? `${getWeekRangeLabel(dateISO)} の週` : `${isoToDateLabel(dateISO)} の割当`}
               </div>
               <div style={{ fontSize: '0.75em', color: 'var(--muted)', marginTop: '4px' }}>
-                清掃サイクル『🌙：04:00~』『☀️:16:00~』16:00以降は次の日案件
+                清掃サイクル『🌙:16:00-翌04:00』『☀️:04:00-16:00』16:00以降は翌営業日案件
               </div>
               {houkokuSaveError && (
                 <div style={{
@@ -2519,7 +2523,7 @@ export default function AdminScheduleTimelinePage() {
                 <span style={{ fontWeight: 'bold', fontSize: '0.9em', color: 'var(--accent-red)' }}>清掃事故案件:</span>
                 {recleanEvents.length > 0 ? (
                   recleanEvents.map((appt) => {
-                    const meta = statusMeta(appt.status);
+                    const meta = executionStatusMetaFromAppt(appt);
                     const conflict = conflictIds.has(appt.id);
                     const store = appt.store_id ? stores.find((s) => String(s.id) === String(appt.store_id)) : null;
                     const client = appt.client_id ? clients.find((c) => String(c.id) === String(appt.client_id)) : null;
@@ -2573,13 +2577,13 @@ export default function AdminScheduleTimelinePage() {
                   cleaners={cleanersWithUnit}
                   timelineUnitColumns={timelineUnitColumns}
                   appointments={filteredAppointments}
-                  blocks={blocks}
+                  blocks={[]}
                   conflictIds={conflictIds}
                   activeScheduleId={selectedAppt?.schedule_id ?? null}
                   onCardClick={handleScheduleCardClick}
                   onBackgroundClick={handleTimelineBackgroundClick}
                   onCreate={openCreate}
-                  onOpenBlockModalWithSlot={openBlockModalWithSlot}
+                  onOpenBlockModalWithSlot={undefined}
                   stores={stores}
                   clients={clients}
                   brands={brands}
@@ -2594,12 +2598,12 @@ export default function AdminScheduleTimelinePage() {
                   activeCleanerId={activeCleanerSP}
                   setActiveCleanerId={setActiveCleanerSP}
                   appointments={filteredAppointments}
-                  blocks={blocks}
+                  blocks={[]}
                   conflictIds={conflictIds}
                   activeScheduleId={selectedAppt?.schedule_id ?? null}
                   onCardClick={handleScheduleCardClick}
                   onCreate={openCreate}
-                  onOpenBlockModalWithSlot={openBlockModalWithSlot}
+                  onOpenBlockModalWithSlot={undefined}
                 />
               </div>
             </div>
@@ -3057,19 +3061,6 @@ export default function AdminScheduleTimelinePage() {
           />
         )}
 
-        {blockModalOpen && (
-          <BlockCreateModal
-            open={blockModalOpen}
-            onClose={closeBlockModal}
-            onCreate={createBlock}
-            cleaners={cleanersWithUnit}
-            dateISO={dateISO}
-            initialUserId={blockModalUserId}
-            initialStartAt={blockModalInitialStartAt}
-            initialEndAt={blockModalInitialEndAt}
-          />
-        )}
-
         {icsImportModal.open && (
           <IcsImportModal
             apiBase={API_BASE}
@@ -3131,7 +3122,7 @@ export default function AdminScheduleTimelinePage() {
               try {
                 if (isFirst) {
                   // 最初の清掃員: 既存のスケジュールを更新
-                  const updateResponse = await fetch(`${base}/schedules/${scheduleId}`, {
+                  const updateResponse = await fetch(`${base}/yotei/${scheduleId}`, {
                     method: 'PUT',
                     headers: {
                       'Authorization': `Bearer ${token}`,
@@ -3149,7 +3140,7 @@ export default function AdminScheduleTimelinePage() {
                 } else {
                   // 2番目以降の清掃員: 新しいスケジュールを作成
                   // まず元のスケジュール情報を取得
-                  const getResponse = await fetch(`${base}/schedules/${scheduleId}`, {
+                  const getResponse = await fetch(`${base}/yotei/${scheduleId}`, {
                     headers: {
                       'Authorization': `Bearer ${token}`,
                     },
@@ -3184,7 +3175,7 @@ export default function AdminScheduleTimelinePage() {
                     work_type: schedule.work_type || 'その他',
                     work_content: schedule.work_content || schedule.memo || '',
                     notes: schedule.notes || schedule.memo || '',
-                    status: schedule.status || 'booked',
+                    status: normalizeYoteiStatus(schedule.status),
                     worker_id: workerId,
                     assigned_to: workerId,
                     origin: schedule.origin || 'manual',
@@ -3192,7 +3183,7 @@ export default function AdminScheduleTimelinePage() {
                     attendee_emails: schedule.attendee_emails || [],
                   };
 
-                  const createResponse = await fetch(`${base}/schedules`, {
+                  const createResponse = await fetch(`${base}/yotei`, {
                     method: 'POST',
                     headers: {
                       'Authorization': `Bearer ${token}`,
@@ -3760,18 +3751,27 @@ function IcsImportModal({ apiBase, onClose, onSuccess }) {
 }
 
 function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, blocks, conflictIds, activeScheduleId, onCardClick, onBackgroundClick, onCreate, onOpenBlockModalWithSlot, stores = [], clients = [], brands = [], timelinePart = 'night', onTimelinePartChange }) {
-  // 午前/午後で分割（AM/PM）
-  // 🌙 午前パート: 00:00〜12:00（12時間）
-  // ☀️ 午後パート: 12:00〜24:00（12時間）
-  const isDayPart = timelinePart === 'day';
-  const dayStart = isDayPart ? 12 * 60 : 0;      // 午後: 12:00, 午前: 00:00
-  const dayEnd = isDayPart ? 24 * 60 : 12 * 60;  // 午後: 24:00, 午前: 12:00
+  // 12時間表示を「日勤/夜勤」で分割
+  // ☀️ 日勤: 04:00〜16:00
+  // 🌙 夜勤: 16:00〜翌04:00
+  const isDayShift = timelinePart === 'day';
+  const dayStart = isDayShift ? 4 * 60 : 16 * 60;
+  const dayEnd = isDayShift ? 16 * 60 : 4 * 60;
   const step = 60;              // 1時間間隔
   const rows = [];
 
-  // 時間行を生成
-  for (let t = dayStart; t < dayEnd; t += step) {
-    rows.push(t);
+  // 時間行を生成（夜勤は日跨ぎ）
+  if (isDayShift) {
+    for (let t = dayStart; t < dayEnd; t += step) {
+      rows.push(t);
+    }
+  } else {
+    for (let t = dayStart; t < 24 * 60; t += step) {
+      rows.push(t);
+    }
+    for (let t = 0; t < dayEnd; t += step) {
+      rows.push(t);
+    }
   }
 
 
@@ -3794,12 +3794,12 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
 
       // AM/PM時間帯フィルタリング
       let overlapsTimeRange = false;
-      if (isDayPart) {
-        // 午後パート(12:00-24:00): 12:00以降に開始する案件
-        overlapsTimeRange = a.start_min >= 12 * 60;
+      if (isDayShift) {
+        // 日勤(04:00-16:00)
+        overlapsTimeRange = a.start_min >= 4 * 60 && a.start_min < 16 * 60;
       } else {
-        // 午前パート(00:00-12:00): 12:00前に開始する案件
-        overlapsTimeRange = a.start_min < 12 * 60;
+        // 夜勤(16:00-翌04:00)
+        overlapsTimeRange = a.start_min >= 16 * 60 || a.start_min < 4 * 60;
       }
       if (overlapsTimeRange) {
         timelineAppts.push(a);
@@ -3852,7 +3852,7 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
   }, [allCleaners, byCleanerItems]);
 
   return (
-    <section className={`timelinePC timelinePCHorizontal ${isDayPart ? 'timelinePart-day' : 'timelinePart-night'}`}>
+    <section className={`timelinePC timelinePCHorizontal ${isDayShift ? 'timelinePart-day' : 'timelinePart-night'}`}>
       <div className="timelinePCContainerHorizontal">
         {/* 左側：名簿（縦並び） */}
         <div className="timelineNameListContainer">
@@ -3874,7 +3874,7 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
           <div className="timelineTimeHeaderHorizontal">
             {rows.map((t, idx) => (
               <div key={`${t}-${idx}`} className="timeHeaderCell">
-                <span style={{ marginRight: '4px' }}>{isDayPart ? '☀️' : '🌙'}</span>
+                <span style={{ marginRight: '4px' }}>{isDayShift ? '☀️' : '🌙'}</span>
                 {minutesToHHMM(t)}
               </div>
             ))}
@@ -3899,7 +3899,7 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
                 stores={stores}
                 clients={clients}
                 brands={brands}
-                isDayPart={isDayPart}
+                isDayShift={isDayShift}
               />
             ))}
           </div>
@@ -3917,12 +3917,12 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
           <div style={{ marginLeft: 'auto' }}>
             <button
               type="button"
-              className={`btn ${timelinePart === 'day' ? 'btnPrimary' : ''}`}
+              className={`btn ${timelinePart === 'night' ? 'btnPrimary' : ''}`}
               onClick={() => onTimelinePartChange(timelinePart === 'day' ? 'night' : 'day')}
-              title={timelinePart === 'day' ? '日勤に切り替え' : '夜勤に切り替え'}
+              title={timelinePart === 'day' ? '夜勤に切り替え' : '日勤に切り替え'}
               style={{ minWidth: '100px', fontSize: '0.9em' }}
             >
-              {timelinePart === 'day' ? '☀️ 夜勤 16-04' : '🌙 日勤 04-16'}
+              {timelinePart === 'day' ? '🌙 夜勤 16-04' : '☀️ 日勤 04-16'}
             </button>
           </div>
         )}
@@ -3931,8 +3931,10 @@ function DayTimelinePC({ dateISO, cleaners, timelineUnitColumns, appointments, b
   );
 }
 
-function CleanerRow({ cleaner, cleaners = [], rows, dayStart, dayEnd, items, conflictIds, activeScheduleId, onCardClick, onSlotClick, onSlotRightClick, stores = [], clients = [], brands = [], isDayPart = false }) {
-  const duration = (dayEnd || 1440) - (dayStart || 0);
+function CleanerRow({ cleaner, cleaners = [], rows, dayStart, dayEnd, items, conflictIds, activeScheduleId, onCardClick, onSlotClick, onSlotRightClick, stores = [], clients = [], brands = [], isDayShift = false }) {
+  const start = dayStart || 0;
+  const end = dayEnd || 1440;
+  const duration = end >= start ? (end - start) : ((24 * 60 - start) + end);
   const rowRef = React.useRef(null);
   const [rowWidth, setRowWidth] = React.useState(0);
 
@@ -3953,7 +3955,7 @@ function CleanerRow({ cleaner, cleaners = [], rows, dayStart, dayEnd, items, con
 
   // 時間をoffsetMinに変換する関数（16:00境界対応）
   const toOffsetMin = (min) => {
-    if (isDayPart) {
+    if (!isDayShift) {
       // 夜勤パート(16:00-04:00): 16:00が0、04:00が720(12時間後)
       if (min >= 16 * 60) {
         return min - 16 * 60;
@@ -3978,8 +3980,7 @@ function CleanerRow({ cleaner, cleaners = [], rows, dayStart, dayEnd, items, con
               type="button"
               className="slotCellHorizontal"
               onClick={(e) => { e.stopPropagation(); onSlotClick?.(cleaner.id, t); }}
-              onContextMenu={(e) => { e.preventDefault(); onSlotRightClick?.(cleaner.id, t); }}
-              aria-label={`${minutesToHHMM(t)}に割当追加。右クリックでクローズ追加`}
+              aria-label={`${minutesToHHMM(t)}に割当追加`}
             />
           );
         })}
@@ -4016,7 +4017,7 @@ function CleanerRow({ cleaner, cleaners = [], rows, dayStart, dayEnd, items, con
             const endOffset = toOffsetMin(a.end_min);
             const left = startOffset * pxPerMin;
             const width = Math.max(60, (endOffset - startOffset) * pxPerMin);
-            const meta = statusMeta(a.status);
+            const meta = executionStatusMetaFromAppt(a);
             const conflict = conflictIds.has(a.id);
             const isLinked = activeScheduleId != null && a.schedule_id === activeScheduleId;
 
@@ -4135,9 +4136,8 @@ function DayTimelineSP({ dateISO, cleaners, activeCleanerId, setActiveCleanerId,
                   type="button"
                   className="spEmpty"
                   onClick={() => onCreate(activeCleanerId, s.t)}
-                  onContextMenu={(e) => { e.preventDefault(); onOpenBlockModalWithSlot?.(activeCleanerId, s.t); }}
                 >
-                  空き（タップで割当追加・長押しメニューでクローズ追加）
+                  空き（タップで割当追加）
                 </button>
               ) : (
                 s.items.map((item) => {
@@ -4156,7 +4156,7 @@ function DayTimelineSP({ dateISO, cleaners, activeCleanerId, setActiveCleanerId,
                     );
                   }
                   const a = item.data;
-                  const meta = statusMeta(a.status);
+                  const meta = executionStatusMetaFromAppt(a);
                   const conflict = conflictIds.has(a.id);
                   const isLinked = activeScheduleId != null && a.schedule_id === activeScheduleId;
 
@@ -4239,7 +4239,7 @@ function DayList({ dateISO, cleaners, appointments, conflictIds, onCardClick, on
         </div>
         {sorted.map((a) => {
           const d = cleaners.find((x) => x.id === a.cleaner_id);
-          const meta = statusMeta(a.status);
+          const meta = executionStatusMetaFromAppt(a);
           const conflict = conflictIds.has(a.id);
           const isInProgress = a.status === 'in_progress';
           return (
@@ -4371,7 +4371,7 @@ function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, co
             <div className="weekEmpty">割当なし</div>
           ) : (
             dayAppts.map((a) => {
-              const meta = statusMeta(a.status);
+              const meta = executionStatusMetaFromAppt(a);
               const conflict = conflictIds.has(a.id);
               const cleanerName = cleaners.find((d) => d.id === a.cleaner_id)?.name ?? '';
               return (
@@ -4609,7 +4609,7 @@ function CleaningWeekPanel({
                   <div className="weekEmpty">割当なし</div>
                 ) : (
                   dayAppts.map((a) => {
-                    const meta = statusMeta(a.status);
+                    const meta = executionStatusMetaFromAppt(a);
                     const contactMeta = contactStatusMeta(a.contact_status ?? 'pending');
                     const conflict = conflictIds.has(a.id);
                     const isHighlight = selectedAppointmentId === a.id;
@@ -4883,6 +4883,7 @@ function AppointmentModal({ dateISO, cleaners, appt, mode, onClose, onSave, onDe
   }
 
   const meta = statusMeta(local.status);
+  const dispatchMeta = dispatchStatusMeta(local.dispatch_status || normalizeDispatchStatusFromSchedule(local.status));
 
   return (
     <div className="modalBackdrop" onMouseDown={onClose} role="presentation">
@@ -5154,6 +5155,15 @@ function AppointmentModal({ dateISO, cleaners, appt, mode, onClose, onSave, onDe
                   ))}
                 </select>
                 <div className={`badge preview ${meta.colorClass}`}>表示: {meta.label}</div>
+              </label>
+              <label className="field">
+                <span>実行状態</span>
+                <select value={local.dispatch_status || normalizeDispatchStatusFromSchedule(local.status)} onChange={(e) => setField('dispatch_status', e.target.value)}>
+                  {DISPATCH_STATUSES.map((s) => (
+                    <option key={s.key} value={s.key}>{s.label}</option>
+                  ))}
+                </select>
+                <div className={`badge preview ${dispatchMeta.colorClass}`}>実行: {dispatchMeta.label}</div>
               </label>
             </div>
           )}

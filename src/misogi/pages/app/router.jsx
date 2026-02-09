@@ -17,6 +17,9 @@ import AdminEntrancePage from '../admin/pages/AdminEntrancePage';
 import AdminWorkReportsPage from '../admin/pages/AdminWorkReportsPage';
 import AdminCleaningReportsPage from '../admin/pages/AdminCleaningReportsPage';
 import AdminScheduleTimelinePage from '../admin/pages/AdminScheduleTimelinePage';
+import AdminUgokiDashboardPage from '../admin/pages/AdminUgokiDashboardPage';
+import AdminYoteiTimelinePage from '../admin/pages/AdminYoteiTimelinePage';
+import AdminYakusokuPage from '../admin/pages/AdminYakusokuPage';
 import AdminPortalOperatingDaysPage from '../admin/pages/AdminPortalOperatingDaysPage';
 import AdminReportNewPage from '../admin/pages/AdminReportNewPage';
 import AdminHoukokuListPage from '../admin/pages/AdminHoukokuListPage';
@@ -93,6 +96,9 @@ export default function Router() {
       <Route path="/admin/reports/new" element={<AdminReportNewPage />} />
       <Route path="/houkoku" element={<AdminReportNewPage />} />
       <Route path="/admin/schedule" element={<AdminScheduleTimelinePage />} />
+      <Route path="/admin/yotei" element={<AdminYoteiTimelinePage />} />
+      <Route path="/admin/yakusoku" element={<AdminYakusokuPage />} />
+      <Route path="/admin/ugoki" element={<AdminUgokiDashboardPage />} />
       <Route path="/admin/portal-operating-days" element={<AdminPortalOperatingDaysPage />} />
       <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />
       <Route path="/admin/houkoku/:reportId" element={<AdminHoukokuDetailPage />} />

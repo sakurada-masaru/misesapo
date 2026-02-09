@@ -1,0 +1,11 @@
+{
+    "path": "/yotei",
+    "httpMethod": "GET",
+    "queryStringParameters": {
+        "limit": "5"
+    },
+    "requestContext": {
+        "resourcePath": "/yotei",
+        "httpMethod": "GET"
+    }
+}

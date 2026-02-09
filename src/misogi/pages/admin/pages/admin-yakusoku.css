@@ -1,0 +1,228 @@
+.admin-yakusoku-page {
+  --bg: #0b0d12;
+  --panel: #121621;
+  --line: #273049;
+  --text: #e9eefc;
+  --muted: #9aa6c5;
+  min-height: 100vh;
+  background: radial-gradient(1200px 800px at 10% -10%, #1b2450 0%, var(--bg) 58%);
+  color: var(--text);
+}
+
+.admin-yakusoku-content {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.admin-yakusoku-back a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.admin-yakusoku-content h1 {
+  margin: 8px 0 14px;
+}
+
+.yakusoku-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.yakusoku-toolbar label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.yakusoku-toolbar label.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.yakusoku-toolbar input,
+.yakusoku-toolbar select,
+.yakusoku-toolbar button {
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0 10px;
+}
+
+.yakusoku-note {
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.yakusoku-error {
+  margin-bottom: 10px;
+  border: 1px solid #ef4444;
+  color: #fecaca;
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(127, 29, 29, 0.35);
+}
+
+.yakusoku-list {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(18, 22, 33, 0.9);
+}
+
+.yakusoku-head,
+.yakusoku-row {
+  display: grid;
+  grid-template-columns: 1.3fr .6fr 1.2fr 1.2fr .7fr .7fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.yakusoku-head {
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.yakusoku-row {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.yakusoku-row:last-child {
+  border-bottom: 0;
+}
+
+.yakusoku-row:hover {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.yakusoku-row small {
+  display: block;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.yakusoku-row .quota {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.yakusoku-empty {
+  padding: 14px;
+  color: var(--muted);
+}
+
+.yakusoku-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.72);
+  display: grid;
+  place-items: center;
+  z-index: 2100;
+}
+
+.yakusoku-modal {
+  width: min(760px, calc(100vw - 20px));
+  background: #0f172a;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.yakusoku-modal h2 {
+  margin: 0 0 12px;
+}
+
+.yakusoku-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.yakusoku-modal-grid label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.yakusoku-modal-grid .span2 {
+  grid-column: span 2;
+}
+
+.yakusoku-modal-grid input,
+.yakusoku-modal-grid select,
+.yakusoku-modal-grid textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0b1220;
+  color: #e2e8f0;
+  padding: 8px 10px;
+}
+
+.yakusoku-modal-error {
+  margin-top: 10px;
+  border: 1px solid #ef4444;
+  color: #fecaca;
+  border-radius: 8px;
+  padding: 8px;
+  background: rgba(127, 29, 29, 0.35);
+}
+
+.yakusoku-modal-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.yakusoku-modal-actions button {
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 0 10px;
+}
+
+.yakusoku-modal-actions .primary {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.yakusoku-modal-actions .danger {
+  background: #7f1d1d;
+  border-color: #ef4444;
+}
+
+@media (max-width: 980px) {
+  .yakusoku-head,
+  .yakusoku-row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .yakusoku-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .yakusoku-modal-grid .span2 {
+    grid-column: span 1;
+  }
+}
+

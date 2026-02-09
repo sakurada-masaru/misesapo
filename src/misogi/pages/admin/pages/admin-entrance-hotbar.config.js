@@ -11,7 +11,16 @@ export const ADMIN_HOTBAR = [
       { id: 'houkoku-list', label: '新・報告一覧 (New)', path: '/admin/houkoku' },
     ]
   },
-  { id: 'schedule', label: '清掃スケジュール', to: '/admin/schedule', disabled: false },
+  {
+    id: 'schedule',
+    label: '清掃スケジュール',
+    subItems: [
+      { id: 'schedule-main', label: '清掃スケジュール(旧)', path: '/admin/schedule' },
+      { id: 'yotei-hospital', label: '清掃管理(新)', path: '/admin/yotei' },
+      { id: 'ugoki-dashboard', label: '管制ダッシュボード', path: '/admin/ugoki' },
+      { id: 'yakusoku-list', label: '案件・定期管理', path: '/admin/yakusoku' },
+    ]
+  },
   {
     id: 'clients',
     role: 'target',
