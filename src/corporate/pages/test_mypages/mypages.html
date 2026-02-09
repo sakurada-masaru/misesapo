@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マイページ | ミセサポ</title>
+  <meta name="description" content="ミセサポのマイページで、発注・スケジュール・レポートなどの各項目をまとめて確認できます。">
+  <meta name="keywords" content="マイページ,発注,スケジュール,レポート,店舗情報,アカウント設定,ミセサポ">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://misesapo.co.jp/mypage">
+  <meta property="og:title" content="マイページ | ミセサポ">
+  <meta property="og:description" content="ミセサポのマイページで、発注・スケジュール・レポートなどの各項目をまとめて確認できます。">
+  <meta property="og:image" content="https://misesapo.co.jp/images/logo_144x144.png">
+  <meta property="og:site_name" content="ミセサポ">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:url" content="https://misesapo.co.jp/mypage">
+  <meta name="twitter:title" content="マイページ | ミセサポ">
+  <meta name="twitter:description" content="ミセサポのマイページで、発注・スケジュール・レポートなどの各項目をまとめて確認できます。">
+  <meta name="twitter:image" content="https://misesapo.co.jp/images/logo_144x144.png">
+  <link rel="canonical" href="https://misesapo.co.jp/mypage">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/css/header.css">
+  <link rel="stylesheet" href="/assets/css/admin-sidebar.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="/assets/js/auth.js"></script>
+  <script src="/js/client_auth.js"></script>
+  <style>
+  .tab-list {
+    padding: 10px;
+    gap: 6px;
+    width: 200px;
+    margin: auto;
+  }
+
+  .tab-item {
+    background: #f8fafc;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #374151;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    width: 100%;
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+
+  .tab-item:hover {
+    background: #fff;
+    border-color: #e5e7eb;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .tab-item.active {
+    background: #fff0f5;
+    border-color: rgba(255, 103, 156, 0.45);
+    color: #be185d;
+  }
+
+  .tab-pill {
+    width: auto;
+    padding: 6px 12px;
+  }
+
+  .mypage.main-content {
+    padding: 28px;
+    max-width: 1200px;
+    margin: auto;
+  }
+
+  .mypage-header {
+    background: var(--primary);
+    border: 1px solid var(--border);
+    padding: 24px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+    margin-bottom: 24px;
+  }
+
+  .mypage-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .mypage-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .client-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .client-name-divider {
+    color: var(--muted);
+  }
+
+  .person-name {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .mypage-header-right {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .mypage-header-divider {
+    margin-top: 18px;
+    border: none;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .mypage-grid {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .mypage-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1000px;
+  }
+
+  .mypage-menu {
+    position: sticky;
+    top: 24px;
+    height: fit-content;
+  }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+  }
+
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.active {
+    display: block;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 14px;
+  }
+
+  .section-placeholder {
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .tab-textarea {
+    width: 100%;
+    min-height: 200px;
+    margin-top: 16px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+  }
+
+  .tab-calendar {
+    margin-top: 16px;
+  }
+
+  .save-button {
+    margin-top: 16px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 10px 18px rgba(255, 103, 156, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .save-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px rgba(255, 103, 156, 0.3);
+  }
+
+  .calendar-section .card,
+  .section-order-3 .card {
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    background: #f9fafb;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .nav-label{
+    margin-right: 5px;
+  }
+
+  @media (max-width: 1024px) {
+    .mypage-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .mypage-menu {
+      position: static;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .mypage.main-content {
+      padding: 18px;
+    }
+
+    .section,
+    .mypage-header {
+      padding: 16px;
+    }
+
+    .mypage-header-right {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body class="theme-pink">
+  <section class="mypage-header">
+    <div class="mypage-header-content">
+      <div class="mypage-header-left">
+        <div class="client-name">マイページ</div>
+      </div>
+    </div>
+  </section>
+
+  <main id="main" class="container mypage main-content">
+
+  <div class="mypage-grid">
+    <aside class="section mypage-menu">
+      <div class="section-title">メニュー</div>
+      <nav class="sidebar-nav tab-list" id="mypage-menu"></nav>
+    </aside>
+
+    <div class="mypage-main">
+      <section class="section">
+        <h2 class="section-title" id="tab-content-title">読み込み中...</h2>
+        <p class="section-placeholder" id="tab-content-description">選択したメニューの内容を表示します。</p>
+        <textarea class="tab-textarea" id="tab-content-textarea" rows="10" placeholder="ここに内容が表示されます。"></textarea>
+        <button class="save-button" id="save-button" type="button">
+          <i class="fas fa-save"></i>
+          保存する
+        </button>
+      </section>
+  </div>
+
+</main>
+<footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>© 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+<script src="./js/mypage_calendar.js"></script>
+<script>
+  (function () {
+    const navEl = document.getElementById('mypage-menu');
+    const titleEl = document.getElementById('tab-content-title');
+    const descEl = document.getElementById('tab-content-description');
+    const textareaEl = document.getElementById('tab-content-textarea');
+    const saveButtonEl = document.getElementById('save-button');
+    if (!navEl || !titleEl || !descEl || !textareaEl || !saveButtonEl) return;
+
+    let tabButtons = [];
+    let tabData = {};
+    let initialTabId = '';
+
+    const fallbackMenu = {
+      items: [
+        { type: 'tab', id: 'calendar', label: 'カレンダー', icon: 'fa-calendar-alt', active: true },
+        { type: 'tab', id: 'report', label: 'レポート', icon: 'fa-file-alt' },
+        { type: 'tab', id: 'request', label: '請求書', icon: 'fa-shopping-cart' },
+        { type: 'tab', id: 'client-info', label: 'クライアント情報/登録・変更', icon: 'fa-id-card' },
+        { type: 'tab', id: 'brand-info', label: 'ブランド情報/登録・変更', icon: 'fa-tags' },
+        { type: 'tab', id: 'store-info', label: '店舗情報/登録・変更', icon: 'fa-store' },
+        { type: 'divider' },
+        { type: 'action', action: 'logout', label: 'ログアウト', icon: 'fa-sign-out-alt' }
+      ]
+    };
+
+    const fallbackTabs = {
+      "calendar": {
+        "title": "カレンダー",
+        "description": "予定の確認や管理を行います。",
+        "text": "・今月の予定\n・次回の作業日\n・調整メモ"
+      },
+      "report": {
+        "title": "レポート",
+        "description": "レポートに関する情報を表示します。",
+        "text": "・最新レポート\n・過去の記録\n・ダウンロード用メモ"
+      },
+      "request": {
+        "title": "請求書",
+        "description": "請求書に関する内容を表示します。",
+        "text": "・請求書の確認"
+      },
+      "client-info": {
+        "title": "クライアント情報/登録・変更",
+        "description": "クライアント情報の登録や変更内容を表示します。",
+        "text": "・会社名/担当者：\n・連絡先：\n・請求/契約メモ："
+      },
+      "brand-info": {
+        "title": "ブランド情報/登録・変更",
+        "description": "ブランド情報の登録や変更内容を表示します。",
+        "text": "・ブランド名：\n・対象店舗：\n・補足メモ："
+      },
+      "store-info": {
+        "title": "店舗情報",
+        "description": "店舗情報を表示します。",
+        "text": "・店舗名：\n・住所：\n・注意事項："
+      }
+    };
+
+    function activateTab(tabId) {
+      if (!tabId) return;
+      tabButtons.forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+      });
+      const data = tabData[tabId] || {};
+      titleEl.textContent = data.title || '未設定';
+      descEl.textContent = data.description || '内容が未設定です。';
+      textareaEl.value = data.text || '';
+      const isCalendar = tabId === 'calendar';
+      textareaEl.hidden = isCalendar;
+      if (window.MypageCalendar) {
+        if (isCalendar) {
+          window.MypageCalendar.show();
+          if (typeof window.MypageCalendar.syncToToday === 'function') {
+            window.MypageCalendar.syncToToday();
+          }
+        } else if (typeof window.MypageCalendar.hide === 'function') {
+          window.MypageCalendar.hide();
+        }
+      }
+      const showSave = ['client-info', 'brand-info', 'store-info'].includes(tabId);
+      saveButtonEl.style.display = showSave ? 'inline-flex' : 'none';
+    }
+
+    function buildMenu(items) {
+      const safeItems = Array.isArray(items) && items.length ? items : fallbackMenu.items;
+      navEl.innerHTML = '';
+      initialTabId = '';
+      safeItems.forEach((item) => {
+        if (item.type === 'divider') {
+          const divider = document.createElement('div');
+          divider.className = 'nav-divider';
+          navEl.appendChild(divider);
+          return;
+        }
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'nav-item tab-item';
+        if (item.type === 'action') {
+          button.dataset.action = item.action || '';
+          button.classList.add('nav-item-button');
+        } else {
+          button.dataset.tab = item.id || '';
+          if (item.active && !initialTabId) {
+            initialTabId = item.id;
+          }
+        }
+        if (item.icon) {
+          const icon = document.createElement('i');
+          icon.className = `fas ${item.icon}`;
+          button.appendChild(icon);
+        }
+        const label = document.createElement('span');
+        label.className = 'nav-label';
+        label.textContent = item.label || '';
+        button.appendChild(label);
+        if (item.type === 'action' && item.action === 'logout') {
+          button.addEventListener('click', () => {
+            if (window.Auth && typeof window.Auth.logout === 'function') {
+              window.Auth.logout();
+            }
+          });
+        }
+        navEl.appendChild(button);
+      });
+      tabButtons = Array.from(navEl.querySelectorAll('[data-tab]'));
+      if (!initialTabId && tabButtons.length) {
+        initialTabId = tabButtons[0].dataset.tab || '';
+      }
+      tabButtons.forEach((btn) => {
+        btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+      });
+    }
+
+    function loadMenu() {
+      return fetch('./data/mypage_menu.json')
+        .then((res) => {
+          if (!res.ok) throw new Error('menu fetch failed');
+          return res.json();
+        })
+        .then((data) => {
+          const items = Array.isArray(data.items) ? data.items : [];
+          buildMenu(items);
+        })
+        .catch(() => {
+          buildMenu(fallbackMenu.items);
+        });
+    }
+
+    function loadTabData() {
+      return fetch('./data/mypage_tab_texts.json')
+        .then((res) => {
+          if (!res.ok) throw new Error('tab fetch failed');
+          return res.json();
+        })
+        .then((data) => {
+          tabData = data && Object.keys(data).length ? data : fallbackTabs;
+        })
+        .catch(() => {
+          tabData = fallbackTabs;
+        });
+    }
+
+    loadMenu()
+      .then(loadTabData)
+      .then(() => activateTab(initialTabId));
+  })();
+</script>

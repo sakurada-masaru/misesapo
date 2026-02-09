@@ -1,0 +1,50 @@
+{
+  "items": [
+    {
+      "type": "tab",
+      "id": "calendar",
+      "label": "カレンダー",
+      "icon": "fa-calendar-alt",
+      "active": true
+    },
+    {
+      "type": "tab",
+      "id": "report",
+      "label": "レポート",
+      "icon": "fa-file-alt"
+    },
+    {
+      "type": "tab",
+      "id": "request",
+      "label": "請求書",
+      "icon": "fa-shopping-cart"
+    },
+    {
+      "type": "tab",
+      "id": "client-info",
+      "label": "クライアント情報/登録・変更",
+      "icon": "fa-id-card"
+    },
+    {
+      "type": "tab",
+      "id": "brand-info",
+      "label": "ブランド情報/登録・変更",
+      "icon": "fa-tags"
+    },
+    {
+      "type": "tab",
+      "id": "store-info",
+      "label": "店舗情報",
+      "icon": "fa-store"
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "action",
+      "action": "logout",
+      "label": "ログアウト",
+      "icon": "fa-sign-out-alt"
+    }
+  ]
+}

@@ -1,0 +1,270 @@
+
+<link rel="stylesheet" href="/assets/css/admin-sidebar.css">
+<script src="/assets/js/auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/assets/js/admin-sidebar.js"></script>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/mypage.html" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">顧客</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/mypage.html" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/index.html" class="nav-item" data-page="order">
+      <i class="fas fa-shopping-cart"></i>
+      <span class="nav-label">発注</span>
+    </a>
+    <a href="/service.html" class="nav-item" data-page="service">
+      <i class="fas fa-list"></i>
+      <span class="nav-label">サービス一覧</span>
+    </a>
+    <a href="/cart.html" class="nav-item" data-page="cart">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="nav-label">カート</span>
+    </a>
+    <a href="/order/history.html" class="nav-item" data-page="order-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">注文履歴</span>
+    </a>
+    <a href="/schedule.html" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/report.html" class="nav-item" data-page="report">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート一覧</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/mypage/info.html" class="nav-item" data-page="info">
+      <i class="fas fa-building"></i>
+      <span class="nav-label">オーナー情報</span>
+    </a>
+    <a href="/mypage/info.html#stores" class="nav-item" data-page="stores">
+      <i class="fas fa-store"></i>
+      <span class="nav-label">登録店舗情報</span>
+    </a>
+    <a href="/mypage/settings.html" class="nav-item" data-page="settings">
+      <i class="fas fa-sliders-h"></i>
+      <span class="nav-label">アカウント設定</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="container mypage main-content">
+  <div class="loading" id="loading" style="display: none; text-align: center; padding: 48px; color: #6b7280;">読み込み中...</div>
+  <div id="error-message" class="error-message" style="display: none; background: #fee2e2; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 24px; text-align: center;"></div>
+  
+  <div id="mypage-content">
+      <!-- Page Header -->
+      <header class="mypage-header">
+        <div class="mypage-header-content">
+          <div class="mypage-header-left">
+            <div class="client-name" id="client-name">-</div>
+            <div class="client-name-divider">/</div>
+            <div class="person-name" id="person-name">-</div>
+          </div>
+          <div class="mypage-header-right">
+            <a class="btn btn-outline btn-sm" href="/mypage/info.html">オーナー情報</a>
+            <a class="btn btn-outline btn-sm" href="/mypage/info.html#stores">登録店舗情報</a>
+            <a class="btn btn-outline btn-sm" href="/mypage/settings.html">アカウント設定</a>
+            <a class="btn btn-outline btn-sm" href="#">発注履歴</a>
+            <a class="btn btn-outline btn-sm" href="/report.html">レポート</a>
+          </div>
+        </div>
+        <hr class="mypage-header-divider" />
+      </header>
+      <!-- Grid -->
+      <div class="mypage-grid stack-on-sm">
+        <!-- Main column -->
+        <div class="mypage-main">
+          <!-- 1. Messages -->
+          <section class="section section-order-1">
+            <h2 class="section-title">ミセサポからのメッセージ</h2>
+            <div class="message-wrapper">
+              <div class="message-item">
+                <span class="message-tag">お知らせ</span>
+                <span class="message-date">2025.09.01</span>
+                <span class="message-text">ご登録ありがとうございます。引き続きサービスをご利用ください。</span>
+              </div>
+            </div>
+            <!-- SP版: 下矢印アニメーション -->
+            <div class="message-arrow-hint">
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </section>
+
+          <!-- 2. Submission prompt -->
+          <section class="section submission-card section-order-2">
+            <div class="submission-head">
+              <div class="submission-title">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                資料提出
+              </div>
+              <a class="btn btn-primary btn-round btn-sm" href="#">
+                資料提出へ <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </a>
+            </div>
+            <p class="submission-note-strong">提出されていない資料があります。</p>
+            <p class="submission-note">資料をご提出いただくことで、より正確なお見積りや以下のようなサポートもスムーズにご案内できます。</p>
+            <ul class="submission-list">
+              <li>配線交換なども、比較的安価で対応可能に。</li>
+              <li>履歴や今後の必要数量の目安がわかるサポート。</li>
+              <li>消耗品交換などの対応についてもご相談いただけます。</li>
+            </ul>
+          </section>
+
+          <!-- 5. Store info -->
+          <section class="section section-order-5">
+            <h2 class="section-title">店舗情報</h2>
+            <div class="card">
+              <div class="info-item">
+                <span class="info-item-label">店舗情報確認/変更</span>
+              </div>
+              <div class="info-item">
+                <span class="info-item-label">
+                  <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                  提出資料
+                </span>
+                <span class="info-item-value">提出されていない資料があります。</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. Subscription / regular order -->
+          <section class="section section-order-4">
+            <h2 class="section-title">定期発注</h2>
+            <div class="card">
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="order-cycle" /><span class="radio-custom"></span><span>毎月</span></label>
+                <label class="radio-label"><input type="radio" name="order-cycle" /><span class="radio-custom"></span><span>2ヶ月</span></label>
+                <label class="radio-label"><input type="radio" name="order-cycle" checked /><span class="radio-custom"></span><span>3ヶ月</span></label>
+                <label class="radio-label"><input type="radio" name="order-cycle" /><span class="radio-custom"></span><span>6ヶ月</span></label>
+                <label class="radio-label"><input type="radio" name="order-cycle" /><span class="radio-custom"></span><span>毎年</span></label>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Sidebar column -->
+        <aside class="mypage-side">
+          <!-- Calendar (PC only) -->
+          <section class="section calendar-section hide-sm">
+            <div class="calendar-head">
+              <a class="calendar-nav" href="#" aria-label="前へ"><i class="fa-solid fa-chevron-left"></i></a>
+              <h2 class="calendar-title">2025 06</h2>
+              <a class="calendar-nav" href="#" aria-label="次へ"><i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+            <div class="card">
+              <div class="calendar-grid">
+                <div class="calendar-cell calendar-day-name">M</div>
+                <div class="calendar-cell calendar-day-name">T</div>
+                <div class="calendar-cell calendar-day-name">W</div>
+                <div class="calendar-cell calendar-day-name">T</div>
+                <div class="calendar-cell calendar-day-name">F</div>
+                <div class="calendar-cell calendar-day-name">S</div>
+                <div class="calendar-cell calendar-day-name">S</div>
+
+                <!-- prev month -->
+                <div class="calendar-cell calendar-date disabled">26</div>
+                <div class="calendar-cell calendar-date disabled">27</div>
+                <div class="calendar-cell calendar-date disabled">28</div>
+                <div class="calendar-cell calendar-date disabled">29</div>
+                <div class="calendar-cell calendar-date disabled">30</div>
+                <div class="calendar-cell calendar-date disabled">31</div>
+
+                <!-- current month -->
+                <div class="calendar-cell calendar-date">1</div>
+                <div class="calendar-cell calendar-date">2</div>
+                <div class="calendar-cell calendar-date">3</div>
+                <div class="calendar-cell calendar-date">4</div>
+                <div class="calendar-cell calendar-date has-event event-visit">5</div>
+                <div class="calendar-cell calendar-date has-event event-end">6</div>
+                <div class="calendar-cell calendar-date">7</div>
+                <div class="calendar-cell calendar-date">8</div>
+                <div class="calendar-cell calendar-date">9</div>
+                <div class="calendar-cell calendar-date">10</div>
+                <div class="calendar-cell calendar-date">11</div>
+                <div class="calendar-cell calendar-date">12</div>
+                <div class="calendar-cell calendar-date">13</div>
+                <div class="calendar-cell calendar-date">14</div>
+                <div class="calendar-cell calendar-date">15</div>
+                <div class="calendar-cell calendar-date">16</div>
+                <div class="calendar-cell calendar-date">17</div>
+                <div class="calendar-cell calendar-date">18</div>
+                <div class="calendar-cell calendar-date">19</div>
+                <div class="calendar-cell calendar-date">20</div>
+                <div class="calendar-cell calendar-date">21</div>
+                <div class="calendar-cell calendar-date">22</div>
+                <div class="calendar-cell calendar-date">23</div>
+                <div class="calendar-cell calendar-date">24</div>
+                <div class="calendar-cell calendar-date">25</div>
+                <div class="calendar-cell calendar-date">26</div>
+                <div class="calendar-cell calendar-date">27</div>
+                <div class="calendar-cell calendar-date">28</div>
+                <div class="calendar-cell calendar-date">29</div>
+                <div class="calendar-cell calendar-date">30</div>
+
+                <!-- next month -->
+                <div class="calendar-cell calendar-date disabled">1</div>
+                <div class="calendar-cell calendar-date disabled">2</div>
+                <div class="calendar-cell calendar-date disabled">3</div>
+                <div class="calendar-cell calendar-date disabled">4</div>
+                <div class="calendar-cell calendar-date disabled">5</div>
+                <div class="calendar-cell calendar-date disabled">6</div>
+              </div>
+              <div class="calendar-legend">
+                <div class="legend-item"><span class="legend-dot visit"></span>訪問予定日</div>
+                <div class="legend-item"><span class="legend-dot end"></span>訪問終了日</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. Schedule overview (SP: order-3, PC: stays in sidebar) -->
+          <section class="section section-order-3">
+            <h2 class="section-title">清掃予定</h2>
+            <div id="schedule-overview">
+              <div class="empty-state">予定はありません</div>
+            </div>
+            <style>
+/* schedule overview compact card */
+.schedule-card { position:relative; display:flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,.04); background:#fff; width:100%; }
+.schedule-lines { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+.schedule-primary { font-weight:800; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.schedule-secondary { color:#6b7280; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.schedule-link { color: var(--primary); font-weight:600; font-size:12px; white-space:nowrap; position:absolute; right:12px; bottom:10px; top:auto; transform:none; }
+.schedule-see-all { text-align:right; margin-top: 8px; }
+#schedule-overview { width:100%; }
+@media (max-width: 767.98px) {
+  .section-order-3 { width:100%; max-width:100%; padding-left:10px; padding-right:10px; }
+  .section-order-3 .section-title { margin-left:0; margin-right:0; }
+}
+</style>
+ 
+          </section>
+
+        </aside>
+      </div>
+  </div>
+</main>
