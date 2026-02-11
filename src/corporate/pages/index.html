@@ -101,22 +101,13 @@
         .about-highlight__inner {
             max-width: 960px;
             margin: 0 auto;
-            padding: 32px 36px;
-            background: linear-gradient(135deg, rgba(255, 103, 156, 0.12), rgba(255, 255, 255, 0.9));
-            border: 1px solid rgba(255, 103, 156, 0.25);
-            border-radius: 20px;
-            box-shadow: 0 16px 30px rgba(255, 103, 156, 0.16);
-            position: relative;
-            overflow: hidden;
+            padding: 32px 36px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .about-highlight__inner::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at top right, rgba(255, 103, 156, 0.18), transparent 55%);
-            pointer-events: none;
-        }
+
 
         .about-highlight__badge {
             display: inline-block;
@@ -137,10 +128,12 @@
             margin-bottom: 12px;
             position: relative;
             z-index: 1;
+            display: flex;
+            align-items: center;
         }
 
         .about-highlight__lead {
-            font-size: 16px;
+            font-size: 20px;
             line-height: 1.9;
             color: #555;
             margin: 0;
@@ -155,14 +148,23 @@
             }
 
             .about-highlight__inner {
-                padding: 24px 20px;
+                padding: 24px 20px 0;
                 border-radius: 16px;
+                display: block;
             }
 
             .about-highlight__title {
                 font-size: 22px;
                 color: #FF679C;
+                display: flex;
+                justify-content: center;
             }
+            .about-highlight__lead {
+            text-align: center;
+        }
+        .about-highlight__image{
+            margin: auto;
+        }
         }
 
         /* コンセプトセクション */
@@ -3135,8 +3137,14 @@
             line-height: 1.8;
             color: #555;
         }
-
-
+        .about-top-text {
+            color: #FF679C;
+            font-weight: bold;
+    }
+    .about-highlight__title img{
+        width: 150px;
+        margin: 10px;
+    }
         @media screen and (max-width: 768px) {
             .service-sections-header {
                 background-color: #FDEDED !important;
@@ -3504,6 +3512,9 @@ background-color: #fff;
 display: flex;
 justify-content: center;
 }
+.about-highlight__image{
+width: 250px;    
+}
 </style>
 </head>
 
@@ -3661,8 +3672,21 @@ justify-content: center;
 
     <section class="about-highlight" aria-labelledby="about-highlight-title">
         <div class="about-highlight__inner">
-            <h2 id="about-highlight-title" class="about-highlight__title">ミセサポとは？</h2>
-            <p class="about-highlight__lead">関東エリアを中心に清掃及び店舗運営に関するトータルサポートを提供するプラットフォームサービスです。</p>
+        <div>
+            <h2 id="about-highlight-title" class="about-highlight__title">
+                <img src="images/top_about_rogo.png" width="200px" alt="ミセサポ">
+                とは
+            </h2>
+            <div class="about-highlight__lead">
+                関東エリアを中心に清掃及び店舗運営に関する
+                <p class="about-top-text">
+                    トータルサポートを提供するプラットフォームサービスです
+                </p>
+            </div>
+        </div>
+        <div class="about-highlight__image">
+            <img src="/images/top_about_img.png" alt="ミセサポ">
+        </div>
         </div>
     </section>
 
