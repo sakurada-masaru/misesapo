@@ -1,0 +1,679 @@
+:root {
+  --tenpo-bg: radial-gradient(1200px 900px at 20% 10%, rgba(42, 73, 122, 0.35), transparent 55%),
+    radial-gradient(900px 700px at 85% 20%, rgba(19, 82, 63, 0.25), transparent 55%),
+    linear-gradient(180deg, #070b12 0%, #070a10 100%);
+}
+
+.tenpo-karte-page {
+  min-height: 100vh;
+  color: #e9eef8;
+  background: var(--tenpo-bg);
+}
+
+.tenpo-karte-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.tenpo-karte-head .left {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.tenpo-karte-head .right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tenpo-karte-head .back {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.2);
+  color: #e9eef8;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.tenpo-karte-head .titles .kicker {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.75);
+  letter-spacing: 0.06em;
+}
+
+.tenpo-karte-head h1 {
+  margin: 4px 0 6px;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.tenpo-karte-head .pathline {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  color: rgba(233, 238, 248, 0.7);
+  font-size: 12px;
+}
+
+.tenpo-karte-head .pathline .seg {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tenpo-karte-head code {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 3px 8px;
+  color: rgba(233, 238, 248, 0.95);
+}
+
+.tenpo-karte-head .link {
+  color: rgba(162, 211, 255, 0.95);
+  text-decoration: none;
+  border: 1px solid rgba(162, 211, 255, 0.18);
+  background: rgba(15, 36, 55, 0.35);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.tenpo-karte-head button {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e9eef8;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.tenpo-karte-head .btn-primary {
+  border-color: rgba(162, 211, 255, 0.3);
+  background: rgba(162, 211, 255, 0.12);
+}
+
+.card-accordion {
+  padding: 0;
+}
+
+.card-accordion > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+}
+
+.card-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+
+.card-accordion > summary .sum-left {
+  min-width: 0;
+}
+
+.card-accordion > summary .sum-title {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: rgba(233, 238, 248, 0.82);
+}
+
+.card-accordion > summary .sum-hint {
+  margin-top: 6px;
+  color: rgba(233, 238, 248, 0.65);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70vw;
+}
+
+.card-accordion > summary .sum-right {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pill {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pill-on {
+  border-color: rgba(120, 220, 160, 0.25);
+  background: rgba(120, 220, 160, 0.08);
+}
+
+.pill-off {
+  border-color: rgba(160, 160, 160, 0.25);
+  background: rgba(160, 160, 160, 0.08);
+}
+
+.chev {
+  color: rgba(233, 238, 248, 0.55);
+  font-size: 18px;
+  transform: rotate(0deg);
+}
+
+.card-accordion[open] .chev {
+  transform: rotate(90deg);
+}
+
+.card-accordion .accordion-body {
+  padding: 0 14px 14px;
+}
+
+.card-large {
+  padding: 16px;
+}
+
+.haccp-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.haccp-group {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.haccp-group-title {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: rgba(233, 238, 248, 0.8);
+  margin-bottom: 10px;
+}
+
+.haccp-items {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.haccp-item {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.haccp-item-label .label {
+  font-size: 14px;
+  color: rgba(233, 238, 248, 0.92);
+}
+
+.haccp-item-label .code {
+  margin-top: 6px;
+  color: rgba(233, 238, 248, 0.55);
+  font-size: 12px;
+}
+
+.haccp-item-controls {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.radio {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(233, 238, 248, 0.86);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+}
+
+.radio input {
+  accent-color: rgba(162, 211, 255, 0.95);
+}
+
+.radio.active {
+  border-color: rgba(162, 211, 255, 0.35);
+  background: rgba(162, 211, 255, 0.12);
+  color: rgba(233, 238, 248, 0.95);
+}
+
+.muted.small {
+  font-size: 12px;
+}
+
+.tenpo-karte-err {
+  margin: 14px 20px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 79, 99, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 79, 99, 0.08);
+  color: rgba(255, 212, 218, 0.95);
+}
+
+.tenpo-karte-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  padding: 16px 20px 28px;
+}
+
+/* DETAIL view should feel like one big sheet (full width), not the two-column summary layout */
+.tenpo-karte-grid-detail {
+  grid-template-columns: 1fr;
+}
+
+.card-full {
+  width: 100%;
+}
+
+.karte-detail-layout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card-sub {
+  padding: 14px;
+}
+
+.card-wide {
+  grid-column: 1 / -1;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.form-grid .f .lbl {
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 6px;
+}
+
+.form-grid input,
+.form-grid select,
+.memo {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: rgba(255,255,255,0.92);
+}
+
+.memo {
+  padding: 12px 14px;
+}
+
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.chk {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: rgba(255,255,255,0.88);
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+}
+
+.subhead {
+  margin-top: 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+}
+
+.rows {
+  display: grid;
+  gap: 10px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 110px 34px;
+  gap: 10px;
+  align-items: center;
+}
+
+.row-3 {
+  grid-template-columns: 1fr 140px 140px 34px;
+}
+
+.row input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: rgba(255,255,255,0.92);
+}
+
+.row button {
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.88);
+}
+
+@media (max-width: 980px) {
+  .karte-detail-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .karte-detail-layout {
+    grid-template-columns: 1fr;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .row,
+  .row-3 {
+    grid-template-columns: 1fr;
+  }
+  .row button {
+    width: 100%;
+  }
+}
+.card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(9, 14, 22, 0.55);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  padding: 14px;
+}
+
+.card-title {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: rgba(233, 238, 248, 0.75);
+  margin-bottom: 10px;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-title-row .card-title {
+  margin-bottom: 0;
+}
+
+.seg-tabs {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.seg-tabs .seg {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(233, 238, 248, 0.85);
+  padding: 6px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.seg-tabs .seg.active {
+  border-color: rgba(162, 211, 255, 0.35);
+  background: rgba(162, 211, 255, 0.12);
+  color: rgba(233, 238, 248, 0.95);
+}
+
+.upload-kubun {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(233, 238, 248, 0.9);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.muted-inline {
+  margin-left: 8px;
+  color: rgba(233, 238, 248, 0.6);
+  font-size: 12px;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.kv:first-of-type { border-top: none; }
+
+.kv .k {
+  color: rgba(233, 238, 248, 0.65);
+  font-size: 12px;
+}
+.kv .v {
+  font-size: 14px;
+}
+.kv .v .v-main {
+  font-weight: 650;
+}
+.kv .v .v-sub {
+  margin-top: 4px;
+  color: rgba(233, 238, 248, 0.65);
+  font-size: 12px;
+}
+
+.actions-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 10px 0 12px;
+}
+
+.karte-accordion {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 10px;
+}
+
+.karte-accordion > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.karte-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+
+.karte-accordion > summary .label {
+  font-size: 13px;
+  color: rgba(233, 238, 248, 0.88);
+  letter-spacing: 0.02em;
+}
+
+.karte-accordion > summary .hint {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.65);
+  max-width: 58%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.karte-accordion .accordion-body {
+  padding-top: 8px;
+}
+
+.upload {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 12px;
+}
+
+.upload-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.upload-row input[type="file"] {
+  max-width: 100%;
+  color: rgba(233, 238, 248, 0.85);
+}
+
+.upload-last {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.upload-last .label {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.7);
+  margin-bottom: 6px;
+}
+
+.upload-last .value {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: rgba(233, 238, 248, 0.6);
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.filelist {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 12px;
+}
+
+.filelist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.filelist-head .label {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.7);
+}
+
+.filelist-head .count {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.7);
+}
+
+.file-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.18);
+  margin-bottom: 8px;
+}
+
+.file-name {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.file-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.72);
+}
+
+.file-key {
+  font-size: 11px;
+}
+
+.file-actions button {
+  white-space: nowrap;
+}
+
+@media (min-width: 980px) {
+  .tenpo-karte-grid {
+    grid-template-columns: 1fr 1.2fr;
+    align-items: start;
+  }
+
+  /* Keep DETAIL view single-column even on wide screens */
+  .tenpo-karte-grid.tenpo-karte-grid-detail {
+    grid-template-columns: 1fr;
+  }
+
+  /* HACCP groups: horizontal layout on desktop */
+  .haccp-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .haccp-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

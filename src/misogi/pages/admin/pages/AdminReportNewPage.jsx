@@ -173,18 +173,20 @@ export default function AdminReportNewPage() {
     };
     const lockedTemplate = typeParam ? typeToTemplate[typeParam.toLowerCase()] : null;
 
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
+
     // 初期表示タブの決定
     useEffect(() => {
-        if (!authLoading) {
+        if (!authLoading && authz.allowedTemplateIds.length > 0 && isFirstLoad) {
             if (lockedTemplate) {
                 setActiveTemplate(lockedTemplate);
-            } else if (authz.allowedTemplateIds.length > 0) {
-                if (!authz.allowedTemplateIds.includes(activeTemplate)) {
-                    setActiveTemplate(authz.allowedTemplateIds[0]);
-                }
+            } else {
+                // そのユーザーの優先順位（allowedTemplateIds[0]）を初期値にする
+                setActiveTemplate(authz.allowedTemplateIds[0]);
             }
+            setIsFirstLoad(false);
         }
-    }, [authLoading, authz.allowedTemplateIds, lockedTemplate, activeTemplate]);
+    }, [authLoading, authz.allowedTemplateIds, lockedTemplate, isFirstLoad]);
 
     // タブ表示判定
     const checkPermission = (tid) => {

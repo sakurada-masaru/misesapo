@@ -15,7 +15,7 @@ const API_BASE = (() => {
     return '/api';
   }
   // 本番環境: 直接API Gatewayエンドポイントを使用
-  return import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  return import.meta.env?.VITE_API_BASE || '/api';
 })();
 
 function getStorageKey(storeId) {

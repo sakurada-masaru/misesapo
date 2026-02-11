@@ -86,34 +86,29 @@ export function useAuth() {
   const authz = useMemo(() => {
     if (!user) return { workerId: null, isDev: false, isAdmin: false, dept: null, allowedTemplateIds: [] };
 
-    const workerId = user.worker_id || user.workerId || user.id || 'unknown';
-    const roles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
+    const workerId = user.sagyouin_id || user.worker_id || user.workerId || user.id || 'unknown';
+    const roles = (Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []))
+      .map((r) => String(r || '').trim().toUpperCase())
+      .filter(Boolean);
     const email = (user.email || user.attributes?.email || '').trim().toLowerCase();
 
-    // 部署 (dept) の判定：属性、ロール、ID、メールから推測
-    let dept = (user.department || user.dept || user.role || '').trim().toUpperCase();
-
-    // 特例：今野様のアカウントは最優先で営業部署として扱う
-    if (email === 'konno@misesapo.co.jp' || user.id === 'konno' || user.worker_id === 'W006') {
-      dept = 'SALES';
+    let dept = String(user.department || user.dept || '').trim().toUpperCase();
+    if (!dept) {
+      if (roles.includes('SALES') || roles.includes('EIGYO')) dept = 'SALES';
+      else if (roles.includes('DEV') || roles.includes('DEVELOPER') || roles.includes('ENGINEERING') || roles.includes('ENGINEER')) dept = 'ENGINEERING';
+      else if (roles.includes('CLEANING') || roles.includes('STAFF') || roles.includes('SEISOU')) dept = 'CLEANING';
+      else if (roles.includes('ADMIN') || roles.includes('OWNER') || roles.includes('SUPERADMIN')) dept = 'ADMIN';
+      else dept = 'OFFICE';
     }
 
-    // 名前の名寄せ
-    if (['STAFF', 'CLEANING', '清掃'].includes(dept)) dept = 'CLEANING';
-    if (['SALES', 'FIELD_SALES', '営業'].includes(dept)) dept = 'SALES';
+    if (email === 'konno@misesapo.co.jp') dept = 'SALES';
+    if (email === 'taira@misesapo.co.jp') dept = 'SALES';
 
-    const isDev = workerId === 'W999';
-    const isAdmin = isDev || roles.some(r => ['ADMIN', 'OWNER', 'SUPERADMIN'].includes(r.toUpperCase()));
-
-    // 特例：平様のアカウントも営業部署として扱う
-    if (email === 'taira@misesapo.co.jp' || user.id === 'W008') {
-      dept = 'SALES';
-    }
+    const isDev = roles.includes('DEV') || roles.includes('DEVELOPER') || workerId === 'W999';
+    const isAdmin = isDev || roles.some((r) => ['ADMIN', 'OWNER', 'SUPERADMIN'].includes(r));
 
     let allowedTemplateIds = [];
     if (isDev || isAdmin) {
-      // 管理者の場合、すべてのテンプレートを許可するが、
-      // 自身の部署 (dept) が SALES なら SALES を先頭にする
       if (dept === 'SALES') {
         allowedTemplateIds = ['SALES_ACTIVITY_REPORT_V1', 'CLEANING_V1', 'ENGINEERING_V1', 'OFFICE_ADMIN_V1'];
       } else {

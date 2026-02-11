@@ -1,0 +1,28 @@
+﻿jinzai_id,name,koyou_kubun,shokushu,busho_ids,email,phone,jotai,raw_koyou_kubun,raw_shokushu,raw_shokushu_busho
+JINZAI#0001,正田和輝,yakuin,"[""keiei""]","[""BUSHO#0001"", ""BUSHO#0002""]",frappe.manma@gmail.com,07033323939,yuko,役員,代表取締役,取締役会・運営本部
+JINZAI#0002,大田真也,gyomu_itaku_kojin,"[""keiri"", ""engineer""]","[""BUSHO#0003"", ""BUSHO#0004""]",so@sou.works,07091908180,yuko,業務委託,財務管理・経理・システム開発,財務運営本部・財務経理部
+JINZAI#0003,高木直人,gyomu_itaku_kojin,"[""jimu""]","[""BUSHO#0005""]",naoto.yu@gmail.com,,yuko,業務委託,総務,総務部
+JINZAI#0004,遠藤虹輝,gyomu_itaku_kojin,"[""maintenance"", ""seisou""]","[""BUSHO#0006""]",endo@misesapo.co.jp,,yuko,業務委託,メンテナンス・清掃,清掃事業部
+JINZAI#0005,佐々木和真,gyomu_itaku_kojin,"[""maintenance"", ""seisou""]","[""BUSHO#0006""]",sasaki@misesapo.co.jp,,yuko,業務委託,メンテナンス・清掃,清掃事業部
+JINZAI#0006,梅岡 アレサンドレ ユウジ,gyomu_itaku_kojin,"[""eigyo"", ""seisou""]","[""BUSHO#0006"", ""BUSHO#0007""]",umeoka@misesapo.co.jp,,yuko,業務委託,"FS営業, 清掃",清掃事業部・営業部
+JINZAI#0007,吉井奎吾,gyomu_itaku_kojin,"[""maintenance"", ""seisou""]","[""BUSHO#0006""]",yoshii@misesapo.co.jp,,yuko,業務委託,メンテナンス・清掃,清掃事業部
+JINZAI#0008,増田優香,gyomu_itaku_kojin,"[""jimu""]","[""BUSHO#0008""]",masuda@misesapo.co.jp,,yuko,業務委託,営業事務,事務経理部
+JINZAI#0009,大野幹太,gyomu_itaku_kojin,"[""seisou""]","[""BUSHO#0006""]",ono@misesapo.co.jp,,yuko,業務委託,清掃,清掃事業部
+JINZAI#0010,中島郁哉,gyomu_itaku_kojin,"[""maintenance"", ""seisou""]","[""BUSHO#0006""]",nakajima@misesapo.co.jp,,yuko,業務委託,メンテナンス・清掃,清掃事業部
+JINZAI#0011,櫻田傑,keiyaku_shain,"[""engineer"", ""design"", ""operator"", ""jinji""]","[""BUSHO#0009"", ""BUSHO#0010"", ""BUSHO#0011""]",sakurada@misesapo.co.jp,08090060410,yuko,契約社員,システム開発・デザイン・カスタマーサポート・人材管理,組織運営本部・オペレーション設計部・DX開発部
+JINZAI#0012,中澤裕,gyomu_itaku_kojin,"[""seisou""]","[""BUSHO#0006""]",nakazawa@misesapo.co.jp,,yuko,業務委託,清掃,清掃事業部
+JINZAI#0013,サウザ レムエル,gyomu_itaku_kojin,"[""seisou""]","[""BUSHO#0006""]",lemuel@misesapo.co.jp,,yuko,業務委託,清掃,清掃事業部
+JINZAI#0014,ガブリエレ,gyomu_itaku_kojin,"[""seisou""]","[""BUSHO#0006""]",bibisayuri2011@hotmail.com,,yuko,業務委託,清掃,清掃事業部
+JINZAI#0015,平鋭未,gyomu_itaku_kojin,"[""eigyo""]","[""BUSHO#0007""]",taira@misesapo.co.jp,,yuko,業務委託,FS営業,営業部
+JINZAI#0016,松岡ジョナス,gyomu_itaku_kojin,"[""seisou""]","[""BUSHO#0006""]",jonas@misesapo.co.jp,,yuko,業務委託,清掃,清掃事業部
+JINZAI#0017,松岡ガブリエラ,gyomu_itaku_kojin,"[""seisou""]","[""BUSHO#0006""]",gabriela@misesapo.co.jp,,yuko,業務委託,清掃,清掃事業部
+JINZAI#0018,前すずら,gyomu_itaku_kojin,"[""maintenance"", ""seisou""]","[""BUSHO#0006""]",ikuyaikuya0214@gmail.com,,yuko,業務委託,メンテナンス・清掃,清掃事業部
+JINZAI#0019,竹内 那海,haken,"[""design""]","[""BUSHO#0012""]",takeuchi@misesapo.co.jp,,yuko,派遣社員,デザイン制作,デザイン制作部
+JINZAI#0020,山村 明弘,gyomu_itaku_kojin,"[""design""]","[""BUSHO#0011""]",yamamura@misesapo.co.jp,,yuko,業務委託,WEBデザイン,DX開発部
+JINZAI#0021,金野哲久,haken,"[""eigyo""]","[""BUSHO#0007""]",konno@misesapo.co.jp,,yuko,派遣社員,FS営業,営業部
+JINZAI#0022,鳥澤　美緒,haken,"[""jinji""]","[""BUSHO#0013""]",torizawa@misesapo.co.jp,,yuko,派遣社員,人事,人事労務部
+JINZAI#0023,岩城　将秀,haken,"[""keiri""]","[""BUSHO#0004""]",iwaki@misesapo.co.jp,09032241279,yuko,派遣社員,財務管理・経理,財務経理部
+JINZAI#0024,吉田 直喜,gyomu_itaku_kojin,"[""eigyo""]","[""BUSHO#0007""]",yoshida@misesapo.co.jp,,yuko,業務委託,清掃業者開拓・新規営業,営業部
+JINZAI#0025,後藤　亮太,haken,"[""design""]","[""BUSHO#0012""]",gotou@misesapo.co.jp,,yuko,派遣社員,デザイン制作,デザイン制作部
+JINZAI#0026,水落　紗也子,haken,"[""design""]","[""BUSHO#0012""]",mizuochi@misesapo.co.jp,,yuko,派遣社員,デザイン制作,デザイン制作部
+JINZAI#0027,櫻田千鶴,baito,"[""jimu"", ""keiri"", ""operator""]","[""BUSHO#0004"", ""BUSHO#0010""]",sakurada@misesapo.co.jp,,yuko,アルバイト,営業事務・経理事務・オペレーター,財務経理部・オペレーション設計部

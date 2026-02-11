@@ -1,6 +1,6 @@
 /**
  * API クライアント（fetch wrapper）
- * /api = 本番ゲート（51bhoxkbxd）。/api-wr = 業務報告専用ゲート（1x0f73dj2l = misesapo-work-report）。
+ * /api = 予定系ゲート。/api-wr = 業務報告専用ゲート（1x0f73dj2l = misesapo-work-report）。
  */
 
 const defaultBase = '/api';
@@ -12,11 +12,16 @@ export function getApiBase() {
   return import.meta.env.VITE_API_BASE ?? defaultBase;
 }
 
-const WORK_REPORT_BASE_URL = 'https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod';
-
 export function getWorkReportApiBase() {
-  // AWS 側で CORS が有効化されたため、環境を問わず直接 AWS を叩くように統一（CORS/405 回避）
-  return WORK_REPORT_BASE_URL;
+  // 開発環境では必ず Vite proxy を通す（CORS回避）。
+  if (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location?.hostname)) {
+    return workReportBase;
+  }
+  if (import.meta.env.DEV) return workReportBase;
+
+  // 本番は環境変数優先。未設定時のみ既定ゲートへ。
+  return import.meta.env.VITE_WORK_REPORT_API_BASE
+    ?? 'https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod';
 }
 
 /**

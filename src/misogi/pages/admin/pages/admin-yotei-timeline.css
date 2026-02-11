@@ -62,6 +62,258 @@
     font-weight: 600;
 }
 
+.yotei-view-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.yotei-view-tabs button {
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    padding: 0 12px;
+    cursor: pointer;
+}
+
+.yotei-view-tabs button.active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    font-weight: 700;
+}
+
+.yotei-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.sum-card {
+    border: 1px solid var(--line);
+    background: rgba(18, 22, 33, 0.8);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.sum-card div {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.sum-card strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.today-list {
+    display: grid;
+    gap: 8px;
+}
+
+.today-scroll-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(18, 22, 33, 0.8);
+}
+
+.today-timeline-inner {
+    min-width: 1400px;
+}
+
+.today-time-header {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    border-bottom: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.today-time-cell {
+    padding: 8px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    border-right: 1px solid var(--line);
+}
+
+.today-time-rail {
+    position: relative;
+    background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
+    background-size: calc(100% / 12) 100%;
+}
+
+.today-rail-card {
+    position: absolute;
+    height: 48px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(59, 130, 246, 0.92);
+    color: #fff;
+    text-align: left;
+    padding: 4px 8px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.today-rail-card.torikeshi {
+    background: rgba(71, 85, 105, 0.9);
+}
+
+.today-rail-card.warn {
+    border-color: #f59e0b;
+}
+
+.today-rail-card.danger {
+    border-color: #ef4444;
+}
+
+.today-rail-time {
+    font-size: 10px;
+    opacity: 0.9;
+}
+
+.today-rail-tenpo {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.today-rail-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    opacity: 0.9;
+}
+
+.today-item {
+    display: grid;
+    grid-template-columns: 140px 1fr 140px 100px 30px;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    background: rgba(18, 22, 33, 0.8);
+    border-radius: 10px;
+    padding: 10px;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.today-item.warn {
+    border-color: #f59e0b;
+}
+
+.today-item.danger {
+    border-color: #ef4444;
+}
+
+.week-grid {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.week-row {
+    display: grid;
+    grid-template-columns: 200px repeat(7, minmax(0, 1fr));
+}
+
+.week-row.week-head {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.week-row>div,
+.week-row>button {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.week-row .worker-col {
+    padding: 10px;
+}
+
+.week-cell {
+    background: rgba(18, 22, 33, 0.8);
+    color: var(--text);
+    padding: 8px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.week-cell small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.week-cell.shinkou {
+    background: rgba(245, 158, 11, 0.18);
+}
+
+.week-cell.kanryou {
+    background: rgba(34, 197, 94, 0.2);
+}
+
+.week-cell.torikeshi {
+    background: rgba(100, 116, 139, 0.3);
+}
+
+.month-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.month-day {
+    border: 1px solid var(--line);
+    background: rgba(18, 22, 33, 0.8);
+    border-radius: 10px;
+    min-height: 72px;
+    padding: 8px;
+    text-align: left;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.month-day strong {
+    font-size: 13px;
+}
+
+.yakusoku-consumption {
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(18, 22, 33, 0.8);
+}
+
+.yakusoku-consumption h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+}
+
+.yakusoku-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+}
+
 /* Timeline Grid */
 .yotei-grid-container {
     border: 1px solid var(--line);
@@ -262,4 +514,19 @@
     background: var(--torikeshi);
     border-color: var(--torikeshi);
     margin-right: auto;
+}
+
+@media (max-width: 1024px) {
+    .yotei-summary-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .week-row {
+        grid-template-columns: 160px repeat(7, minmax(120px, 1fr));
+        min-width: 980px;
+    }
+
+    .today-timeline-inner {
+        min-width: 1100px;
+    }
 }

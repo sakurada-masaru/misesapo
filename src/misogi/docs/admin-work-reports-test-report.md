@@ -11,7 +11,7 @@
 ### 実行コマンド
 
 ```bash
-BASE_PROD="https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod"
+BASE_PROD="https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod"
 AUTH="Authorization: Bearer $(cat ~/.cognito_token)"
 DATE="2026-01-31"
 

@@ -38,7 +38,7 @@ export default function OfficePayrollMonthPage() {
     return (
       <div className="report-page" data-job="office" style={{ padding: 24 }}>
         <p>URLが不正です。user_id と YYYY-MM が必要です。</p>
-        <Link to="/admin/work-reports">業務報告（管理）一覧へ</Link>
+        <Link to="/admin/houkoku">報告一覧へ</Link>
       </div>
     );
   }
@@ -56,7 +56,7 @@ export default function OfficePayrollMonthPage() {
       <div className="report-page" data-job="office" style={{ padding: 24 }}>
         <h1 style={{ fontSize: '1.25rem', marginBottom: 16 }}>経理・月次ビュー</h1>
         <p style={{ color: 'var(--alert)' }}>{error}</p>
-        <Link to="/admin/work-reports">業務報告（管理）一覧へ</Link>
+        <Link to="/admin/houkoku">報告一覧へ</Link>
       </div>
     );
   }
@@ -68,7 +68,7 @@ export default function OfficePayrollMonthPage() {
   return (
     <div className="report-page" data-job="office" style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
       <p style={{ marginBottom: 16 }}>
-        <Link to="/admin/work-reports" style={{ color: 'var(--job-office)' }}>← 業務報告（管理）一覧</Link>
+        <Link to="/admin/houkoku" style={{ color: 'var(--job-office)' }}>← 報告一覧</Link>
       </p>
       <h1 style={{ fontSize: '1.25rem', marginBottom: 8 }}>経理・月次ビュー</h1>
       <p style={{ fontSize: '0.9rem', color: 'var(--muted)', marginBottom: 24 }}>

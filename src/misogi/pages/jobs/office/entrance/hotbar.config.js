@@ -5,9 +5,10 @@ export const OFFICE_HOTBAR = [
     role: 'target',
     label: '顧客',
     subItems: [
-      { id: 'client-register', label: '登録', path: '/office/clients/new' },
-      { id: 'client-list', label: 'リスト', path: '/office/clients/list' },
-      { id: 'client-karte', label: 'カルテ', path: '/office/clients/list' },
+      // 旧 /office/clients/* は廃止。新マスター体系に統一。
+      { id: 'torihikisaki-touroku', label: '登録(新)', path: '/admin/torihikisaki-touroku' },
+      { id: 'torihikisaki-meibo', label: '名簿(新)', path: '/admin/torihikisaki-meibo' },
+      { id: 'tenpo-master', label: '店舗(新)', path: '/admin/master/tenpo' },
     ]
   },
   { id: 'status', role: 'status', label: '進捗' },

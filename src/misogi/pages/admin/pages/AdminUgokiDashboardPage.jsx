@@ -2,10 +2,16 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-ugoki-dashboard.css';
 
-const API_BASE =
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost')
-    ? '/api'
-    : (import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod');
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = window.location?.hostname || '';
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+// UI は常に同一オリジン相対 (/api) を正とする。
+const API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api' : '/api';
+const MASTER_API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api-master' : '/api-master';
+const JINZAI_API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api-jinzai' : '/api-jinzai';
 
 const REASON_OPTIONS = [
   { value: 'NET', label: 'NET' },
@@ -102,9 +108,52 @@ export default function AdminUgokiDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
+  const [tenpoNameMap, setTenpoNameMap] = useState({});
+  const [jinzaiNameMap, setJinzaiNameMap] = useState({});
   const [overrideModal, setOverrideModal] = useState(null);
   const [savingOverride, setSavingOverride] = useState(false);
   const [groupMode] = useState('sagyouin');
+
+  const loadNameMasters = useCallback(async () => {
+    try {
+      const [tenpoRes, jinzaiRes] = await Promise.all([
+        fetch(`${MASTER_API_BASE.replace(/\/$/, '')}/master/tenpo?limit=20000&jotai=yuko`, {
+          headers: { ...authHeaders() },
+          cache: 'no-store',
+        }),
+        fetch(`${JINZAI_API_BASE.replace(/\/$/, '')}/jinzai?limit=2000&jotai=yuko`, {
+          headers: { ...authHeaders() },
+          cache: 'no-store',
+        }),
+      ]);
+
+      if (tenpoRes.ok) {
+        const tData = await tenpoRes.json();
+        const tItems = asList(tData);
+        const map = {};
+        tItems.forEach((v) => {
+          const id = v?.tenpo_id || v?.id;
+          if (!id) return;
+          map[id] = v?.name || '';
+        });
+        setTenpoNameMap(map);
+      }
+
+      if (jinzaiRes.ok) {
+        const jData = await jinzaiRes.json();
+        const jItems = asList(jData);
+        const map = {};
+        jItems.forEach((v) => {
+          const id = v?.jinzai_id || v?.id;
+          if (!id) return;
+          map[id] = v?.name || '';
+        });
+        setJinzaiNameMap(map);
+      }
+    } catch {
+      // 名前マスタ取得失敗時はAPIレスポンス内の表示名を使って継続
+    }
+  }, []);
 
   const loadUgoki = useCallback(async () => {
     setLoading(true);
@@ -145,6 +194,10 @@ export default function AdminUgokiDashboardPage() {
   }, [date]);
 
   useEffect(() => {
+    loadNameMasters();
+  }, [loadNameMasters]);
+
+  useEffect(() => {
     loadUgoki();
   }, [loadUgoki]);
 
@@ -152,7 +205,12 @@ export default function AdminUgokiDashboardPage() {
     const map = new Map();
     items.forEach((it) => {
       const key = it.sagyouin_id || 'unknown';
-      if (!map.has(key)) map.set(key, { id: key, name: it.sagyouin_name || key, jobs: [] });
+      const displayName =
+        it.sagyouin_name ||
+        jinzaiNameMap[it.sagyouin_id] ||
+        jinzaiNameMap[it.worker_id] ||
+        '担当未設定';
+      if (!map.has(key)) map.set(key, { id: key, name: displayName, jobs: [] });
       map.get(key).jobs.push(it);
     });
     return Array.from(map.values())
@@ -161,7 +219,7 @@ export default function AdminUgokiDashboardPage() {
         jobs: w.jobs.sort((a, b) => Date.parse(a.start_at || '') - Date.parse(b.start_at || '')),
       }))
       .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-  }, [items]);
+  }, [items, jinzaiNameMap]);
 
   const warningCounts = useMemo(() => {
     const nowMs = Date.now();
@@ -264,16 +322,16 @@ export default function AdminUgokiDashboardPage() {
           ) : workers.map((w) => (
             <div key={w.id} className="ugoki-row">
               <div className="ugoki-worker">
-                <strong>{w.name || w.id}</strong>
-                <small>{w.id}</small>
+                <strong>{w.name || '担当未設定'}</strong>
               </div>
               <div className="ugoki-timeline">
                 {w.jobs.map((job) => {
                   const wc = warningClass(job, nowMs);
+                  const jobTenpoName = job.tenpo_name || tenpoNameMap[job.tenpo_id] || '店舗未設定';
                   return (
                     <article key={job.id} className={`ugoki-card ${wc}`}>
                       <div className="ugoki-card-main">
-                        <div className="ugoki-tenpo">{job.tenpo_name || job.tenpo_id || '店舗未設定'}</div>
+                        <div className="ugoki-tenpo">{jobTenpoName}</div>
                         <div className="ugoki-time">{job.start_at} - {job.end_at}</div>
                         <div className="ugoki-meta">
                           <span>jotai: {job.jotai}</span>

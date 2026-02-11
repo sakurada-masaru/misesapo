@@ -4,32 +4,45 @@
 export const ADMIN_HOTBAR = [
   {
     id: 'reports',
-    label: '業務報告',
+    label: '報告',
     subItems: [
-      { id: 'cleaning-reports', label: '清掃報告受領', path: '/houkoku' },
-      { id: 'all-reports', label: '全報告管理', path: '/admin/work-reports' },
-      { id: 'houkoku-list', label: '新・報告一覧 (New)', path: '/admin/houkoku' },
+      { id: 'houkoku-list', label: '報告一覧', path: '/admin/houkoku', group: '報告' },
     ]
   },
   {
     id: 'schedule',
-    label: '清掃スケジュール',
+    label: '予定',
     subItems: [
-      { id: 'schedule-main', label: '清掃スケジュール(旧)', path: '/admin/schedule' },
-      { id: 'yotei-hospital', label: '清掃管理(新)', path: '/admin/yotei' },
-      { id: 'ugoki-dashboard', label: '管制ダッシュボード', path: '/admin/ugoki' },
-      { id: 'yakusoku-list', label: '案件・定期管理', path: '/admin/yakusoku' },
+      { id: 'schedule-main', label: '清掃スケジュール(旧)', path: '/admin/schedule', group: '旧' },
+      { id: 'yotei-hospital', label: '清掃管理(新)', path: '/admin/yotei', group: '運用' },
+      { id: 'ugoki-dashboard', label: '管制ダッシュボード', path: '/admin/ugoki', group: '運用' },
+      { id: 'yakusoku-list', label: '案件・定期管理', path: '/admin/yakusoku', group: '運用' },
     ]
   },
   {
     id: 'clients',
     role: 'target',
-    label: '顧客',
+    label: '情報',
     subItems: [
-      { id: 'client-register', label: '登録', path: '/office/clients/new' },
-      { id: 'client-list', label: 'リスト', path: '/office/clients/list' },
-      { id: 'client-karte', label: 'カルテ', path: '/office/clients/list' },
+      { id: 'torihikisaki-touroku', label: '顧客登録(新)', path: '/admin/torihikisaki-touroku', group: '登録' },
+      { id: 'torihikisaki-meibo', label: '取引先名簿', path: '/admin/torihikisaki-meibo', group: '名簿' },
+      { id: 'jinzai-meibo', label: '人材名簿', path: '/admin/jinzai-meibo', group: '名簿' },
+      { id: 'master-torihikisaki', label: '取引先マスタ', path: '/admin/master/torihikisaki', group: 'マスタ(顧客)' },
+      { id: 'master-yagou', label: '屋号マスタ', path: '/admin/master/yagou', group: 'マスタ(顧客)' },
+      { id: 'master-tenpo', label: '店舗マスタ', path: '/admin/master/tenpo', group: 'マスタ(顧客)' },
+      { id: 'master-souko', label: '顧客ストレージ', path: '/admin/master/souko', group: 'マスタ(顧客)' },
+      { id: 'master-jinzai', label: '人材マスタ', path: '/admin/master/jinzai', group: 'マスタ(人材)' },
+      { id: 'master-jinzai-busho', label: '人材部署', path: '/admin/master/jinzai-busho', group: 'マスタ(人材)' },
+      { id: 'master-jinzai-shokushu', label: '人材職種', path: '/admin/master/jinzai-shokushu', group: 'マスタ(人材)' },
+      { id: 'master-service', label: 'サービスマスタ', path: '/admin/master/service', group: 'マスタ(運用)' },
     ]
   },
-  { id: 'portal-operating-days', label: '玄関稼働日', to: '/admin/portal-operating-days', disabled: false },
+  {
+    // 4枠固定（JobEntranceScreenの仕様）なので、運用メニューの残りをここに寄せる
+    id: 'tools',
+    label: '運用ツール',
+    subItems: [
+      { id: 'flow-guide', label: '業務フロー', path: '/flow-guide', group: '基本' },
+    ],
+  },
 ];

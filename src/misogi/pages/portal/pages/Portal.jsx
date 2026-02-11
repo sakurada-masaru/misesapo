@@ -9,7 +9,7 @@ const SignInModal = React.lazy(() => import('../../shared/auth/SignInModal'));
 const API_BASE =
   typeof window !== 'undefined' && window.location?.hostname === 'localhost'
     ? '/api'
-    : (import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod');
+    : (import.meta.env?.VITE_API_BASE || '/api');
 
 /**
  * 大前提（ナビゲーション）

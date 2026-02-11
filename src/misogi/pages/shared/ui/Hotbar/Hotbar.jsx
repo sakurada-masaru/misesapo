@@ -10,7 +10,7 @@ import { useAuth } from '../../auth/useAuth';
 /**
  * アクションボタン。ジョブごとに内容は変えるが、仕組みは機能呼び出しだけ。
  */
-export default function Hotbar({ actions = [], active, onChange }) {
+export default function Hotbar({ actions = [], active, onChange, showFlowGuideButton = true }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -103,15 +103,16 @@ export default function Hotbar({ actions = [], active, onChange }) {
             </button>
           );
         })}
-        {/* メインの導線：専用画面へ */}
-        <button
-          type="button"
-          className={`hotbar-btn ${isFlowGuidePage ? 'active' : ''}`}
-          style={{ borderStyle: 'dashed' }}
-          onClick={navigateToFlow}
-        >
-          {isFlowGuidePage ? '🏠 ポータルへ' : '📘 業務フロー'}
-        </button>
+        {showFlowGuideButton && (
+          <button
+            type="button"
+            className={`hotbar-btn ${isFlowGuidePage ? 'active' : ''}`}
+            style={{ borderStyle: 'dashed' }}
+            onClick={navigateToFlow}
+          >
+            {isFlowGuidePage ? '🏠 ポータルへ' : '📘 業務フロー'}
+          </button>
+        )}
       </div>
 
       <EXHotbar

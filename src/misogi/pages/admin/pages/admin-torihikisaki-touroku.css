@@ -1,0 +1,230 @@
+.admin-touroku-page {
+  min-height: 100vh;
+  background: radial-gradient(1200px 800px at 10% -10%, #1b2450 0%, #0b0d12 58%);
+  color: #e9eefc;
+}
+
+.admin-touroku-content {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.admin-touroku-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-touroku-back {
+  color: #9aa6c5;
+  text-decoration: none;
+}
+
+.admin-touroku-headline {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-touroku-headline h1 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.admin-touroku-headline .sub {
+  color: #9aa6c5;
+  font-size: 12px;
+}
+
+.admin-touroku-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-touroku-actions button,
+.admin-touroku-actions .ghost {
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #273049;
+  background: #121621;
+  color: #e9eefc;
+  padding: 0 10px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-touroku-err {
+  margin-bottom: 10px;
+  border: 1px solid #ef4444;
+  color: #fecaca;
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(127, 29, 29, 0.35);
+}
+
+.admin-touroku-ok {
+  margin-bottom: 10px;
+  border: 1px solid #22c55e;
+  color: #bbf7d0;
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(20, 83, 45, 0.35);
+}
+
+.admin-touroku-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.card {
+  border: 1px solid #273049;
+  border-radius: 12px;
+  background: rgba(18, 22, 33, 0.9);
+  overflow: hidden;
+}
+
+.card-h {
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid #273049;
+}
+
+.card-h .t {
+  font-weight: 700;
+}
+
+.card-h .d {
+  color: #9aa6c5;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.form {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+  color: #9aa6c5;
+  font-size: 12px;
+}
+
+.form input,
+.form select,
+.form button {
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #273049;
+  background: #121621;
+  color: #e9eefc;
+  padding: 0 10px;
+}
+
+.form label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e9eefc;
+  font-size: 13px;
+}
+
+.form label.checkbox input {
+  height: 16px;
+  width: 16px;
+  padding: 0;
+  margin: 0;
+  border-radius: 4px;
+}
+
+.form button.primary {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.hint {
+  color: #9aa6c5;
+  font-size: 12px;
+}
+
+.hint code {
+  color: #e9eefc;
+}
+
+@media (max-width: 980px) {
+  .admin-touroku-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-touroku-header {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-touroku-content {
+    padding: 12px;
+  }
+
+  .admin-touroku-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .admin-touroku-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .admin-touroku-actions button,
+  .admin-touroku-actions .ghost {
+    height: 44px;
+    justify-content: center;
+  }
+
+  .form input,
+  .form select,
+  .form button {
+    height: 44px;
+    padding: 0 12px;
+  }
+
+  .row {
+    justify-content: stretch;
+  }
+
+  .row button {
+    flex: 1;
+  }
+
+  .split {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-touroku-actions {
+    grid-template-columns: 1fr;
+  }
+}

@@ -36,7 +36,7 @@ export default function CustomerOnboardingPage() {
         requests: ''
     });
 
-    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const API_BASE = '/api';
 
     useEffect(() => {
         // 既存の情報を取得

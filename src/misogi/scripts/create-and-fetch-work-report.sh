@@ -3,7 +3,9 @@
 # 前提: ~/.cognito_token に有効な Cognito ID Token が入っていること
 
 set -e
-BASE_PROD="${BASE_PROD:-https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod}"
+# 業務報告は専用ゲート（misesapo-work-report: 1x0f73dj2l）。
+# 旧スケジュールAPI(51bhoxkbxd)は使用しない。
+BASE_PROD="${BASE_PROD:-https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod}"
 AUTH="Authorization: Bearer $(cat ~/.cognito_token)"
 DATE="${DATE:-2026-01-31}"
 

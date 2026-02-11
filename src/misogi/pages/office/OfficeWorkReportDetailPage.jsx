@@ -81,7 +81,7 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
       <div className={`report-page office-work-report-detail ${embed ? 'embed' : ''}`} data-job="office" style={{ padding: 24, maxWidth: 560, margin: '0 auto' }}>
         {!embed && <h1 style={{ fontSize: '1.25rem', marginBottom: 16 }}>業務報告の閲覧</h1>}
         <p style={{ color: 'var(--alert, #ff3030)' }}>{error}</p>
-        {!embed && <p><Link to="/admin/work-reports">業務報告（管理）一覧へ</Link></p>}
+        {!embed && <p><Link to="/admin/houkoku">報告一覧へ</Link></p>}
       </div>
     );
   }
@@ -101,7 +101,7 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
         <>
           <div className="office-work-report-detail-actions no-print">
             <p style={{ margin: 0 }}>
-              <Link to="/admin/work-reports" style={{ color: 'var(--job-office)' }}>← 業務報告（管理）一覧</Link>
+              <Link to="/admin/houkoku" style={{ color: 'var(--job-office)' }}>← 報告一覧</Link>
             </p>
             <button type="button" className="btn btn-print" onClick={handlePrint} aria-label="印刷またはPDFで保存">
               印刷／PDFで保存

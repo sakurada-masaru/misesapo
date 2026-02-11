@@ -3,14 +3,16 @@ import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css'; // Reuse styling
 
-const API_BASE =
-  typeof window !== 'undefined' && window.location?.hostname === 'localhost'
-    ? '/api'
-    : (import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod');
-const YAKUSOKU_FALLBACK_BASE =
-  typeof window !== 'undefined' && window.location?.hostname === 'localhost'
-    ? '/api2'
-    : API_BASE;
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = window.location?.hostname || '';
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+// UI は常に同一オリジン相対 (/api*) を正とする。
+const API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api' : '/api';
+const YAKUSOKU_FALLBACK_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api2' : '/api2';
+const MASTER_API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api-master' : '/api-master';
 
 function authHeaders() {
   const legacyAuth = (() => {
@@ -44,6 +46,7 @@ async function fetchYakusokuWithFallback(path, options = {}) {
 
 export default function AdminYakusokuPage() {
   const [items, setItems] = useState([]);
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -67,11 +70,29 @@ export default function AdminYakusokuPage() {
     fetchItems();
   }, [fetchItems]);
 
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const base = MASTER_API_BASE.replace(/\/$/, '');
+        const res = await fetch(`${base}/master/service?limit=2000&jotai=yuko`, { headers: authHeaders(), cache: 'no-store' });
+        if (!res.ok) throw new Error(`Service HTTP ${res.status}`);
+        const data = await res.json();
+        setServices(Array.isArray(data) ? data : (data?.items || []));
+      } catch (e) {
+        console.error('Failed to fetch services:', e);
+        setServices([]);
+      }
+    };
+    run();
+  }, []);
+
   const openNew = () => {
     setModalData({
       isNew: true,
       type: 'teiki',
       tenpo_name: '',
+      service_id: '',
+      service_name: '',
       monthly_quota: 1,
       price: 0,
       start_date: dayjs().format('YYYY-MM-DD'),
@@ -134,6 +155,7 @@ export default function AdminYakusokuPage() {
               <tr style={{ textAlign: 'left', borderBottom: '1px solid #444' }}>
                 <th style={{ padding: '10px' }}>ID</th>
                 <th style={{ padding: '10px' }}>現場名</th>
+                <th style={{ padding: '10px' }}>サービス</th>
                 <th style={{ padding: '10px' }}>種別</th>
                 <th style={{ padding: '10px' }}>月枠</th>
                 <th style={{ padding: '10px' }}>当月消化</th>
@@ -150,6 +172,7 @@ export default function AdminYakusokuPage() {
                   <tr key={it.yakusoku_id} style={{ borderBottom: '1px solid #333' }}>
                     <td style={{ padding: '10px', fontSize: '12px', color: '#888' }}>{it.yakusoku_id}</td>
                     <td style={{ padding: '10px' }}>{it.tenpo_name || '---'}</td>
+                    <td style={{ padding: '10px' }}>{it.service_name || it.service_id || '---'}</td>
                     <td style={{ padding: '10px' }}>{it.type === 'teiki' ? '定期' : '単発'}</td>
                     <td style={{ padding: '10px' }}>{it.monthly_quota || '-'}回</td>
                     <td style={{ padding: '10px' }}>
@@ -189,6 +212,29 @@ export default function AdminYakusokuPage() {
               <div className="yotei-form-group">
                 <label>現場名</label>
                 <input type="text" value={modalData.tenpo_name} onChange={e => setModalData({ ...modalData, tenpo_name: e.target.value })} />
+              </div>
+              <div className="yotei-form-group">
+                <label>サービス</label>
+                <select
+                  value={modalData.service_id || ''}
+                  onChange={e => {
+                    const sid = e.target.value;
+                    const svc = services.find((x) => x.service_id === sid);
+                    setModalData({
+                      ...modalData,
+                      service_id: sid,
+                      service_name: svc?.name || '',
+                      price: modalData.isNew && Number(svc?.default_price || 0) > 0 ? Number(svc.default_price) : modalData.price,
+                    });
+                  }}
+                >
+                  <option value="">選択してください</option>
+                  {services.map((s) => (
+                    <option key={s.service_id} value={s.service_id}>
+                      {s.name} ({s.category})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="yotei-form-group">
                 <label>月間規定回数 (monthly_quota)</label>

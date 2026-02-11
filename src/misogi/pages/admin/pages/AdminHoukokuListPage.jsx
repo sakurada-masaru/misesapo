@@ -12,42 +12,47 @@ const AdminHoukokuListPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const { getToken } = useAuth();
 
+    const normalizeReport = useCallback((item) => {
+        if (!item || typeof item !== 'object') return null;
+        const payload = item.payload || {};
+        return {
+            ...item,
+            id: item.id || item.log_id || item.report_id || '',
+            template_id: item.template_id || item.templateId || payload.template_id || 'GENERAL_V1',
+            user_name: item.user_name || item.worker_name || item.created_by_name || '不明なユーザー',
+            created_at: item.created_at || item.updated_at || new Date().toISOString(),
+            payload,
+        };
+    }, []);
+
+    const fetchByHoukoku = useCallback(async (date, headers) => {
+        const res = await apiFetchWorkReport(`/houkoku?date=${date}`, {
+            method: 'GET',
+            headers,
+        });
+        const items = Array.isArray(res) ? res : (res?.items || []);
+        return items.map(normalizeReport).filter(Boolean);
+    }, [normalizeReport]);
+
     const fetchReports = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const token = getToken() || localStorage.getItem('cognito_id_token');
             const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
-
-            // 新APIからその日の報告を取得
-            const res = await apiFetchWorkReport(`/houkoku?date=${date}`, {
-                method: 'GET',
-                headers
-            });
-
-            const getPhoto = (item) => {
-                const p = item.payload || {};
-                // 1. 直下の写真（営業など）
-                if (p.attachments?.length > 0) return p.attachments[0].url;
-                // 2. 清掃報告の階層（stores[i].store.attachments）
-                if (p.stores?.length > 0) {
-                    for (const s of p.stores) {
-                        const nested = s.store || s;
-                        const atts = nested.attachments || [];
-                        if (atts.length > 0) return atts[0].url;
-                    }
-                }
-                return null;
-            };
-
-            setReports(res.items || []);
+            const items = await fetchByHoukoku(date, headers);
+            setReports(items);
         } catch (e) {
             console.error("Failed to fetch reports:", e);
-            setError('報告の取得に失敗しました。');
+            if (e?.status === 502) {
+                setError('houkoku API が 502 を返しています（バックエンド要確認）');
+            } else {
+                setError('報告の取得に失敗しました。');
+            }
         } finally {
             setLoading(false);
         }
-    }, [date, getToken]);
+    }, [date, getToken, fetchByHoukoku]);
 
     useEffect(() => {
         fetchReports();

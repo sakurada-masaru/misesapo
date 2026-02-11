@@ -18,10 +18,14 @@ const STORAGE_APPOINTMENTS = 'admin-schedule-appointments';
 const STORAGE_CLEANERS = 'admin-schedule-cleaners';
 
 /** workers API 用ベース（localhost は /api、本番は VITE_API_BASE または prod） */
-const API_BASE =
-  typeof window !== 'undefined' && window.location?.hostname === 'localhost'
-    ? '/api'
-    : (import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod');
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = window.location?.hostname || '';
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+// UI は常に同一オリジン相対 (/api) を正とする。
+const API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api' : '/api';
 
 const STATUSES = [
   { key: 'planned', label: '予定', colorClass: 's-booked' },
@@ -4958,7 +4962,7 @@ function AppointmentModal({ dateISO, cleaners, appt, mode, onClose, onSave, onDe
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span style={{ fontSize: '13px', color: 'var(--text)' }}>店舗検索（法人・ブランド・店舗名で検索）</span>
                   <Link
-                    to="/office/clients/new"
+                    to="/admin/torihikisaki-touroku"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -4986,7 +4990,7 @@ function AppointmentModal({ dateISO, cleaners, appt, mode, onClose, onSave, onDe
                     }}
                   >
                     <span>＋</span>
-                    <span>顧客新規登録</span>
+                    <span>顧客登録(新)</span>
                   </Link>
                 </div>
                 <div style={{ position: 'relative' }}>
@@ -5100,7 +5104,7 @@ function AppointmentModal({ dateISO, cleaners, appt, mode, onClose, onSave, onDe
               )}
               <div style={{ marginTop: '12px', gridColumn: 'span 2' }}>
                 <Link
-                  to="/office/clients/new"
+                  to="/admin/torihikisaki-touroku"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{

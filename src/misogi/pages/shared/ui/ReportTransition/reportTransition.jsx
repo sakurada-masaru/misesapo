@@ -1,9 +1,12 @@
 /**
  * 報告モード遷移アニメーションのテンプレート
- * 報告タブ・顧客サブボタンなど、同一の「フェードアウト → 経過後に遷移」を行う箇所で共有する。
+ *
+ * NOTE:
+ * 現場運用のフィードバックにより「MODE CHANGE」系の遷移演出は無効化した。
+ * UI 側はこのモジュールを参照し続けられるが、遷移は即時に行う（互換維持）。
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './reportTransition.css';
 
@@ -36,42 +39,9 @@ export const FLASH_PHASE_DELAY_MS = 4000;
  * @param {boolean} visible - オーバーレイを表示するか
  */
 export function ReportTransitionOverlay({ visible }) {
-  const [labelVisible, setLabelVisible] = useState(false);
-  const [showGlitch, setShowGlitch] = useState(false);
-  const [showFlash, setShowFlash] = useState(false);
-
-  useEffect(() => {
-    if (!visible) {
-      setLabelVisible(false);
-      setShowGlitch(false);
-      setShowFlash(false);
-      return;
-    }
-    const t1 = setTimeout(() => setLabelVisible(true), 1000);
-    const t2 = setTimeout(() => setShowGlitch(true), GLITCH_PHASE_DELAY_MS);
-    const t3 = setTimeout(() => setShowFlash(true), FLASH_PHASE_DELAY_MS);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
-  }, [visible]);
-
-  if (!visible) return null;
-  return (
-    <div className="report-transition-overlay" aria-hidden="true">
-      <div className={`report-transition-label ${labelVisible ? 'visible' : ''}`}>
-        <span className="label-jitter">{TRANSITION_LABEL}</span>
-      </div>
-      {showGlitch && <div className="report-transition-glitch report-transition-glitch-active" />}
-      {showFlash && (
-        <>
-          <div className="report-transition-white-flash" />
-          <div className="report-transition-dark-instant" />
-        </>
-      )}
-    </div>
-  );
+  // 遷移演出は無効化（即時遷移へ移行）
+  void visible;
+  return null;
 }
 
 /**
@@ -82,30 +52,18 @@ export function ReportTransitionOverlay({ visible }) {
  * @returns {{ isTransitioning: boolean, startTransition: (path: string) => void }}
  */
 export function useReportStyleTransition(navigate) {
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [targetPath, setTargetPath] = useState(null);
-
-  useEffect(() => {
-    if (!targetPath) return;
-    const t = setTimeout(() => {
-      // .html で終わるパスは React 外部の既存ページへの遷移として扱う
-      if (targetPath.endsWith('.html')) {
-        window.location.href = targetPath;
-      } else {
-        navigate(targetPath);
-      }
-      setTargetPath(null);
-      setIsTransitioning(false);
-    }, TRANSITION_DURATION_MS);
-    return () => clearTimeout(t);
-  }, [targetPath, navigate]);
-
+  // 演出は無効化: 即時遷移
   const startTransition = useCallback((path) => {
-    setTargetPath(path);
-    setIsTransitioning(true);
-  }, []);
+    if (!path) return;
+    // .html で終わるパスは React 外部の既存ページへの遷移として扱う
+    if (String(path).endsWith('.html')) {
+      window.location.href = String(path);
+      return;
+    }
+    navigate(String(path));
+  }, [navigate]);
 
-  return { isTransitioning, startTransition };
+  return { isTransitioning: false, startTransition };
 }
 
 /**
@@ -113,9 +71,16 @@ export function useReportStyleTransition(navigate) {
  * 全局イベントを発行して、App.jsx 等に配置された GlobalFlashTransition を起動させる。
  */
 export function useFlashTransition() {
+  // 演出は無効化: 即時遷移（イベント/オーバーレイは使わない）
+  const navigate = useNavigate();
   const startTransition = useCallback((path) => {
-    window.dispatchEvent(new CustomEvent('misogi-flash-transition', { detail: { path } }));
-  }, []);
+    if (!path) return;
+    if (String(path).endsWith('.html')) {
+      window.location.href = String(path);
+      return;
+    }
+    navigate(String(path));
+  }, [navigate]);
 
   return { startTransition };
 }
@@ -125,65 +90,6 @@ export function useFlashTransition() {
  * App.jsx に配置することで、ページ遷移中も暗転を維持できる。
  */
 export function GlobalFlashTransition() {
-  const navigate = useNavigate();
-  const [phase, setPhase] = useState('idle'); // idle | noise | snap | dark | fading
-  const [targetPath, setTargetPath] = useState(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      const { path } = e.detail;
-      setTargetPath(path);
-      setPhase('noise');
-
-      // 0.6秒間ノイズを見せる
-      setTimeout(() => setPhase('snap'), 600);
-
-      // 0.4秒間のスナップアニメーション後に暗転
-      setTimeout(() => setPhase('dark'), 1000);
-
-      // 暗転中に遷移実行
-      setTimeout(() => {
-        if (path.endsWith('.html')) {
-          window.location.href = path;
-        } else {
-          navigate(path);
-        }
-        // 遷移実行後、少し待ってからフェードアウト開始
-        setTimeout(() => setPhase('fading'), 300);
-      }, 1200);
-
-      // 全行程終了
-      setTimeout(() => {
-        setPhase('idle');
-        setTargetPath(null);
-      }, 2000);
-    };
-
-    window.addEventListener('misogi-flash-transition', handler);
-    return () => window.removeEventListener('misogi-flash-transition', handler);
-  }, [navigate]);
-
-  if (phase === 'idle') return null;
-
-  return (
-    <div className="report-transition-overlay"
-      style={{
-        zIndex: 10000000,
-        background: (phase === 'dark' || phase === 'snap' || phase === 'fading') ? '#000' : 'transparent',
-        pointerEvents: 'all'
-      }}>
-      {/* ノイズ: snap フェーズまで表示 */}
-      {(phase === 'noise' || phase === 'snap') && (
-        <div className="report-transition-glitch report-transition-glitch-active" style={{ zIndex: 10000001 }} />
-      )}
-      {/* CRTスナップ演出 */}
-      {phase === 'snap' && (
-        <div className="report-transition-crt-snap" style={{ zIndex: 10000002 }} />
-      )}
-      {/* フェードアウト */}
-      {phase === 'fading' && (
-        <div className="report-transition-dark-fade-out" style={{ animationDuration: '0.6s', zIndex: 10000003 }} />
-      )}
-    </div>
-  );
+  // 演出は無効化
+  return null;
 }

@@ -2,10 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-yotei.css';
 
-const API_BASE =
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost')
-    ? '/api'
-    : (import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod');
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = window.location?.hostname || '';
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+// UI は常に同一オリジン相対 (/api) を正とする。
+const API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api' : '/api';
 
 const TIMELINE_START_HOUR = 16;
 const TIMELINE_END_HOUR_NEXT_DAY = 4;

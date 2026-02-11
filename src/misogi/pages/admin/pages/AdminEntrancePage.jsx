@@ -7,5 +7,5 @@ import { ADMIN_HOTBAR } from './admin-entrance-hotbar.config';
  * 選択肢はホットバーボタン。オーバーレイ禁止。権限ガードは当面なし。
  */
 export default function AdminEntrancePage() {
-  return <JobEntranceScreen job="admin" hotbarConfig={ADMIN_HOTBAR} />;
+  return <JobEntranceScreen job="admin" hotbarConfig={ADMIN_HOTBAR} showFlowGuideButton={false} />;
 }

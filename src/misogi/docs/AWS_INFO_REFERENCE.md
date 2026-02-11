@@ -9,8 +9,11 @@
 
 | 種類 | 所在 | 内容 |
 |------|------|------|
-| **API ベース URL（本番）** | `scripts/create-and-fetch-work-report.sh`<br>`docs/admin-work-reports-test-report.md`<br>`legacy/extract/js/office-work-reports.js` 等 | `https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod` |
-| **フロントの API 先** | `src/shared/api/client.js` | `import.meta.env.VITE_API_BASE ?? '/api'`<br>未設定なら `/api`（プロキシ想定） |
+| **予定系 API ベース URL（本番）** | `src/misogi/vite.config.js`<br>`src/misogi/pages/shared/api/client.js` | `VITE_API_BASE`（例: `https://v7komjkx4k.execute-api.ap-northeast-1.amazonaws.com/prod`） |
+| **マスタ系 API ベース URL（本番）** | `src/misogi/vite.config.js`<br>`src/misogi/pages/admin/pages/AdminMasterBase.jsx` | `VITE_MASTER_API_BASE`（例: `https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod`） |
+| **人材 API ベース URL（本番）** | `src/misogi/vite.config.js`<br>`src/misogi/pages/shared/auth/signInWithCognito.js` | `VITE_JINZAI_API_BASE`（例: `https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod`） |
+| **業務報告 API ベース URL（本番）** | `src/misogi/pages/shared/api/adminWorkReportsApi.js`<br>`src/misogi/scripts/create-and-fetch-work-report.sh` | 専用ゲート（例: `https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod`） |
+| **フロントの API 先（dev）** | `src/misogi/pages/shared/api/client.js` | `import.meta.env.VITE_API_BASE ?? '/api'`<br>未設定なら `/api`（Vite proxy想定） |
 | **Cognito User Pool ID** | `docs/V1_DATA_SOURCES_MAP.md` | `ap-northeast-1_EDKElIGoC`（v1 記載） |
 | **トークンの置き場所** | ブラウザ: `src/shared/auth/cognitoStorage.js`<br>CLI: `~/.cognito_token` | `cognito_id_token`（localStorage）<br>Bearer 用に `~/.cognito_token` を読むスクリプトあり |
 | **データソース一覧** | `docs/V1_DATA_SOURCES_MAP.md` | DynamoDB テーブル名・Cognito・API の対応 |
@@ -57,11 +60,14 @@ test -s ~/.cognito_token && echo "token file exists" || echo "no token file"
 
 | 項目 | 値（例） |
 |------|----------|
-| 本番 API Base | `https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod` |
+| 予定系 API Base（例） | `https://v7komjkx4k.execute-api.ap-northeast-1.amazonaws.com/prod` |
+| マスタ系 API Base（例） | `https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod` |
+| 人材 API Base（例） | `https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod` |
+| 業務報告 API Base（例） | `https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod` |
 | リージョン | `ap-northeast-1` |
 | Cognito User Pool ID（v1 記載） | `ap-northeast-1_EDKElIGoC` |
 | 業務報告 PUT/GET | `PUT /work-report`, `GET /work-report?date=YYYY-MM-DD` |
-| 環境変数（Vite） | `VITE_API_BASE` → API のベース URL |
+| 環境変数（Vite） | `VITE_API_BASE` / `VITE_MASTER_API_BASE` / `VITE_JINZAI_API_BASE` |
 
 ---
 

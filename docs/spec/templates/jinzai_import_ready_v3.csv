@@ -1,0 +1,29 @@
+jinzai_id,name,email,phone,jotai,koyou_kubun,yakuwari,shokushu,busho_names,han_type,kigyou_id,raw_yakushoku,raw_shokushu
+JINZAI#0001,正田和輝,frappe.manma@gmail.com,7033323939,yuko,役員,"[""admin""]","[""keiei""]",取締役会・運営本部,internal,,管理,代表取締役
+JINZAI#0002,大田真也,so@sou.works,7091908180,yuko,業務委託,"[""admin""]","[""keiri"", ""engineer""]",財務運営本部・財務経理部,kigyou,KIGYOU#KOJIN#JINZAI#0002,管理,財務管理・経理・システム開発
+JINZAI#0003,高木直人,naoto.yu@gmail.com,,yuko,業務委託,"[""admin""]","[""engineer""]",総務部,kigyou,KIGYOU#KOJIN#JINZAI#0003,管理,総務
+JINZAI#0004,遠藤虹輝,endo@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""maintenance"", ""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0004,リーダー,メンテナンス・清掃
+JINZAI#0005,佐々木和真,sasaki@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""maintenance"", ""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0005,一般,メンテナンス・清掃
+JINZAI#0006,梅岡 アレサンドレ ユウジ,umeoka@misesapo.co.jp,,yuko,業務委託,"[""admin""]","[""seisou""]",清掃事業部・営業部,kigyou,KIGYOU#KOJIN#JINZAI#0006,リーダー,"FS営業, 清掃"
+JINZAI#0007,吉井奎吾,yoshii@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""maintenance"", ""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0007,一般,メンテナンス・清掃
+JINZAI#0008,増田優香,masuda@misesapo.co.jp,,yuko,業務委託,"[""office""]","[""jimu""]",事務経理部,kigyou,KIGYOU#KOJIN#JINZAI#0008,一般,営業事務
+JINZAI#0009,大野幹太,ono@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0009,一般,清掃
+JINZAI#0010,中島郁哉,nakajima@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""maintenance"", ""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0010,一般,メンテナンス・清掃
+JINZAI#9999,櫻田傑,sakurada@misesapo.co.jp,8090060410,yuko,契約社員,"[""admin""]","[""engineer"", ""design"", ""operator"", ""jinji""]",組織運営本部・オペレーション設計部・DX開発部,internal,,管理,システム開発・デザイン・カスタマーサポート・人材管理
+JINZAI#0012,中澤裕,nakazawa@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0012,一般,清掃
+JINZAI#0013,サウザ レムエル,lemuel@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0013,一般,清掃
+JINZAI#0014,ガブリエレ,bibisayuri2011@hotmail.com,,yuko,業務委託,"[""worker""]","[""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0014,一般,清掃
+JINZAI#0015,平鋭未,taira@misesapo.co.jp,,yuko,業務委託,"[""sales""]",[“sales”],営業部,kigyou,KIGYOU#KOJIN#JINZAI#0015,一般,FS営業
+JINZAI#0016,松岡ジョナス,jonas@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0016,一般,清掃
+JINZAI#0017,松岡ガブリエラ,gabriela@misesapo.co.jp,,yuko,業務委託,"[""worker""]","[""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0017,一般,清掃
+JINZAI#0018,前すずら,ikuyaikuya0214@gmail.com,,yuko,業務委託,"[""worker""]","[""maintenance"", ""seisou""]",清掃事業部,kigyou,KIGYOU#KOJIN#JINZAI#0018,一般,メンテナンス・清掃
+JINZAI#0019,竹内 那海,takeuchi@misesapo.co.jp,,yuko,派遣社員,"[""dev""]","[""design""]",デザイン制作部,internal,,一般,デザイン制作
+JINZAI#0020,山村 明弘,yamamura@misesapo.co.jp,,yuko,業務委託,"[""dev""]","[""engineer""]",DX開発部,kigyou,KIGYOU#KOJIN#JINZAI#0020,一般,WEBデザイン
+JINZAI#0021,金野哲久,konno@misesapo.co.jp,,yuko,派遣社員,"[""sales""]",[“sales”],営業部,internal,,一般,FS営業
+JINZAI#0022,鳥澤　美緒,torizawa@misesapo.co.jp,,yuko,派遣社員,"[""office""]","[""jinji""]",人事労務部,internal,,一般,人事
+JINZAI#0023,岩城　将秀,iwaki@misesapo.co.jp,9032241279,yuko,派遣社員,"[""office""]","[""jimu"",""keiri""]",財務経理部,internal,,一般,財務管理・経理
+JINZAI#0024,吉田 直喜,yoshida@misesapo.co.jp,,yuko,業務委託,"[""sales""]",[“sales”],営業部,kigyou,KIGYOU#KOJIN#JINZAI#0024,一般,清掃業者開拓・新規営業
+JINZAI#0025,後藤　亮太,gotou@misesapo.co.jp,,yuko,派遣社員,"[""dev""]","[""design""]",デザイン制作部,internal,,一般,デザイン制作
+JINZAI#0026,水落　紗也子,mizuochi@misesapo.co.jp,,yuko,派遣社員,"[""dev""]","[""design""]",デザイン制作部,internal,,一般,デザイン制作
+JINZAI#0027,櫻田千鶴,sakurada@misesapo.co.jp,,yuko,アルバイト,"[""admin""]","[""jimu"", ""keiri"", ""operator""]",財務経理部・オペレーション設計部,internal,,管理,営業事務・経理事務・オペレーター
+JINZAI#0028,沖智弘,oki@misesapo.co.jp,,yuko,契約社員,"[""sales""]",[“sales”],営業部,internal,,一般,FS営業

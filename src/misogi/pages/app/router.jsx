@@ -7,23 +7,33 @@ function ReportLegacyRedirect() {
     <div style={{ padding: 24, maxWidth: 560, margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.25rem', marginBottom: 16 }}>業務報告の閲覧</h1>
       <p style={{ color: 'var(--muted)' }}>このURLは廃止されました。社内ではログイン後、業務報告（管理）から個別ページを開いてください。</p>
-      <p><Link to="/admin/work-reports">業務報告（管理）一覧へ</Link></p>
+      <p><Link to="/admin/houkoku">報告一覧へ</Link></p>
     </div>
   );
 }
 import Portal from '../portal/pages/Portal';
 import AdminHome from '../admin/pages/Home';
 import AdminEntrancePage from '../admin/pages/AdminEntrancePage';
-import AdminWorkReportsPage from '../admin/pages/AdminWorkReportsPage';
 import AdminCleaningReportsPage from '../admin/pages/AdminCleaningReportsPage';
 import AdminScheduleTimelinePage from '../admin/pages/AdminScheduleTimelinePage';
 import AdminUgokiDashboardPage from '../admin/pages/AdminUgokiDashboardPage';
 import AdminYoteiTimelinePage from '../admin/pages/AdminYoteiTimelinePage';
 import AdminYakusokuPage from '../admin/pages/AdminYakusokuPage';
-import AdminPortalOperatingDaysPage from '../admin/pages/AdminPortalOperatingDaysPage';
 import AdminReportNewPage from '../admin/pages/AdminReportNewPage';
 import AdminHoukokuListPage from '../admin/pages/AdminHoukokuListPage';
 import AdminHoukokuDetailPage from '../admin/pages/AdminHoukokuDetailPage';
+import AdminMasterTorihikisakiPage from '../admin/pages/AdminMasterTorihikisakiPage';
+import AdminMasterYagouPage from '../admin/pages/AdminMasterYagouPage';
+import AdminMasterTenpoPage from '../admin/pages/AdminMasterTenpoPage';
+import AdminMasterSoukoPage from '../admin/pages/AdminMasterSoukoPage';
+import AdminMasterJinzaiPage from '../admin/pages/AdminMasterJinzaiPage';
+import AdminMasterJinzaiBushoPage from '../admin/pages/AdminMasterJinzaiBushoPage';
+import AdminMasterJinzaiShokushuPage from '../admin/pages/AdminMasterJinzaiShokushuPage';
+import AdminMasterServicePage from '../admin/pages/AdminMasterServicePage';
+import AdminTorihikisakiMeiboPage from '../admin/pages/AdminTorihikisakiMeiboPage';
+import AdminJinzaiMeiboPage from '../admin/pages/AdminJinzaiMeiboPage';
+import AdminTenpoKartePage from '../admin/pages/AdminTenpoKartePage';
+import AdminTorihikisakiTourokuPage from '../admin/pages/AdminTorihikisakiTourokuPage';
 import HrAttendance from '../admin/pages/hr/Attendance';
 import ReportCreatePage from '../shared/ui/Report/ReportCreatePage';
 import SalesStoreKartePage from '../shared/ui/Sales/SalesStoreKartePage';
@@ -39,10 +49,6 @@ import SalesLeadsPage from '../shared/ui/Sales/SalesLeadsPage';
 import SalesLeadNewPage from '../shared/ui/Sales/SalesLeadNewPage';
 import SalesLeadDetailPage from '../shared/ui/Sales/SalesLeadDetailPage';
 import SalesSchedulePage from '../shared/ui/Sales/SalesSchedulePage';
-import OfficeStoreDetailPage from '../jobs/office/stores/OfficeStoreDetailPage';
-import OfficeClientListPage from '../jobs/office/clients/OfficeClientListPage';
-import OfficeClientNewPage from '../jobs/office/clients/OfficeClientNewPage';
-import OfficeClientKartePage from '../jobs/office/clients/OfficeClientKartePage';
 import CleanerSchedulePage from '../jobs/cleaning/pages/CleanerSchedulePage';
 import CleanerClientListPage from '../jobs/cleaning/pages/CleanerClientListPage';
 import CleanerClientKartePage from '../jobs/cleaning/pages/CleanerClientKartePage';
@@ -77,7 +83,7 @@ function JobEntranceRoute() {
 }
 
 /**
- * ルーティング定義（basename /misogi → 実際のURLは /misogi/#/admin/work-reports 等）
+ * ルーティング定義（basename /misogi）
  * ボタン遷移先と完全一致させる（末尾スラッシュなし）
  */
 export default function Router() {
@@ -90,8 +96,6 @@ export default function Router() {
       <Route path="/jobs/:job/report" element={<ReportCreatePage />} />
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/entrance" element={<AdminEntrancePage />} />
-      {/* /misogi/#/admin/work-reports で確実に表示 */}
-      <Route path="/admin/work-reports" element={<AdminWorkReportsPage />} />
       <Route path="/admin/cleaning-reports" element={<AdminCleaningReportsPage />} />
       <Route path="/admin/reports/new" element={<AdminReportNewPage />} />
       <Route path="/houkoku" element={<AdminReportNewPage />} />
@@ -99,7 +103,18 @@ export default function Router() {
       <Route path="/admin/yotei" element={<AdminYoteiTimelinePage />} />
       <Route path="/admin/yakusoku" element={<AdminYakusokuPage />} />
       <Route path="/admin/ugoki" element={<AdminUgokiDashboardPage />} />
-      <Route path="/admin/portal-operating-days" element={<AdminPortalOperatingDaysPage />} />
+      <Route path="/admin/torihikisaki-touroku" element={<AdminTorihikisakiTourokuPage />} />
+      <Route path="/admin/torihikisaki-meibo" element={<AdminTorihikisakiMeiboPage />} />
+      <Route path="/admin/jinzai-meibo" element={<AdminJinzaiMeiboPage />} />
+      <Route path="/admin/tenpo/:tenpoId" element={<AdminTenpoKartePage />} />
+      <Route path="/admin/master/torihikisaki" element={<AdminMasterTorihikisakiPage />} />
+      <Route path="/admin/master/yagou" element={<AdminMasterYagouPage />} />
+      <Route path="/admin/master/tenpo" element={<AdminMasterTenpoPage />} />
+      <Route path="/admin/master/souko" element={<AdminMasterSoukoPage />} />
+      <Route path="/admin/master/jinzai" element={<AdminMasterJinzaiPage />} />
+      <Route path="/admin/master/jinzai-busho" element={<AdminMasterJinzaiBushoPage />} />
+      <Route path="/admin/master/jinzai-shokushu" element={<AdminMasterJinzaiShokushuPage />} />
+      <Route path="/admin/master/service" element={<AdminMasterServicePage />} />
       <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />
       <Route path="/admin/houkoku/:reportId" element={<AdminHoukokuDetailPage />} />
       <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
@@ -119,10 +134,6 @@ export default function Router() {
       <Route path="/sales/leads/new" element={<SalesLeadNewPage />} />
       <Route path="/sales/leads/:leadId" element={<SalesLeadDetailPage />} />
       <Route path="/sales/schedule" element={<SalesSchedulePage />} />
-      <Route path="/office/clients/list" element={<OfficeClientListPage />} />
-      <Route path="/office/clients/new" element={<OfficeClientNewPage />} />
-      <Route path="/office/clients/:storeId" element={<OfficeClientKartePage />} />
-      <Route path="/office/stores/:storeId" element={<OfficeStoreDetailPage />} />
       <Route path="/jobs/cleaning/schedule" element={<CleanerSchedulePage />} />
       <Route path="/jobs/cleaning/clients/list" element={<CleanerClientListPage />} />
       <Route path="/jobs/cleaning/clients/:storeId" element={<CleanerClientKartePage />} />

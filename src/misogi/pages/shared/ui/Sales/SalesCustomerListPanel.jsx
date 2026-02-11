@@ -6,7 +6,7 @@ const API_BASE = (() => {
   if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
     return '/api';
   }
-  return import.meta.env?.VITE_API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  return import.meta.env?.VITE_API_BASE || '/api';
 })();
 
 const PIPELINE_LABELS = {

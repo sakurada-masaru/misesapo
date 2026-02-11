@@ -81,3 +81,103 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `SalesDayReportPage.jsx` の提出必須条件を緩和（案件カード必須項目を撤廃）
 - [x] 営業日次フォームを5項目（活動日 / 活動時間 / 本日の成果 / 明日の予定 / 気になった点）中心に簡素化
 - [x] 画面から案件カード入力UIと添付UIを外し、日次サマリ単体で提出可能に調整
+
+## YOTEI View Expansion (2026-02-09)
+
+- [x] `/admin/yotei` に `今日 / 週間 / 月間 / 予約表` タブを追加
+- [x] 週間ビューで `作業員×7日` の件数・状態集計と日次遷移を実装
+- [x] 月間ビューで日別件数カレンダーと0件日警告（⚠）を実装
+- [x] 月間ビューに `yakusoku` 消化サマリー（quota/used/remaining）を表示
+
+## Master UI Foundation (2026-02-10)
+
+- [x] `/admin/master/torihikisaki` を新規追加（`name` / `jotai` CRUD）
+- [x] `/admin/master/yagou` を新規追加（`torihikisaki_id` フィルタ/選択対応）
+- [x] `/admin/master/tenpo` を新規追加（`torihikisaki_id` / `yagou_id` フィルタ/選択対応）
+- [x] `/admin/master/souko` を新規追加（`tenpo_id` フィルタ/選択対応）
+- [x] `jotai=yuko|torikeshi` を各マスタ画面で統一（DELETE=torikeshi 前提）
+
+## Master Data Gate Path (2026-02-10)
+
+- [x] マスタ投入テンプレート（`torihikisaki/yagou/tenpo/souko`）を `docs/spec/templates/*.csv` に追加
+- [x] 「器と道」用の運用手順を `docs/spec/MASTER_DATA_GATE_SETUP.md` に追加
+
+## JINZAI Domain Spec (2026-02-11)
+
+- [x] `docs/spec/JINZAI_DOMAIN_SPEC.md` を新規作成
+- [x] `jinzai` の3軸（`koyou_kubun` / `shokushu` / `yakuwari`）を固定
+- [x] `jinzai_kaban` とS3（`jinzai-kaban`）の責務分離を明文化
+
+## JINZAI API Scaffold (2026-02-11)
+
+- [x] `lambda_jinzai_api.py` を追加（`/jinzai`・`/jinzai/busho`・`/jinzai/shokushu`・`/jinzai/{id}/kaban`）
+- [x] `scripts/setup_jinzai_api.sh` を追加（DynamoDB/Lambda/APIGateway の器作成）
+- [x] `scripts/import_jinzai_to_api.py` でCSV投入手順を整備
+- [x] `docs/spec/JINZAI_API_SETUP_RUNBOOK.md` を追加
+
+## JINZAI Login Integration (2026-02-11)
+
+- [x] `signInWithCognito` のユーザー解決元を `/workers` から `jinzai-data API` に切替
+
+## Admin Entrance Cleanup (2026-02-11)
+
+- [x] 「玄関稼働日」ボタン/ページ（`/admin/portal-operating-days`）を撤去（謎の副産物のため）
+- [x] `jinzai.shokushu` から `role`（`sales/cleaning/dev/office/admin`）を決定するロジックを追加
+- [x] `useAuth` で `sagyouin_id` 優先の `workerId` 解決と `dept` 判定互換を追加
+- [x] `scripts/sync_jinzai_cognito_sub.py` を追加（Cognito `sub` の一括反映）
+
+## Customer Registration Refresh (2026-02-11)
+
+- [x] 管理向けの入力特化ページ `/admin/torihikisaki-touroku` を追加（`torihikisaki → yagou → tenpo → souko`）
+- [x] 旧「顧客（旧）」ページ（`/office/clients/*`, `/office/stores/*`）をルーティング/導線から除外し、ページ自体も削除
+- [x] 旧導線（Office hotbar / AdminScheduleTimeline の「顧客新規登録」）を新ページへ差し替え
+- [x] `npm -C src/misogi run build` が通る
+
+## Remove Portal Operating Days UI (2026-02-11)
+
+- [x] 管理ホットバーから「玄関稼働日」を削除
+- [x] `/admin/portal-operating-days` ルートとページを削除（未使用化）
+
+## Remove Legacy Report Management (2026-02-11)
+
+- [x] 管理ホットバー「報告」から「全報告管理」を削除
+- [x] `/admin/work-reports` ルートと `AdminWorkReportsPage` を削除
+- [x] 旧一覧リンクを `/admin/houkoku` に統一
+- [x] 管理ホットバー「清掃報告受領」を削除し、「新・報告一覧 (New)」を「報告一覧」に改称
+
+## Global Header Cleanup (2026-02-11)
+
+- [x] `App.jsx` の非フルスクリーン共通ナビ（Portal/Entrance群）を削除
+- [x] 全ページで上部ナビヘッダーなしの統一描画に変更
+
+## Tenpo Onboarding API Unification (2026-02-11)
+
+- [x] `POST /master/tenpo/onboarding` を `lambda_torihikisaki_api.py` に追加（`torihikisaki -> yagou -> tenpo` を単一APIで作成）
+- [x] 顧客登録（新）に `同時にカルテ作成` チェックを追加し、単一API呼び出しへ切替
+- [x] 顧客登録（新）へ追加項目（電話番号/メール/担当者/住所/URL/情報登録者名）を追加
+- [x] `tenpo` と `tenpo_karte` 初期データへ基本情報を同時反映
+- [x] API側に `idempotency_key` 受け入れと再送時の再利用（重複作成回避）を実装
+
+## Tenpo Karte Always-On Creation (2026-02-11)
+
+- [x] onboarding APIで `tenpo_karte` を常時自動作成（`create_karte` 任意フラグ依存を廃止）
+- [x] 顧客登録（新）のチェック項目を「作成可否」ではなく「作成後にカルテ入力へ進むか」に変更
+- [x] 登録送信ペイロードの `create_karte` は常に `true` を送信
+
+## Service Master Gate (2026-02-11)
+
+- [x] `service` テーブルを作成（`service_id` PK / `jotai` / `category`）
+- [x] 初期サービス3件（`cleaning_regular` / `maintenance_check` / `pest_spot`）を投入
+- [x] `lambda_torihikisaki_api.py` に `service` コレクションを追加（`/master/service` CRUD）
+
+## Service Link to Scheduling (2026-02-11)
+
+- [x] `/admin/yotei` の予定モーダルに `service` 選択を追加（`/master/service` 参照）
+- [x] `service` 選択時に `work_type` と終了時刻（`default_duration_min`）を自動補完
+- [x] `/admin/yakusoku` の案件モーダルに `service` 選択を追加（`service_id/service_name` 保存）
+
+## Service Master UI (2026-02-11)
+
+- [x] 管理マスタ画面 `/admin/master/service` を新規追加
+- [x] 管理ホットバー（情報）に「サービスマスタ」導線を追加
+- [x] 一覧/新規/編集/取消を `AdminMasterBase` 共通UIで運用可能化
