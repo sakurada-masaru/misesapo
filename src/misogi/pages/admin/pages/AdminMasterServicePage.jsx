@@ -44,8 +44,8 @@ export default function AdminMasterServicePage() {
           labelKey: 'name',
           defaultValue: 'cleaning',
         },
-        { key: 'default_duration_min', label: '標準時間(分)' },
-        { key: 'default_price', label: '標準単価' },
+        { key: 'default_duration_min', label: '標準時間(分)', type: 'number', defaultValue: 60 },
+        { key: 'default_price', label: '標準単価', type: 'number', defaultValue: 0 },
       ]}
     />
   );

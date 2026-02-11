@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => {
   // 業務報告専用ゲート（1x0f73dj2l = misesapo-work-report）。/api より先に定義すること。
   const WORK_REPORT_GATEWAY = env.VITE_WORK_REPORT_API_BASE || 'https://1x0f73dj2l.execute-api.ap-northeast-1.amazonaws.com/prod';
   // 予定系API（旧 51bhoxkbxd は使用禁止）
-  const YOTEI_GATEWAY = env.VITE_API_BASE || 'https://v7komjkx4k.execute-api.ap-northeast-1.amazonaws.com/prod';
+  const YOTEI_GATEWAY = env.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod';
   // マスタ系API（torihikisaki-data）
   const MASTER_GATEWAY = env.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod';
   // 人材API（jinzai-data）

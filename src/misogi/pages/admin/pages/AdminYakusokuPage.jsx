@@ -9,10 +9,16 @@ function isLocalUiHost() {
   return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
 }
 
-// UI は常に同一オリジン相対 (/api*) を正とする。
-const API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api' : '/api';
-const YAKUSOKU_FALLBACK_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api2' : '/api2';
-const MASTER_API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api-master' : '/api-master';
+const IS_LOCAL = import.meta.env?.DEV || isLocalUiHost();
+const API_BASE = IS_LOCAL
+  ? '/api'
+  : (import.meta.env?.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod');
+const YAKUSOKU_FALLBACK_BASE = IS_LOCAL
+  ? '/api2'
+  : (import.meta.env?.VITE_YAKUSOKU_API_BASE || API_BASE);
+const MASTER_API_BASE = IS_LOCAL
+  ? '/api-master'
+  : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 function authHeaders() {
   const legacyAuth = (() => {

@@ -8,8 +8,10 @@ function isLocalUiHost() {
   return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
 }
 
-// UI は常に同一オリジン相対 (/api) を正とする。
-const API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api' : '/api';
+const IS_LOCAL = import.meta.env?.DEV || isLocalUiHost();
+const API_BASE = IS_LOCAL
+  ? '/api'
+  : (import.meta.env?.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 const TIMELINE_START_HOUR = 16;
 const TIMELINE_END_HOUR_NEXT_DAY = 4;

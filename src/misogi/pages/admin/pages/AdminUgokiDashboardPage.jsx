@@ -8,10 +8,16 @@ function isLocalUiHost() {
   return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
 }
 
-// UI は常に同一オリジン相対 (/api) を正とする。
-const API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api' : '/api';
-const MASTER_API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api-master' : '/api-master';
-const JINZAI_API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api-jinzai' : '/api-jinzai';
+const IS_LOCAL = import.meta.env?.DEV || isLocalUiHost();
+const API_BASE = IS_LOCAL
+  ? '/api'
+  : (import.meta.env?.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod');
+const MASTER_API_BASE = IS_LOCAL
+  ? '/api-master'
+  : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
+const JINZAI_API_BASE = IS_LOCAL
+  ? '/api-jinzai'
+  : (import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 const REASON_OPTIONS = [
   { value: 'NET', label: 'NET' },

@@ -2,8 +2,16 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-jinzai-meibo.css';
 
-// dev では Vite proxy 経由、prod では同一オリジンの API Gateway 経由を想定
-const JINZAI_API_BASE = '/api-jinzai';
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = window.location?.hostname || '';
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+const JINZAI_API_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api-jinzai'
+    : (import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 function authHeaders() {
   const legacyAuth = (() => {

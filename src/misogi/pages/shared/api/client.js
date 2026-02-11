@@ -4,12 +4,13 @@
  */
 
 const defaultBase = '/api';
+const prodDefaultBase = 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod';
 const workReportBase = '/api-wr';
 
 export function getApiBase() {
-  if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') return defaultBase;
+  if (typeof window !== 'undefined' && ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location?.hostname)) return defaultBase;
   if (import.meta.env.DEV) return defaultBase;
-  return import.meta.env.VITE_API_BASE ?? defaultBase;
+  return import.meta.env.VITE_API_BASE ?? prodDefaultBase;
 }
 
 export function getWorkReportApiBase() {

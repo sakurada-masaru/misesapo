@@ -2,7 +2,16 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import './admin-tenpo-karte.css';
 
-const MASTER_API_BASE = '/api-master';
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = window.location?.hostname || '';
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+const MASTER_API_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api-master'
+    : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 const KARTE_VIEW = {
   SUMMARY: 'summary',

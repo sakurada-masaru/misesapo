@@ -2,8 +2,16 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-master.css';
 
-// ブラウザ直叩きは CORS で死ぬので、dev/prod ともに同一オリジン相対を正とする。
-const DEFAULT_API_BASE = '/api-master';
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = String(window.location?.hostname || '').toLowerCase();
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+const DEFAULT_API_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api-master'
+    : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 function authHeaders() {
   const legacyAuth = (() => {
@@ -56,6 +64,19 @@ function pickId(item, idKey) {
   return item?.[idKey] || item?.id || '';
 }
 
+function formatCellValue(value) {
+  if (value === null || value === undefined || value === '') return '-';
+  if (Array.isArray(value)) return value.join(', ');
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
 export default function AdminMasterBase({
   title,
   resource,
@@ -79,6 +100,8 @@ export default function AdminMasterBase({
   const [parents, setParents] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const buildResourcePath = useCallback(
     (suffixPath) => {
@@ -222,10 +245,22 @@ export default function AdminMasterBase({
     }
   }, [editing, idKey, resource, closeModal, loadItems, onAfterSave, apiBase, buildResourcePath, resourceBasePath]);
 
-  const onDelete = useCallback(async (row) => {
+  const onDelete = useCallback((row) => {
     const rowId = pickId(row, idKey);
     if (!rowId) return;
-    if (!window.confirm('取り消し（torikeshi）にしますか？')) return;
+    setDeleteTarget(row);
+  }, [idKey]);
+
+  const closeDeleteConfirm = useCallback(() => {
+    if (deleting) return;
+    setDeleteTarget(null);
+  }, [deleting]);
+
+  const confirmDelete = useCallback(async () => {
+    const row = deleteTarget;
+    const rowId = pickId(row, idKey);
+    if (!rowId) return;
+    setDeleting(true);
     try {
       const res = await apiFetch(apiBase, buildResourcePath(`${resource}/${encodeURIComponent(rowId)}`), {
         method: 'DELETE',
@@ -234,11 +269,14 @@ export default function AdminMasterBase({
         const text = await res.text();
         throw new Error(`${resource} 取消失敗 (${res.status}) ${text}`);
       }
+      setDeleteTarget(null);
       await loadItems();
     } catch (e) {
       window.alert(e.message || '取消に失敗しました');
+    } finally {
+      setDeleting(false);
     }
-  }, [idKey, resource, loadItems, apiBase, buildResourcePath, resourceBasePath]);
+  }, [deleteTarget, idKey, apiBase, buildResourcePath, resource, loadItems]);
 
   const columns = useMemo(() => {
     return [
@@ -305,7 +343,7 @@ export default function AdminMasterBase({
                 const rid = pickId(row, idKey);
                 return (
                   <tr key={rid || Math.random()}>
-                    {columns.map((c) => <td key={`${rid}-${c.key}`}>{row?.[c.key] || '-'}</td>)}
+                    {columns.map((c) => <td key={`${rid}-${c.key}`}>{formatCellValue(row?.[c.key])}</td>)}
                     <td className="actions">
                       <button onClick={() => openEdit(row)}>編集</button>
                       <button className="danger" onClick={() => onDelete(row)}>取消</button>
@@ -351,8 +389,8 @@ export default function AdminMasterBase({
                   <label key={f.key}>
                     <span>{f.label}</span>
                     <input
-                      type="text"
-                      value={editing[f.key] || ''}
+                      type={f.type === 'number' ? 'number' : 'text'}
+                      value={editing[f.key] ?? ''}
                       onChange={(e) => setEditing((prev) => ({ ...prev, [f.key]: e.target.value }))}
                     />
                   </label>
@@ -373,6 +411,33 @@ export default function AdminMasterBase({
             <div className="admin-master-modal-actions">
               <button onClick={closeModal}>キャンセル</button>
               <button className="primary" onClick={onSave} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="admin-master-modal-backdrop" onClick={closeDeleteConfirm}>
+          <div className="admin-master-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>取り消し確認</h2>
+            <p style={{ marginTop: 0, color: '#cbd5e1' }}>
+              このデータを取り消し（`torikeshi`）にします。よろしいですか？
+            </p>
+            <div style={{ marginBottom: 12, padding: 10, border: '1px solid #273049', borderRadius: 8, background: '#0b1220' }}>
+              <div style={{ color: '#9aa6c5', fontSize: 12 }}>対象ID</div>
+              <div>{pickId(deleteTarget, idKey)}</div>
+              {deleteTarget?.name ? (
+                <>
+                  <div style={{ color: '#9aa6c5', fontSize: 12, marginTop: 6 }}>名称</div>
+                  <div>{deleteTarget.name}</div>
+                </>
+              ) : null}
+            </div>
+            <div className="admin-master-modal-actions">
+              <button onClick={closeDeleteConfirm} disabled={deleting}>キャンセル</button>
+              <button className="primary" onClick={confirmDelete} disabled={deleting}>
+                {deleting ? '取り消し中...' : '取り消す'}
+              </button>
             </div>
           </div>
         </div>

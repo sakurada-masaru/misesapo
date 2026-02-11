@@ -4,9 +4,17 @@
  * window.AmazonCognitoIdentity と window.CognitoConfig（index.html で CDN 読み込み）を使用。
  */
 
-// ブラウザ直叩きは CORS で死ぬので、dev/prod ともに同一オリジン相対を正とする。
-// Vite 側では `/api-jinzai` を API Gateway にプロキシする。
-const JINZAI_API_BASE = '/api-jinzai';
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = String(window.location.hostname || '').toLowerCase();
+  return h === 'localhost' || h === '127.0.0.1';
+}
+
+// 開発: Vite proxy (/api-jinzai)
+// 本番: API Gateway 直叩き
+const JINZAI_API_BASE = isLocalUiHost()
+  ? '/api-jinzai'
+  : (import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 /** 既存 signin.html と同様: window.CognitoConfig（index.html で設定）またはデフォルト */
 function getPoolData() {

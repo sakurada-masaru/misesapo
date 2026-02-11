@@ -25,7 +25,9 @@ function isLocalUiHost() {
 }
 
 // UI は常に同一オリジン相対 (/api) を正とする。
-const API_BASE = (import.meta.env?.DEV || isLocalUiHost()) ? '/api' : '/api';
+const API_BASE = (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api'
+    : (import.meta.env?.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 const STATUSES = [
   { key: 'planned', label: '予定', colorClass: 's-booked' },

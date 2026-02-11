@@ -1,8 +1,16 @@
 import React, { useCallback } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
-// ブラウザ直叩きは CORS で死ぬので、dev/prod ともに同一オリジン相対を正とする。
-const JINZAI_API_BASE = '/api-jinzai';
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = String(window.location?.hostname || '').toLowerCase();
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+const JINZAI_API_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api-jinzai'
+    : (import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 export default function AdminMasterJinzaiPage() {
   const handleAfterSave = useCallback(async ({ isUpdate, id, editing, request }) => {
