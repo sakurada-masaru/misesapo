@@ -12,18 +12,64 @@ const AdminHoukokuListPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const { getToken } = useAuth();
 
+    const coercePayloadObject = useCallback((raw) => {
+        if (!raw) return {};
+        if (typeof raw === 'object') return raw;
+        if (typeof raw !== 'string') return {};
+        const s = raw.trim();
+        if (!s) return {};
+        try {
+            const j = JSON.parse(s);
+            return (j && typeof j === 'object') ? j : {};
+        } catch {
+            return {};
+        }
+    }, []);
+
     const normalizeReport = useCallback((item) => {
         if (!item || typeof item !== 'object') return null;
-        const payload = item.payload || {};
+        const payload = coercePayloadObject(
+            item.payload ??
+            item.payload_json ??
+            item.payloadJson ??
+            item.body ??
+            item.data
+        );
+
+        const template_id =
+            item.template_id ||
+            item.templateId ||
+            item.template ||
+            payload.template_id ||
+            payload.templateId ||
+            payload.template ||
+            'GENERAL_V1';
+
         return {
             ...item,
             id: item.id || item.log_id || item.report_id || '',
-            template_id: item.template_id || item.templateId || payload.template_id || 'GENERAL_V1',
-            user_name: item.user_name || item.worker_name || item.created_by_name || '不明なユーザー',
-            created_at: item.created_at || item.updated_at || new Date().toISOString(),
+            template_id,
+            user_name:
+                item.user_name ||
+                item.worker_name ||
+                item.sagyouin_name ||
+                item.created_by_name ||
+                item.submitted_by_name ||
+                payload.user_name ||
+                payload.worker_name ||
+                payload.sagyouin_name ||
+                '不明なユーザー',
+            created_at:
+                item.submitted_at ||
+                item.created_at ||
+                item.updated_at ||
+                payload.submitted_at ||
+                payload.created_at ||
+                payload.updated_at ||
+                new Date().toISOString(),
             payload,
         };
-    }, []);
+    }, [coercePayloadObject]);
 
     const fetchByHoukoku = useCallback(async (date, headers) => {
         const res = await apiFetchWorkReport(`/houkoku?date=${date}`, {
@@ -71,6 +117,54 @@ const AdminHoukokuListPage = () => {
         return { label: '一般', color: '#6B7280', icon: 'fa-file' };
     };
 
+    const getReportPreview = useCallback((report) => {
+        const payload = report?.payload || {};
+        const pick = (...keys) => {
+            for (const k of keys) {
+                const v = payload?.[k];
+                if (typeof v === 'string' && v.trim()) return v.trim();
+            }
+            return '';
+        };
+
+        // Common-ish names across templates / historical payloads
+        const tenpoName =
+            pick('tenpo_name', 'store_name', 'target_name') ||
+            (payload?.stores?.[0]?.name ? String(payload.stores[0].name) : '');
+
+        if (report?.template_id === 'SALES_V1') {
+            return (
+                pick('honjitsu_seika', 'result_today', 'summary', 'memo') ||
+                tenpoName ||
+                '営業報告'
+            );
+        }
+        if (report?.template_id === 'CLEANING_V1') {
+            return (
+                tenpoName ||
+                pick('summary', 'memo') ||
+                '清掃報告'
+            );
+        }
+        if (report?.template_id === 'ENGINEERING_V1') {
+            return (
+                pick('project', 'summary', 'memo') ||
+                '開発報告'
+            );
+        }
+        if (report?.template_id === 'OFFICE_V1') {
+            return (
+                pick('summary', 'memo') ||
+                '事務報告'
+            );
+        }
+        return (
+            pick('summary', 'honjitsu_seika', 'memo') ||
+            tenpoName ||
+            '業務報告'
+        );
+    }, []);
+
     return (
         <Container>
             <Header>
@@ -112,14 +206,9 @@ const AdminHoukokuListPage = () => {
                                     </TypeTag>
                                     <CardId>{report.id.split('#').pop()}</CardId>
                                 </CardHeader>
-                                <CardBody>
-                                    <UserName>{report.user_name || '不明なユーザー'}</UserName>
-                                    <ContentPreview>
-                                        {report.template_id === 'SALES_V1' ? report.payload.target_name :
-                                            report.template_id === 'CLEANING_V1' ? (report.payload.stores?.[0]?.name || '店舗清掃') :
-                                                report.template_id === 'ENGINEERING_V1' ? report.payload.project :
-                                                    '業務報告'}
-                                    </ContentPreview>
+                                    <CardBody>
+                                        <UserName>{report.user_name || '不明なユーザー'}</UserName>
+                                    <ContentPreview>{getReportPreview(report)}</ContentPreview>
                                     <Timestamp>{new Date(report.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} 提出</Timestamp>
                                 </CardBody>
                                 <CardFooter>

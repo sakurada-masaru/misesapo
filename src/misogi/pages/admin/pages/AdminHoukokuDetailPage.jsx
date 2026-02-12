@@ -34,14 +34,38 @@ const AdminHoukokuDetailPage = () => {
     if (error) return <Container><ErrorMessage>{error}</ErrorMessage></Container>;
     if (!report) return <Container><Message>報告が見つかりません。</Message></Container>;
 
-    // payload が object かどうかチェック（型ガード：文字列/NULL対策）
-    const payload =
-        report?.payload && typeof report.payload === 'object' && !Array.isArray(report.payload)
-            ? report.payload
-            : {};
+    const coercePayloadObject = (raw) => {
+        if (!raw) return {};
+        if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+        if (typeof raw !== 'string') return {};
+        const s = raw.trim();
+        if (!s) return {};
+        try {
+            const j = JSON.parse(s);
+            return (j && typeof j === 'object' && !Array.isArray(j)) ? j : {};
+        } catch {
+            return {};
+        }
+    };
 
-    // template_id からテンプレートを取得
-    const templateId = report.template_id;
+    // payload が文字列(JSON)で返ることがあるので吸収（管理側は内容が最重要）
+    const payload = coercePayloadObject(
+        report?.payload ??
+        report?.payload_json ??
+        report?.payloadJson ??
+        report?.body ??
+        report?.data
+    );
+
+    // template_id からテンプレートを取得（後方互換: templateId/template/payload.template_id）
+    const templateId =
+        report.template_id ||
+        report.templateId ||
+        report.template ||
+        payload?.template_id ||
+        payload?.templateId ||
+        payload?.template ||
+        null;
     const template = templateId ? getTemplateById(templateId) : null;
 
     // header/overview も型ガード（後方互換fallback用）
@@ -70,8 +94,9 @@ const AdminHoukokuDetailPage = () => {
         ...(activeStoreRaw.store || {}),
         ...activeStoreRaw,
         // metaがあればそれもマージ
-        template_id: activeStoreRaw.template_id || report.template_id,
-        template_payload: activeStoreRaw.template_payload
+        template_id: activeStoreRaw.template_id || activeStoreRaw.templateId || templateId,
+        // stores 形式が無い(=payload直置き)ケースでは、payloadをそのままテンプレへ渡す
+        template_payload: coercePayloadObject(activeStoreRaw.template_payload || activeStoreRaw.templatePayload) || {},
     } : null;
 
     // 作業時間を計算（分）- 旧表示用
@@ -135,7 +160,16 @@ const AdminHoukokuDetailPage = () => {
                                                 start_time: s.work_start_time,
                                                 end_time: s.work_end_time
                                             }}
-                                            payload={s.template_payload || {}}
+                                            payload={(() => {
+                                                // 1) store側に template_payload があるならそれ
+                                                const tp = coercePayloadObject(s.template_payload || s.templatePayload);
+                                                if (tp && Object.keys(tp).length) return tp;
+                                                // 2) 営業報告など: payload直置きのときは store自体が payload
+                                                const raw = coercePayloadObject(activeStoreRaw);
+                                                if (raw && Object.keys(raw).length) return raw;
+                                                // 3) 最後の保険
+                                                return payload || {};
+                                            })()}
                                             mode="view"
                                         />
                                     ) : (
@@ -578,4 +612,3 @@ const FooterInfo = styled.div`
 `;
 
 export default AdminHoukokuDetailPage;
-
