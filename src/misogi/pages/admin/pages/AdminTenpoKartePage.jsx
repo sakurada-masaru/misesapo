@@ -88,6 +88,30 @@ const PLAN_FREQUENCY_OPTIONS = [
   { value: 'undecided', label: '未定' },
 ];
 
+const SERVICE_CYCLE_OPTIONS = [
+  { value: 'monthly', label: '毎月' },
+  { value: 'bimonthly', label: '隔月' },
+  { value: 'quarterly', label: '四半期' },
+  { value: 'half_yearly', label: '半年' },
+  { value: 'yearly', label: '年1' },
+  { value: 'spot', label: 'スポット' },
+];
+
+const MONTH_OPTIONS = [
+  { value: 1, label: '1月' },
+  { value: 2, label: '2月' },
+  { value: 3, label: '3月' },
+  { value: 4, label: '4月' },
+  { value: 5, label: '5月' },
+  { value: 6, label: '6月' },
+  { value: 7, label: '7月' },
+  { value: 8, label: '8月' },
+  { value: 9, label: '9月' },
+  { value: 10, label: '10月' },
+  { value: 11, label: '11月' },
+  { value: 12, label: '12月' },
+];
+
 const SELF_RATING_OPTIONS = [
   { value: 'yoi', label: '良い' },
   { value: 'futsu', label: '普通' },
@@ -225,6 +249,7 @@ export default function AdminTenpoKartePage() {
   // tenpo.karte_detail の編集ドラフト（master API PUTはmergeなので差分PUTで安全に保存できる）
   const [karteDetail, setKarteDetail] = useState(null);
   const [savingKarteDetail, setSavingKarteDetail] = useState(false);
+  const [services, setServices] = useState([]);
 
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
@@ -275,6 +300,21 @@ export default function AdminTenpoKartePage() {
     if (!tenpo) return;
     setKarteDetail((prev) => (prev === null ? (tenpo?.karte_detail || {}) : prev));
   }, [tenpo]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiGetJson('/master/service?limit=2000&jotai=yuko');
+        if (!cancelled) setServices(asItems(res));
+      } catch {
+        if (!cancelled) setServices([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const refresh = useCallback(async () => {
     if (!tenpoId) return;
@@ -374,6 +414,7 @@ export default function AdminTenpoKartePage() {
     if (!Array.isArray(next.equipment)) next.equipment = [];
     if (!Array.isArray(next.consumables)) next.consumables = [];
     if (!Array.isArray(next.staff_history)) next.staff_history = [];
+    if (!Array.isArray(next.service_plan)) next.service_plan = [];
 
     // Free text is allowed only as short exception memo (admin ops).
     next.memo = clampStr(next.memo || '', 200);
@@ -504,6 +545,64 @@ export default function AdminTenpoKartePage() {
       const next = { ...base };
       const cur = Array.isArray(next.staff_history) ? next.staff_history.slice() : [];
       next.staff_history = cur.filter((_, i) => i !== index);
+      return next;
+    });
+  }, []);
+
+  const addServicePlan = useCallback(() => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.service_plan) ? next.service_plan.slice() : [];
+      cur.push({
+        service_id: '',
+        service_name: '',
+        cycle: 'monthly',
+        months: [],
+        note: '',
+      });
+      next.service_plan = cur;
+      return next;
+    });
+  }, []);
+
+  const updateServicePlan = useCallback((index, patch) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.service_plan) ? next.service_plan.slice() : [];
+      if (!cur[index]) return next;
+      cur[index] = { ...cur[index], ...(patch || {}) };
+      next.service_plan = cur;
+      return next;
+    });
+  }, []);
+
+  const removeServicePlan = useCallback((index) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.service_plan) ? next.service_plan.slice() : [];
+      next.service_plan = cur.filter((_, i) => i !== index);
+      return next;
+    });
+  }, []);
+
+  const toggleServicePlanMonth = useCallback((index, month) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.service_plan) ? next.service_plan.slice() : [];
+      const item = cur[index];
+      if (!item) return next;
+      const months = Array.isArray(item.months) ? item.months.slice() : [];
+      const m = Number(month);
+      const pos = months.indexOf(m);
+      if (pos >= 0) months.splice(pos, 1);
+      else months.push(m);
+      months.sort((a, b) => a - b);
+      cur[index] = { ...item, months };
+      next.service_plan = cur;
       return next;
     });
   }, []);
@@ -1031,6 +1130,91 @@ export default function AdminTenpoKartePage() {
                         <button type="button" onClick={() => removeConsumable(i)}>×</button>
                       </div>
                     ))}
+                  </div>
+                ) : (
+                  <div className="muted">未登録</div>
+                )}
+              </section>
+
+              <section className="card card-sub card-wide">
+                <div className="card-title-row">
+                  <div className="card-title">サービスメニュー（周期管理）</div>
+                  <div className="seg-tabs">
+                    <button type="button" onClick={addServicePlan}>追加</button>
+                  </div>
+                </div>
+                {Array.isArray(karteDetail?.service_plan) && karteDetail.service_plan.length > 0 ? (
+                  <div className="service-plan-list">
+                    {karteDetail.service_plan.map((sp, i) => {
+                      const selectedService = services.find((s) => String(s?.service_id || '') === String(sp?.service_id || ''));
+                      const selectedMonths = Array.isArray(sp?.months) ? sp.months : [];
+                      return (
+                        <div key={i} className="service-plan-row">
+                          <div className="service-plan-head">
+                            <div className="service-plan-title">メニュー {i + 1}</div>
+                            <button type="button" onClick={() => removeServicePlan(i)}>×</button>
+                          </div>
+                          <div className="form-grid">
+                            <label className="f">
+                              <div className="lbl">サービス</div>
+                              <select
+                                value={String(sp?.service_id || '')}
+                                onChange={(e) => {
+                                  const serviceId = e.target.value;
+                                  const hit = services.find((s) => String(s?.service_id || '') === serviceId);
+                                  updateServicePlan(i, {
+                                    service_id: serviceId,
+                                    service_name: String(hit?.name || ''),
+                                  });
+                                }}
+                              >
+                                <option value="">未選択</option>
+                                {services.map((s) => (
+                                  <option key={String(s?.service_id || '')} value={String(s?.service_id || '')}>
+                                    {String(s?.name || s?.service_id || '')}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="f">
+                              <div className="lbl">周期</div>
+                              <select
+                                value={String(sp?.cycle || 'monthly')}
+                                onChange={(e) => updateServicePlan(i, { cycle: e.target.value })}
+                              >
+                                {SERVICE_CYCLE_OPTIONS.map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+                          <div className="muted small">
+                            {selectedService?.default_duration_min ? `標準時間: ${selectedService.default_duration_min}分` : '標準時間: -'}
+                            {selectedService?.default_price ? ` / 標準単価: ¥${Number(selectedService.default_price).toLocaleString()}` : ' / 標準単価: -'}
+                          </div>
+                          <div className="month-chip-grid">
+                            {MONTH_OPTIONS.map((m) => (
+                              <button
+                                key={m.value}
+                                type="button"
+                                className={`month-chip ${selectedMonths.includes(m.value) ? 'active' : ''}`}
+                                onClick={() => toggleServicePlanMonth(i, m.value)}
+                              >
+                                {m.label}
+                              </button>
+                            ))}
+                          </div>
+                          <label className="f">
+                            <div className="lbl">補足（任意）</div>
+                            <input
+                              value={String(sp?.note || '')}
+                              onChange={(e) => updateServicePlan(i, { note: clampStr(e.target.value, 120) })}
+                              placeholder="例: 9・11・1・3・5・7月実施"
+                            />
+                          </label>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="muted">未登録</div>

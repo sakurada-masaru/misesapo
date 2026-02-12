@@ -263,6 +263,63 @@
   color: rgba(233, 238, 248, 0.95);
 }
 
+.service-plan-list {
+  display: grid;
+  gap: 12px;
+}
+
+.service-plan-row {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 10px;
+}
+
+.service-plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.service-plan-title {
+  font-size: 13px;
+  color: rgba(233, 238, 248, 0.85);
+}
+
+.service-plan-head button {
+  height: 30px;
+  min-width: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.month-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.month-chip {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(233, 238, 248, 0.85);
+  border-radius: 10px;
+  padding: 8px 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.month-chip.active {
+  border-color: rgba(162, 211, 255, 0.35);
+  background: rgba(162, 211, 255, 0.15);
+  color: rgba(233, 238, 248, 0.98);
+}
+
 .muted.small {
   font-size: 12px;
 }
@@ -410,6 +467,9 @@
   }
   .row button {
     width: 100%;
+  }
+  .month-chip-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 .card {

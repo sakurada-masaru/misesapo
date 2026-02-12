@@ -89,6 +89,7 @@ export default function AdminMasterBase({
   fields,
   parentSources = {},
   onAfterSave,
+  localSearch = null,
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -102,6 +103,7 @@ export default function AdminMasterBase({
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [searchText, setSearchText] = useState('');
 
   const buildResourcePath = useCallback(
     (suffixPath) => {
@@ -286,6 +288,14 @@ export default function AdminMasterBase({
     ];
   }, [fields, idKey]);
 
+  const visibleItems = useMemo(() => {
+    const q = String(searchText || '').trim().toLowerCase();
+    if (!q || !localSearch?.keys?.length) return items;
+    return items.filter((row) =>
+      localSearch.keys.some((k) => String(row?.[k] ?? '').toLowerCase().includes(q))
+    );
+  }, [items, searchText, localSearch]);
+
   return (
     <div className="admin-master-page">
       <div className="admin-master-content">
@@ -299,6 +309,17 @@ export default function AdminMasterBase({
         </header>
 
         <section className="admin-master-toolbar">
+          {localSearch?.keys?.length ? (
+            <label>
+              <span>{localSearch.label || '検索'}</span>
+              <input
+                type="text"
+                placeholder={localSearch.placeholder || 'キーワード検索'}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </label>
+          ) : null}
           {filters.map((f) => {
             const options = f.sourceKey ? (parents[f.sourceKey] || []) : (f.options || []);
             const valueKey = f.valueKey || f.key;
@@ -334,12 +355,12 @@ export default function AdminMasterBase({
               </tr>
             </thead>
             <tbody>
-              {items.length === 0 && !loading && (
+              {visibleItems.length === 0 && !loading && (
                 <tr>
                   <td colSpan={columns.length + 1} className="empty">データがありません</td>
                 </tr>
               )}
-              {items.map((row) => {
+              {visibleItems.map((row) => {
                 const rid = pickId(row, idKey);
                 return (
                   <tr key={rid || Math.random()}>

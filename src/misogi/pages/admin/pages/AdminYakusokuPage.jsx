@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css'; // Reuse styling
@@ -20,6 +20,21 @@ const YAKUSOKU_FALLBACK_BASE = IS_LOCAL
 const MASTER_API_BASE = IS_LOCAL
   ? '/api-master'
   : normalizeGatewayBase(import.meta.env?.VITE_MASTER_API_BASE, 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
+
+const PLAN_BUCKETS = [
+  { key: 'monthly', label: '毎月' },
+  { key: 'odd_month', label: '奇数月' },
+  { key: 'even_month', label: '偶数月' },
+  { key: 'quarterly_a', label: '四半期A (1/5/9月)' },
+  { key: 'quarterly_b', label: '四半期B (3/7/11月)' },
+  { key: 'half_year_a', label: '半年A (1/7月)' },
+  { key: 'half_year_b', label: '半年B (5/11月)' },
+  { key: 'yearly', label: '年1回' },
+];
+
+function createEmptyTaskMatrix() {
+  return Object.fromEntries(PLAN_BUCKETS.map((b) => [b.key, []]));
+}
 
 function authHeaders() {
   const legacyAuth = (() => {
@@ -54,9 +69,36 @@ async function fetchYakusokuWithFallback(path, options = {}) {
 export default function AdminYakusokuPage() {
   const [items, setItems] = useState([]);
   const [services, setServices] = useState([]);
+  const [tenpos, setTenpos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  const normalizeServiceConcept = useCallback((svc) => {
+    const raw = String(svc?.category_concept || svc?.category || '').trim();
+    const map = {
+      kitchen_haccp: '厨房衛生(HACCP)',
+      aircon: '空調設備',
+      floor: 'フロア清掃',
+      pest_hygiene: '害虫衛生',
+      maintenance: '設備メンテ',
+      window_wall: '窓・壁面',
+      cleaning: '清掃',
+      pest: '害虫',
+      other: 'その他',
+    };
+    return map[raw] || raw || '未分類';
+  }, []);
+
+  const normalizeTaskMatrix = useCallback((taskMatrix) => {
+    const base = createEmptyTaskMatrix();
+    if (!taskMatrix || typeof taskMatrix !== 'object') return base;
+    for (const b of PLAN_BUCKETS) {
+      const arr = taskMatrix[b.key];
+      base[b.key] = Array.isArray(arr) ? arr.map((x) => String(x)).filter(Boolean) : [];
+    }
+    return base;
+  }, []);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -93,6 +135,61 @@ export default function AdminYakusokuPage() {
     run();
   }, []);
 
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const base = MASTER_API_BASE.replace(/\/$/, '');
+        const [toriRes, yagouRes, tenpoRes] = await Promise.all([
+          fetch(`${base}/master/torihikisaki?limit=5000&jotai=yuko`, { headers: authHeaders(), cache: 'no-store' }),
+          fetch(`${base}/master/yagou?limit=8000&jotai=yuko`, { headers: authHeaders(), cache: 'no-store' }),
+          fetch(`${base}/master/tenpo?limit=20000&jotai=yuko`, { headers: authHeaders(), cache: 'no-store' }),
+        ]);
+        if (!toriRes.ok) throw new Error(`Torihikisaki HTTP ${toriRes.status}`);
+        if (!yagouRes.ok) throw new Error(`Yagou HTTP ${yagouRes.status}`);
+        if (!tenpoRes.ok) throw new Error(`Tenpo HTTP ${tenpoRes.status}`);
+
+        const toriData = await toriRes.json();
+        const yagouData = await yagouRes.json();
+        const tenpoData = await tenpoRes.json();
+        const toriItems = Array.isArray(toriData) ? toriData : (toriData?.items || []);
+        const yagouItems = Array.isArray(yagouData) ? yagouData : (yagouData?.items || []);
+        const tenpoItems = Array.isArray(tenpoData) ? tenpoData : (tenpoData?.items || []);
+
+        const toriNameById = new Map(toriItems.map((it) => [it?.torihikisaki_id || it?.id, it?.name || '']));
+        const yagouNameById = new Map(yagouItems.map((it) => [it?.yagou_id || it?.id, it?.name || '']));
+
+        const normalized = tenpoItems
+          .map((it) => {
+            const tenpo_id = it?.tenpo_id || it?.id || '';
+            const name = it?.name || '';
+            const torihikisaki_id = it?.torihikisaki_id || '';
+            const yagou_id = it?.yagou_id || '';
+            const torihikisaki_name = toriNameById.get(torihikisaki_id) || '';
+            const yagou_name = yagouNameById.get(yagou_id) || '';
+            const search_blob = [
+              name,
+              tenpo_id,
+              yagou_name,
+              yagou_id,
+              torihikisaki_name,
+              torihikisaki_id,
+            ]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase();
+            return { tenpo_id, name, torihikisaki_id, yagou_id, torihikisaki_name, yagou_name, search_blob };
+          })
+          .filter((it) => it.tenpo_id && it.name)
+          .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+        setTenpos(normalized);
+      } catch (e) {
+        console.error('Failed to fetch tenpos:', e);
+        setTenpos([]);
+      }
+    };
+    run();
+  }, []);
+
   const openNew = () => {
     setModalData({
       isNew: true,
@@ -100,28 +197,122 @@ export default function AdminYakusokuPage() {
       tenpo_name: '',
       service_id: '',
       service_name: '',
+      service_query: '',
       monthly_quota: 1,
       price: 0,
       start_date: dayjs().format('YYYY-MM-DD'),
       status: 'active',
       memo: '',
-      recurrence_rule: { type: 'flexible' }
+      recurrence_rule: { type: 'flexible', task_matrix: createEmptyTaskMatrix() },
+      _tagDrafts: {},
     });
   };
 
   const openEdit = (item) => {
-    setModalData({ ...item, isNew: false });
+    const rr = item?.recurrence_rule && typeof item.recurrence_rule === 'object'
+      ? item.recurrence_rule
+      : { type: 'flexible' };
+    setModalData({
+      ...item,
+      isNew: false,
+      service_query: item?.service_name || item?.service_id || '',
+      recurrence_rule: {
+        ...rr,
+        task_matrix: normalizeTaskMatrix(rr.task_matrix),
+      },
+      _tagDrafts: {},
+    });
   };
+
+  const tenpoCandidates = useMemo(() => {
+    const q = String(modalData?.tenpo_name || '').trim().toLowerCase();
+    if (!q) return tenpos.slice(0, 12);
+    return tenpos
+      .filter((it) => (it.search_blob || '').includes(q))
+      .slice(0, 20);
+  }, [modalData?.tenpo_name, tenpos]);
+
+  const serviceCandidates = useMemo(() => {
+    const q = String(modalData?.service_query || '').trim().toLowerCase();
+    if (!q) return services.slice(0, 12);
+    return services
+      .filter((s) => {
+        const blob = [
+          s?.name,
+          s?.service_id,
+          s?.category,
+          s?.category_concept,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return blob.includes(q);
+      })
+      .slice(0, 20);
+  }, [modalData?.service_query, services]);
+
+  const setBucketDraft = useCallback((bucketKey, value) => {
+    setModalData((prev) => ({
+      ...prev,
+      _tagDrafts: {
+        ...(prev?._tagDrafts || {}),
+        [bucketKey]: value,
+      },
+    }));
+  }, []);
+
+  const addBucketTag = useCallback((bucketKey) => {
+    setModalData((prev) => {
+      const draft = String(prev?._tagDrafts?.[bucketKey] || '').trim();
+      if (!draft) return prev;
+      const tm = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
+      const nextSet = new Set(tm[bucketKey] || []);
+      nextSet.add(draft);
+      return {
+        ...prev,
+        recurrence_rule: {
+          ...(prev?.recurrence_rule || { type: 'flexible' }),
+          task_matrix: {
+            ...tm,
+            [bucketKey]: [...nextSet],
+          },
+        },
+        _tagDrafts: {
+          ...(prev?._tagDrafts || {}),
+          [bucketKey]: '',
+        },
+      };
+    });
+  }, [normalizeTaskMatrix]);
+
+  const removeBucketTag = useCallback((bucketKey, tag) => {
+    setModalData((prev) => {
+      const tm = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
+      return {
+        ...prev,
+        recurrence_rule: {
+          ...(prev?.recurrence_rule || { type: 'flexible' }),
+          task_matrix: {
+            ...tm,
+            [bucketKey]: (tm[bucketKey] || []).filter((x) => String(x) !== String(tag)),
+          },
+        },
+      };
+    });
+  }, [normalizeTaskMatrix]);
 
   const save = async () => {
     setSaving(true);
     try {
       const method = modalData.isNew ? 'POST' : 'PUT';
       const path = modalData.isNew ? '/yakusoku' : `/yakusoku/${modalData.yakusoku_id}`;
+      const payload = { ...modalData };
+      delete payload.service_query;
+      delete payload._tagDrafts;
       const res = await fetchYakusokuWithFallback(path, {
         method,
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify(modalData)
+        body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error('Failed to save');
       setModalData(null);
@@ -217,32 +408,167 @@ export default function AdminYakusokuPage() {
                 </select>
               </div>
               <div className="yotei-form-group">
-                <label>現場名</label>
-                <input type="text" value={modalData.tenpo_name} onChange={e => setModalData({ ...modalData, tenpo_name: e.target.value })} />
+                <label>現場名（統合検索）</label>
+                <input
+                  type="text"
+                  value={modalData.tenpo_name || ''}
+                  onChange={e => {
+                    const nextName = e.target.value;
+                    const exact = tenpos.find((t) => t.name === nextName);
+                    setModalData({
+                      ...modalData,
+                      tenpo_name: nextName,
+                      tenpo_id: exact?.tenpo_id || modalData.tenpo_id || '',
+                    });
+                  }}
+                  placeholder="取引先 / 屋号 / 店舗 / ID で検索"
+                />
+                <div style={{ marginTop: 8, display: 'grid', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
+                  {tenpoCandidates.map((tp) => (
+                    <button
+                      key={tp.tenpo_id}
+                      type="button"
+                      onClick={() => setModalData({ ...modalData, tenpo_name: tp.name, tenpo_id: tp.tenpo_id })}
+                      style={{
+                        textAlign: 'left',
+                        padding: '8px 10px',
+                        borderRadius: 8,
+                        border: '1px solid rgba(255,255,255,0.14)',
+                        background: 'rgba(255,255,255,0.04)',
+                        color: 'white',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ fontWeight: 600 }}>{tp.name}</div>
+                      <div style={{ fontSize: 12, opacity: 0.8 }}>
+                        {(tp.torihikisaki_name || '取引先未設定')} / {(tp.yagou_name || '屋号未設定')}
+                      </div>
+                      <div style={{ fontSize: 11, opacity: 0.65 }}>
+                        {tp.tenpo_id} ・ {tp.yagou_id || '-'} ・ {tp.torihikisaki_id || '-'}
+                      </div>
+                    </button>
+                  ))}
+                  {!tenpoCandidates.length && (
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>候補がありません。新規顧客登録から作成してください。</div>
+                  )}
+                </div>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>選択ID: {modalData.tenpo_id || '未選択'}</span>
+                  <Link to="/admin/torihikisaki-touroku" style={{ color: '#8bd8ff', textDecoration: 'none' }}>
+                    新規顧客登録へ →
+                  </Link>
+                </div>
               </div>
               <div className="yotei-form-group">
                 <label>サービス</label>
-                <select
-                  value={modalData.service_id || ''}
-                  onChange={e => {
-                    const sid = e.target.value;
-                    const svc = services.find((x) => x.service_id === sid);
+                <input
+                  type="text"
+                  value={modalData.service_query || ''}
+                  onChange={(e) => {
+                    const q = e.target.value;
+                    const exact = services.find((s) => s?.name === q || s?.service_id === q);
                     setModalData({
                       ...modalData,
-                      service_id: sid,
-                      service_name: svc?.name || '',
-                      price: modalData.isNew && Number(svc?.default_price || 0) > 0 ? Number(svc.default_price) : modalData.price,
+                      service_query: q,
+                      service_id: exact?.service_id || modalData.service_id || '',
+                      service_name: exact?.name || modalData.service_name || '',
                     });
                   }}
-                >
-                  <option value="">選択してください</option>
-                  {services.map((s) => (
-                    <option key={s.service_id} value={s.service_id}>
-                      {s.name} ({s.category})
-                    </option>
+                  placeholder="サービス名 / ID / カテゴリで検索"
+                />
+                <div style={{ marginTop: 8, display: 'grid', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+                  {serviceCandidates.map((s) => (
+                    <button
+                      key={String(s?.service_id || '')}
+                      type="button"
+                      onClick={() =>
+                        setModalData({
+                          ...modalData,
+                          service_query: String(s?.name || ''),
+                          service_id: String(s?.service_id || ''),
+                          service_name: String(s?.name || ''),
+                          price:
+                            modalData.isNew && Number(s?.default_price || 0) > 0
+                              ? Number(s.default_price)
+                              : modalData.price,
+                        })
+                      }
+                      style={{
+                        textAlign: 'left',
+                        padding: '8px 10px',
+                        borderRadius: 8,
+                        border: '1px solid rgba(255,255,255,0.14)',
+                        background: 'rgba(255,255,255,0.04)',
+                        color: 'white',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ fontWeight: 600 }}>{String(s?.name || s?.service_id || '')}</div>
+                      <div style={{ fontSize: 12, opacity: 0.8 }}>
+                        {normalizeServiceConcept(s)} / {String(s?.category || '未分類')}
+                      </div>
+                      <div style={{ fontSize: 11, opacity: 0.65 }}>
+                        {String(s?.service_id || '-')} ・ 標準単価 ¥{Number(s?.default_price || 0).toLocaleString()}
+                      </div>
+                    </button>
                   ))}
-                </select>
+                  {!serviceCandidates.length ? (
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>候補がありません。サービスマスタを確認してください。</div>
+                  ) : null}
+                </div>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)' }}>
+                  選択ID: {modalData.service_id || '未選択'} / 名称: {modalData.service_name || '未選択'}
+                </div>
               </div>
+              {modalData.type === 'teiki' && (
+                <div className="yotei-form-group">
+                  <label>定期メニュー（月別タグ）</label>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {PLAN_BUCKETS.map((b) => {
+                      const matrix = normalizeTaskMatrix(modalData?.recurrence_rule?.task_matrix);
+                      const tags = matrix[b.key] || [];
+                      const draft = String(modalData?._tagDrafts?.[b.key] || '');
+                      return (
+                        <div key={b.key} style={{ border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: 10 }}>
+                          <div style={{ fontWeight: 700, marginBottom: 8 }}>{b.label}</div>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                            {tags.length ? tags.map((tag) => (
+                              <button
+                                key={`${b.key}-${tag}`}
+                                type="button"
+                                onClick={() => removeBucketTag(b.key, tag)}
+                                style={{
+                                  border: '1px solid rgba(255,255,255,0.18)',
+                                  background: 'rgba(255,255,255,0.08)',
+                                  color: 'white',
+                                  borderRadius: 999,
+                                  padding: '4px 10px',
+                                  fontSize: 12,
+                                  cursor: 'pointer',
+                                }}
+                                title="クリックで削除"
+                              >
+                                {tag} ×
+                              </button>
+                            )) : <span style={{ fontSize: 12, color: 'var(--muted)' }}>未設定</span>}
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <select value={draft} onChange={(e) => setBucketDraft(b.key, e.target.value)}>
+                              <option value="">追加するタグを選択</option>
+                              {services.map((s) => (
+                                <option key={String(s?.service_id || '')} value={String(s?.service_id || '')}>
+                                  {String(s?.name || s?.service_id || '')}
+                                </option>
+                              ))}
+                            </select>
+                            <button type="button" onClick={() => addBucketTag(b.key)}>追加</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="yotei-form-group">
                 <label>月間規定回数 (monthly_quota)</label>
                 <input type="number" value={modalData.monthly_quota} onChange={e => setModalData({ ...modalData, monthly_quota: parseInt(e.target.value) })} />
