@@ -1,7 +1,14 @@
 @layout('layouts.base')
 @json('data/meta/customers_title.json', $title)
 @json('data/meta/customers_body_class.json', $body_class)
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZJ1XD60S84"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-ZJ1XD60S84');
+</script>
 <style>
 @media (max-width: 767.98px) {
     main, .container {
