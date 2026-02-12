@@ -29,6 +29,13 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
+/* Common small row for "hamburger + back link" */
+.admin-top-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* フルスクリーン用ラッパー（portal / ジョブエントランス・報告でヘッダーなし） */
 .app-fullscreen {
   width: 100%;

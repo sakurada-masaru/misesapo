@@ -178,6 +178,36 @@ def _strip(v):
     return str(v or "").strip()
 
 
+def _normalize_tenpo_billing_owner(item: dict):
+    """
+    tenpo の請求主体（= クレジット/与信の owner）を正規化する。
+    - デフォルト: torihikisaki を主体
+    - 個人店などで屋号主体にしたい場合のみ yagou を主体に切替（管理のみ想定）
+    """
+    if not isinstance(item, dict):
+        return item
+    torihikisaki_id = item.get("torihikisaki_id")
+    yagou_id = item.get("yagou_id")
+
+    kind = (item.get("billing_owner_kind") or "").strip()
+    owner_id = (item.get("billing_owner_id") or "").strip()
+
+    if kind not in {"torihikisaki", "yagou"}:
+        kind = "torihikisaki"
+
+    if kind == "torihikisaki":
+        if not owner_id and torihikisaki_id:
+            owner_id = torihikisaki_id
+    elif kind == "yagou":
+        if not owner_id and yagou_id:
+            owner_id = yagou_id
+
+    item["billing_owner_kind"] = kind
+    if owner_id:
+        item["billing_owner_id"] = owner_id
+    return item
+
+
 def _rollback_torikeshi(created_stack):
     # created_stack: [(collection, id), ...]
     for collection, record_id in reversed(created_stack):
@@ -342,6 +372,8 @@ def _create_onboarding(body: dict):
             "updated_at": now,
             "karte_detail": karte_detail,
         }
+        # 請求主体（デフォルトは torihikisaki 主体）
+        _normalize_tenpo_billing_owner(tenpo_item)
         if contact_phone:
             tenpo_item["phone"] = contact_phone
         if contact_email:
@@ -503,6 +535,8 @@ def lambda_handler(event, context):
             item["jotai"] = body.get("jotai", "yuko")
             item["created_at"] = now
             item["updated_at"] = now
+            if collection == "tenpo":
+                _normalize_tenpo_billing_owner(item)
             table.put_item(
                 Item=item,
                 ConditionExpression=f"attribute_not_exists({pk_name})",
@@ -522,6 +556,8 @@ def lambda_handler(event, context):
                     continue
                 item[k] = v
             item["updated_at"] = _now_iso()
+            if collection == "tenpo":
+                _normalize_tenpo_billing_owner(item)
             table.put_item(Item=item)
             return _resp(200, item)
 

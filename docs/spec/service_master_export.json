@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "service_id": "cleaning_regular",
+      "name": "定期清掃",
+      "category": "cleaning",
+      "default_duration_min": 120,
+      "default_price": 30000,
+      "jotai": "yuko"
+    },
+    {
+      "service_id": "maintenance_check",
+      "name": "メンテ巡回",
+      "category": "maintenance",
+      "default_duration_min": 90,
+      "default_price": 40000,
+      "jotai": "yuko"
+    },
+    {
+      "service_id": "pest_spot",
+      "name": "害虫スポット対応",
+      "category": "pest",
+      "default_duration_min": 60,
+      "default_price": 25000,
+      "jotai": "yuko"
+    }
+  ]
+}

@@ -3,10 +3,7 @@
  */
 
 .hamburger-menu-trigger {
-  position: fixed;
-  top: var(--space-4, 16px);
-  right: var(--space-4, 16px);
-  z-index: 9999;
+  position: static;
   display: flex;
   align-items: center;
   justify-content: center;

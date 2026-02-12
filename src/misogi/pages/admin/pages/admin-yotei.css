@@ -285,7 +285,8 @@
 }
 
 .yotei-modal {
-  width: min(640px, calc(100vw - 20px));
+  /* Keep consistent with timeline modal width; still fits on mobile. */
+  width: min(980px, calc(100vw - 24px));
   background: #0f172a;
   border: 1px solid var(--line);
   border-radius: 12px;

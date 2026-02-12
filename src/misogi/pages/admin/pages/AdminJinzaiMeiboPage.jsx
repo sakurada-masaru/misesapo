@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
 import './admin-jinzai-meibo.css';
 
 function isLocalUiHost() {
@@ -145,7 +146,10 @@ export default function AdminJinzaiMeiboPage() {
     <div className="jinzai-meibo-page">
       <header className="jinzai-meibo-head">
         <div className="left">
-          <Link to="/admin/entrance" className="back">← 管理トップ</Link>
+          <div className="admin-top-left">
+            <HamburgerMenu />
+            <Link to="/admin/entrance" className="back">← 管理トップ</Link>
+          </div>
           <h1>人材名簿（meibo）</h1>
           <div className="sub">jinzai（人）</div>
         </div>

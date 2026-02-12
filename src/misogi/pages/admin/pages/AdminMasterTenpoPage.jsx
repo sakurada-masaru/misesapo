@@ -1,6 +1,17 @@
 import React, { useCallback } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
+function normalizeBillingOwnerKind(v) {
+  const s = String(v || '').trim();
+  return s === 'yagou' ? 'yagou' : 'torihikisaki';
+}
+
+function deriveBillingOwnerId(row) {
+  const kind = normalizeBillingOwnerKind(row?.billing_owner_kind);
+  if (kind === 'yagou') return row?.billing_owner_id || row?.yagou_id || '';
+  return row?.billing_owner_id || row?.torihikisaki_id || '';
+}
+
 export default function AdminMasterTenpoPage() {
   const handleAfterSave = useCallback(async ({ isUpdate, editing, request }) => {
     if (isUpdate) return;
@@ -45,9 +56,55 @@ export default function AdminMasterTenpoPage() {
         yagou: { resource: 'yagou', query: { limit: 200 } },
   }}
       fields={[
-        { key: 'torihikisaki_id', label: '取引先', type: 'select', sourceKey: 'torihikisaki', valueKey: 'torihikisaki_id', labelKey: 'name' },
-        { key: 'yagou_id', label: '屋号', type: 'select', sourceKey: 'yagou', valueKey: 'yagou_id', labelKey: 'name' },
+        {
+          key: 'torihikisaki_id',
+          label: '取引先',
+          type: 'select',
+          sourceKey: 'torihikisaki',
+          valueKey: 'torihikisaki_id',
+          labelKey: 'name',
+          onChange: ({ value, prev }) => {
+            const kind = normalizeBillingOwnerKind(prev?.billing_owner_kind);
+            if (kind !== 'torihikisaki') return null;
+            return { billing_owner_id: String(value || '').trim() };
+          },
+        },
+        {
+          key: 'yagou_id',
+          label: '屋号',
+          type: 'select',
+          sourceKey: 'yagou',
+          valueKey: 'yagou_id',
+          labelKey: 'name',
+          onChange: ({ value, prev }) => {
+            const kind = normalizeBillingOwnerKind(prev?.billing_owner_kind);
+            if (kind !== 'yagou') return null;
+            return { billing_owner_id: String(value || '').trim() };
+          },
+        },
         { key: 'name', label: '店舗名' },
+        {
+          key: 'billing_owner_kind',
+          label: '請求主体',
+          type: 'select',
+          defaultValue: 'torihikisaki',
+          options: [
+            { value: 'torihikisaki', label: '取引先（法人）' },
+            { value: 'yagou', label: '屋号（個人店など）' },
+          ],
+          format: (v) => normalizeBillingOwnerKind(v),
+          onChange: ({ value, prev }) => {
+            const kind = normalizeBillingOwnerKind(value);
+            if (kind === 'yagou') return { billing_owner_id: prev?.yagou_id || '' };
+            return { billing_owner_id: prev?.torihikisaki_id || '' };
+          },
+        },
+        {
+          key: 'billing_owner_id',
+          label: '請求主体ID',
+          readOnly: true,
+          format: (_v, row) => deriveBillingOwnerId(row),
+        },
       ]}
     />
   );

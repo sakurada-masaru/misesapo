@@ -15,6 +15,10 @@ MISOGIは以下5層の業務フローを基軸とする。
 
 すべての業務データは、この流れに沿って生成・更新される。
 
+## Related Specs
+
+- `docs/spec/YAKUSOKU_CREDIT_AND_YOSHIN_SPEC.md` (monthly plan credit, top-up, yoshin, stop gate)
+
 ## 3. ドメイン構造（Source of Truth）
 
 ### 3.1 正データの定義

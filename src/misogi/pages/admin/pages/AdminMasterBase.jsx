@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
 import './admin-master.css';
 
 function isLocalUiHost() {
@@ -280,6 +281,15 @@ export default function AdminMasterBase({
     }
   }, [deleteTarget, idKey, apiBase, buildResourcePath, resource, loadItems]);
 
+  const fieldByKey = useMemo(() => {
+    const m = new Map();
+    (fields || []).forEach((f) => {
+      if (!f?.key) return;
+      m.set(f.key, f);
+    });
+    return m;
+  }, [fields]);
+
   const columns = useMemo(() => {
     return [
       { key: idKey, label: 'ID' },
@@ -300,7 +310,10 @@ export default function AdminMasterBase({
     <div className="admin-master-page">
       <div className="admin-master-content">
         <header className="admin-master-header">
-          <Link to="/admin/entrance" className="admin-master-back">← 管理トップ</Link>
+          <div className="admin-top-left">
+            <HamburgerMenu />
+            <Link to="/admin/entrance" className="admin-master-back">← 管理トップ</Link>
+          </div>
           <h1>{title}</h1>
           <div className="admin-master-header-actions">
             <button onClick={openCreate} className="primary">新規登録</button>
@@ -364,7 +377,12 @@ export default function AdminMasterBase({
                 const rid = pickId(row, idKey);
                 return (
                   <tr key={rid || Math.random()}>
-                    {columns.map((c) => <td key={`${rid}-${c.key}`}>{formatCellValue(row?.[c.key])}</td>)}
+                    {columns.map((c) => {
+                      const f = fieldByKey.get(c.key);
+                      const raw = row?.[c.key];
+                      const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
+                      return <td key={`${rid}-${c.key}`}>{formatCellValue(v)}</td>;
+                    })}
                     <td className="actions">
                       <button onClick={() => openEdit(row)}>編集</button>
                       <button className="danger" onClick={() => onDelete(row)}>取消</button>
@@ -392,12 +410,23 @@ export default function AdminMasterBase({
                       <span>{f.label}</span>
                       <select
                         value={editing[f.key] || ''}
-                        onChange={(e) => setEditing((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setEditing((prev) => {
+                            let next = { ...prev, [f.key]: value };
+                            if (typeof f.onChange === 'function') {
+                              const patch = f.onChange({ value, prev: next });
+                              if (patch && typeof patch === 'object') next = { ...next, ...patch };
+                            }
+                            return next;
+                          });
+                        }}
+                        disabled={f.readOnly === true}
                       >
                         <option value="">選択してください</option>
                         {options.map((opt) => {
-                          const v = opt?.[valueKey] || opt?.id || '';
-                          const l = opt?.[labelKey] || v;
+                          const v = opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '';
+                          const l = opt?.[labelKey] ?? opt?.label ?? v;
                           if (!v) return null;
                           return <option key={v} value={v}>{l}</option>;
                         })}
@@ -412,7 +441,18 @@ export default function AdminMasterBase({
                     <input
                       type={f.type === 'number' ? 'number' : 'text'}
                       value={editing[f.key] ?? ''}
-                      onChange={(e) => setEditing((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditing((prev) => {
+                          let next = { ...prev, [f.key]: value };
+                          if (typeof f.onChange === 'function') {
+                            const patch = f.onChange({ value, prev: next });
+                            if (patch && typeof patch === 'object') next = { ...next, ...patch };
+                          }
+                          return next;
+                        });
+                      }}
+                      disabled={f.readOnly === true}
                     />
                   </label>
                 );

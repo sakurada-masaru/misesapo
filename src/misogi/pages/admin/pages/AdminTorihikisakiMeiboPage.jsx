@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
 import './admin-torihikisaki-meibo.css';
 
 function isLocalUiHost() {
@@ -211,7 +212,10 @@ export default function AdminTorihikisakiMeiboPage() {
     <div className="meibo-page">
       <header className="meibo-head">
         <div className="meibo-head-left">
-          <Link to="/admin/entrance" className="meibo-back">← 管理トップ</Link>
+          <div className="admin-top-left">
+            <HamburgerMenu />
+            <Link to="/admin/entrance" className="meibo-back">← 管理トップ</Link>
+          </div>
           <h1>取引先名簿（meibo）</h1>
           <div className="meibo-sub">torihikisaki → yagou → tenpo</div>
         </div>

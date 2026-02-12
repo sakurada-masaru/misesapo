@@ -1,0 +1,2 @@
+service_id,name,category,default_price,default_duration_min,matched_count,total_price_proxy
+cleaning_regular,定期清掃,cleaning,30000,120,173,5190000.0

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
 import './admin-tenpo-karte.css';
 
 function isLocalUiHost() {
@@ -704,7 +705,10 @@ export default function AdminTenpoKartePage() {
     return (
       <div className="tenpo-karte-page">
         <header className="tenpo-karte-head">
-          <Link to="/admin/entrance" className="back">← 管理トップ</Link>
+          <div className="admin-top-left">
+            <HamburgerMenu />
+            <Link to="/admin/entrance" className="back">← 管理トップ</Link>
+          </div>
           <h1>店舗カルテ</h1>
         </header>
         <div className="tenpo-karte-err">tenpo_id が不正です</div>
@@ -716,7 +720,10 @@ export default function AdminTenpoKartePage() {
     <div className="tenpo-karte-page">
       <header className="tenpo-karte-head">
         <div className="left">
-          <button className="back" onClick={() => navigate(-1)}>← 戻る</button>
+          <div className="admin-top-left">
+            <HamburgerMenu />
+            <button className="back" onClick={() => navigate(-1)}>← 戻る</button>
+          </div>
           <div className="titles">
             <div className="kicker">お客様詳細（患者カルテ風）</div>
             <h1>{headerTitle}</h1>

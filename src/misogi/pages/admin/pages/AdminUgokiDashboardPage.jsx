@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-ugoki-dashboard.css';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
+import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -289,7 +290,10 @@ export default function AdminUgokiDashboardPage() {
     <div className="report-page admin-ugoki-dashboard-page" data-job="admin">
       <div className="report-page-content admin-ugoki-dashboard-content">
         <p className="admin-ugoki-dashboard-back">
-          <Link to="/admin/entrance">← 管理トップへ戻る</Link>
+          <span className="admin-top-left">
+            <HamburgerMenu />
+            <Link to="/admin/entrance">← 管理トップへ戻る</Link>
+          </span>
         </p>
 
         <header className="ugoki-head">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css'; // Reuse styling
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
+import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -205,6 +206,7 @@ export default function AdminYakusokuPage() {
       memo: '',
       recurrence_rule: { type: 'flexible', task_matrix: createEmptyTaskMatrix() },
       _tagDrafts: {},
+      _tagSearch: {},
     });
   };
 
@@ -221,6 +223,7 @@ export default function AdminYakusokuPage() {
         task_matrix: normalizeTaskMatrix(rr.task_matrix),
       },
       _tagDrafts: {},
+      _tagSearch: {},
     });
   };
 
@@ -260,6 +263,36 @@ export default function AdminYakusokuPage() {
       },
     }));
   }, []);
+
+  const setBucketSearch = useCallback((bucketKey, value) => {
+    setModalData((prev) => ({
+      ...prev,
+      _tagSearch: {
+        ...(prev?._tagSearch || {}),
+        [bucketKey]: value,
+      },
+    }));
+  }, []);
+
+  const serviceCandidatesForTag = useCallback((qRaw) => {
+    const q = String(qRaw || '').trim().toLowerCase();
+    const list = Array.isArray(services) ? services : [];
+    if (!q) return list.slice(0, 80);
+    return list
+      .filter((s) => {
+        const blob = [
+          s?.name,
+          s?.service_id,
+          s?.category,
+          s?.category_concept,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return blob.includes(q);
+      })
+      .slice(0, 80);
+  }, [services]);
 
   const addBucketTag = useCallback((bucketKey) => {
     setModalData((prev) => {
@@ -309,6 +342,7 @@ export default function AdminYakusokuPage() {
       const payload = { ...modalData };
       delete payload.service_query;
       delete payload._tagDrafts;
+      delete payload._tagSearch;
       const res = await fetchYakusokuWithFallback(path, {
         method,
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -339,7 +373,10 @@ export default function AdminYakusokuPage() {
     <div className="admin-yotei-timeline-page">
       <div className="admin-yotei-timeline-content">
         <header className="yotei-head">
-          <Link to="/admin/entrance" style={{ color: 'var(--muted)', textDecoration: 'none' }}>← 管理トップ</Link>
+          <div className="admin-top-left">
+            <HamburgerMenu />
+            <Link to="/admin/entrance" style={{ color: 'var(--muted)', textDecoration: 'none' }}>← 管理トップ</Link>
+          </div>
           <h1>実案件・定期管理 (yakusoku)</h1>
           <div className="yotei-head-actions">
             <button className="primary" onClick={openNew}>新規案件登録</button>
@@ -528,6 +565,8 @@ export default function AdminYakusokuPage() {
                       const matrix = normalizeTaskMatrix(modalData?.recurrence_rule?.task_matrix);
                       const tags = matrix[b.key] || [];
                       const draft = String(modalData?._tagDrafts?.[b.key] || '');
+                      const search = String(modalData?._tagSearch?.[b.key] || '');
+                      const tagCandidates = serviceCandidatesForTag(search);
                       return (
                         <div key={b.key} style={{ border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: 10 }}>
                           <div style={{ fontWeight: 700, marginBottom: 8 }}>{b.label}</div>
@@ -553,15 +592,25 @@ export default function AdminYakusokuPage() {
                             )) : <span style={{ fontSize: 12, color: 'var(--muted)' }}>未設定</span>}
                           </div>
                           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <input
+                              type="text"
+                              value={search}
+                              onChange={(e) => setBucketSearch(b.key, e.target.value)}
+                              placeholder="検索 (サービス名/ID/カテゴリ)"
+                              style={{ minWidth: 220 }}
+                            />
                             <select value={draft} onChange={(e) => setBucketDraft(b.key, e.target.value)}>
                               <option value="">追加するタグを選択</option>
-                              {services.map((s) => (
+                              {tagCandidates.map((s) => (
                                 <option key={String(s?.service_id || '')} value={String(s?.service_id || '')}>
                                   {String(s?.name || s?.service_id || '')}
                                 </option>
                               ))}
                             </select>
                             <button type="button" onClick={() => addBucketTag(b.key)}>追加</button>
+                          </div>
+                          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
+                            候補 {tagCandidates.length} 件（検索はこのバケット内のみ適用）
                           </div>
                         </div>
                       );

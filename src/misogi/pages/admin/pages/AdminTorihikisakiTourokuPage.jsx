@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
 import './admin-torihikisaki-touroku.css';
 
 function isLocalUiHost() {
@@ -318,7 +319,10 @@ export default function AdminTorihikisakiTourokuPage() {
     <div className="admin-touroku-page">
       <div className="admin-touroku-content">
         <header className="admin-touroku-header">
-          <Link to="/admin/entrance" className="admin-touroku-back">← 管理トップ</Link>
+          <div className="admin-top-left">
+            <HamburgerMenu />
+            <Link to="/admin/entrance" className="admin-touroku-back">← 管理トップ</Link>
+          </div>
           <div className="admin-touroku-headline">
             <h1>顧客登録（新）</h1>
             <div className="sub">torihikisaki → yagou → tenpo → souko（自動作成）</div>
