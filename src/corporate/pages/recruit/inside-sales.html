@@ -1,7 +1,14 @@
 @layout('layouts.base')
 @json('data/meta/recruit_apply_inside_sales_title.json', $title)
 @json('data/meta/recruit_apply_inside_sales_body_class.json', $body_class)
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZJ1XD60S84"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-ZJ1XD60S84');
+</script>
 <!-- 通常ヘッダー（about-more.html と同じ） -->
 <header class="normal-header visible">
   <div class="normal-header-inner">
