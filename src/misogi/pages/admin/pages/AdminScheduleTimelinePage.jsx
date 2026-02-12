@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { detectConflicts as detectConflictsBeforeSave } from '../../shared/utils/scheduleConflicts';
 import { newScheduleId } from '../../shared/utils/scheduleId';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
 import Visualizer from '../../shared/ui/Visualizer/Visualizer';
 import OfficeClientKartePanel from '../../jobs/office/clients/OfficeClientKartePanel';
 import '../../shared/styles/components.css';
@@ -27,7 +28,7 @@ function isLocalUiHost() {
 // UI は常に同一オリジン相対 (/api) を正とする。
 const API_BASE = (import.meta.env?.DEV || isLocalUiHost())
     ? '/api'
-    : (import.meta.env?.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod');
+    : normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 
 const STATUSES = [
   { key: 'planned', label: '予定', colorClass: 's-booked' },

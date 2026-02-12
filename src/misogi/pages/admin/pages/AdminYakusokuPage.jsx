@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css'; // Reuse styling
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -12,13 +13,13 @@ function isLocalUiHost() {
 const IS_LOCAL = import.meta.env?.DEV || isLocalUiHost();
 const API_BASE = IS_LOCAL
   ? '/api'
-  : (import.meta.env?.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod');
+  : normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 const YAKUSOKU_FALLBACK_BASE = IS_LOCAL
   ? '/api2'
-  : (import.meta.env?.VITE_YAKUSOKU_API_BASE || API_BASE);
+  : normalizeGatewayBase(import.meta.env?.VITE_YAKUSOKU_API_BASE, API_BASE);
 const MASTER_API_BASE = IS_LOCAL
   ? '/api-master'
-  : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
+  : normalizeGatewayBase(import.meta.env?.VITE_MASTER_API_BASE, 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 function authHeaders() {
   const legacyAuth = (() => {

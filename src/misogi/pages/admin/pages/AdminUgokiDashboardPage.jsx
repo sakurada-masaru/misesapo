@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-ugoki-dashboard.css';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -11,13 +12,13 @@ function isLocalUiHost() {
 const IS_LOCAL = import.meta.env?.DEV || isLocalUiHost();
 const API_BASE = IS_LOCAL
   ? '/api'
-  : (import.meta.env?.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod');
+  : normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 const MASTER_API_BASE = IS_LOCAL
   ? '/api-master'
-  : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
+  : normalizeGatewayBase(import.meta.env?.VITE_MASTER_API_BASE, 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
 const JINZAI_API_BASE = IS_LOCAL
   ? '/api-jinzai'
-  : (import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
+  : normalizeGatewayBase(import.meta.env?.VITE_JINZAI_API_BASE, 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 const REASON_OPTIONS = [
   { value: 'NET', label: 'NET' },
