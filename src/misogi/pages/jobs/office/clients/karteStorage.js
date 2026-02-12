@@ -4,6 +4,7 @@
  */
 
 import { createKarteForStore, mergeKarteWithTemplate } from './karteTemplate.js';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../../shared/api/gatewayBase.js';
 
 const STORAGE_KEY_PREFIX = 'chart_';
 // API ベースURL: 本番環境では直接API Gatewayエンドポイントを使用
@@ -14,8 +15,7 @@ const API_BASE = (() => {
   if (import.meta.env?.DEV) {
     return '/api';
   }
-  // 本番環境: 直接API Gatewayエンドポイントを使用
-  return import.meta.env?.VITE_API_BASE || '/api';
+  return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 })();
 
 function getStorageKey(storeId) {

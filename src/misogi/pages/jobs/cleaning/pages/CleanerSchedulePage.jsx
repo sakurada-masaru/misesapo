@@ -6,6 +6,7 @@ import BlockCreateModal from '../../../shared/ui/BlockCreateModal/BlockCreateMod
 import OfficeClientKartePanel from '../../office/clients/OfficeClientKartePanel';
 import { detectBlockConflicts } from '../../../shared/utils/scheduleConflicts';
 import Visualizer from '../../../shared/ui/Visualizer/Visualizer';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../../shared/api/gatewayBase';
 import '../../../shared/styles/components.css';
 import './cleaner-schedule.css';
 import '../../../admin/pages/admin-schedule-timeline.css';
@@ -23,7 +24,7 @@ import '../../office/clients/office-client-karte-panel.css';
 const API_BASE =
   typeof window !== 'undefined' && window.location?.hostname === 'localhost'
     ? '/api'
-    : (import.meta.env?.VITE_API_BASE || '/api');
+    : normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 
 const STORAGE_BLOCKS = 'cleaner-schedule-blocks';
 

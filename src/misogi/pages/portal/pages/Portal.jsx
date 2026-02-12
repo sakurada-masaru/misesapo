@@ -3,13 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import Visualizer from '../../shared/ui/Visualizer/Visualizer';
 import { JOBS } from '../../shared/utils/constants';
 import { useAuth } from '../../shared/auth/useAuth';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
 
 const SignInModal = React.lazy(() => import('../../shared/auth/SignInModal'));
 
 const API_BASE =
   typeof window !== 'undefined' && window.location?.hostname === 'localhost'
     ? '/api'
-    : (import.meta.env?.VITE_API_BASE || '/api');
+    : normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 
 /**
  * 大前提（ナビゲーション）

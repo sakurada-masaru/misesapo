@@ -4,12 +4,13 @@ import OfficeClientKartePanel from '../../office/clients/OfficeClientKartePanel'
 import Visualizer from '../../../shared/ui/Visualizer/Visualizer';
 import '../../../shared/styles/components.css';
 import '../../office/clients/office-client-karte-panel.css';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../../shared/api/gatewayBase';
 
 const API_BASE = (() => {
     if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
         return '/api';
     }
-    return import.meta.env?.VITE_API_BASE || '/api';
+    return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 })();
 
 export default function CleanerClientKartePage() {

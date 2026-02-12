@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTransition';
 import Visualizer from '../../../shared/ui/Visualizer/Visualizer';
 import '../../../shared/styles/components.css';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../../shared/api/gatewayBase';
 
 const API_BASE = (() => {
     if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
         return '/api';
     }
-    return import.meta.env?.VITE_API_BASE || '/api';
+    return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 })();
 
 export default function CleanerClientListPage() {

@@ -8,6 +8,7 @@ import {
   getUploadUrl,
 } from './salesKarteApi';
 import OfficeClientKartePanel from '../../../jobs/office/clients/OfficeClientKartePanel';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../api/gatewayBase';
 import './sales-store-karte.css';
 import '../../../jobs/office/clients/office-client-karte-panel.css';
 
@@ -496,12 +497,10 @@ export default function SalesStoreKartePage() {
     }
     setEntity((e) => ({ ...e, store: { ...e.store, key: decodedKey } }));
 
-    const API_BASE = (() => {
-      if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
-        return '/api';
-      }
-      return import.meta.env?.VITE_API_BASE || '/api';
-    })();
+    const API_BASE =
+      typeof window !== 'undefined' && window.location?.hostname === 'localhost'
+        ? '/api'
+        : normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 
     Promise.all([
       getWorkReportsForStore(decodedKey, 30),

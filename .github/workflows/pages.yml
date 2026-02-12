@@ -44,7 +44,7 @@ jobs:
           # NOTE:
           # - 旧API(51bhoxkbxd)は使用禁止。ここでは新ゲートをデフォルトにする。
           # - GitHub Actions Variables で上書き可能（Settings -> Secrets and variables -> Actions -> Variables）
-          VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://v7komjkx4k.execute-api.ap-northeast-1.amazonaws.com/prod' }}
+          VITE_API_BASE: ${{ vars.VITE_API_BASE || 'https://v7komjxk4k.execute-api.ap-northeast-1.amazonaws.com/prod' }}
           VITE_MASTER_API_BASE: ${{ vars.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod' }}
           VITE_JINZAI_API_BASE: ${{ vars.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod' }}
           # work-report は専用ゲート（/api-wr proxy用）。将来 CloudFront/ALB 経由で同一ドメイン配下に寄せる場合は相対化してOK。

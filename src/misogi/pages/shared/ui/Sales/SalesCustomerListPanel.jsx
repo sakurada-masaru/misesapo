@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './sales-customer-list.css';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../api/gatewayBase';
 
 const API_BASE = (() => {
   if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
     return '/api';
   }
-  return import.meta.env?.VITE_API_BASE || '/api';
+  return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
 })();
 
 const PIPELINE_LABELS = {
