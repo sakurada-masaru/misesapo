@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / admin-top are provided by GlobalNav.
 import './admin-tenpo-karte.css';
 
 function isLocalUiHost() {
@@ -211,17 +211,53 @@ function clampStr(v, max) {
 async function fetchOneByIdOrList({ collection, id, listQuery }) {
   if (!id) return null;
   try {
-    return await apiGetJson(`/master/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`);
-  } catch (e) {
-    const isNotFound = Number(e?.status) === 404 || String(e?.message || '').includes('HTTP 404');
-    if (!isNotFound) return null;
-    try {
-      const qs = new URLSearchParams({ limit: '2000', jotai: 'yuko', ...(listQuery || {}) }).toString();
-      const res = await apiGetJson(`/master/${encodeURIComponent(collection)}?${qs}`);
-      return asItems(res).find((it) => String(it?.[`${collection}_id`] || it?.id || '') === id) || null;
-    } catch {
-      return null;
-    }
+    // NOTE:
+    // Some master APIs do not stably support /master/{collection}/{id}.
+    // Query list first to avoid noisy 404 in browser console.
+    const qs = new URLSearchParams({ limit: '2000', jotai: 'yuko', ...(listQuery || {}) }).toString();
+    const res = await apiGetJson(`/master/${encodeURIComponent(collection)}?${qs}`);
+    return asItems(res).find((it) => String(it?.[`${collection}_id`] || it?.id || '') === id) || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchTenpoByParentOrNull({ tenpoId, torihikisakiId, yagouId }) {
+  if (!tenpoId || !torihikisakiId || !yagouId) return null;
+  const list = await apiGetJson(
+    `/master/tenpo?limit=5000&jotai=yuko&torihikisaki_id=${encodeURIComponent(
+      torihikisakiId
+    )}&yagou_id=${encodeURIComponent(yagouId)}`
+  );
+  return asItems(list).find((it) => String(it?.tenpo_id || it?.id || '') === tenpoId) || null;
+}
+
+async function fetchTenpoByGlobalScanOrNull(tenpoId) {
+  if (!tenpoId) return null;
+  const list = await apiGetJson('/master/tenpo?limit=20000&jotai=yuko');
+  return asItems(list).find((it) => String(it?.tenpo_id || it?.id || '') === tenpoId) || null;
+}
+
+async function fetchTenpoDetail({ tenpoId, parentKeys }) {
+  // Prefer parent-key query route to avoid /master/tenpo/{id} 404.
+  if (parentKeys?.torihikisaki_id && parentKeys?.yagou_id) {
+    const found = await fetchTenpoByParentOrNull({
+      tenpoId,
+      torihikisakiId: parentKeys.torihikisaki_id,
+      yagouId: parentKeys.yagou_id,
+    });
+    if (found) return found;
+  }
+
+  // Fallback for direct URL open without parent query.
+  const byGlobalScan = await fetchTenpoByGlobalScanOrNull(tenpoId);
+  if (byGlobalScan) return byGlobalScan;
+
+  // Last fallback if API supports id endpoint in some envs.
+  try {
+    return await apiGetJson(`/master/tenpo/${encodeURIComponent(tenpoId)}`);
+  } catch {
+    return null;
   }
 }
 
@@ -322,29 +358,11 @@ export default function AdminTenpoKartePage() {
     setLoading(true);
     setError('');
     try {
-      let tp = null;
-      try {
-        tp = await apiGetJson(`/master/tenpo/${encodeURIComponent(tenpoId)}`);
-      } catch (e) {
-        // master API が /master/tenpo/{id} を未実装/不安定な場合に備えたフォールバック。
-        // 取引先名簿からの遷移では torihikisaki_id/yagou_id をクエリに含めるので、それを使って一覧から拾う。
-        const isNotFound = Number(e?.status) === 404 || String(e?.message || '').includes('HTTP 404');
-        if (isNotFound && parentKeys.torihikisaki_id && parentKeys.yagou_id) {
-          const list = await apiGetJson(
-            `/master/tenpo?limit=5000&jotai=yuko&torihikisaki_id=${encodeURIComponent(
-              parentKeys.torihikisaki_id
-            )}&yagou_id=${encodeURIComponent(parentKeys.yagou_id)}`
-          );
-          const found = asItems(list).find((it) => String(it?.tenpo_id || it?.id || '') === tenpoId) || null;
-          if (!found) {
-            const err = new Error(`tenpo not found: ${tenpoId}`);
-            err.status = 404;
-            throw err;
-          }
-          tp = found;
-        } else {
-          throw e;
-        }
+      const tp = await fetchTenpoDetail({ tenpoId, parentKeys });
+      if (!tp) {
+        const err = new Error(`tenpo not found: ${tenpoId}`);
+        err.status = 404;
+        throw err;
       }
 
       setTenpo(tp || null);
@@ -706,8 +724,7 @@ export default function AdminTenpoKartePage() {
       <div className="tenpo-karte-page">
         <header className="tenpo-karte-head">
           <div className="admin-top-left">
-            <HamburgerMenu />
-            <Link to="/admin/entrance" className="back">← 管理トップ</Link>
+            {/* GlobalNav handles navigation */}
           </div>
           <h1>店舗カルテ</h1>
         </header>
@@ -721,7 +738,7 @@ export default function AdminTenpoKartePage() {
       <header className="tenpo-karte-head">
         <div className="left">
           <div className="admin-top-left">
-            <HamburgerMenu />
+            {/* GlobalNav handles navigation */}
             <button className="back" onClick={() => navigate(-1)}>← 戻る</button>
           </div>
           <div className="titles">
@@ -792,6 +809,18 @@ export default function AdminTenpoKartePage() {
                   <div className="v-sub">
                     <code>{tenpo?.tenpo_id || tenpoId}</code>
                   </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">住所</div>
+                <div className="v">
+                  <div className="v-main">{tenpo?.address || '—'}</div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">電話番号</div>
+                <div className="v">
+                  <div className="v-main">{tenpo?.phone || '—'}</div>
                 </div>
               </div>
 

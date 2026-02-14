@@ -3,6 +3,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
+from urllib.parse import unquote
 
 import boto3
 from boto3.dynamodb.conditions import Attr
@@ -15,7 +16,7 @@ HEADERS = {
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
 }
 
-ALLOWED_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko", "jinzai", "service"}
+ALLOWED_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko", "jinzai", "service", "kadai"}
 
 PK_MAP = {
     "torihikisaki": "torihikisaki_id",
@@ -24,6 +25,7 @@ PK_MAP = {
     "souko": "souko_id",
     "jinzai": "jinzai_id",
     "service": "service_id",
+    "kadai": "kadai_id",
 }
 
 # 子テーブルの最低限親キー
@@ -40,6 +42,7 @@ ID_PREFIX = {
     "souko": "SOUKO",
     "jinzai": "JINZAI",
     "service": "SERVICE",
+    "kadai": "KADAI",
 }
 
 TABLE_MAP = {
@@ -49,6 +52,7 @@ TABLE_MAP = {
     "souko": os.environ.get("TABLE_SOUKO", "souko"),
     "jinzai": os.environ.get("TABLE_JINZAI", "jinzai"),
     "service": os.environ.get("TABLE_SERVICE", "service"),
+    "kadai": os.environ.get("TABLE_KADAI", "kadai"),
 }
 
 TENPO_KARTE_TABLE = os.environ.get("TABLE_TENPO_KARTE", "tenpo_karte")
@@ -98,7 +102,8 @@ def _collection_from_event(event):
 
 def _record_id_from_event(event):
     params = event.get("pathParameters") or {}
-    return params.get("id")
+    rid = params.get("id")
+    return unquote(rid) if rid else None
 
 
 def _make_id(collection: str) -> str:
@@ -127,6 +132,13 @@ def _build_filter(collection: str, q: dict):
         if category:
             c_expr = Attr("category").eq(category)
             expr = c_expr if expr is None else expr & c_expr
+
+    if collection == "kadai":
+        for k in ["category", "status", "source", "priority", "torihikisaki_id", "yagou_id", "tenpo_id", "jinzai_id"]:
+            v = q.get(k)
+            if v:
+                k_expr = Attr(k).eq(v)
+                expr = k_expr if expr is None else expr & k_expr
 
     for key in REQUIRED_PARENT_KEYS.get(collection, []):
         value = q.get(key)

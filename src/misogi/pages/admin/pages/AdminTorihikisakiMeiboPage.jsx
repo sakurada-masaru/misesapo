@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / admin-top are provided by GlobalNav.
 import './admin-torihikisaki-meibo.css';
 
 function isLocalUiHost() {
@@ -72,10 +72,33 @@ function normStr(v) {
   return String(v || '').trim();
 }
 
+function tenpoAddress(tp) {
+  return (
+    tp?.address ||
+    tp?.jusho ||
+    tp?.location ||
+    tp?.addr ||
+    ''
+  );
+}
+
+function tenpoPhone(tp) {
+  return (
+    tp?.phone ||
+    tp?.tel ||
+    tp?.telephone ||
+    ''
+  );
+}
+
 export default function AdminTorihikisakiMeiboPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchYagous, setSearchYagous] = useState([]);
+  const [searchTenpos, setSearchTenpos] = useState([]);
+  const [searchCorpusReady, setSearchCorpusReady] = useState(false);
   const [torihikisakis, setTorihikisakis] = useState([]);
   const [yagous, setYagous] = useState([]);
   const [tenpos, setTenpos] = useState([]);
@@ -104,6 +127,29 @@ export default function AdminTorihikisakiMeiboPage() {
   useEffect(() => {
     loadTorihikisakiOnly();
   }, [loadTorihikisakiOnly]);
+
+  const loadSearchCorpus = useCallback(async () => {
+    if (searchLoading || searchCorpusReady) return;
+    setSearchLoading(true);
+    try {
+      const [allYagou, allTenpo] = await Promise.all([
+        fetchMaster('yagou', { limit: 8000 }),
+        fetchMaster('tenpo', { limit: 20000 }),
+      ]);
+      setSearchYagous(allYagou);
+      setSearchTenpos(allTenpo);
+      setSearchCorpusReady(true);
+    } catch (e) {
+      setError(e?.message || '検索インデックスの読み込みに失敗しました');
+    } finally {
+      setSearchLoading(false);
+    }
+  }, [searchLoading, searchCorpusReady]);
+
+  useEffect(() => {
+    if (!normStr(q)) return;
+    loadSearchCorpus();
+  }, [q, loadSearchCorpus]);
 
   const loadChildren = useCallback(async (torihikisakiId) => {
     if (!torihikisakiId) return;
@@ -179,16 +225,59 @@ export default function AdminTorihikisakiMeiboPage() {
     return m;
   }, [tenpos]);
 
+  const searchYagouByTorihikisaki = useMemo(() => {
+    const m = new Map();
+    searchYagous.forEach((it) => {
+      const tId = it?.torihikisaki_id;
+      if (!tId) return;
+      if (!m.has(tId)) m.set(tId, []);
+      m.get(tId).push(it);
+    });
+    return m;
+  }, [searchYagous]);
+
+  const searchTenpoByTorihikisaki = useMemo(() => {
+    const yagouToTorihikisaki = new Map();
+    searchYagous.forEach((it) => {
+      const yId = it?.yagou_id || it?.id;
+      const tId = it?.torihikisaki_id;
+      if (yId && tId) yagouToTorihikisaki.set(yId, tId);
+    });
+
+    const m = new Map();
+    searchTenpos.forEach((it) => {
+      const tId = it?.torihikisaki_id || yagouToTorihikisaki.get(it?.yagou_id);
+      if (!tId) return;
+      if (!m.has(tId)) m.set(tId, []);
+      m.get(tId).push(it);
+    });
+    return m;
+  }, [searchTenpos, searchYagous]);
+
   const filteredTorihikisakis = useMemo(() => {
     const needle = normStr(q).toLowerCase();
     const base = [...torihikisakis].sort((a, b) => normStr(a?.name).localeCompare(normStr(b?.name), 'ja'));
     if (!needle) return base;
     return base.filter((it) => {
+      const torihikisakiId = it?.torihikisaki_id || it?.id;
       const name = normStr(it?.name).toLowerCase();
-      const id = normStr(it?.torihikisaki_id).toLowerCase();
-      return name.includes(needle) || id.includes(needle);
+      const id = normStr(torihikisakiId).toLowerCase();
+      if (name.includes(needle) || id.includes(needle)) return true;
+
+      const hitInYagou = (searchYagouByTorihikisaki.get(torihikisakiId) || []).some((yg) => {
+        const yName = normStr(yg?.name).toLowerCase();
+        const yId = normStr(yg?.yagou_id || yg?.id).toLowerCase();
+        return yName.includes(needle) || yId.includes(needle);
+      });
+      if (hitInYagou) return true;
+
+      return (searchTenpoByTorihikisaki.get(torihikisakiId) || []).some((tp) => {
+        const tName = normStr(tp?.name).toLowerCase();
+        const tId = normStr(tp?.tenpo_id || tp?.id).toLowerCase();
+        return tName.includes(needle) || tId.includes(needle);
+      });
     });
-  }, [torihikisakis, q]);
+  }, [torihikisakis, q, searchYagouByTorihikisaki, searchTenpoByTorihikisaki]);
 
   const selectedTorihikisaki = useMemo(() => {
     if (!selectedTorihikisakiId) return null;
@@ -213,8 +302,7 @@ export default function AdminTorihikisakiMeiboPage() {
       <header className="meibo-head">
         <div className="meibo-head-left">
           <div className="admin-top-left">
-            <HamburgerMenu />
-            <Link to="/admin/entrance" className="meibo-back">← 管理トップ</Link>
+            {/* GlobalNav handles navigation */}
           </div>
           <h1>取引先名簿（meibo）</h1>
           <div className="meibo-sub">torihikisaki → yagou → tenpo</div>
@@ -223,13 +311,14 @@ export default function AdminTorihikisakiMeiboPage() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="取引先を検索（name / id）"
+            placeholder="統合検索（取引先 / 屋号 / 店舗 / id）"
           />
           <button onClick={loadTorihikisakiOnly} disabled={loading}>更新</button>
         </div>
       </header>
 
       {error ? <div className="meibo-err">{error}</div> : null}
+      {!error && searchLoading ? <div className="meibo-err">検索インデックス読み込み中...</div> : null}
 
       <div className="meibo-body">
         <aside className="meibo-list">
@@ -303,9 +392,17 @@ export default function AdminTorihikisakiMeiboPage() {
                             const tenpoId = tp?.tenpo_id || tp?.id;
                             return (
                               <div className="tenpo-row" key={tenpoId}>
-                                <div className="tenpo-main">
+                              <div className="tenpo-main">
                                   <div className="tenpo-name">{tp?.name || '(no name)'}</div>
                                   <div className="tenpo-id">{tenpoId}</div>
+                                  <div className="tenpo-address">
+                                    <span className="lbl">住所:</span>
+                                    <span className="txt">{tenpoAddress(tp) || '未設定'}</span>
+                                  </div>
+                                  <div className="tenpo-address">
+                                    <span className="lbl">電話:</span>
+                                    <span className="txt">{tenpoPhone(tp) || '未設定'}</span>
+                                  </div>
                                 </div>
                               <div className="tenpo-actions">
                                 <button onClick={() => copy(tenpoId)}>IDコピー</button>

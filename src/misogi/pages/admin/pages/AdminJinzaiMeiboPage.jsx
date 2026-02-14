@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / admin-top are provided by GlobalNav.
 import './admin-jinzai-meibo.css';
 
 function isLocalUiHost() {
@@ -147,8 +147,7 @@ export default function AdminJinzaiMeiboPage() {
       <header className="jinzai-meibo-head">
         <div className="left">
           <div className="admin-top-left">
-            <HamburgerMenu />
-            <Link to="/admin/entrance" className="back">← 管理トップ</Link>
+            {/* GlobalNav handles navigation */}
           </div>
           <h1>人材名簿（meibo）</h1>
           <div className="sub">jinzai（人）</div>

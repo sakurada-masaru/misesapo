@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / back / admin-top are provided by GlobalNav.
 import './admin-torihikisaki-touroku.css';
 
 function isLocalUiHost() {
@@ -320,8 +320,7 @@ export default function AdminTorihikisakiTourokuPage() {
       <div className="admin-touroku-content">
         <header className="admin-touroku-header">
           <div className="admin-top-left">
-            <HamburgerMenu />
-            <Link to="/admin/entrance" className="admin-touroku-back">← 管理トップ</Link>
+            {/* GlobalNav handles navigation */}
           </div>
           <div className="admin-touroku-headline">
             <h1>顧客登録（新）</h1>

@@ -56,12 +56,15 @@
   background: rgba(0, 0, 0, 0.4);
   opacity: 0;
   visibility: hidden;
+  /* Safety: even if visibility/opacity state gets out of sync, never block clicks while closed. */
+  pointer-events: none;
   transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .hamburger-menu-backdrop.is-open {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 /* 左からスライドするドロワー */

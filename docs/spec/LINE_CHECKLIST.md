@@ -209,3 +209,54 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 - [x] 週間ビューに清掃トラブルイベント（再清掃/不足清掃消化/クレーム再対応）の全幅エリアを追加
 - [x] 週サマリー直下にタグ集計表示（件数・対象日・現場名）を追加
+
+## ICS Tenpo Geo Sync (2026-02-13)
+
+- [x] `scripts/sync_tenpo_geo_from_ics.py` を追加（dry-run既定 / `--apply` で反映）
+- [x] `tenpo` への `address` / `map_url` / `google_map_url` 反映ロジックを追加
+- [x] `docs/spec/ICS_TENPO_GEO_SYNC_RUNBOOK.md` を追加（手順・注意点・検証方法）
+
+## Tenpo Places Details Sync (2026-02-13)
+
+- [x] `scripts/sync_tenpo_places_details.py` を追加（dry-run既定 / `--apply` で反映）
+- [x] `tenpo` への `phone` / `opening_hours` / `maps_place_id` 反映ロジックを追加
+- [x] `docs/spec/TENPO_PLACES_SYNC_RUNBOOK.md` を追加（Google Places 同期手順）
+
+## Service Price Sync From Quote CSV (2026-02-13)
+
+- [x] `scripts/sync_service_price_from_quote_csv.py` を追加（dry-run既定 / `--apply` で反映）
+- [x] 料金表CSVの価格列（毎月/隔月/四半期/半年/年間/スポット）を選択して `default_price` 更新可能化
+- [x] 名称ゆらぎに対して fuzzy match + 閾値指定（`--min-score`）で誤更新を抑止
+
+## YOTEI Worker Display Stability (2026-02-13)
+
+- [x] `SAG#...` を `SAGYOUIN#...` と同一扱いにする正規化を追加（集計/表示の揺れ抑止）
+- [x] `sagyouin_name` が空でも `jinzai` マスタから表示名を解決するフォールバックを追加
+- [x] 予定保存時に `sagyouin_name` を同梱して空欄を減らす
+
+## JINZAI Partner Change UI (2026-02-13)
+
+- [x] 人材マスタ編集モーダルに「契約主体変更」UIを追加（`partner_type/partner_id` 更新 + `partner_history` 追記）
+- [x] `AdminMasterBase` に `renderModalExtra` を追加して、マスタ種別ごとに拡張UIを差し込めるようにした
+
+## Global Back Button (2026-02-13)
+
+- [x] 全ページ共通の「戻る」ボタンを `App.jsx` に追加（履歴が無い場合は適切なトップへフォールバック）
+
+## Admin Houkoku List View Modes (2026-02-13)
+
+- [x] `/admin/houkoku` に表示形式（`日/週/月/カレンダー`）の切替を追加
+- [x] 週/月は提出状況（提出/未提出）をサマリ化し、未提出者をタグ表示
+- [x] 戻るボタンを `/admin`（管理トップ）へ明確化（アイコンのみ→ラベル付き）
+
+## Global Nav Unification (2026-02-14)
+
+- [x] 固定ナビ（戻る / コンテキストトップ / ハンバーガー）を `GlobalNav` に統一
+- [x] 各ページの重複した「管理トップ」「ハンバーガー」表示を撤去して重なりを解消
+
+## Kadai List (2026-02-14)
+
+- [x] 管理エントランス `運用ツール` に `Kadaiリスト` 導線を追加
+- [x] `/admin/kadai` を追加（一覧/新規/編集/取消）
+- [x] `kadai` collection を `lambda_torihikisaki_api.py` に追加（テーブル env `TABLE_KADAI`）
+- [x] 運用手順を `docs/spec/KADAI_LIST_RUNBOOK.md` に追加

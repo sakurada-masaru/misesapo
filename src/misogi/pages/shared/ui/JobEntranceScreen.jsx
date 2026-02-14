@@ -4,6 +4,7 @@ import Visualizer from './Visualizer/Visualizer';
 import Hotbar from './Hotbar/Hotbar';
 import { useReportStyleTransition, TRANSITION_CLASS_PAGE, TRANSITION_CLASS_UI } from './ReportTransition/reportTransition.jsx';
 import { JOBS } from '../utils/constants';
+import HamburgerMenu from './HamburgerMenu/HamburgerMenu';
 
 const JOB_KEYS = ['sales', 'cleaning', 'office', 'dev', 'admin'];
 
@@ -81,6 +82,9 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
 
   return (
     <div className={`job-entrance-page ${showTransition ? TRANSITION_CLASS_PAGE : ''}`} data-job={jobKey} style={{ paddingBottom: 110 }}>
+      <div className="entrance-hamburger">
+        <HamburgerMenu />
+      </div>
       <div className="job-entrance-viz">
         <Visualizer mode={vizMode} />
       </div>

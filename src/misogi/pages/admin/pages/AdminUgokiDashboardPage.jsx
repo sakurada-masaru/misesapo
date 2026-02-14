@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-ugoki-dashboard.css';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / admin-top are provided by GlobalNav.
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -291,8 +291,7 @@ export default function AdminUgokiDashboardPage() {
       <div className="report-page-content admin-ugoki-dashboard-content">
         <p className="admin-ugoki-dashboard-back">
           <span className="admin-top-left">
-            <HamburgerMenu />
-            <Link to="/admin/entrance">← 管理トップへ戻る</Link>
+            {/* GlobalNav handles navigation */}
           </span>
         </p>
 

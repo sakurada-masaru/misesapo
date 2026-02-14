@@ -1,0 +1,41 @@
+.global-back-btn{
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: var(--z-header, 100);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+  background: rgba(0,0,0,0.35);
+  color: var(--fg, #fff);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.global-back-btn:hover{
+  background: rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+
+.global-back-btn:active{
+  transform: translateY(0);
+}
+
+@media (max-width: 640px){
+  .global-back-btn{
+    left: 10px;
+    top: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
+

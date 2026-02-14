@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / admin-top are provided by GlobalNav.
 
 function isLocalUiHost() {
     if (typeof window === 'undefined') return false;
@@ -338,15 +338,11 @@ export default function AdminYoteiTimelinePage() {
             const data = await res.json();
             const items = Array.isArray(data) ? data : (data?.items || []);
 
-            // Timeline の縦軸: 基本は worker yakuwari、なければ清掃/メンテ職種。
+            // Timeline の縦軸: internal の有効人材は全員表示（清掃専任とは限らないため）。
+            // - `han_type` が未設定の古いデータは internal 扱いに寄せる（移行期の互換）。
             const baseWorkers = items
                 .filter((it) => it?.jotai !== 'torikeshi')
-                .filter((it) => {
-                    const yakuwari = it?.yakuwari || [];
-                    if (Array.isArray(yakuwari) && yakuwari.includes('worker')) return true;
-                    const shokushu = it?.shokushu || [];
-                    return Array.isArray(shokushu) && (shokushu.includes('seisou') || shokushu.includes('maintenance'));
-                })
+                .filter((it) => (it?.han_type || 'internal') === 'internal')
                 .map((it) => ({
                     id: it.jinzai_id || it.sagyouin_id || it.worker_id || it.id,
                     name: it.name || it.email || it.jinzai_id || it.id,
@@ -682,8 +678,38 @@ export default function AdminYoteiTimelinePage() {
 
     const monthLabel = useMemo(() => dayjs(date).format('YYYY年M月'), [date]);
 
+    // Worker id normalization:
+    // - historical IDs like `SAG#W002` should be treated as the same as `SAGYOUIN#W002`
+    // - newer data paths may use `JINZAI#....` (jinzai master) as the scheduling axis
+    const normalizeWorkerId = useCallback((id) => {
+        const s = String(id || '').trim();
+        if (!s) return '';
+        if (s.startsWith('SAG#')) return s.replace(/^SAG#/, 'SAGYOUIN#');
+        return s;
+    }, []);
+
+    const workerNameMap = useMemo(() => {
+        const map = {};
+        (workers || []).forEach((w) => {
+            const k = normalizeWorkerId(w?.id);
+            if (!k) return;
+            map[k] = w?.name || w?.email || w?.id || '';
+        });
+        return map;
+    }, [workers, normalizeWorkerId]);
+
+    const workerKeyFor = useCallback((row) => {
+        if (!row) return '';
+        const direct = row.sagyouin_id || row.worker_id || row.assigned_to;
+        if (direct) return normalizeWorkerId(direct);
+        const arr = row.worker_ids;
+        if (Array.isArray(arr) && arr.length > 0) return normalizeWorkerId(arr[0]);
+        return '';
+    }, [normalizeWorkerId]);
+
     const weeklyCell = useCallback((workerId, day) => {
-        const items = schedules.filter((s) => (s.sagyouin_id || s.worker_id) === workerId && itemDate(s) === day);
+        const wid = normalizeWorkerId(workerId);
+        const items = schedules.filter((s) => workerKeyFor(s) === wid && itemDate(s) === day);
         const yukoItems = items.filter((s) => s.jotai !== 'torikeshi');
         const counts = {
             yotei: yukoItems.length,
@@ -699,7 +725,7 @@ export default function AdminYoteiTimelinePage() {
             else counts.mikanryo += 1;
         });
         return counts;
-    }, [schedules, progressFor]);
+    }, [schedules, progressFor, normalizeWorkerId, workerKeyFor]);
 
     const openDayTimeline = useCallback((d) => {
         setDate(d);
@@ -710,6 +736,14 @@ export default function AdminYoteiTimelinePage() {
         if (!row) return '現場未設定';
         return tenpoNameMap[row.tenpo_id] || row.tenpo_name || '現場未設定';
     }, [tenpoNameMap]);
+
+    const displayWorkerName = useCallback((row) => {
+        if (!row) return '担当未設定';
+        if (row.sagyouin_name) return row.sagyouin_name;
+        if (row.worker_name) return row.worker_name;
+        const k = workerKeyFor(row);
+        return workerNameMap[k] || (k || '担当未設定');
+    }, [workerKeyFor, workerNameMap]);
 
     const detectTroubleEventType = useCallback((item) => {
         const text = [
@@ -735,7 +769,7 @@ export default function AdminYoteiTimelinePage() {
         const total = yuko.length;
         const byWorker = workers.map((w) => ({
             worker: w,
-            count: yuko.filter((s) => (s.sagyouin_id || s.worker_id) === w.id).length,
+            count: yuko.filter((s) => workerKeyFor(s) === normalizeWorkerId(w.id)).length,
         }));
         const sorted = [...byWorker].sort((a, b) => b.count - a.count);
         const blankDays = weekDays.filter((d) => yuko.filter((s) => itemDate(s) === d).length === 0);
@@ -745,7 +779,7 @@ export default function AdminYoteiTimelinePage() {
             low: sorted[sorted.length - 1] || null,
             blankDays,
         };
-    }, [schedules, workers, weekDays]);
+    }, [schedules, workers, weekDays, workerKeyFor, normalizeWorkerId]);
 
     const calcCapacitySummary = useCallback((usedCount, workerCount, dayCount) => {
         const workersNum = Math.max(1, Number(workerCount || 0));
@@ -815,7 +849,7 @@ export default function AdminYoteiTimelinePage() {
         const total = yuko.length;
         const byWorker = workers.map((w) => ({
             worker: w,
-            count: yuko.filter((s) => (s.sagyouin_id || s.worker_id) === w.id).length,
+            count: yuko.filter((s) => workerKeyFor(s) === normalizeWorkerId(w.id)).length,
         }));
         const byYakusokuUsed = new Map();
         yuko.forEach((s) => {
@@ -840,7 +874,7 @@ export default function AdminYoteiTimelinePage() {
             };
         });
         return { total, byWorker, yakusokuConsumption };
-    }, [schedules, workers, yakusokus, progressFor]);
+    }, [schedules, workers, yakusokus, progressFor, workerKeyFor, normalizeWorkerId]);
 
     const todayUsedCount = useMemo(
         () => schedules.filter((s) => s.jotai !== 'torikeshi').length,
@@ -967,6 +1001,8 @@ export default function AdminYoteiTimelinePage() {
                 end_at: `${endDate}T${modalData.end_time}:00`,
                 service_id: modalData.service_id || '',
                 service_name: modalData.service_name || '',
+                // Make the UI stable even when the API doesn't hydrate names.
+                sagyouin_name: workerNameMap[normalizeWorkerId(modalData.sagyouin_id)] || modalData.sagyouin_name || '',
             };
 
             const res = await fetch(url, {
@@ -1021,8 +1057,7 @@ export default function AdminYoteiTimelinePage() {
             <div className="admin-yotei-timeline-content">
                 <header className="yotei-head">
                     <div className="admin-top-left">
-                        <HamburgerMenu />
-                        <Link to="/admin/entrance" style={{ color: 'var(--muted)', textDecoration: 'none' }}>← 管理トップ</Link>
+                        {/* GlobalNav handles navigation */}
                     </div>
                     <h1>清掃管制スケジュール (16:00-翌04:00 / 04:00-16:00){isDemo ? ' [DEMO]' : ''}</h1>
                     <div className="yotei-head-actions">
@@ -1187,7 +1222,7 @@ export default function AdminYoteiTimelinePage() {
                                                     <div className="today-rail-time">{dayjs(s.start_at).format('HH:mm')} - {dayjs(s.end_at).format('HH:mm')}</div>
                                                     <div className="today-rail-tenpo">{displayTenpoName(s)}</div>
                                                     <div className="today-rail-meta">
-                                                        <span>{s.sagyouin_name || '担当未設定'}</span>
+                                                        <span>{displayWorkerName(s)}</span>
                                                         <span>{statusLabelFor(s)} {warn === 2 ? '🔴' : warn === 1 ? '⚠' : ''}</span>
                                                     </div>
                                                 </button>
@@ -1220,7 +1255,7 @@ export default function AdminYoteiTimelinePage() {
                                                     <div className="today-rail-time">{dayjs(s.start_at).format('HH:mm')} - {dayjs(s.end_at).format('HH:mm')}</div>
                                                     <div className="today-rail-tenpo">{displayTenpoName(s)}</div>
                                                     <div className="today-rail-meta">
-                                                        <span>{s.sagyouin_name || '担当未設定'}</span>
+                                                        <span>{displayWorkerName(s)}</span>
                                                         <span>{statusLabelFor(s)} {warn === 2 ? '🔴' : warn === 1 ? '⚠' : ''}</span>
                                                     </div>
                                                 </button>

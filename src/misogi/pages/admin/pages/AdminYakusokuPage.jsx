@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css'; // Reuse styling
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / admin-top are provided by GlobalNav.
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -99,6 +99,19 @@ export default function AdminYakusokuPage() {
       base[b.key] = Array.isArray(arr) ? arr.map((x) => String(x)).filter(Boolean) : [];
     }
     return base;
+  }, []);
+
+  const normalizeServiceSelection = useCallback((src) => {
+    const ids = Array.isArray(src?.service_ids)
+      ? src.service_ids.map((x) => String(x)).filter(Boolean)
+      : [];
+    const names = Array.isArray(src?.service_names)
+      ? src.service_names.map((x) => String(x)).filter(Boolean)
+      : [];
+
+    if (!ids.length && src?.service_id) ids.push(String(src.service_id));
+    if (!names.length && src?.service_name) names.push(String(src.service_name));
+    return { service_ids: ids, service_names: names };
   }, []);
 
   const fetchItems = useCallback(async () => {
@@ -198,6 +211,8 @@ export default function AdminYakusokuPage() {
       tenpo_name: '',
       service_id: '',
       service_name: '',
+      service_ids: [],
+      service_names: [],
       service_query: '',
       monthly_quota: 1,
       price: 0,
@@ -214,8 +229,10 @@ export default function AdminYakusokuPage() {
     const rr = item?.recurrence_rule && typeof item.recurrence_rule === 'object'
       ? item.recurrence_rule
       : { type: 'flexible' };
+    const multiSvc = normalizeServiceSelection(item);
     setModalData({
       ...item,
+      ...multiSvc,
       isNew: false,
       service_query: item?.service_name || item?.service_id || '',
       recurrence_rule: {
@@ -340,6 +357,17 @@ export default function AdminYakusokuPage() {
       const method = modalData.isNew ? 'POST' : 'PUT';
       const path = modalData.isNew ? '/yakusoku' : `/yakusoku/${modalData.yakusoku_id}`;
       const payload = { ...modalData };
+      const serviceIds = Array.isArray(payload.service_ids)
+        ? payload.service_ids.map((x) => String(x)).filter(Boolean)
+        : (payload.service_id ? [String(payload.service_id)] : []);
+      const serviceNames = Array.isArray(payload.service_names)
+        ? payload.service_names.map((x) => String(x)).filter(Boolean)
+        : (payload.service_name ? [String(payload.service_name)] : []);
+      payload.service_ids = serviceIds;
+      payload.service_names = serviceNames;
+      // Backward compatibility: keep single-value fields for existing readers.
+      payload.service_id = serviceIds[0] || '';
+      payload.service_name = serviceNames[0] || '';
       delete payload.service_query;
       delete payload._tagDrafts;
       delete payload._tagSearch;
@@ -374,8 +402,7 @@ export default function AdminYakusokuPage() {
       <div className="admin-yotei-timeline-content">
         <header className="yotei-head">
           <div className="admin-top-left">
-            <HamburgerMenu />
-            <Link to="/admin/entrance" style={{ color: 'var(--muted)', textDecoration: 'none' }}>← 管理トップ</Link>
+                        {/* GlobalNav handles navigation */}
           </div>
           <h1>実案件・定期管理 (yakusoku)</h1>
           <div className="yotei-head-actions">
@@ -407,7 +434,15 @@ export default function AdminYakusokuPage() {
                   <tr key={it.yakusoku_id} style={{ borderBottom: '1px solid #333' }}>
                     <td style={{ padding: '10px', fontSize: '12px', color: '#888' }}>{it.yakusoku_id}</td>
                     <td style={{ padding: '10px' }}>{it.tenpo_name || '---'}</td>
-                    <td style={{ padding: '10px' }}>{it.service_name || it.service_id || '---'}</td>
+                    <td style={{ padding: '10px' }}>
+                      {(() => {
+                        const ids = Array.isArray(it.service_ids) ? it.service_ids : [];
+                        const names = Array.isArray(it.service_names) ? it.service_names : [];
+                        const primary = names[0] || it.service_name || ids[0] || it.service_id || '---';
+                        const extra = Math.max(0, Math.max(ids.length, names.length) - 1);
+                        return extra > 0 ? `${primary} (+${extra})` : primary;
+                      })()}
+                    </td>
                     <td style={{ padding: '10px' }}>{it.type === 'teiki' ? '定期' : '単発'}</td>
                     <td style={{ padding: '10px' }}>{it.monthly_quota || '-'}回</td>
                     <td style={{ padding: '10px' }}>
@@ -503,33 +538,80 @@ export default function AdminYakusokuPage() {
                   value={modalData.service_query || ''}
                   onChange={(e) => {
                     const q = e.target.value;
-                    const exact = services.find((s) => s?.name === q || s?.service_id === q);
                     setModalData({
                       ...modalData,
                       service_query: q,
-                      service_id: exact?.service_id || modalData.service_id || '',
-                      service_name: exact?.name || modalData.service_name || '',
                     });
                   }}
                   placeholder="サービス名 / ID / カテゴリで検索"
                 />
+                <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {(Array.isArray(modalData.service_names) ? modalData.service_names : []).map((nm, idx) => {
+                    const sid = String((modalData.service_ids || [])[idx] || '');
+                    const key = `${sid || nm}-${idx}`;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          const ids = [...(modalData.service_ids || [])];
+                          const names = [...(modalData.service_names || [])];
+                          ids.splice(idx, 1);
+                          names.splice(idx, 1);
+                          setModalData({
+                            ...modalData,
+                            service_ids: ids,
+                            service_names: names,
+                            service_id: ids[0] || '',
+                            service_name: names[0] || '',
+                          });
+                        }}
+                        style={{
+                          border: '1px solid rgba(255,255,255,0.18)',
+                          background: 'rgba(255,255,255,0.08)',
+                          color: 'white',
+                          borderRadius: 999,
+                          padding: '4px 10px',
+                          fontSize: 12,
+                          cursor: 'pointer',
+                        }}
+                        title="クリックで削除"
+                      >
+                        {nm || sid} ×
+                      </button>
+                    );
+                  })}
+                  {!(modalData.service_ids || []).length ? (
+                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>未選択</span>
+                  ) : null}
+                </div>
                 <div style={{ marginTop: 8, display: 'grid', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
                   {serviceCandidates.map((s) => (
                     <button
                       key={String(s?.service_id || '')}
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        const sid = String(s?.service_id || '');
+                        const sname = String(s?.name || sid);
+                        const ids = [...(modalData.service_ids || [])];
+                        const names = [...(modalData.service_names || [])];
+                        if (!ids.includes(sid)) {
+                          ids.push(sid);
+                          names.push(sname);
+                        }
                         setModalData({
                           ...modalData,
-                          service_query: String(s?.name || ''),
-                          service_id: String(s?.service_id || ''),
-                          service_name: String(s?.name || ''),
+                          service_query: '',
+                          service_ids: ids,
+                          service_names: names,
+                          service_id: ids[0] || '',
+                          service_name: names[0] || '',
                           price:
-                            modalData.isNew && Number(s?.default_price || 0) > 0
+                            modalData.isNew && Number(s?.default_price || 0) > 0 && ids.length === 1
                               ? Number(s.default_price)
                               : modalData.price,
-                        })
-                      }
+                        });
+                      }}
                       style={{
                         textAlign: 'left',
                         padding: '8px 10px',
@@ -554,7 +636,7 @@ export default function AdminYakusokuPage() {
                   ) : null}
                 </div>
                 <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)' }}>
-                  選択ID: {modalData.service_id || '未選択'} / 名称: {modalData.service_name || '未選択'}
+                  選択件数: {(modalData.service_ids || []).length} 件
                 </div>
               </div>
               {modalData.type === 'teiki' && (

@@ -289,6 +289,25 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
+.tenpo-address {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--meibo-muted);
+}
+
+.tenpo-address .lbl {
+  flex: 0 0 auto;
+}
+
+.tenpo-address .txt {
+  color: var(--meibo-text);
+  word-break: break-word;
+}
+
 .tenpo-actions {
   display: flex;
   gap: 8px;
@@ -325,4 +344,3 @@
     max-height: none;
   }
 }
-

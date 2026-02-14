@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './admin-yotei.css';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / admin-top are provided by GlobalNav.
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -623,8 +623,7 @@ export default function AdminYoteiPage() {
       <div className="report-page-content admin-yotei-content">
         <p className="admin-yotei-back">
           <span className="admin-top-left">
-            <HamburgerMenu />
-            <Link to="/admin/entrance">← 管理トップへ戻る</Link>
+            {/* GlobalNav handles navigation */}
           </span>
         </p>
         <h1>YOTEI 予約管理（病院型）</h1>

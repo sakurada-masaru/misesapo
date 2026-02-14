@@ -1,1 +1,0 @@
-import{j as o,J as e}from"./index-DYmPaCVn.js";const l=[{id:"site",role:"target",label:"店舗",to:"/jobs/cleaning/clients/list"},{id:"quality",role:"status",label:"進捗",to:"/houkoku"},{id:"flow",role:"plan",label:"予定",to:"/jobs/cleaning/schedule"},{id:"photo",role:"log",label:"報告",to:"/houkoku"}];function a(){return o.jsx(e,{job:"cleaning",hotbarConfig:l})}export{a as default};

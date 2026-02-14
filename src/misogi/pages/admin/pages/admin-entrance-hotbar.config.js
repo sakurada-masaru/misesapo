@@ -7,6 +7,8 @@ export const ADMIN_HOTBAR = [
     label: '報告',
     subItems: [
       { id: 'houkoku-list', label: '報告一覧', path: '/admin/houkoku', group: '報告' },
+      // 他ロール同様: 「報告する」導線（提出側）
+      { id: 'houkoku-create', label: '報告する', path: '/jobs/admin/report', group: '提出' },
     ]
   },
   {

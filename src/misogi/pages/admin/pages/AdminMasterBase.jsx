@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import HamburgerMenu from '../../shared/ui/HamburgerMenu/HamburgerMenu';
+// Hamburger / admin-top are provided by GlobalNav.
 import './admin-master.css';
+
+const EMPTY_OBJ = Object.freeze({});
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -45,14 +47,22 @@ function toQuery(query) {
 
 async function apiFetch(baseUrl, path, options = {}) {
   const base = (baseUrl || DEFAULT_API_BASE).replace(/\/$/, '');
-  const res = await fetch(`${base}${path}`, {
-    ...options,
-    headers: {
-      ...authHeaders(),
-      ...(options.headers || {}),
-    },
-  });
-  return res;
+  const controller = new AbortController();
+  const timeoutMs = Number(options?.timeoutMs || 12000);
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${base}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...authHeaders(),
+        ...(options.headers || {}),
+      },
+    });
+    return res;
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 function getItems(data) {
@@ -69,13 +79,78 @@ function formatCellValue(value) {
   if (value === null || value === undefined || value === '') return '-';
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'object') {
+    // Avoid heavy JSON.stringify on arbitrary objects (can freeze with large nested data).
+    // Prefer human keys when present, otherwise show a lightweight preview.
     try {
-      return JSON.stringify(value);
+      if (value.label) return String(value.label);
+      if (value.name) return String(value.name);
+      if (value.title) return String(value.title);
+      if (value.id) return String(value.id);
+      if (value.key) return String(value.key);
+
+      const keys = Object.keys(value || {});
+      if (keys.length === 0) return '{}';
+
+      // If it's a small, shallow object, show key=value pairs.
+      const previewPairs = [];
+      for (const k of keys.slice(0, 4)) {
+        const v = value[k];
+        if (v === null || v === undefined) continue;
+        if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+          previewPairs.push(`${k}=${String(v)}`);
+        } else if (v && (v.label || v.name || v.id)) {
+          previewPairs.push(`${k}=${String(v.label || v.name || v.id)}`);
+        }
+      }
+      if (previewPairs.length) {
+        const extra = keys.length > 4 ? `,+${keys.length - 4}` : '';
+        return `{${previewPairs.join(', ')}${extra}}`;
+      }
+
+      // Fallback: stringify but cap length.
+      const s = JSON.stringify(value);
+      if (s.length > 160) return `${s.slice(0, 160)}…`;
+      return s;
     } catch {
-      return String(value);
+      return '[object]';
     }
   }
-  return String(value);
+  const s = String(value);
+  // Prevent huge text from freezing table layout; full text is editable in modal.
+  if (s.length > 160) return `${s.slice(0, 160)}…`;
+  return s;
+}
+
+function isDiagMode() {
+  try {
+    if (typeof window === 'undefined') return false;
+    const sp = new URLSearchParams(window.location.search || '');
+    return sp.get('diag') === '1' || sp.get('diag') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function isNoTableMode() {
+  try {
+    if (typeof window === 'undefined') return false;
+    const sp = new URLSearchParams(window.location.search || '');
+    return sp.get('no_table') === '1' || sp.get('no_table') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function getDiagStep() {
+  try {
+    if (typeof window === 'undefined') return 0;
+    const sp = new URLSearchParams(window.location.search || '');
+    const raw = sp.get('diag_step') || '';
+    const n = Number(raw);
+    return Number.isFinite(n) ? Math.trunc(n) : 0;
+  } catch {
+    return 0;
+  }
 }
 
 export default function AdminMasterBase({
@@ -88,9 +163,10 @@ export default function AdminMasterBase({
   resourceBasePath = '/master',
   filters = [],
   fields,
-  parentSources = {},
+  parentSources = EMPTY_OBJ,
   onAfterSave,
   localSearch = null,
+  renderModalExtra = null,
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -105,6 +181,22 @@ export default function AdminMasterBase({
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [uiDebug, setUiDebug] = useState(null);
+  const diagMode = isDiagMode();
+  const diagStep = getDiagStep();
+  const noTableMode = isNoTableMode();
+
+  // NOTE: Many pages pass inline arrays/objects for fields/filters/localSearch.
+  // If we use those refs directly as memo deps, opening a modal causes full table re-render.
+  // Use value-based signatures to keep memoization effective.
+  const fieldsSig = (fields || []).map((f) => {
+    const k = f?.key || '';
+    const t = f?.type || '';
+    const l = f?.label || '';
+    const hasFormat = typeof f?.format === 'function' ? 'fmt' : '';
+    return `${k}:${t}:${l}:${hasFormat}`;
+  }).join('|');
+  const localSearchKeysSig = Array.isArray(localSearch?.keys) ? localSearch.keys.map(String).join('|') : '';
 
   const buildResourcePath = useCallback(
     (suffixPath) => {
@@ -118,9 +210,14 @@ export default function AdminMasterBase({
   );
 
   const loadParents = useCallback(async () => {
+    // If no parent sources are configured, do not touch state.
+    // (Avoid effect loops caused by unstable default `{}` props.)
+    const entries = Object.entries(parentSources || EMPTY_OBJ);
+    if (entries.length === 0) return;
+
     const next = {};
     await Promise.all(
-      Object.entries(parentSources).map(async ([key, source]) => {
+      entries.map(async ([key, source]) => {
         try {
           const query = toQuery(source.query || {});
           const path = query
@@ -144,8 +241,8 @@ export default function AdminMasterBase({
     setError('');
     try {
       // master API の scan を前提にしているため、過大な limit は 500/timeout の原因になる。
-      // 一覧はまず 200 件に抑え、必要ならフィルタで絞る運用にする。
-      const query = toQuery({ limit: 200, ...filtersValue });
+      // 一覧はまず 50 件に抑え、必要ならフィルタ/検索で絞る運用にする（UIフリーズ回避）。
+      const query = toQuery({ limit: 50, ...filtersValue });
       const path = query
         ? `${buildResourcePath(resource)}?${query}`
         : buildResourcePath(resource);
@@ -171,26 +268,106 @@ export default function AdminMasterBase({
   }, [loadItems]);
 
   const openCreate = useCallback(() => {
+    // Diagnostics:
+    // - diag=1: stop before any state updates (just confirm click reached).
+    // - diag=1&diag_step=N: execute step-by-step to pinpoint which state update freezes.
+    //
+    // Steps:
+    //  1) setUiDebug only
+    //  2) build initial only (no setState)
+    //  3) setEditing only
+    //  4) setModalOpen only
+    //  5) setEditing + setModalOpen (sync, no rAF)
+    //  6) normal behavior (setEditing + rAF open)
+    if (diagMode && !diagStep) {
+      window.alert('[diag] openCreate clicked');
+      return;
+    }
+
+    const at = new Date().toISOString();
+    if (diagMode && diagStep === 1) {
+      setUiDebug({ action: 'openCreate(step1)', at });
+      window.alert('[diag] step1 ok (setUiDebug only)');
+      return;
+    }
+
     const initial = { jotai: 'yuko' };
-    fields.forEach((f) => {
+    (fields || []).forEach((f) => {
+      if (!f?.key) return;
       if (f.defaultValue !== undefined) initial[f.key] = f.defaultValue;
       else if (initial[f.key] === undefined) initial[f.key] = '';
     });
+
+    if (diagMode && diagStep === 2) {
+      window.alert(`[diag] step2 ok (built initial keys=${Object.keys(initial).length})`);
+      return;
+    }
+
+    // Always mark action in non-diag, to help postmortem screenshots.
+    if (!diagMode) setUiDebug({ action: 'openCreate', at });
+
+    if (diagMode && diagStep === 3) {
+      setEditing(initial);
+      setTimeout(() => window.alert('[diag] step3 ok (after setEditing tick)'), 0);
+      return;
+    }
+
+    if (diagMode && diagStep === 4) {
+      setModalOpen(true);
+      setTimeout(() => window.alert('[diag] step4 ok (after setModalOpen tick)'), 0);
+      return;
+    }
+
+    if (diagMode && diagStep === 5) {
+      setEditing(initial);
+      setModalOpen(true);
+      setTimeout(() => window.alert('[diag] step5 ok (after setEditing+setModalOpen tick)'), 0);
+      return;
+    }
+
+    // Step6 / normal: setEditing then open.
     setEditing(initial);
-    setModalOpen(true);
-  }, [fields]);
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(() => setModalOpen(true));
+    } else {
+      setModalOpen(true);
+    }
+  }, [fields, diagMode, diagStep]);
 
   const openEdit = useCallback((row) => {
+    if (diagMode && !diagStep) {
+      window.alert(`[diag] openEdit clicked id=${pickId(row, idKey)}`);
+      return;
+    }
+    const at = new Date().toISOString();
+    if (!diagMode) setUiDebug({ action: 'openEdit', at, id: pickId(row, idKey) });
     const model = { ...row };
     if (!model.jotai) model.jotai = 'yuko';
     setEditing(model);
-    setModalOpen(true);
-  }, []);
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(() => setModalOpen(true));
+    } else {
+      setModalOpen(true);
+    }
+  }, [diagMode, diagStep, idKey]);
 
   const closeModal = useCallback(() => {
+    setUiDebug({ action: 'closeModal', at: new Date().toISOString() });
     setModalOpen(false);
     setEditing(null);
   }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (!modalOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [modalOpen, closeModal]);
+
+  // NOTE: Avoid forcing body scroll lock here; it can trigger expensive reflow on some setups.
 
   const onSave = useCallback(async () => {
     if (!editing) return;
@@ -249,6 +426,7 @@ export default function AdminMasterBase({
   }, [editing, idKey, resource, closeModal, loadItems, onAfterSave, apiBase, buildResourcePath, resourceBasePath]);
 
   const onDelete = useCallback((row) => {
+    setUiDebug({ action: 'openDeleteConfirm', at: new Date().toISOString(), id: pickId(row, idKey) });
     const rowId = pickId(row, idKey);
     if (!rowId) return;
     setDeleteTarget(row);
@@ -256,6 +434,7 @@ export default function AdminMasterBase({
 
   const closeDeleteConfirm = useCallback(() => {
     if (deleting) return;
+    setUiDebug({ action: 'closeDeleteConfirm', at: new Date().toISOString() });
     setDeleteTarget(null);
   }, [deleting]);
 
@@ -288,7 +467,7 @@ export default function AdminMasterBase({
       m.set(f.key, f);
     });
     return m;
-  }, [fields]);
+  }, [fieldsSig]); // keep stable even if fields array ref changes
 
   const columns = useMemo(() => {
     return [
@@ -296,109 +475,80 @@ export default function AdminMasterBase({
       ...fields.map((f) => ({ key: f.key, label: f.label })),
       { key: 'jotai', label: '状態' },
     ];
-  }, [fields, idKey]);
+  }, [fieldsSig, idKey]);
 
   const visibleItems = useMemo(() => {
     const q = String(searchText || '').trim().toLowerCase();
-    if (!q || !localSearch?.keys?.length) return items;
+    const keys = Array.isArray(localSearch?.keys) ? localSearch.keys : [];
+    if (!q || !keys.length) return items;
     return items.filter((row) =>
-      localSearch.keys.some((k) => String(row?.[k] ?? '').toLowerCase().includes(q))
+      keys.some((k) => String(row?.[k] ?? '').toLowerCase().includes(q))
     );
-  }, [items, searchText, localSearch]);
+  }, [items, searchText, localSearchKeysSig]);
+
+  // Rendering the full table for every modal state change can stall the UI on large lists.
+  // Memoize table rows so opening/closing the modal doesn't redo heavy cell formatting work.
+  const tableContent = useMemo(() => (
+    <section className="admin-master-table-wrap">
+      <table className="admin-master-table">
+        <thead>
+          <tr>
+            {columns.map((c) => <th key={c.key}>{c.label}</th>)}
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {visibleItems.length === 0 && !loading && (
+            <tr>
+              <td colSpan={columns.length + 1} className="empty">データがありません</td>
+            </tr>
+          )}
+          {visibleItems.map((row) => {
+            const rid = pickId(row, idKey);
+            return (
+              <tr key={rid || Math.random()}>
+                {columns.map((c) => {
+                  const f = fieldByKey.get(c.key);
+                  const raw = row?.[c.key];
+                  const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
+                  return <td key={`${rid}-${c.key}`}>{formatCellValue(v)}</td>;
+                })}
+                <td className="actions">
+                  <button type="button" onClick={() => openEdit(row)}>編集</button>
+                  <button type="button" className="danger" onClick={() => onDelete(row)}>取消</button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
+  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, idKey]);
 
   return (
     <div className="admin-master-page">
       <div className="admin-master-content">
         <header className="admin-master-header">
           <div className="admin-top-left">
-            <HamburgerMenu />
-            <Link to="/admin/entrance" className="admin-master-back">← 管理トップ</Link>
+            {/* GlobalNav handles navigation */}
           </div>
           <h1>{title}</h1>
           <div className="admin-master-header-actions">
-            <button onClick={openCreate} className="primary">新規登録</button>
-            <button onClick={loadItems} disabled={loading}>{loading ? '更新中...' : '更新'}</button>
+            <button type="button" onClick={openCreate} className="primary">新規登録</button>
+            <button type="button" onClick={loadItems} disabled={loading}>{loading ? '更新中...' : '更新'}</button>
           </div>
         </header>
 
-        <section className="admin-master-toolbar">
-          {localSearch?.keys?.length ? (
-            <label>
-              <span>{localSearch.label || '検索'}</span>
-              <input
-                type="text"
-                placeholder={localSearch.placeholder || 'キーワード検索'}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-            </label>
-          ) : null}
-          {filters.map((f) => {
-            const options = f.sourceKey ? (parents[f.sourceKey] || []) : (f.options || []);
-            const valueKey = f.valueKey || f.key;
-            const labelKey = f.labelKey || 'name';
-            return (
-              <label key={f.key}>
-                <span>{f.label}</span>
-                <select
-                  value={filtersValue[f.key] || ''}
-                  onChange={(e) => setFiltersValue((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                >
-                  <option value="">全て</option>
-                  {options.map((opt) => {
-                    const v = opt?.[valueKey] || opt?.id || '';
-                    const l = opt?.[labelKey] || v;
-                    if (!v) return null;
-                    return <option key={v} value={v}>{l}</option>;
-                  })}
-                </select>
-              </label>
-            );
-          })}
-        </section>
+        {uiDebug ? (
+          <div style={{ fontSize: 12, color: '#9aa6c5', marginBottom: 8 }}>
+            ui: {uiDebug.action} {uiDebug.id ? `(${uiDebug.id})` : ''} {uiDebug.at}
+          </div>
+        ) : null}
 
-        {error && <div className="admin-master-error">{error}</div>}
-
-        <section className="admin-master-table-wrap">
-          <table className="admin-master-table">
-            <thead>
-              <tr>
-                {columns.map((c) => <th key={c.key}>{c.label}</th>)}
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleItems.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={columns.length + 1} className="empty">データがありません</td>
-                </tr>
-              )}
-              {visibleItems.map((row) => {
-                const rid = pickId(row, idKey);
-                return (
-                  <tr key={rid || Math.random()}>
-                    {columns.map((c) => {
-                      const f = fieldByKey.get(c.key);
-                      const raw = row?.[c.key];
-                      const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
-                      return <td key={`${rid}-${c.key}`}>{formatCellValue(v)}</td>;
-                    })}
-                    <td className="actions">
-                      <button onClick={() => openEdit(row)}>編集</button>
-                      <button className="danger" onClick={() => onDelete(row)}>取消</button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
-      </div>
-
-      {modalOpen && editing && (
-        <div className="admin-master-modal-backdrop" onClick={closeModal}>
-          <div className="admin-master-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>{pickId(editing, idKey) ? '編集' : '新規登録'}</h2>
+        {/* Inline editor (avoid fixed/portal overlays; browsers were hard-freezing on modal open). */}
+        {modalOpen && editing ? (
+          <section style={{ border: '1px solid #273049', borderRadius: 12, background: '#0f172a', padding: 16, marginBottom: 12 }}>
+            <h2 style={{ margin: '0 0 12px' }}>{pickId(editing, idKey) ? '編集' : '新規登録'}</h2>
             <div className="admin-master-modal-grid">
               {fields.map((f) => {
                 const options = f.sourceKey ? (parents[f.sourceKey] || []) : (f.options || []);
@@ -469,40 +619,93 @@ export default function AdminMasterBase({
                 </select>
               </label>
             </div>
-            <div className="admin-master-modal-actions">
-              <button onClick={closeModal}>キャンセル</button>
-              <button className="primary" onClick={onSave} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {deleteTarget && (
-        <div className="admin-master-modal-backdrop" onClick={closeDeleteConfirm}>
-          <div className="admin-master-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>取り消し確認</h2>
-            <p style={{ marginTop: 0, color: '#cbd5e1' }}>
+            {typeof renderModalExtra === 'function' ? (
+              <div style={{ marginTop: 12 }}>
+                {renderModalExtra({ editing, setEditing })}
+              </div>
+            ) : null}
+
+            <div className="admin-master-modal-actions">
+              <button type="button" onClick={closeModal}>キャンセル</button>
+              <button type="button" className="primary" onClick={onSave} disabled={saving}>
+                {saving ? '保存中...' : '保存'}
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        {deleteTarget ? (
+          <section style={{ border: '1px solid #ef4444', borderRadius: 12, background: 'rgba(127,29,29,0.20)', padding: 16, marginBottom: 12 }}>
+            <h2 style={{ margin: '0 0 10px' }}>取り消し確認</h2>
+            <p style={{ marginTop: 0, color: '#fecaca' }}>
               このデータを取り消し（`torikeshi`）にします。よろしいですか？
             </p>
-            <div style={{ marginBottom: 12, padding: 10, border: '1px solid #273049', borderRadius: 8, background: '#0b1220' }}>
-              <div style={{ color: '#9aa6c5', fontSize: 12 }}>対象ID</div>
+            <div style={{ marginBottom: 12, padding: 10, border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8, background: 'rgba(2,6,23,0.35)' }}>
+              <div style={{ color: '#fecaca', fontSize: 12 }}>対象ID</div>
               <div>{pickId(deleteTarget, idKey)}</div>
               {deleteTarget?.name ? (
                 <>
-                  <div style={{ color: '#9aa6c5', fontSize: 12, marginTop: 6 }}>名称</div>
+                  <div style={{ color: '#fecaca', fontSize: 12, marginTop: 6 }}>名称</div>
                   <div>{deleteTarget.name}</div>
                 </>
               ) : null}
             </div>
             <div className="admin-master-modal-actions">
-              <button onClick={closeDeleteConfirm} disabled={deleting}>キャンセル</button>
-              <button className="primary" onClick={confirmDelete} disabled={deleting}>
+              <button type="button" onClick={closeDeleteConfirm} disabled={deleting}>キャンセル</button>
+              <button type="button" className="primary" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? '取り消し中...' : '取り消す'}
               </button>
             </div>
+          </section>
+        ) : null}
+
+        <section className="admin-master-toolbar">
+          {localSearch?.keys?.length ? (
+            <label>
+              <span>{localSearch.label || '検索'}</span>
+              <input
+                type="text"
+                placeholder={localSearch.placeholder || 'キーワード検索'}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </label>
+          ) : null}
+          {filters.map((f) => {
+            const options = f.sourceKey ? (parents[f.sourceKey] || []) : (f.options || []);
+            const valueKey = f.valueKey || f.key;
+            const labelKey = f.labelKey || 'name';
+            return (
+              <label key={f.key}>
+                <span>{f.label}</span>
+                <select
+                  value={filtersValue[f.key] || ''}
+                  onChange={(e) => setFiltersValue((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                >
+                  <option value="">全て</option>
+                  {options.map((opt) => {
+                    // Support { value, label } shape too (used by Kadai filters etc.)
+                    const v = opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '';
+                    const l = opt?.[labelKey] ?? opt?.label ?? v;
+                    if (!v) return null;
+                    return <option key={v} value={v}>{l}</option>;
+                  })}
+                </select>
+              </label>
+            );
+          })}
+        </section>
+
+        {error && <div className="admin-master-error">{error}</div>}
+
+        {/* Diagnostics: allow disabling the table render to isolate freeze cause. */}
+        {noTableMode ? (
+          <div style={{ padding: 12, border: '1px dashed #273049', borderRadius: 12, color: '#9aa6c5' }}>
+            no_table=1: テーブル描画を無効化中
           </div>
-        </div>
-      )}
+        ) : tableContent}
+      </div>
     </div>
   );
 }

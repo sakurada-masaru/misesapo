@@ -12,6 +12,15 @@
   background: var(--card-border);
 }
 
+/* Global affordance: buttons should feel clickable unless disabled. */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 .card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -286,6 +295,14 @@
   background:
     radial-gradient(800px 500px at 50% 40%, rgba(70, 140, 255, 0.18), transparent 55%),
     radial-gradient(900px 700px at 50% 65%, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.92));
+}
+
+/* Entrance-only hamburger (job entrances + admin entrance). */
+.entrance-hamburger{
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: var(--z-header, 100);
 }
 
 [data-theme="light"] .job-entrance-page {

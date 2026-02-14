@@ -14,6 +14,41 @@ const CATEGORY_OPTIONS = [
   { category: 'pest', name: '(互換) pest' },
 ];
 
+function asNumber(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'string') {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  if (typeof v === 'object' && v && typeof v.N === 'string') {
+    const n = Number(v.N);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+function formatYen(v, row) {
+  const n =
+    asNumber(v) ??
+    asNumber(row?.default_price) ??
+    asNumber(row?.price) ??
+    asNumber(row?.unit_price) ??
+    asNumber(row?.standard_price);
+  if (n === null) return '-';
+  return `¥${n.toLocaleString()}`;
+}
+
+function formatMinutes(v, row) {
+  const n =
+    asNumber(v) ??
+    asNumber(row?.default_duration_min) ??
+    asNumber(row?.duration_min) ??
+    asNumber(row?.standard_duration_min);
+  if (n === null) return '-';
+  return `${Math.trunc(n)}分`;
+}
+
 export default function AdminMasterServicePage() {
   return (
     <AdminMasterBase
@@ -71,8 +106,20 @@ export default function AdminMasterServicePage() {
           labelKey: 'name',
           defaultValue: 'kitchen_haccp',
         },
-        { key: 'default_duration_min', label: '標準時間(分)', type: 'number', defaultValue: 60 },
-        { key: 'default_price', label: '標準単価', type: 'number', defaultValue: 0 },
+        {
+          key: 'default_duration_min',
+          label: '標準時間(分)',
+          type: 'number',
+          defaultValue: 60,
+          format: formatMinutes,
+        },
+        {
+          key: 'default_price',
+          label: '標準単価',
+          type: 'number',
+          defaultValue: 0,
+          format: formatYen,
+        },
       ]}
     />
   );

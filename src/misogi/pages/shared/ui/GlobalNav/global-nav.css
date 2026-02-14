@@ -1,0 +1,84 @@
+.global-nav{
+  z-index: var(--z-header, 100);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  /* In-flow header (no overlay). Sticks while scrolling. */
+  position: sticky;
+  top: 10px;
+  margin: 10px 0 12px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+  /* Avoid backdrop-filter here; it can cause GPU stalls on some machines when modals open. */
+  background: rgba(10, 12, 18, 0.78);
+  color: var(--fg, #fff);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.global-nav-btn,
+.global-nav-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.18);
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 900;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.global-nav-btn:hover,
+.global-nav-link:hover{
+  background: rgba(0,0,0,0.38);
+  border-color: rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+
+.global-nav-btn:active{
+  transform: translateY(0);
+}
+
+.global-nav-menu{
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Tighten the hamburger trigger for the pill chrome */
+.global-nav .hamburger-menu-trigger{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  box-shadow: none;
+}
+
+.global-nav .hamburger-menu-trigger:hover{
+  background: rgba(0,0,0,0.38);
+  border-color: rgba(255,255,255,0.22);
+  box-shadow: none;
+}
+
+@media (max-width: 640px){
+  .global-nav{
+    top: 8px;
+    margin: 8px 0 10px 8px;
+    padding: 10px 10px;
+  }
+  .global-nav-label{
+    display: none;
+  }
+  .global-nav-btn,
+  .global-nav-link{
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
