@@ -164,6 +164,8 @@ export default function AdminMasterBase({
   filters = [],
   fields,
   parentSources = EMPTY_OBJ,
+  fixedQuery = EMPTY_OBJ,
+  fixedNewValues = EMPTY_OBJ,
   onAfterSave,
   localSearch = null,
   renderModalExtra = null,
@@ -242,7 +244,7 @@ export default function AdminMasterBase({
     try {
       // master API の scan を前提にしているため、過大な limit は 500/timeout の原因になる。
       // 一覧はまず 50 件に抑え、必要ならフィルタ/検索で絞る運用にする（UIフリーズ回避）。
-      const query = toQuery({ limit: 50, ...filtersValue });
+      const query = toQuery({ limit: 50, ...filtersValue, ...(fixedQuery || EMPTY_OBJ) });
       const path = query
         ? `${buildResourcePath(resource)}?${query}`
         : buildResourcePath(resource);
@@ -257,7 +259,7 @@ export default function AdminMasterBase({
     } finally {
       setLoading(false);
     }
-  }, [resource, filtersValue, apiBase, buildResourcePath]);
+  }, [resource, filtersValue, apiBase, buildResourcePath, fixedQuery]);
 
   useEffect(() => {
     loadParents();
@@ -292,10 +294,15 @@ export default function AdminMasterBase({
     }
 
     const initial = { jotai: 'yuko' };
+    // Allow callers to pin immutable defaults for "sub-views" (ex: category fixed page).
+    if (fixedNewValues && typeof fixedNewValues === 'object') {
+      Object.assign(initial, fixedNewValues);
+    }
     (fields || []).forEach((f) => {
       if (!f?.key) return;
+      if (initial[f.key] !== undefined) return; // fixed values win
       if (f.defaultValue !== undefined) initial[f.key] = f.defaultValue;
-      else if (initial[f.key] === undefined) initial[f.key] = '';
+      else initial[f.key] = '';
     });
 
     if (diagMode && diagStep === 2) {
@@ -332,7 +339,7 @@ export default function AdminMasterBase({
     } else {
       setModalOpen(true);
     }
-  }, [fields, diagMode, diagStep]);
+  }, [fields, diagMode, diagStep, fixedNewValues]);
 
   const openEdit = useCallback((row) => {
     if (diagMode && !diagStep) {

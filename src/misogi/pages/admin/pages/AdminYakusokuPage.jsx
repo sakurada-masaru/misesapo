@@ -33,6 +33,14 @@ const PLAN_BUCKETS = [
   { key: 'yearly', label: '年1回' },
 ];
 
+const DEFAULT_ONSITE_FLAGS = {
+  has_spare_key: false,
+  key_loss_replacement_risk: false,
+  require_gas_valve_check: false,
+  trash_pickup_required: false,
+  trash_photo_required: false,
+};
+
 function createEmptyTaskMatrix() {
   return Object.fromEntries(PLAN_BUCKETS.map((b) => [b.key, []]));
 }
@@ -99,6 +107,13 @@ export default function AdminYakusokuPage() {
       base[b.key] = Array.isArray(arr) ? arr.map((x) => String(x)).filter(Boolean) : [];
     }
     return base;
+  }, []);
+
+  const normalizeOnsiteFlags = useCallback((flags) => {
+    const src = flags && typeof flags === 'object' ? flags : {};
+    const out = { ...DEFAULT_ONSITE_FLAGS };
+    for (const k of Object.keys(out)) out[k] = Boolean(src[k]);
+    return out;
   }, []);
 
   const normalizeServiceSelection = useCallback((src) => {
@@ -219,6 +234,7 @@ export default function AdminYakusokuPage() {
       start_date: dayjs().format('YYYY-MM-DD'),
       status: 'active',
       memo: '',
+      onsite_flags: { ...DEFAULT_ONSITE_FLAGS },
       recurrence_rule: { type: 'flexible', task_matrix: createEmptyTaskMatrix() },
       _tagDrafts: {},
       _tagSearch: {},
@@ -235,6 +251,7 @@ export default function AdminYakusokuPage() {
       ...multiSvc,
       isNew: false,
       service_query: item?.service_name || item?.service_id || '',
+      onsite_flags: normalizeOnsiteFlags(item?.onsite_flags),
       recurrence_rule: {
         ...rr,
         task_matrix: normalizeTaskMatrix(rr.task_matrix),
@@ -352,6 +369,26 @@ export default function AdminYakusokuPage() {
   }, [normalizeTaskMatrix]);
 
   const save = async () => {
+    // Minimal operational validation (admin-only; avoids half-baked truth records).
+    const tenpoId = String(modalData?.tenpo_id || '').trim();
+    const type = String(modalData?.type || '').trim();
+    const serviceIds = Array.isArray(modalData?.service_ids)
+      ? modalData.service_ids.map((x) => String(x)).filter(Boolean)
+      : [];
+    const monthlyQuota = Number(modalData?.monthly_quota || 0);
+    const price = Number(modalData?.price || 0);
+    const tm = normalizeTaskMatrix(modalData?.recurrence_rule?.task_matrix);
+    const tmTagCount = Object.values(tm).reduce((acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
+
+    if (!tenpoId) { window.alert('tenpo_id（現場）を選択してください'); return; }
+    if (!['teiki', 'tanpatsu'].includes(type)) { window.alert('type（種別）は teiki / tanpatsu から選択してください'); return; }
+    if (!serviceIds.length) { window.alert('service（サービス）を1件以上選択してください'); return; }
+    if (type === 'teiki') {
+      if (!Number.isFinite(monthlyQuota) || monthlyQuota < 1) { window.alert('monthly_quota（月間規定回数）は1以上で入力してください'); return; }
+      if (!Number.isFinite(price) || price < 0) { window.alert('price（単価）は0以上で入力してください'); return; }
+      if (tmTagCount <= 0) { window.alert('定期メニュー（task_matrix）を1件以上設定してください'); return; }
+    }
+
     setSaving(true);
     try {
       const method = modalData.isNew ? 'POST' : 'PUT';
@@ -371,6 +408,7 @@ export default function AdminYakusokuPage() {
       delete payload.service_query;
       delete payload._tagDrafts;
       delete payload._tagSearch;
+      payload.onsite_flags = normalizeOnsiteFlags(payload.onsite_flags);
       const res = await fetchYakusokuWithFallback(path, {
         method,
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -491,6 +529,10 @@ export default function AdminYakusokuPage() {
                       ...modalData,
                       tenpo_name: nextName,
                       tenpo_id: exact?.tenpo_id || modalData.tenpo_id || '',
+                      torihikisaki_id: exact?.torihikisaki_id || modalData.torihikisaki_id || '',
+                      yagou_id: exact?.yagou_id || modalData.yagou_id || '',
+                      torihikisaki_name: exact?.torihikisaki_name || modalData.torihikisaki_name || '',
+                      yagou_name: exact?.yagou_name || modalData.yagou_name || '',
                     });
                   }}
                   placeholder="取引先 / 屋号 / 店舗 / ID で検索"
@@ -500,7 +542,15 @@ export default function AdminYakusokuPage() {
                     <button
                       key={tp.tenpo_id}
                       type="button"
-                      onClick={() => setModalData({ ...modalData, tenpo_name: tp.name, tenpo_id: tp.tenpo_id })}
+                      onClick={() => setModalData({
+                        ...modalData,
+                        tenpo_name: tp.name,
+                        tenpo_id: tp.tenpo_id,
+                        torihikisaki_id: tp.torihikisaki_id || '',
+                        yagou_id: tp.yagou_id || '',
+                        torihikisaki_name: tp.torihikisaki_name || '',
+                        yagou_name: tp.yagou_name || '',
+                      })}
                       style={{
                         textAlign: 'left',
                         padding: '8px 10px',
@@ -721,7 +771,40 @@ export default function AdminYakusokuPage() {
               </div>
               <div className="yotei-form-group">
                 <label>メモ</label>
-                <textarea value={modalData.memo} onChange={e => setModalData({ ...modalData, memo: e.target.value })} rows={3} />
+                <textarea
+                  value={modalData.memo}
+                  onChange={e => setModalData({ ...modalData, memo: e.target.value })}
+                  rows={3}
+                  maxLength={200}
+                  placeholder="短く（例: 鍵/ガス栓/ゴミ回収などの運用注意のみ）"
+                />
+              </div>
+              <div className="yotei-form-group">
+                <label>現場チェック（構造化）</label>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {[
+                    { key: 'has_spare_key', label: '合鍵あり' },
+                    { key: 'key_loss_replacement_risk', label: '鍵紛失＝鍵交換（注意）' },
+                    { key: 'require_gas_valve_check', label: 'ガス栓確認 必須' },
+                    { key: 'trash_pickup_required', label: 'ゴミ回収あり' },
+                    { key: 'trash_photo_required', label: 'ゴミ回収時に写真 必須' },
+                  ].map((it) => (
+                    <label key={it.key} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: 'rgba(255,255,255,0.92)' }}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(modalData?.onsite_flags?.[it.key])}
+                        onChange={(e) => setModalData({
+                          ...modalData,
+                          onsite_flags: {
+                            ...normalizeOnsiteFlags(modalData?.onsite_flags),
+                            [it.key]: e.target.checked,
+                          },
+                        })}
+                      />
+                      <span>{it.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="yotei-modal-footer">

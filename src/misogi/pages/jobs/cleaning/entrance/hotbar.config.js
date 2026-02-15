@@ -2,6 +2,6 @@
 export const CLEANING_HOTBAR = [
   { id: 'site', role: 'target', label: '店舗', to: '/jobs/cleaning/clients/list' },
   { id: 'quality', role: 'status', label: '進捗', to: '/houkoku' },
-  { id: 'flow', role: 'plan', label: '予定', to: '/jobs/cleaning/schedule' },
-  { id: 'photo', role: 'log', label: '報告', to: '/houkoku' },
+  { id: 'flow', role: 'plan', label: '予定', to: '/jobs/cleaning/yotei' },
+  { id: 'photo', role: 'log', label: '報告', to: '/jobs/cleaning/report' },
 ];

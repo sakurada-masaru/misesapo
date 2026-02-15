@@ -46,3 +46,9 @@ AGENTS.md 準拠: 既知の競合を握りつぶさずここに列挙する。
 | High | ugoki progress naming ambiguity | 仕様文では `ugoki.jotai` が進捗（mikanryo/shinkou/kanryou）として記述される一方、ドメイン仕様では `jokyo` が進捗定義。API/UIでズレると不整合になる | UIは `jokyo` を正としつつ互換で `jotai` 入力も受理。API側で最終正規化を統一する |
 
 | High | ugoki naming ambiguity | 仕様文では  が進捗（mikanryo/shinkou/kanryou）として扱われる記述がある一方、ドメイン仕様では  が進捗定義。API/UIでズレると不整合になる | UIは  を正としつつ、互換で  入力も受理する。API側で最終正規化を統一する |
+
+## Yakusoku/Yotei MVP related (2026-02-15)
+
+| Priority | 項目 | 内容 | 方針 |
+|------|------|------|------|
+| High | shigoto layer missing | `docs/spec/MISOGI_DOMAIN_SPEC.md` は `yakusoku -> shigoto -> yotei` を正としているが、現行MVPは `yotei.yakusoku_id` で直接紐付けており `shigoto` が未実装 | Phase0は `yakusoku_id` を必須として運用開始し、後続で `shigoto` を導入。移行時は `yotei` に `shigoto_id` を追加しつつ `yakusoku_id` も保持して段階移行する |

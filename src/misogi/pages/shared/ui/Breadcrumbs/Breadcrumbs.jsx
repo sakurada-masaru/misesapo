@@ -41,9 +41,14 @@ function labelForPath(pathname) {
   if (p === '/admin/master/jinzai-shokushu') return '人材職種';
   if (p === '/admin/master/service') return 'サービスマスタ';
 
+  // Jobs (v2)
+  if (/^\/jobs\/[^/]+\/yotei$/.test(p)) return '予定';
+
   // Sales / Office / Cleaning / Dev (minimal)
   if (p.startsWith('/sales/')) return '営業';
   if (p.startsWith('/office/')) return '事務';
+  if (p.startsWith('/jobs/sales/')) return '営業';
+  if (p.startsWith('/jobs/office/')) return '事務';
   if (p.startsWith('/jobs/cleaning/')) return '清掃';
   if (p.startsWith('/jobs/dev/')) return '開発';
 
@@ -61,6 +66,10 @@ function crumbsForPath(pathname) {
   } else if (p.startsWith('/sales')) {
     crumbs.push({ to: '/jobs/sales/entrance', label: '営業' });
   } else if (p.startsWith('/office')) {
+    crumbs.push({ to: '/jobs/office/entrance', label: '事務' });
+  } else if (p.startsWith('/jobs/sales')) {
+    crumbs.push({ to: '/jobs/sales/entrance', label: '営業' });
+  } else if (p.startsWith('/jobs/office')) {
     crumbs.push({ to: '/jobs/office/entrance', label: '事務' });
   } else if (p.startsWith('/jobs/cleaning')) {
     crumbs.push({ to: '/jobs/cleaning/entrance', label: '清掃' });

@@ -12,6 +12,6 @@ export const OFFICE_HOTBAR = [
     ]
   },
   { id: 'status', role: 'status', label: '進捗' },
-  { id: 'plan', role: 'plan', label: '予定' },
+  { id: 'plan', role: 'plan', label: '予定', to: '/jobs/office/yotei' },
   { id: 'memo', role: 'log', label: '報告', to: '/houkoku' },
 ];

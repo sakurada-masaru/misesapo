@@ -22,6 +22,8 @@ import AdminYakusokuPage from '../admin/pages/AdminYakusokuPage';
 import AdminReportNewPage from '../admin/pages/AdminReportNewPage';
 import AdminHoukokuListPage from '../admin/pages/AdminHoukokuListPage';
 import AdminHoukokuDetailPage from '../admin/pages/AdminHoukokuDetailPage';
+import AdminKadaiListPage from '../admin/pages/AdminKadaiListPage';
+import AdminAdminLogPage from '../admin/pages/AdminAdminLogPage';
 import AdminMasterTorihikisakiPage from '../admin/pages/AdminMasterTorihikisakiPage';
 import AdminMasterYagouPage from '../admin/pages/AdminMasterYagouPage';
 import AdminMasterTenpoPage from '../admin/pages/AdminMasterTenpoPage';
@@ -52,6 +54,7 @@ import SalesSchedulePage from '../shared/ui/Sales/SalesSchedulePage';
 import CleanerSchedulePage from '../jobs/cleaning/pages/CleanerSchedulePage';
 import CleanerClientListPage from '../jobs/cleaning/pages/CleanerClientListPage';
 import CleanerClientKartePage from '../jobs/cleaning/pages/CleanerClientKartePage';
+import MyYoteiListPage from '../shared/ui/Yotei/MyYoteiListPage';
 import CustomerOnboardingPage from '../registration/CustomerOnboardingPage';
 import FlowGuideScreen from '../FlowGuideScreen';
 
@@ -94,6 +97,7 @@ export default function Router() {
       <Route path="/entrance" element={<Navigate to="/" replace />} />
       <Route path="/jobs/:job/entrance" element={<JobEntranceRoute />} />
       <Route path="/jobs/:job/report" element={<ReportCreatePage />} />
+      <Route path="/jobs/:job/yotei" element={<MyYoteiListPage />} />
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/entrance" element={<AdminEntrancePage />} />
       <Route path="/admin/cleaning-reports" element={<AdminCleaningReportsPage />} />
@@ -117,6 +121,8 @@ export default function Router() {
       <Route path="/admin/master/service" element={<AdminMasterServicePage />} />
       <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />
       <Route path="/admin/houkoku/:reportId" element={<AdminHoukokuDetailPage />} />
+      <Route path="/admin/kadai" element={<AdminKadaiListPage />} />
+      <Route path="/admin/admin-log" element={<AdminAdminLogPage />} />
       <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
       <Route path="/sales/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
       <Route path="/office/payroll/:userId/:yyyyMm" element={<OfficePayrollMonthPage />} />

@@ -1,0 +1,48 @@
+{
+  "template_id": "CLEANING_SHEETS_3_V1",
+  "title": "清掃 報告書（3枚提出）",
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "overview",
+      "label": "提出情報",
+      "type": "group",
+      "required": true,
+      "meta_fields": [
+        {
+          "key": "work_date",
+          "label": "作業日"
+        },
+        {
+          "key": "user_name",
+          "label": "担当作業員"
+        }
+      ],
+      "fields": []
+    },
+    {
+      "id": "sheets",
+      "label": "報告書（3枚）",
+      "type": "photos",
+      "required": true,
+      "min_items": 3,
+      "validation_summary": "提出には「報告書1〜3」の画像が必要です（3/3）。",
+      "helper": "紙の報告書を撮影して、報告書1/2/3に1枚ずつアップロードしてください。差し替えは何度でも可能です。",
+      "presets": [
+        {
+          "key": "sheets.sheet1",
+          "label": "報告書1"
+        },
+        {
+          "key": "sheets.sheet2",
+          "label": "報告書2"
+        },
+        {
+          "key": "sheets.sheet3",
+          "label": "報告書3"
+        }
+      ]
+    }
+  ]
+}
+

@@ -5827,25 +5827,102 @@ def yakusoku_create(event, headers):
                 }, ensure_ascii=False)
             }
 
-        body = _yotei_parse_body(event)
+        body = _yotei_parse_body(event) or {}
         yid = body.get('yakusoku_id') or f"YAK-{uuid.uuid4().hex[:12]}"
         now = datetime.utcnow().isoformat() + 'Z'
+
+        # Normalize / validate minimal operational required fields.
+        tenpo_id = str(body.get('tenpo_id') or '').strip()
+        yak_type = str(body.get('type') or 'teiki').strip()
+        if yak_type not in ('teiki', 'tanpatsu'):
+            return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'invalid_type', 'message': 'type must be teiki|tanpatsu'}, ensure_ascii=False)}
+
+        raw_service_ids = body.get('service_ids')
+        if not isinstance(raw_service_ids, list):
+            raw_service_ids = [body.get('service_id')] if body.get('service_id') else []
+        service_ids = [str(x).strip() for x in raw_service_ids if str(x or '').strip()]
+
+        raw_service_names = body.get('service_names')
+        if not isinstance(raw_service_names, list):
+            raw_service_names = [body.get('service_name')] if body.get('service_name') else []
+        service_names = [str(x).strip() for x in raw_service_names if str(x or '').strip()]
+
+        # Align array lengths (names are optional; ids are the truth for matrix tagging).
+        if len(service_names) > len(service_ids):
+            service_names = service_names[:len(service_ids)]
+
+        def _to_int(v):
+            try:
+                if v is None or v == '':
+                    return None
+                return int(v)
+            except Exception:
+                return None
+
+        monthly_quota = _to_int(body.get('monthly_quota'))
+        price = _to_int(body.get('price'))
+        status = str(body.get('status') or 'active').strip()
+        if status not in ('active', 'inactive'):
+            return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'invalid_status', 'message': 'status must be active|inactive'}, ensure_ascii=False)}
+
+        recurrence_rule = body.get('recurrence_rule') if isinstance(body.get('recurrence_rule'), dict) else {}
+        if yak_type == 'teiki':
+            if monthly_quota is None or monthly_quota < 1:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'monthly_quota_required', 'message': 'monthly_quota must be >= 1 for teiki'}, ensure_ascii=False)}
+            if price is None or price < 0:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'price_required', 'message': 'price must be >= 0 for teiki'}, ensure_ascii=False)}
+            # recurrence_rule is required for teiki (even if flexible), and should contain task_matrix in v2 UI.
+            if not recurrence_rule:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'recurrence_rule_required', 'message': 'recurrence_rule is required for teiki'}, ensure_ascii=False)}
+
+        if not tenpo_id:
+            return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'tenpo_id_required', 'message': 'tenpo_id is required'}, ensure_ascii=False)}
+        if not service_ids:
+            return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'service_ids_required', 'message': 'service_ids is required'}, ensure_ascii=False)}
+
+        # Onsite flags: structured operational notes (avoid free narrative).
+        allowed_onsite_flags = {
+            'has_spare_key',
+            'key_loss_replacement_risk',
+            'require_gas_valve_check',
+            'trash_pickup_required',
+            'trash_photo_required',
+        }
+        onsite_flags = {}
+        raw_flags = body.get('onsite_flags') if isinstance(body.get('onsite_flags'), dict) else {}
+        for k in allowed_onsite_flags:
+            if k in raw_flags:
+                onsite_flags[k] = bool(raw_flags.get(k))
+
         item = {
             'yakusoku_id': yid,
             'client_id': body.get('client_id'),
-            'tenpo_id': body.get('tenpo_id'),
-            'type': body.get('type', 'teiki'),
-            'recurrence_rule': body.get('recurrence_rule', {}),
-            'monthly_quota': body.get('monthly_quota'),
+            'tenpo_id': tenpo_id,
+            # Snapshot fields (truth is ids): keep UI stable even when master names change.
+            'tenpo_name': body.get('tenpo_name') or body.get('store_name') or '',
+            'torihikisaki_id': body.get('torihikisaki_id') or '',
+            'torihikisaki_name': body.get('torihikisaki_name') or '',
+            'yagou_id': body.get('yagou_id') or '',
+            'yagou_name': body.get('yagou_name') or '',
+            'type': yak_type,
+            'service_ids': service_ids,
+            'service_names': service_names,
+            # Backward compatibility (single-value fields).
+            'service_id': service_ids[0] if service_ids else '',
+            'service_name': service_names[0] if service_names else '',
+            'recurrence_rule': recurrence_rule,
+            'monthly_quota': monthly_quota,
             'consumption_count': {},
-            'price': body.get('price'),
+            'price': price,
             'start_date': body.get('start_date'),
             'end_date': body.get('end_date'),
-            'status': body.get('status', 'active'),
+            'status': status,
             'memo': body.get('memo', ''),
+            'onsite_flags': onsite_flags,
             'created_at': now,
             'updated_at': now
         }
+        item = {k: v for k, v in item.items() if v is not None}
         YAKUSOKU_TABLE.put_item(Item=item)
         return {'statusCode': 201, 'headers': headers, 'body': json.dumps(item, default=str, ensure_ascii=False)}
     except Exception as e:
@@ -5869,15 +5946,104 @@ def yakusoku_update(yakusoku_id, event, headers):
                 }, ensure_ascii=False)
             }
 
-        body = _yotei_parse_body(event)
+        body = _yotei_parse_body(event) or {}
         now = datetime.utcnow().isoformat() + 'Z'
         res = YAKUSOKU_TABLE.get_item(Key={'yakusoku_id': yakusoku_id})
         item = res.get('Item')
         if not item: return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'not found'})}
-        
-        for f in ['client_id', 'tenpo_id', 'type', 'recurrence_rule', 'monthly_quota', 'price', 'start_date', 'end_date', 'status', 'memo']:
-            if f in body: item[f] = body[f]
+
+        # Normalize mutable fields
+        def _to_int(v):
+            try:
+                if v is None or v == '':
+                    return None
+                return int(v)
+            except Exception:
+                return None
+
+        if 'type' in body:
+            yak_type = str(body.get('type') or '').strip()
+            if yak_type and yak_type not in ('teiki', 'tanpatsu'):
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'invalid_type', 'message': 'type must be teiki|tanpatsu'}, ensure_ascii=False)}
+            if yak_type:
+                item['type'] = yak_type
+
+        if 'status' in body:
+            status = str(body.get('status') or '').strip()
+            if status and status not in ('active', 'inactive'):
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'invalid_status', 'message': 'status must be active|inactive'}, ensure_ascii=False)}
+            if status:
+                item['status'] = status
+
+        if 'tenpo_id' in body:
+            tenpo_id = str(body.get('tenpo_id') or '').strip()
+            if not tenpo_id:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'tenpo_id_required', 'message': 'tenpo_id is required'}, ensure_ascii=False)}
+            item['tenpo_id'] = tenpo_id
+
+        for snap in ['tenpo_name', 'torihikisaki_id', 'torihikisaki_name', 'yagou_id', 'yagou_name']:
+            if snap in body:
+                item[snap] = body.get(snap) or ''
+
+        if 'service_ids' in body or 'service_id' in body:
+            raw_service_ids = body.get('service_ids')
+            if not isinstance(raw_service_ids, list):
+                raw_service_ids = [body.get('service_id')] if body.get('service_id') else []
+            service_ids = [str(x).strip() for x in raw_service_ids if str(x or '').strip()]
+            if not service_ids:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'service_ids_required', 'message': 'service_ids is required'}, ensure_ascii=False)}
+            item['service_ids'] = service_ids
+            item['service_id'] = service_ids[0]
+
+        if 'service_names' in body or 'service_name' in body:
+            raw_service_names = body.get('service_names')
+            if not isinstance(raw_service_names, list):
+                raw_service_names = [body.get('service_name')] if body.get('service_name') else []
+            service_names = [str(x).strip() for x in raw_service_names if str(x or '').strip()]
+            if 'service_ids' in item and len(service_names) > len(item.get('service_ids') or []):
+                service_names = service_names[:len(item.get('service_ids') or [])]
+            item['service_names'] = service_names
+            item['service_name'] = service_names[0] if service_names else item.get('service_name', '')
+
+        if 'recurrence_rule' in body:
+            rr = body.get('recurrence_rule')
+            if rr is not None and not isinstance(rr, dict):
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'invalid_recurrence_rule', 'message': 'recurrence_rule must be an object'}, ensure_ascii=False)}
+            item['recurrence_rule'] = rr or {}
+
+        if 'monthly_quota' in body:
+            monthly_quota = _to_int(body.get('monthly_quota'))
+            if monthly_quota is None or monthly_quota < 1:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'monthly_quota_required', 'message': 'monthly_quota must be >= 1'}, ensure_ascii=False)}
+            item['monthly_quota'] = monthly_quota
+
+        if 'price' in body:
+            price = _to_int(body.get('price'))
+            if price is None or price < 0:
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'price_required', 'message': 'price must be >= 0'}, ensure_ascii=False)}
+            item['price'] = price
+
+        for f in ['client_id', 'start_date', 'end_date', 'memo']:
+            if f in body:
+                item[f] = body[f]
+
+        if 'onsite_flags' in body:
+            allowed_onsite_flags = {
+                'has_spare_key',
+                'key_loss_replacement_risk',
+                'require_gas_valve_check',
+                'trash_pickup_required',
+                'trash_photo_required',
+            }
+            raw_flags = body.get('onsite_flags') if isinstance(body.get('onsite_flags'), dict) else {}
+            onsite_flags = item.get('onsite_flags') if isinstance(item.get('onsite_flags'), dict) else {}
+            for k in allowed_onsite_flags:
+                if k in raw_flags:
+                    onsite_flags[k] = bool(raw_flags.get(k))
+            item['onsite_flags'] = onsite_flags
+
         item['updated_at'] = now
+        item = {k: v for k, v in item.items() if v is not None}
         YAKUSOKU_TABLE.put_item(Item=item)
         return {'statusCode': 200, 'headers': headers, 'body': json.dumps(item, default=str, ensure_ascii=False)}
     except Exception as e:

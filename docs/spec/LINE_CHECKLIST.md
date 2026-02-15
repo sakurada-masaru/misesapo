@@ -199,6 +199,32 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 月表示セルに予約可能状況アイコン（空きなし/少/あり/十分）を表示
 - [x] 週間/月間フッター凡例に予約可能状況アイコンを追加
 
+## Jobs YOTEI Task List (2026-02-15)
+
+- [x] `/jobs/:job/yotei`（閲覧専用）を追加し、自分の `worker_id` の予定をリスト表示できる
+- [x] 玄関ホットバーの「予定」導線を `/jobs/*/yotei` に統一（cleaning/sales/office/dev）
+- [x] 現場側の入力要求（自由記述/評価/提案）を増やさない（閲覧のみ）
+
+## Yakusoku -> Yotei Operation MVP (2026-02-15)
+
+- [x] 管理UI `/admin/yakusoku` で `tenpo_id/type/service_ids` を前提に案件作成できる
+- [x] API `/yakusoku` が `service_ids/service_names/tenpo_name` を保存し、必須項目を 400 で拒否できる
+- [x] 管理UI `/admin/yotei` の予定作成で `yakusoku_id` を必須にし、選択時に `tenpo_id/tenpo_name` を自動設定できる
+- [ ] Worker 側 `/jobs/:job/yotei` で「自分の割当」が週間/当日で見えることを実データで確認（本番投入後）
+
+## KADAI / Admin Log UI (2026-02-15)
+
+- [ ] 管理エントランス（運用ツール）から `Kadaiリスト` が開ける
+- [ ] `Kadaiリスト` で `新規登録/編集/取消` が動作する（ブラウザが固まらない）
+- [ ] 管理エントランス（報告）から `管理ログ(提出)` が開ける
+- [ ] `管理ログ(提出)` は `Fact/Interpretation/Decision/NextAction` の分離入力ができ、保存できる
+
+## Cleaning Houkoku Sheets Upload (2026-02-15)
+
+- [ ] 清掃の提出画面（`/jobs/cleaning/report`）が「アップロードのみ」になっている
+- [ ] 報告書1/2/3 を各1枚アップロードできる（差し替え可能）
+- [ ] 3/3 揃うまで提出できない
+
 ## YOTEI Monthly Trouble Event Strip (2026-02-13)
 
 - [x] 月間ビューに清掃トラブルイベント（再清掃/不足清掃消化/クレーム再対応）の全幅エリアを追加

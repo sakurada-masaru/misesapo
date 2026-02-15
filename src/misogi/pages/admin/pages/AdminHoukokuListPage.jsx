@@ -296,10 +296,14 @@ const AdminHoukokuListPage = () => {
     }, [reports, searchTerm]);
 
     const getTemplateLabel = (tid) => {
-        if (tid === 'CLEANING_V1') return { label: '清掃', color: '#10B981', icon: 'fa-broom' };
-        if (tid === 'SALES_V1') return { label: '営業', color: '#3B82F6', icon: 'fa-briefcase' };
-        if (tid === 'ENGINEERING_V1') return { label: '開発', color: '#8B5CF6', icon: 'fa-code' };
-        if (tid === 'OFFICE_V1') return { label: '事務', color: '#F59E0B', icon: 'fa-file-invoice' };
+        const s = String(tid || '');
+        // Backward compatible buckets + newer template IDs.
+        if (s === 'CLEANING_V1' || s.startsWith('CLEAN_') || s.startsWith('CLEANING_')) {
+            return { label: '清掃', color: '#10B981', icon: 'fa-broom' };
+        }
+        if (s === 'SALES_V1' || s.startsWith('SALES_')) return { label: '営業', color: '#3B82F6', icon: 'fa-briefcase' };
+        if (s === 'ENGINEERING_V1' || s.startsWith('ENGINEERING_') || s.startsWith('DEV_')) return { label: '開発', color: '#8B5CF6', icon: 'fa-code' };
+        if (s === 'OFFICE_V1' || s.startsWith('OFFICE_')) return { label: '事務', color: '#F59E0B', icon: 'fa-file-invoice' };
         return { label: '一般', color: '#6B7280', icon: 'fa-file' };
     };
 

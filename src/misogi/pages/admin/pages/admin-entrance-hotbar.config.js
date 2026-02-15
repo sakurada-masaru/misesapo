@@ -7,8 +7,8 @@ export const ADMIN_HOTBAR = [
     label: '報告',
     subItems: [
       { id: 'houkoku-list', label: '報告一覧', path: '/admin/houkoku', group: '報告' },
-      // 他ロール同様: 「報告する」導線（提出側）
-      { id: 'houkoku-create', label: '報告する', path: '/jobs/admin/report', group: '提出' },
+      // 管理側の「提出/ログ」は専用ページに分離（line-system: structured log）
+      { id: 'admin-log', label: '管理ログ(提出)', path: '/admin/admin-log', group: '提出' },
     ]
   },
   {
@@ -45,6 +45,7 @@ export const ADMIN_HOTBAR = [
     label: '運用ツール',
     subItems: [
       { id: 'flow-guide', label: '業務フロー', path: '/flow-guide', group: '基本' },
+      { id: 'kadai', label: 'Kadaiリスト', path: '/admin/kadai', group: '基本' },
     ],
   },
 ];
