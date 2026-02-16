@@ -2958,7 +2958,7 @@
         .area-coverage-section .wrapper {
             max-width: 100%;
             width: 100%;
-            padding: 0 clamp(16px, 4vw, 48px);
+            padding: 0 100px 100px;
             margin: 0 auto;
         }
 
@@ -3512,6 +3512,7 @@
 }
 .sns-section{
 background-color: #fff;
+margin-top: 50px;
 }
 .service-btn-box{
 display: flex;
@@ -3519,6 +3520,19 @@ justify-content: center;
 }
 .about-highlight__image{
 width: 320px;    
+}
+@media screen and (max-width:768px) {
+    .section-box {
+        margin: 0 auto;
+        padding: 0 5rem;
+    }
+        .area-coverage-section .wrapper {
+            padding: 0 0 50px;
+            margin: 0 auto;
+        }
+}
+.section-box{
+    padding: 0 1rem;
 }
 </style>
 <meta name="google-site-verification" content="1p_D4TeZPs9QD3zGxNqkjrKZPkTHlsa9MCXkPR83wJk" />
@@ -3709,7 +3723,7 @@ width: 320px;
     <!-- サービス画像流れアニメーション -->
     <section id="service" class="section-box about-coverage-section">
     <!-- 対応サービス一覧タイトル -->
-    <div class="service-sections-header" style="margin-top: 100px;">
+    <div class="service-sections-header" style="margin-top: 50px;">
         <p class="section-tag-label">SERVICE
         </p>
         <h2 class="service-sections-title">お問い合わせ多数<br>ご好評のサービス</h2>
