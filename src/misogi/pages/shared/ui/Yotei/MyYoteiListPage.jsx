@@ -5,6 +5,7 @@ import Visualizer from '../Visualizer/Visualizer';
 import { apiFetch } from '../../api/client';
 import { useAuth } from '../../auth/useAuth';
 import { JOBS } from '../../utils/constants';
+import SupportHistoryDrawer from '../SupportHistoryDrawer';
 import './my-yotei.css';
 
 function fmtDate(d) {
@@ -61,6 +62,10 @@ export default function MyYoteiListPage() {
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
 
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportTenpoId, setSupportTenpoId] = useState('');
+  const [supportTenpoLabel, setSupportTenpoLabel] = useState('');
+
   const range = useMemo(() => {
     const base = dayjs(dateISO);
     if (!base.isValid()) return { from: fmtDate(new Date()), to: fmtDate(new Date()) };
@@ -76,6 +81,14 @@ export default function MyYoteiListPage() {
     const token = getToken?.();
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, [getToken]);
+
+  const openSupport = useCallback((tenpoId, tenpoLabel) => {
+    const id = safeStr(tenpoId);
+    if (!id) return;
+    setSupportTenpoId(id);
+    setSupportTenpoLabel(safeStr(tenpoLabel));
+    setSupportOpen(true);
+  }, []);
 
   const load = useCallback(async () => {
     if (!workerId) return;
@@ -266,6 +279,17 @@ export default function MyYoteiListPage() {
                           </div>
                           {memo ? <div className="my-yotei-memo">{memo}</div> : null}
                         </div>
+                        {tenpoId ? (
+                          <div className="my-yotei-card-actions">
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => openSupport(tenpoId, tenpoName)}
+                            >
+                              対応履歴
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     );
                   })}
@@ -275,7 +299,15 @@ export default function MyYoteiListPage() {
           })}
         </div>
       </div>
+
+      <SupportHistoryDrawer
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        tenpoId={supportTenpoId}
+        tenpoLabel={supportTenpoLabel}
+        getAuthHeaders={authHeaders}
+        canEdit={Boolean(authz?.isAdmin)}
+      />
     </div>
   );
 }
-

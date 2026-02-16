@@ -89,6 +89,148 @@
   white-space: pre-wrap;
 }
 
+.meibo-search-hits {
+  margin: 12px 20px 0;
+  border: 1px solid var(--meibo-border);
+  background: var(--meibo-panel);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.meibo-search-hits-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--meibo-muted);
+  font-size: 12px;
+}
+
+.meibo-search-hits-head .k {
+  font-weight: 800;
+  color: rgba(255,255,255,0.80);
+}
+
+.meibo-search-hits-head .v {
+  margin-left: auto;
+  font-weight: 900;
+  color: rgba(255,255,255,0.85);
+}
+
+.meibo-search-hits-head .hint {
+  color: var(--meibo-muted);
+}
+
+.meibo-search-hits-list {
+  max-height: 240px;
+  overflow: auto;
+}
+
+.hit-group {
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.hit-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.18);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.hit-group-title {
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(255,255,255,0.88);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hit-group-count {
+  flex: 0 0 auto;
+  color: var(--meibo-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.meibo-search-hits-empty {
+  padding: 12px;
+  color: var(--meibo-muted);
+  font-size: 12px;
+}
+
+.hit-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.hit-row:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.hit-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hit-name {
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.hit-meta,
+.hit-sub {
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--meibo-muted);
+  font-size: 11px;
+}
+
+.hit-meta code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: rgba(255,255,255,0.88);
+}
+
+.hit-meta .lbl,
+.hit-sub .lbl {
+  opacity: 0.75;
+}
+
+.hit-meta .val,
+.hit-sub .val {
+  color: rgba(255,255,255,0.84);
+}
+
+.hit-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hit-actions button,
+.hit-actions .link {
+  padding: 7px 9px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.22);
+  color: var(--meibo-text);
+  text-decoration: none;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .meibo-body {
   display: grid;
   grid-template-columns: 340px 1fr;

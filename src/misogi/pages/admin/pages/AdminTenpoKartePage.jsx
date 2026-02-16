@@ -14,6 +14,11 @@ const MASTER_API_BASE =
     ? '/api-master'
     : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
 
+const JINZAI_API_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api-jinzai'
+    : (import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
+
 const KARTE_VIEW = {
   SUMMARY: 'summary',
   DETAIL: 'detail',
@@ -113,11 +118,215 @@ const MONTH_OPTIONS = [
   { value: 12, label: '12月' },
 ];
 
+function monthLabel(month) {
+  const m = Number(month);
+  if (!m || m < 1 || m > 12) return '';
+  return `${m}月`;
+}
+
+function formatMonthSummary(months) {
+  const arr = (Array.isArray(months) ? months : [])
+    .map((m) => Number(m))
+    .filter((m) => Number.isFinite(m) && m >= 1 && m <= 12);
+  const uniq = Array.from(new Set(arr)).sort((a, b) => a - b);
+  if (uniq.length === 0) return '未設定';
+  return uniq.map(monthLabel).join('・');
+}
+
+function normalizeMonths(months) {
+  const arr = (Array.isArray(months) ? months : [])
+    .map((m) => Number(m))
+    .filter((m) => Number.isFinite(m) && m >= 1 && m <= 12);
+  return Array.from(new Set(arr)).sort((a, b) => a - b);
+}
+
+function ServiceSearchSelect({ services, selectedId, onSelect }) {
+  const [q, setQ] = useState('');
+  const [open, setOpen] = useState(false);
+
+  const selected = useMemo(() => {
+    return (services || []).find((s) => String(s?.service_id || '') === String(selectedId || '')) || null;
+  }, [services, selectedId]);
+
+  const candidates = useMemo(() => {
+    const qq = String(q || '').trim().toLowerCase();
+    const list = Array.isArray(services) ? services : [];
+    if (!qq) return [];
+    const hits = list.filter((s) => {
+      const id = String(s?.service_id || '').toLowerCase();
+      const name = String(s?.name || '').toLowerCase();
+      return id.includes(qq) || name.includes(qq);
+    });
+    return hits.slice(0, 30);
+  }, [services, q]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => {
+      const t = e.target;
+      if (!t) return;
+      const root = t.closest?.('.service-search');
+      if (!root) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div className="service-search">
+      <input
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        placeholder={selected?.name ? `選択中: ${selected.name}` : 'サービス名/IDで検索'}
+        aria-label="サービス検索"
+      />
+      {open && candidates.length > 0 ? (
+        <div className="service-search-pop">
+          {candidates.map((s) => (
+            <button
+              key={String(s?.service_id || '')}
+              type="button"
+              className="service-search-item"
+              onClick={() => {
+                onSelect?.(String(s?.service_id || ''), String(s?.name || ''));
+                setQ('');
+                setOpen(false);
+              }}
+            >
+              <span className="nm">{String(s?.name || s?.service_id || '')}</span>
+              <span className="id">{String(s?.service_id || '')}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {selected?.name ? (
+        <div className="service-search-selected">
+          <span className="label">選択中</span>
+          <span className="value">{selected.name}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ServicePlanRow({
+  index,
+  sp,
+  services,
+  onUpdate,
+  onRemove,
+  onToggleMonth,
+}) {
+  const [showMonths, setShowMonths] = useState(false);
+
+  const selectedService = useMemo(() => {
+    return (services || []).find((s) => String(s?.service_id || '') === String(sp?.service_id || '')) || null;
+  }, [services, sp?.service_id]);
+
+  const months = useMemo(() => normalizeMonths(sp?.months), [sp?.months]);
+  const monthSummary = useMemo(() => formatMonthSummary(months), [months]);
+
+  const preset = useCallback((m) => {
+    onUpdate?.(index, { months: normalizeMonths(m) });
+  }, [onUpdate, index]);
+
+  return (
+    <div className="service-plan-row">
+      <div className="service-plan-head">
+        <div className="service-plan-title">
+          <span className="n">メニュー {index + 1}</span>
+          <span className="s">対象月: {monthSummary}</span>
+        </div>
+        <div className="service-plan-actions">
+          <button type="button" onClick={() => setShowMonths((v) => !v)}>
+            {showMonths ? '月を閉じる' : '月を編集'}
+          </button>
+          <button type="button" onClick={() => onRemove?.(index)}>×</button>
+        </div>
+      </div>
+
+      <div className="form-grid">
+        <label className="f" style={{ gridColumn: '1 / -1' }}>
+          <div className="lbl">サービス（検索）</div>
+          <ServiceSearchSelect
+            services={services}
+            selectedId={String(sp?.service_id || '')}
+            onSelect={(serviceId, serviceName) => onUpdate?.(index, { service_id: serviceId, service_name: serviceName })}
+          />
+        </label>
+        <label className="f">
+          <div className="lbl">周期</div>
+          <select
+            value={String(sp?.cycle || 'monthly')}
+            onChange={(e) => onUpdate?.(index, { cycle: e.target.value })}
+          >
+            {SERVICE_CYCLE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </label>
+        <label className="f">
+          <div className="lbl">補足（任意）</div>
+          <input
+            value={String(sp?.note || '')}
+            onChange={(e) => onUpdate?.(index, { note: clampStr(e.target.value, 120) })}
+            placeholder="例: 9・11・1・3・5・7月実施"
+          />
+        </label>
+      </div>
+
+      <div className="muted small">
+        {selectedService?.default_duration_min ? `標準時間: ${selectedService.default_duration_min}分` : '標準時間: -'}
+        {selectedService?.default_price ? ` / 標準単価: ¥${Number(selectedService.default_price).toLocaleString()}` : ' / 標準単価: -'}
+      </div>
+
+      {showMonths ? (
+        <div className="service-months">
+          <div className="service-month-presets">
+            <button type="button" onClick={() => preset([1,2,3,4,5,6,7,8,9,10,11,12])}>全月</button>
+            <button type="button" onClick={() => preset([1,3,5,7,9,11])}>奇数月</button>
+            <button type="button" onClick={() => preset([2,4,6,8,10,12])}>偶数月</button>
+            <button type="button" onClick={() => preset([10,1,4,7])}>10/1/4/7</button>
+            <button type="button" onClick={() => preset([11,2,5,8])}>11/2/5/8</button>
+            <button type="button" onClick={() => preset([12,3,6,9])}>12/3/6/9</button>
+            <button type="button" onClick={() => preset([])}>クリア</button>
+          </div>
+          <div className="month-chip-grid month-chip-grid-compact">
+            {MONTH_OPTIONS.map((m) => (
+              <button
+                key={m.value}
+                type="button"
+                className={`month-chip ${months.includes(m.value) ? 'active' : ''}`}
+                onClick={() => onToggleMonth?.(index, m.value)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 const SELF_RATING_OPTIONS = [
   { value: 'yoi', label: '良い' },
   { value: 'futsu', label: '普通' },
   { value: 'kaizen', label: '要改善' },
   { value: 'mihyouka', label: '未評価' },
+];
+
+const SUPPORT_HISTORY_CATEGORIES = [
+  { value: 'ops', label: '運用' },
+  { value: 'claim', label: 'クレーム' },
+  { value: 'request', label: '要望' },
+  { value: 'schedule', label: '日程' },
+  { value: 'billing', label: '請求' },
+  { value: 'other', label: 'その他' },
 ];
 
 function authHeaders() {
@@ -142,6 +351,11 @@ function authHeaders() {
 
 async function apiFetch(path, init) {
   const base = MASTER_API_BASE.replace(/\/$/, '');
+  return fetch(`${base}${path}`, { headers: authHeaders(), cache: 'no-store', ...(init || {}) });
+}
+
+async function jinzaiFetch(path, init) {
+  const base = JINZAI_API_BASE.replace(/\/$/, '');
   return fetch(`${base}${path}`, { headers: authHeaders(), cache: 'no-store', ...(init || {}) });
 }
 
@@ -202,10 +416,127 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function fmtDateTimeJst(iso) {
+  const s = String(iso || '').trim();
+  if (!s) return '';
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return s;
+  try {
+    const dt = new Intl.DateTimeFormat('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+    // "2026/02/16 06:15" or similar
+    return dt.replace(/\u200e/g, '');
+  } catch {
+    // fallback: local time
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${dd} ${hh}:${mm}`;
+  }
+}
+
+function todayDate() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
 function clampStr(v, max) {
   const s = String(v || '');
   if (!max) return s;
   return s.length > max ? s.slice(0, max) : s;
+}
+
+function normArr(v) {
+  if (Array.isArray(v)) return v.filter(Boolean).map((x) => String(x).trim()).filter(Boolean);
+  const s = String(v || '').trim();
+  if (!s) return [];
+  if (s.startsWith('[')) {
+    try {
+      const a = JSON.parse(s);
+      return Array.isArray(a) ? a.filter(Boolean).map((x) => String(x).trim()).filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [s];
+}
+
+function parseYmdToInt(ymd) {
+  const s = String(ymd || '').trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  return Number(`${m[1]}${m[2]}${m[3]}`);
+}
+
+function splitTags(s) {
+  const raw = String(s || '').trim();
+  if (!raw) return [];
+  return raw
+    .split(/[\/,、\n]+/g)
+    .map((x) => String(x || '').trim())
+    .filter(Boolean);
+}
+
+function uniqTags(arr, max = 8) {
+  const out = [];
+  const seen = new Set();
+  (Array.isArray(arr) ? arr : []).forEach((x) => {
+    const v = String(x || '').trim();
+    if (!v) return;
+    if (seen.has(v)) return;
+    seen.add(v);
+    out.push(v);
+  });
+  return out.slice(0, max);
+}
+
+function sortSupportHistoryNewestFirst(list) {
+  const arr = Array.isArray(list) ? list.slice() : [];
+  const keyed = arr.map((it, idx) => {
+    const key = parseYmdToInt(it?.date);
+    return { it, idx, key: key == null ? -1 : key };
+  });
+  keyed.sort((a, b) => {
+    // date desc, empty dates last
+    if (a.key !== b.key) return b.key - a.key;
+    return a.idx - b.idx;
+  });
+  return keyed.map((x) => x.it);
+}
+
+function uniqStaffMembers(arr, max = 8) {
+  const out = [];
+  const seen = new Set();
+  (Array.isArray(arr) ? arr : []).forEach((m) => {
+    const id = String(m?.jinzai_id || '').trim();
+    const name = String(m?.name || '').trim();
+    const k = id ? `id:${id}` : (name ? `nm:${name}` : '');
+    if (!k) return;
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push({ jinzai_id: id, name });
+  });
+  return out.slice(0, max);
+}
+
+function getCurrentUserName() {
+  try {
+    const u = JSON.parse(localStorage.getItem('cognito_user') || '{}') || {};
+    return String(u?.name || u?.displayName || u?.username || u?.email || '').trim();
+  } catch {
+    return '';
+  }
 }
 
 async function fetchOneByIdOrList({ collection, id, listQuery }) {
@@ -287,6 +618,7 @@ export default function AdminTenpoKartePage() {
   const [karteDetail, setKarteDetail] = useState(null);
   const [savingKarteDetail, setSavingKarteDetail] = useState(false);
   const [services, setServices] = useState([]);
+  const [jinzais, setJinzais] = useState([]);
 
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
@@ -346,6 +678,39 @@ export default function AdminTenpoKartePage() {
         if (!cancelled) setServices(asItems(res));
       } catch {
         if (!cancelled) setServices([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await jinzaiFetch('/jinzai?limit=2000&jotai=yuko');
+        if (!res.ok) throw new Error(`JINZAI HTTP ${res.status}`);
+        const data = await res.json();
+        const items = asItems(data)
+          .map((it) => ({
+            jinzai_id: String(it?.jinzai_id || it?.id || '').trim(),
+            name: String(it?.name || '').trim(),
+            email: String(it?.email || '').trim(),
+            phone: String(it?.phone || '').trim(),
+            jotai: String(it?.jotai || '').trim(),
+            shokushu: normArr(it?.shokushu).map((v) => String(v).trim().toLowerCase()),
+          }))
+          .filter((it) => {
+            if (!it.jinzai_id || !it.name) return false;
+            // 担当履歴/対応履歴に出す候補は、清掃/メンテのみ
+            const ss = Array.isArray(it.shokushu) ? it.shokushu : [];
+            return ss.includes('seisou') || ss.includes('maintenance') || ss.includes('cleaning');
+          })
+          .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ja'));
+        if (!cancelled) setJinzais(items);
+      } catch {
+        if (!cancelled) setJinzais([]);
       }
     })();
     return () => {
@@ -425,6 +790,9 @@ export default function AdminTenpoKartePage() {
     const base = karteDetail && typeof karteDetail === 'object' ? karteDetail : {};
     const next = { ...base };
     next.version = next.version || KARTE_DETAIL_VERSION;
+    if (!next.created_at) next.created_at = nowIso();
+    next.updated_at = nowIso();
+    next.updated_by = clampStr(getCurrentUserName(), 80);
 
     // Structured fields (旧カルテの精査版)
     if (!next.spec || typeof next.spec !== 'object') next.spec = {};
@@ -434,9 +802,49 @@ export default function AdminTenpoKartePage() {
     if (!Array.isArray(next.consumables)) next.consumables = [];
     if (!Array.isArray(next.staff_history)) next.staff_history = [];
     if (!Array.isArray(next.service_plan)) next.service_plan = [];
+    if (!Array.isArray(next.support_history)) next.support_history = [];
 
     // Free text is allowed only as short exception memo (admin ops).
     next.memo = clampStr(next.memo || '', 200);
+
+    // Staff history: store both jinzai_id and name to avoid ambiguity later.
+    next.staff_history = (Array.isArray(next.staff_history) ? next.staff_history : [])
+      .map((it) => ({
+        // v2: allow multiple members as tags
+        members: uniqStaffMembers([
+          ...(Array.isArray(it?.members) ? it.members : []),
+          {
+            jinzai_id: clampStr(it?.jinzai_id || '', 40),
+            name: clampStr(it?.name || '', 40),
+          },
+        ], 8),
+        start_date: clampStr(it?.start_date || '', 20),
+        end_date: clampStr(it?.end_date || '', 20),
+      }))
+      .map((it) => ({
+        ...it,
+        // legacy: keep first member in flat fields for backward compatibility
+        jinzai_id: clampStr(it?.members?.[0]?.jinzai_id || '', 40),
+        name: clampStr(it?.members?.[0]?.name || '', 40),
+      }))
+      .filter((it) => (Array.isArray(it.members) && it.members.length > 0) || it.start_date || it.end_date);
+
+    // Support history: short, structured notes only.
+    next.support_history = sortSupportHistoryNewestFirst((Array.isArray(next.support_history) ? next.support_history : [])
+      .map((it) => {
+        const legacyNote = clampStr(it?.note || '', 200);
+        const topic = clampStr(it?.topic || '', 60) || (legacyNote ? clampStr(legacyNote, 60) : '');
+        return {
+          date: clampStr(it?.date || '', 20),
+          category: clampStr(it?.category || 'ops', 20),
+          requested_by: clampStr(it?.requested_by || it?.from || '', 40),
+          handled_by: clampStr(it?.handled_by || it?.by || '', 80),
+          topic,
+          action: clampStr(it?.action || '', 120),
+          outcome: clampStr(it?.outcome || '', 120),
+        };
+      })
+      .filter((it) => it.date || it.topic || it.action || it.outcome || it.requested_by || it.handled_by));
 
     // HACCP defaults
     if (!next.haccp || typeof next.haccp !== 'object') next.haccp = {};
@@ -538,7 +946,7 @@ export default function AdminTenpoKartePage() {
       const base = prev && typeof prev === 'object' ? prev : {};
       const next = { ...base };
       const cur = Array.isArray(next.staff_history) ? next.staff_history.slice() : [];
-      cur.push({ name: '', start_date: '', end_date: '' });
+      cur.push({ members: [], start_date: '', end_date: '' });
       next.staff_history = cur;
       return next;
     });
@@ -551,7 +959,56 @@ export default function AdminTenpoKartePage() {
       const cur = Array.isArray(next.staff_history) ? next.staff_history.slice() : [];
       if (!cur[index]) return next;
       const it = { ...(cur[index] || {}) };
-      it[key] = key === 'name' ? clampStr(value, 40) : clampStr(value, 20);
+      if (key === 'start_date' || key === 'end_date') it[key] = clampStr(value, 20);
+      cur[index] = it;
+      next.staff_history = cur;
+      return next;
+    });
+  }, []);
+
+  const addStaffHistoryMember = useCallback((index, member) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.staff_history) ? next.staff_history.slice() : [];
+      const it0 = cur[index];
+      if (!it0) return next;
+      const it = { ...(it0 || {}) };
+      const members = uniqStaffMembers([
+        ...(Array.isArray(it.members) ? it.members : []),
+        {
+          jinzai_id: clampStr(member?.jinzai_id || '', 40),
+          name: clampStr(member?.name || '', 40),
+        },
+      ], 8);
+      it.members = members;
+      it.jinzai_id = clampStr(members?.[0]?.jinzai_id || '', 40);
+      it.name = clampStr(members?.[0]?.name || '', 40);
+      cur[index] = it;
+      next.staff_history = cur;
+      return next;
+    });
+  }, []);
+
+  const removeStaffHistoryMember = useCallback((index, member) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.staff_history) ? next.staff_history.slice() : [];
+      const it0 = cur[index];
+      if (!it0) return next;
+      const it = { ...(it0 || {}) };
+      const id = String(member?.jinzai_id || '').trim();
+      const name = String(member?.name || '').trim();
+      const members = (Array.isArray(it.members) ? it.members : []).filter((m) => {
+        if (id && String(m?.jinzai_id || '').trim() === id) return false;
+        if (!id && name && String(m?.name || '').trim() === name) return false;
+        return true;
+      });
+      const norm = uniqStaffMembers(members, 8);
+      it.members = norm;
+      it.jinzai_id = clampStr(norm?.[0]?.jinzai_id || '', 40);
+      it.name = clampStr(norm?.[0]?.name || '', 40);
       cur[index] = it;
       next.staff_history = cur;
       return next;
@@ -564,6 +1021,59 @@ export default function AdminTenpoKartePage() {
       const next = { ...base };
       const cur = Array.isArray(next.staff_history) ? next.staff_history.slice() : [];
       next.staff_history = cur.filter((_, i) => i !== index);
+      return next;
+    });
+  }, []);
+
+  const addSupportHistory = useCallback(() => {
+    const handledBy = getCurrentUserName();
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.support_history) ? next.support_history.slice() : [];
+      // Newest-first
+      cur.unshift({
+        date: todayDate(),
+        category: 'ops',
+        requested_by: '',
+        handled_by: clampStr(handledBy, 80),
+        topic: '',
+        action: '',
+        outcome: '',
+      });
+      next.support_history = cur;
+      return next;
+    });
+  }, []);
+
+  const updateSupportHistory = useCallback((index, patch) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.support_history) ? next.support_history.slice() : [];
+      if (!cur[index]) return next;
+      const it = { ...(cur[index] || {}) };
+      const p = patch || {};
+      const touchedDate = p.date !== undefined;
+      if (touchedDate) it.date = clampStr(p.date, 20);
+      if (p.category !== undefined) it.category = clampStr(p.category, 20);
+      if (p.requested_by !== undefined) it.requested_by = clampStr(p.requested_by, 40);
+      if (p.handled_by !== undefined) it.handled_by = clampStr(p.handled_by, 120);
+      if (p.topic !== undefined) it.topic = clampStr(p.topic, 60);
+      if (p.action !== undefined) it.action = clampStr(p.action, 120);
+      if (p.outcome !== undefined) it.outcome = clampStr(p.outcome, 120);
+      cur[index] = it;
+      next.support_history = touchedDate ? sortSupportHistoryNewestFirst(cur) : cur;
+      return next;
+    });
+  }, []);
+
+  const removeSupportHistory = useCallback((index) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.support_history) ? next.support_history.slice() : [];
+      next.support_history = cur.filter((_, i) => i !== index);
       return next;
     });
   }, []);
@@ -765,6 +1275,12 @@ export default function AdminTenpoKartePage() {
       </header>
 
       {error ? <div className="tenpo-karte-err">{error}</div> : null}
+
+      <datalist id="tenpo-karte-jinzai-name-list">
+        {jinzais.map((j) => (
+          <option key={j.jinzai_id} value={j.name} />
+        ))}
+      </datalist>
 
       {karteView === KARTE_VIEW.SUMMARY ? (
         <div className="tenpo-karte-grid">
@@ -1014,6 +1530,14 @@ export default function AdminTenpoKartePage() {
                 <div className="muted">
                   旧カルテの項目を整理して再構築しています。自由記述は「例外メモ（200字）」のみに抑えます。
                 </div>
+                <div className="muted small" style={{ marginTop: 6 }}>
+                  最終更新: <code>{fmtDateTimeJst(karteDetail?.updated_at || tenpo?.updated_at || '') || '—'}</code>
+                  {String(karteDetail?.updated_by || '').trim() ? (
+                    <>
+                      {' '} / 更新者: <code>{String(karteDetail.updated_by)}</code>
+                    </>
+                  ) : null}
+                </div>
               </div>
               <div className="seg-tabs">
                 <button type="button" onClick={saveKarteDetailNow} disabled={savingKarteDetail}>
@@ -1023,156 +1547,346 @@ export default function AdminTenpoKartePage() {
             </div>
 
             <div className="karte-detail-layout">
-              <section className="card card-sub">
-                <div className="card-title-row">
-                  <div className="card-title">運用・鍵</div>
-                </div>
-                <div className="form-grid">
-                  <label className="f">
-                    <div className="lbl">スタッフルーム</div>
-                    <select
-                      value={String(karteDetail?.spec?.staff_room || '')}
-                      onChange={(e) => setKarteField('spec.staff_room', e.target.value)}
-                    >
-                      <option value="">未設定</option>
-                      {STAFF_ROOM_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="f">
-                    <div className="lbl">セキュリティボックスNo</div>
-                    <input
-                      value={String(karteDetail?.spec?.security_box_number || '')}
-                      onChange={(e) => setKarteField('spec.security_box_number', clampStr(e.target.value, 30))}
-                      placeholder="例: 1"
-                    />
-                  </label>
-                  <label className="f">
-                    <div className="lbl">鍵の位置</div>
-                    <input
-                      value={String(karteDetail?.spec?.key_location || '')}
-                      onChange={(e) => setKarteField('spec.key_location', clampStr(e.target.value, 60))}
-                      placeholder="例: 受付右棚"
-                    />
-                  </label>
-                  <label className="f">
-                    <div className="lbl">ブレーカーの位置</div>
-                    <input
-                      value={String(karteDetail?.spec?.breaker_location || '')}
-                      onChange={(e) => setKarteField('spec.breaker_location', clampStr(e.target.value, 60))}
-                      placeholder="例: 厨房奥"
-                    />
-                  </label>
-                </div>
-              </section>
-
-              <section className="card card-sub">
-                <div className="card-title-row">
-                  <div className="card-title">設備</div>
-                </div>
-                <div className="check-grid">
-                  {EQUIPMENT_OPTIONS.map((it) => (
-                    <label key={it.code} className="chk">
-                      <input
-                        type="checkbox"
-                        checked={Array.isArray(karteDetail?.equipment) && karteDetail.equipment.includes(it.code)}
-                        onChange={() => toggleEquipment(it.code)}
-                      />
-                      <span>{it.label}</span>
-                    </label>
-                  ))}
-                </div>
-                <div className="subhead">客席</div>
-                <div className="check-grid">
-                  {[
-                    { code: 'counter', label: 'カウンター席' },
-                    { code: 'box', label: 'ボックス席' },
-                    { code: 'zashiki', label: '座敷' },
-                  ].map((it) => (
-                    <label key={it.code} className="chk">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(karteDetail?.seats?.[it.code])}
-                        onChange={(e) => setKarteField(`seats.${it.code}`, e.target.checked)}
-                      />
-                      <span>{it.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </section>
-
-              <section className="card card-sub">
-                <div className="card-title-row">
-                  <div className="card-title">プラン・評価</div>
-                </div>
-                <div className="form-grid">
-                  <label className="f">
-                    <div className="lbl">プラン頻度</div>
-                    <select
-                      value={String(karteDetail?.plan?.plan_frequency || '')}
-                      onChange={(e) => setKarteField('plan.plan_frequency', e.target.value)}
-                    >
-                      <option value="">未設定</option>
-                      {PLAN_FREQUENCY_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="f">
-                    <div className="lbl">衛生状態自己評価</div>
-                    <select
-                      value={String(karteDetail?.plan?.self_rating || '')}
-                      onChange={(e) => setKarteField('plan.self_rating', e.target.value)}
-                    >
-                      <option value="">未設定</option>
-                      {SELF_RATING_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="f">
-                    <div className="lbl">最終清掃日</div>
-                    <input
-                      type="date"
-                      value={String(karteDetail?.plan?.last_clean || '')}
-                      onChange={(e) => setKarteField('plan.last_clean', e.target.value)}
-                    />
-                  </label>
-                </div>
-              </section>
-
-              <section className="card card-sub">
-                <div className="card-title-row">
-                  <div className="card-title">消耗品</div>
-                  <div className="seg-tabs">
-                    <button type="button" onClick={addConsumable}>追加</button>
+              <div className="karte-detail-col">
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">運用・鍵</div>
                   </div>
-                </div>
-                {Array.isArray(karteDetail?.consumables) && karteDetail.consumables.length > 0 ? (
-                  <div className="rows">
-                    {karteDetail.consumables.map((c, i) => (
-                      <div key={i} className="row">
+                  <div className="form-grid">
+                    <label className="f">
+                      <div className="lbl">スタッフルーム</div>
+                      <select
+                        value={String(karteDetail?.spec?.staff_room || '')}
+                        onChange={(e) => setKarteField('spec.staff_room', e.target.value)}
+                      >
+                        <option value="">未設定</option>
+                        {STAFF_ROOM_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="f">
+                      <div className="lbl">セキュリティボックスNo</div>
+                      <input
+                        value={String(karteDetail?.spec?.security_box_number || '')}
+                        onChange={(e) => setKarteField('spec.security_box_number', clampStr(e.target.value, 30))}
+                        placeholder="例: 1"
+                      />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">鍵の位置</div>
+                      <input
+                        value={String(karteDetail?.spec?.key_location || '')}
+                        onChange={(e) => setKarteField('spec.key_location', clampStr(e.target.value, 60))}
+                        placeholder="例: 受付右棚"
+                      />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">ブレーカーの位置</div>
+                      <input
+                        value={String(karteDetail?.spec?.breaker_location || '')}
+                        onChange={(e) => setKarteField('spec.breaker_location', clampStr(e.target.value, 60))}
+                        placeholder="例: 厨房奥"
+                      />
+                    </label>
+                  </div>
+                </section>
+
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">設備</div>
+                  </div>
+                  <div className="check-grid">
+                    {EQUIPMENT_OPTIONS.map((it) => (
+                      <label key={it.code} className="chk">
                         <input
-                          placeholder="品名"
-                          value={String(c?.name || '')}
-                          onChange={(e) => updateConsumable(i, 'name', e.target.value)}
+                          type="checkbox"
+                          checked={Array.isArray(karteDetail?.equipment) && karteDetail.equipment.includes(it.code)}
+                          onChange={() => toggleEquipment(it.code)}
                         />
-                        <input
-                          placeholder="数量"
-                          value={String(c?.quantity || '')}
-                          onChange={(e) => updateConsumable(i, 'quantity', e.target.value)}
-                        />
-                        <button type="button" onClick={() => removeConsumable(i)}>×</button>
-                      </div>
+                        <span>{it.label}</span>
+                      </label>
                     ))}
                   </div>
-                ) : (
-                  <div className="muted">未登録</div>
-                )}
-              </section>
+                  <div className="subhead">客席</div>
+                  <div className="check-grid">
+                    {[
+                      { code: 'counter', label: 'カウンター席' },
+                      { code: 'box', label: 'ボックス席' },
+                      { code: 'zashiki', label: '座敷' },
+                    ].map((it) => (
+                      <label key={it.code} className="chk">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(karteDetail?.seats?.[it.code])}
+                          onChange={(e) => setKarteField(`seats.${it.code}`, e.target.checked)}
+                        />
+                        <span>{it.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </section>
 
-              <section className="card card-sub card-wide">
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">消耗品</div>
+                    <div className="seg-tabs">
+                      <button type="button" onClick={addConsumable}>追加</button>
+                    </div>
+                  </div>
+                  {Array.isArray(karteDetail?.consumables) && karteDetail.consumables.length > 0 ? (
+                    <div className="rows">
+                      {karteDetail.consumables.map((c, i) => (
+                        <div key={i} className="row">
+                          <input
+                            placeholder="品名"
+                            value={String(c?.name || '')}
+                            onChange={(e) => updateConsumable(i, 'name', e.target.value)}
+                          />
+                          <input
+                            placeholder="数量"
+                            value={String(c?.quantity || '')}
+                            onChange={(e) => updateConsumable(i, 'quantity', e.target.value)}
+                          />
+                          <button type="button" onClick={() => removeConsumable(i)}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted">未登録</div>
+                  )}
+                </section>
+              </div>
+
+              <div className="karte-detail-col">
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">プラン・評価</div>
+                  </div>
+                  <div className="form-grid">
+                    <label className="f">
+                      <div className="lbl">プラン頻度</div>
+                      <select
+                        value={String(karteDetail?.plan?.plan_frequency || '')}
+                        onChange={(e) => setKarteField('plan.plan_frequency', e.target.value)}
+                      >
+                        <option value="">未設定</option>
+                        {PLAN_FREQUENCY_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="f">
+                      <div className="lbl">衛生状態自己評価</div>
+                      <select
+                        value={String(karteDetail?.plan?.self_rating || '')}
+                        onChange={(e) => setKarteField('plan.self_rating', e.target.value)}
+                      >
+                        <option value="">未設定</option>
+                        {SELF_RATING_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="f">
+                      <div className="lbl">最終清掃日</div>
+                      <input
+                        type="date"
+                        value={String(karteDetail?.plan?.last_clean || '')}
+                        onChange={(e) => setKarteField('plan.last_clean', e.target.value)}
+                      />
+                    </label>
+                  </div>
+                </section>
+
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">担当履歴</div>
+                    <div className="seg-tabs">
+                      <button type="button" onClick={addStaffHistory}>追加</button>
+                    </div>
+                  </div>
+                  {Array.isArray(karteDetail?.staff_history) && karteDetail.staff_history.length > 0 ? (
+                    <div className="rows">
+                      {karteDetail.staff_history.map((h, i) => (
+                        <div key={i} className="row row-3">
+                          <div className="tag-picker">
+                            <div className="tag-row">
+                              {(Array.isArray(h?.members) ? h.members : (h?.name ? [{ jinzai_id: h?.jinzai_id || '', name: h.name }] : [])).map((m) => {
+                                const label = String(m?.name || m?.jinzai_id || '').trim();
+                                if (!label) return null;
+                                return (
+                                  <span key={`${String(m?.jinzai_id || '')}-${label}`} className="tag-chip">
+                                    {label}
+                                    <button
+                                      type="button"
+                                      className="x"
+                                      onClick={() => removeStaffHistoryMember(i, m)}
+                                      aria-label="remove"
+                                    >
+                                      ×
+                                    </button>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                            <div className="tag-controls">
+                              <select
+                                value=""
+                                onChange={(e) => {
+                                  const id = e.target.value;
+                                  if (!id) return;
+                                  const hit = jinzais.find((j) => String(j.jinzai_id) === String(id));
+                                  addStaffHistoryMember(i, { jinzai_id: id, name: hit?.name || '' });
+                                }}
+                                aria-label="担当者追加"
+                              >
+                                <option value="">担当者（清掃/メンテのみ）を追加</option>
+                                {jinzais.map((j) => (
+                                  <option key={j.jinzai_id} value={j.jinzai_id}>
+                                    {j.name}{j.email ? ` / ${j.email}` : ''}{j.phone ? ` / ${j.phone}` : ''}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                list="tenpo-karte-jinzai-name-list"
+                                placeholder="氏名を手入力して追加（任意）"
+                                onKeyDown={(e) => {
+                                  if (e.key !== 'Enter') return;
+                                  const v = String(e.currentTarget.value || '').trim();
+                                  if (!v) return;
+                                  addStaffHistoryMember(i, { jinzai_id: '', name: v });
+                                  e.currentTarget.value = '';
+                                }}
+                                aria-label="担当者氏名（手入力）"
+                              />
+                            </div>
+                            <div className="muted small">複数選択OK（タグ）</div>
+                          </div>
+                          <input
+                            type="date"
+                            value={String(h?.start_date || '')}
+                            onChange={(e) => updateStaffHistory(i, 'start_date', e.target.value)}
+                          />
+                          <input
+                            type="date"
+                            value={String(h?.end_date || '')}
+                            onChange={(e) => updateStaffHistory(i, 'end_date', e.target.value)}
+                          />
+                          <button type="button" onClick={() => removeStaffHistory(i)}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted">未登録</div>
+                  )}
+                </section>
+              </div>
+
+              <div className="karte-detail-col karte-detail-col-right">
+                <section className="card card-sub support-history-card">
+                  <div className="card-title-row">
+                    <div className="card-title">対応履歴（短文・200字）</div>
+                    <div className="seg-tabs">
+                      <button type="button" onClick={addSupportHistory}>追加</button>
+                    </div>
+                  </div>
+                  <div className="muted small">
+                    目的: 事実ベースで「いつ/誰から/何の件/誰が対応/何をした/結果」を短く残す。長文の経緯・評価・提案は書かない（例外メモへ）。
+                  </div>
+                  {Array.isArray(karteDetail?.support_history) && karteDetail.support_history.length > 0 ? (
+                    <div className="service-plan-list" style={{ marginTop: 10 }}>
+                      {karteDetail.support_history.map((h, i) => (
+                        <div key={i} className="service-plan-row">
+                          <div className="service-plan-head">
+                            <div className="service-plan-title">履歴 {karteDetail.support_history.length - i}</div>
+                            <button type="button" onClick={() => removeSupportHistory(i)}>×</button>
+                          </div>
+                          <div className="form-grid">
+                            <label className="f">
+                              <div className="lbl">日付</div>
+                              <input
+                                type="date"
+                                value={String(h?.date || '')}
+                                onChange={(e) => updateSupportHistory(i, { date: e.target.value })}
+                              />
+                            </label>
+                            <label className="f">
+                              <div className="lbl">区分</div>
+                              <select
+                                value={String(h?.category || 'ops')}
+                                onChange={(e) => updateSupportHistory(i, { category: e.target.value })}
+                              >
+                                {SUPPORT_HISTORY_CATEGORIES.map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="f" style={{ gridColumn: '1 / -1' }}>
+                              <div className="lbl">起点（誰から/誰が言った）</div>
+                              <input
+                                value={String(h?.requested_by || '')}
+                                onChange={(e) => updateSupportHistory(i, { requested_by: e.target.value })}
+                                placeholder="例: 先方店長 / 本部 / 櫻田"
+                              />
+                            </label>
+                            <label className="f" style={{ gridColumn: '1 / -1' }}>
+                              <div className="lbl">対応（誰が対応した）</div>
+                              <input
+                                value={String(h?.handled_by || '')}
+                                onChange={(e) => updateSupportHistory(i, { handled_by: e.target.value })}
+                                placeholder="例: 櫻田 / 太田 / 清掃班長"
+                              />
+                            </label>
+                          </div>
+                          <div className="form-grid" style={{ marginTop: 10 }}>
+                            <label className="f" style={{ gridColumn: '1 / -1' }}>
+                              <div className="lbl">何の件か（要件）</div>
+                              <input
+                                value={String(h?.topic || '')}
+                                onChange={(e) => updateSupportHistory(i, { topic: e.target.value })}
+                                placeholder="例: 窓の仕上がり / 臭い / 鍵運用 / 請求"
+                              />
+                            </label>
+                            <label className="f" style={{ gridColumn: '1 / -1' }}>
+                              <div className="lbl">何をした（対応）</div>
+                              <input
+                                value={String(h?.action || '')}
+                                onChange={(e) => updateSupportHistory(i, { action: e.target.value })}
+                                placeholder="例: 乾拭き徹底を指示 / 再清掃を手配"
+                              />
+                            </label>
+                            <label className="f" style={{ gridColumn: '1 / -1' }}>
+                              <div className="lbl">どうなった（結果）</div>
+                              <input
+                                value={String(h?.outcome || '')}
+                                onChange={(e) => updateSupportHistory(i, { outcome: e.target.value })}
+                                placeholder="例: 次回確認 / 了承 / 保留"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted" style={{ marginTop: 10 }}>未登録</div>
+                  )}
+                </section>
+
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">例外メモ（任意・200字）</div>
+                  </div>
+                  <input
+                    className="memo"
+                    value={String(karteDetail?.memo || '')}
+                    onChange={(e) => setKarteField('memo', clampStr(e.target.value, 200))}
+                    placeholder="例: 薬剤の匂いNG / 入館ルール 等（短く）"
+                  />
+                </section>
+              </div>
+
+              <section className="card card-sub card-span-2">
                 <div className="card-title-row">
                   <div className="card-title">サービスメニュー（周期管理）</div>
                   <div className="seg-tabs">
@@ -1181,110 +1895,16 @@ export default function AdminTenpoKartePage() {
                 </div>
                 {Array.isArray(karteDetail?.service_plan) && karteDetail.service_plan.length > 0 ? (
                   <div className="service-plan-list">
-                    {karteDetail.service_plan.map((sp, i) => {
-                      const selectedService = services.find((s) => String(s?.service_id || '') === String(sp?.service_id || ''));
-                      const selectedMonths = Array.isArray(sp?.months) ? sp.months : [];
-                      return (
-                        <div key={i} className="service-plan-row">
-                          <div className="service-plan-head">
-                            <div className="service-plan-title">メニュー {i + 1}</div>
-                            <button type="button" onClick={() => removeServicePlan(i)}>×</button>
-                          </div>
-                          <div className="form-grid">
-                            <label className="f">
-                              <div className="lbl">サービス</div>
-                              <select
-                                value={String(sp?.service_id || '')}
-                                onChange={(e) => {
-                                  const serviceId = e.target.value;
-                                  const hit = services.find((s) => String(s?.service_id || '') === serviceId);
-                                  updateServicePlan(i, {
-                                    service_id: serviceId,
-                                    service_name: String(hit?.name || ''),
-                                  });
-                                }}
-                              >
-                                <option value="">未選択</option>
-                                {services.map((s) => (
-                                  <option key={String(s?.service_id || '')} value={String(s?.service_id || '')}>
-                                    {String(s?.name || s?.service_id || '')}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                            <label className="f">
-                              <div className="lbl">周期</div>
-                              <select
-                                value={String(sp?.cycle || 'monthly')}
-                                onChange={(e) => updateServicePlan(i, { cycle: e.target.value })}
-                              >
-                                {SERVICE_CYCLE_OPTIONS.map((o) => (
-                                  <option key={o.value} value={o.value}>{o.label}</option>
-                                ))}
-                              </select>
-                            </label>
-                          </div>
-                          <div className="muted small">
-                            {selectedService?.default_duration_min ? `標準時間: ${selectedService.default_duration_min}分` : '標準時間: -'}
-                            {selectedService?.default_price ? ` / 標準単価: ¥${Number(selectedService.default_price).toLocaleString()}` : ' / 標準単価: -'}
-                          </div>
-                          <div className="month-chip-grid">
-                            {MONTH_OPTIONS.map((m) => (
-                              <button
-                                key={m.value}
-                                type="button"
-                                className={`month-chip ${selectedMonths.includes(m.value) ? 'active' : ''}`}
-                                onClick={() => toggleServicePlanMonth(i, m.value)}
-                              >
-                                {m.label}
-                              </button>
-                            ))}
-                          </div>
-                          <label className="f">
-                            <div className="lbl">補足（任意）</div>
-                            <input
-                              value={String(sp?.note || '')}
-                              onChange={(e) => updateServicePlan(i, { note: clampStr(e.target.value, 120) })}
-                              placeholder="例: 9・11・1・3・5・7月実施"
-                            />
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="muted">未登録</div>
-                )}
-              </section>
-
-              <section className="card card-sub">
-                <div className="card-title-row">
-                  <div className="card-title">担当履歴</div>
-                  <div className="seg-tabs">
-                    <button type="button" onClick={addStaffHistory}>追加</button>
-                  </div>
-                </div>
-                {Array.isArray(karteDetail?.staff_history) && karteDetail.staff_history.length > 0 ? (
-                  <div className="rows">
-                    {karteDetail.staff_history.map((h, i) => (
-                      <div key={i} className="row row-3">
-                        <input
-                          placeholder="氏名"
-                          value={String(h?.name || '')}
-                          onChange={(e) => updateStaffHistory(i, 'name', e.target.value)}
-                        />
-                        <input
-                          type="date"
-                          value={String(h?.start_date || '')}
-                          onChange={(e) => updateStaffHistory(i, 'start_date', e.target.value)}
-                        />
-                        <input
-                          type="date"
-                          value={String(h?.end_date || '')}
-                          onChange={(e) => updateStaffHistory(i, 'end_date', e.target.value)}
-                        />
-                        <button type="button" onClick={() => removeStaffHistory(i)}>×</button>
-                      </div>
+                    {karteDetail.service_plan.map((sp, i) => (
+                      <ServicePlanRow
+                        key={i}
+                        index={i}
+                        sp={sp}
+                        services={services}
+                        onUpdate={(idx, patch) => updateServicePlan(idx, patch)}
+                        onRemove={(idx) => removeServicePlan(idx)}
+                        onToggleMonth={(idx, month) => toggleServicePlanMonth(idx, month)}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -1295,7 +1915,10 @@ export default function AdminTenpoKartePage() {
               <section className="card card-sub card-wide">
                 <div className="card-title-row">
                   <div className="card-title">HACCP 準拠チェック</div>
-                  <div className="muted small">状態はHACCP内に記録（チェックのみ）</div>
+                  <div className="muted small">
+                    状態はHACCP内に記録（チェックのみ）
+                    {' '} / 最終更新: <code>{fmtDateTimeJst(karteDetail?.haccp?.updated_at || '') || '—'}</code>
+                  </div>
                 </div>
                 <div className="haccp-grid">
                   {HACCP_GROUPS.map((g) => (
@@ -1346,21 +1969,6 @@ export default function AdminTenpoKartePage() {
                     </div>
                   ))}
                 </div>
-                <div className="muted small">
-                  最終更新: <code>{String(karteDetail?.haccp?.updated_at || '') || '—'}</code>
-                </div>
-              </section>
-
-              <section className="card card-sub card-wide">
-                <div className="card-title-row">
-                  <div className="card-title">例外メモ（任意・200字）</div>
-                </div>
-                <input
-                  className="memo"
-                  value={String(karteDetail?.memo || '')}
-                  onChange={(e) => setKarteField('memo', clampStr(e.target.value, 200))}
-                  placeholder="例: 薬剤の匂いNG / 入館ルール 等（短く）"
-                />
               </section>
             </div>
           </section>

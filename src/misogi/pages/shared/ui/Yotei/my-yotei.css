@@ -265,9 +265,15 @@
   line-height: 1.35;
 }
 
+.my-yotei-card-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 @media (min-width: 900px) {
   .my-yotei-cards {
     grid-template-columns: 1fr 1fr;
   }
 }
-

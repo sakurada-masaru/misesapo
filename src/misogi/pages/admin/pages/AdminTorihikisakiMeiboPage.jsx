@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 // Hamburger / admin-top are provided by GlobalNav.
 import './admin-torihikisaki-meibo.css';
+import { matchAllTokens, normalizeForSearch } from '../../shared/utils/search';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -91,11 +92,32 @@ function tenpoPhone(tp) {
   );
 }
 
+function detectQueryKind(qRaw) {
+  const q = normStr(qRaw);
+  if (!q) return 'none';
+  const n = normalizeForSearch(q);
+  if (!n) return 'none';
+
+  // Looks like an ID (TENPO#/YAGOU#/TORI# or numeric code etc)
+  if (n.includes('tenpo') || n.includes('yagou') || n.includes('tori')) return 'id';
+  if (/^(tenpo|yagou|tori)\d+/.test(n)) return 'id';
+
+  // Phone-like: 9+ digits (hyphens/space removed by normalizeForSearch)
+  if (/^\d{9,}$/.test(n)) return 'phone';
+
+  // Address-like: Japanese postal / prefecture/city markers (keep raw to detect kana/kanji)
+  if (q.includes('〒') || /[都道府県市区町村]/.test(q)) return 'address';
+
+  // Default: brand/store free text
+  return 'brand';
+}
+
 export default function AdminTorihikisakiMeiboPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
+  const [searchTorihikisakis, setSearchTorihikisakis] = useState([]);
   const [searchYagous, setSearchYagous] = useState([]);
   const [searchTenpos, setSearchTenpos] = useState([]);
   const [searchCorpusReady, setSearchCorpusReady] = useState(false);
@@ -132,12 +154,58 @@ export default function AdminTorihikisakiMeiboPage() {
     if (searchLoading || searchCorpusReady) return;
     setSearchLoading(true);
     try {
-      const [allYagou, allTenpo] = await Promise.all([
+      const [allTori, allYagou, allTenpo] = await Promise.all([
+        fetchMaster('torihikisaki', { limit: 3000 }),
         fetchMaster('yagou', { limit: 8000 }),
         fetchMaster('tenpo', { limit: 20000 }),
       ]);
-      setSearchYagous(allYagou);
-      setSearchTenpos(allTenpo);
+      // Search corpus is for cross-entity lookup (integrated search).
+      // Keep NFKC/whitespace-insensitive string for robust matching.
+      const toriNameById = new Map();
+      allTori.forEach((it) => {
+        const id = it?.torihikisaki_id || it?.id || '';
+        if (!id) return;
+        toriNameById.set(id, it?.name || '');
+      });
+
+      const yagouNameById = new Map();
+      allYagou.forEach((it) => {
+        const id = it?.yagou_id || it?.id || '';
+        if (!id) return;
+        yagouNameById.set(id, it?.name || '');
+      });
+
+      const toriNorm = allTori.map((it) => {
+        const id = it?.torihikisaki_id || it?.id || '';
+        const name = it?.name || '';
+        const blob = [name, id].filter(Boolean).join(' ');
+        return { ...it, _search_norm: normalizeForSearch(blob) };
+      });
+      const yagouNorm = allYagou.map((it) => {
+        const id = it?.yagou_id || it?.id || '';
+        const name = it?.name || '';
+        const tid = it?.torihikisaki_id || '';
+        const tName = toriNameById.get(tid) || '';
+        const blob = [name, id, tid, tName].filter(Boolean).join(' ');
+        return { ...it, _search_norm: normalizeForSearch(blob) };
+      });
+      const tenpoNorm = allTenpo.map((it) => {
+        const id = it?.tenpo_id || it?.id || '';
+        const name = it?.name || '';
+        const tid = it?.torihikisaki_id || '';
+        const yid = it?.yagou_id || '';
+        const tName = toriNameById.get(tid) || '';
+        const yName = yagouNameById.get(yid) || '';
+        const addr = tenpoAddress(it);
+        const phone = tenpoPhone(it);
+        const mapUrl = it?.google_map_url || it?.map_url || it?.url || '';
+        // Important: include torihikisaki/yagou NAMES so "屋号検索" yields stores list.
+        const blob = [name, id, yName, yid, tName, tid, addr, phone, mapUrl].filter(Boolean).join(' ');
+        return { ...it, _search_norm: normalizeForSearch(blob) };
+      });
+      setSearchTorihikisakis(toriNorm);
+      setSearchYagous(yagouNorm);
+      setSearchTenpos(tenpoNorm);
       setSearchCorpusReady(true);
     } catch (e) {
       setError(e?.message || '検索インデックスの読み込みに失敗しました');
@@ -254,30 +322,169 @@ export default function AdminTorihikisakiMeiboPage() {
     return m;
   }, [searchTenpos, searchYagous]);
 
+  const searchNameById = useMemo(() => {
+    const toriById = new Map();
+    searchTorihikisakis.forEach((it) => {
+      const id = it?.torihikisaki_id || it?.id;
+      if (!id) return;
+      toriById.set(id, it?.name || '');
+    });
+    const yagouById = new Map();
+    searchYagous.forEach((it) => {
+      const id = it?.yagou_id || it?.id;
+      if (!id) return;
+      yagouById.set(id, it?.name || '');
+    });
+    return { toriById, yagouById };
+  }, [searchTorihikisakis, searchYagous]);
+
   const filteredTorihikisakis = useMemo(() => {
-    const needle = normStr(q).toLowerCase();
+    const needle = normStr(q);
     const base = [...torihikisakis].sort((a, b) => normStr(a?.name).localeCompare(normStr(b?.name), 'ja'));
     if (!needle) return base;
     return base.filter((it) => {
       const torihikisakiId = it?.torihikisaki_id || it?.id;
-      const name = normStr(it?.name).toLowerCase();
-      const id = normStr(torihikisakiId).toLowerCase();
-      if (name.includes(needle) || id.includes(needle)) return true;
+      const name = normStr(it?.name);
+      const id = normStr(torihikisakiId);
+      if (matchAllTokens(`${name} ${id}`, needle)) return true;
 
       const hitInYagou = (searchYagouByTorihikisaki.get(torihikisakiId) || []).some((yg) => {
-        const yName = normStr(yg?.name).toLowerCase();
-        const yId = normStr(yg?.yagou_id || yg?.id).toLowerCase();
-        return yName.includes(needle) || yId.includes(needle);
+        const yName = normStr(yg?.name);
+        const yId = normStr(yg?.yagou_id || yg?.id);
+        const blob = yg?._search_norm ? `${yg._search_norm}` : `${yName} ${yId}`;
+        return matchAllTokens(blob, needle);
       });
       if (hitInYagou) return true;
 
       return (searchTenpoByTorihikisaki.get(torihikisakiId) || []).some((tp) => {
-        const tName = normStr(tp?.name).toLowerCase();
-        const tId = normStr(tp?.tenpo_id || tp?.id).toLowerCase();
-        return tName.includes(needle) || tId.includes(needle);
+        const tName = normStr(tp?.name);
+        const tId = normStr(tp?.tenpo_id || tp?.id);
+        const blob = tp?._search_norm ? `${tp._search_norm}` : `${tName} ${tId}`;
+        return matchAllTokens(blob, needle);
       });
     });
   }, [torihikisakis, q, searchYagouByTorihikisaki, searchTenpoByTorihikisaki]);
+
+  const tenpoSearchHits = useMemo(() => {
+    const needle = normStr(q);
+    if (!needle || !searchCorpusReady) return [];
+    const kind = detectQueryKind(needle);
+
+    // Do NOT slice too early (brand search should yield "stores under the brand").
+    // Cap only to protect UI responsiveness.
+    const maxTotal = kind === 'brand' ? 500 : (kind === 'address' ? 300 : 150);
+
+    const hits = (searchTenpos || []).filter((tp) => matchAllTokens(tp?._search_norm || '', needle));
+
+    const nq = normalizeForSearch(needle);
+    const score = (tp) => {
+      const tenpoId = String(tp?.tenpo_id || tp?.id || '');
+      const tenpoName = String(tp?.name || '');
+      const addr = tenpoAddress(tp);
+      const phone = tenpoPhone(tp);
+      const yagouId = String(tp?.yagou_id || '');
+      const toriId = String(tp?.torihikisaki_id || '');
+      const yagouName = searchNameById.yagouById.get(yagouId) || '';
+      const toriName = searchNameById.toriById.get(toriId) || '';
+
+      const tid = normalizeForSearch(tenpoId);
+      const tname = normalizeForSearch(tenpoName);
+      const yname = normalizeForSearch(yagouName);
+      const yid = normalizeForSearch(yagouId);
+      const aname = normalizeForSearch(addr);
+      const pnum = normalizeForSearch(phone);
+      const torin = normalizeForSearch(toriName);
+
+      let s = 0;
+      if (!nq) return 0;
+
+      if (kind === 'id') {
+        if (tid && tid.includes(nq)) s += 200;
+        if (yid && yid.includes(nq)) s += 160;
+      } else if (kind === 'phone') {
+        if (pnum && pnum.includes(nq)) s += 240;
+      } else if (kind === 'address') {
+        if (aname && aname.includes(nq)) s += 220;
+      } else {
+        // brand
+        if (yname && yname.includes(nq)) s += 220;
+        if (torin && torin.includes(nq)) s += 120;
+        if (tname && tname.includes(nq)) s += 90;
+      }
+
+      // Secondary signals
+      if (tname && tname.includes(nq)) s += 30;
+      if (aname && aname.includes(nq)) s += 25;
+      if (pnum && pnum.includes(nq)) s += 15;
+      return s;
+    };
+
+    hits.sort((a, b) => {
+      const sa = score(a);
+      const sb = score(b);
+      if (sb !== sa) return sb - sa;
+      // Stable-ish: then by yagou->tenpo name
+      const ay = String(searchNameById.yagouById.get(a?.yagou_id || '') || a?.yagou_id || '');
+      const by = String(searchNameById.yagouById.get(b?.yagou_id || '') || b?.yagou_id || '');
+      const yn = normStr(ay).localeCompare(normStr(by), 'ja');
+      if (yn !== 0) return yn;
+      return normStr(a?.name).localeCompare(normStr(b?.name), 'ja');
+    });
+
+    return hits.slice(0, maxTotal);
+  }, [q, searchCorpusReady, searchTenpos]);
+
+  const tenpoSearchGroups = useMemo(() => {
+    if (!tenpoSearchHits.length) return [];
+    const needle = normStr(q);
+    const nq = normalizeForSearch(needle);
+    const kind = detectQueryKind(needle);
+
+    const groups = new Map(); // yagou_id -> { yagou_id, yagou_name, torihikisaki_id, torihikisaki_name, items }
+    tenpoSearchHits.forEach((tp) => {
+      const yagouId = tp?.yagou_id || '';
+      const tenpoId = tp?.tenpo_id || tp?.id || '';
+      const torihikisakiId = tp?.torihikisaki_id || '';
+      const yagouName = searchNameById.yagouById.get(yagouId) || '';
+      const toriName = searchNameById.toriById.get(torihikisakiId) || '';
+      const key = yagouId || '(no-yagou)';
+      if (!groups.has(key)) {
+        groups.set(key, {
+          yagou_id: yagouId,
+          yagou_name: yagouName,
+          torihikisaki_id: torihikisakiId,
+          torihikisaki_name: toriName,
+          items: [],
+          _score: 0,
+        });
+      }
+      const g = groups.get(key);
+      g.items.push({ ...tp, _tenpo_id: tenpoId });
+    });
+
+    const out = Array.from(groups.values()).map((g) => {
+      const yNameNorm = normalizeForSearch(g.yagou_name || '');
+      const yIdNorm = normalizeForSearch(g.yagou_id || '');
+      // Score: if query matches yagou name/id strongly, group goes top.
+      let score = 0;
+      if (nq && yNameNorm && yNameNorm.includes(nq)) score += 100;
+      if (nq && yIdNorm && yIdNorm.includes(nq)) score += 80;
+      score += Math.min(30, g.items.length); // prefer larger groups a bit
+      g._score = score;
+
+      // Within group, keep "store name" order for brand search, and keep scoring order for address/phone/id.
+      if (kind === 'brand') {
+        g.items.sort((a, b) => normStr(a?.name).localeCompare(normStr(b?.name), 'ja'));
+      }
+      return g;
+    });
+
+    out.sort((a, b) => {
+      if (b._score !== a._score) return b._score - a._score;
+      return normStr(a.yagou_name || a.yagou_id).localeCompare(normStr(b.yagou_name || b.yagou_id), 'ja');
+    });
+    return out;
+  }, [tenpoSearchHits, q, searchNameById]);
 
   const selectedTorihikisaki = useMemo(() => {
     if (!selectedTorihikisakiId) return null;
@@ -319,6 +526,80 @@ export default function AdminTorihikisakiMeiboPage() {
 
       {error ? <div className="meibo-err">{error}</div> : null}
       {!error && searchLoading ? <div className="meibo-err">検索インデックス読み込み中...</div> : null}
+
+      {normStr(q) ? (
+        <section className="meibo-search-hits">
+          <div className="meibo-search-hits-head">
+            <div className="k">店舗検索結果</div>
+            <div className="v">{searchCorpusReady ? tenpoSearchHits.length : '-'}</div>
+            {!searchCorpusReady ? <div className="hint">（検索インデックス読み込み中）</div> : null}
+          </div>
+          {searchCorpusReady && tenpoSearchHits.length ? (
+            <div className="meibo-search-hits-list">
+              {tenpoSearchGroups.map((g) => {
+                const header = [
+                  g.torihikisaki_name || g.torihikisaki_id || '取引先未設定',
+                  g.yagou_name || g.yagou_id || '屋号未設定',
+                ].join(' / ');
+                return (
+                  <div key={g.yagou_id || '(no-yagou)'} className="hit-group">
+                    <div className="hit-group-head">
+                      <div className="hit-group-title">{header}</div>
+                      <div className="hit-group-count">店舗 {g.items.length}</div>
+                    </div>
+                    {g.items.map((tp) => {
+                      const tenpoId = tp?._tenpo_id || tp?.tenpo_id || tp?.id || '';
+                      const toriId = tp?.torihikisaki_id || '';
+                      const yagouId = tp?.yagou_id || '';
+                      return (
+                        <div key={`${g.yagou_id || ''}-${tenpoId}`} className="hit-row">
+                          <div className="hit-main">
+                            <div className="hit-name">{tp?.name || '(no name)'}</div>
+                            <div className="hit-meta">
+                              <span className="lbl">ID:</span><span className="val"><code>{tenpoId}</code></span>
+                              {tenpoAddress(tp) ? (
+                                <>
+                                  <span className="lbl">住所:</span><span className="val">{tenpoAddress(tp)}</span>
+                                </>
+                              ) : null}
+                              {tenpoPhone(tp) ? (
+                                <>
+                                  <span className="lbl">電話:</span><span className="val">{tenpoPhone(tp)}</span>
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="hit-actions">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (toriId) setSelectedTorihikisakiId(toriId);
+                              }}
+                            >
+                              名簿で表示
+                            </button>
+                            <Link
+                              className="link"
+                              to={`/admin/tenpo/${encodeURIComponent(tenpoId)}?${new URLSearchParams({
+                                torihikisaki_id: toriId,
+                                yagou_id: yagouId,
+                              }).toString()}`}
+                            >
+                              カルテ
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          ) : searchCorpusReady ? (
+            <div className="meibo-search-hits-empty">該当店舗が見つかりません。</div>
+          ) : null}
+        </section>
+      ) : null}
 
       <div className="meibo-body">
         <aside className="meibo-list">

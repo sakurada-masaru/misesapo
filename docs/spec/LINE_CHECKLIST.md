@@ -119,6 +119,12 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 - [x] `signInWithCognito` のユーザー解決元を `/workers` から `jinzai-data API` に切替
 
+## Tenpo Karte Support History Layout (2026-02-15)
+
+- [x] 店舗カルテ（詳細）に「対応履歴（短文・200字）」を右カラムに大きく配置（右カラムは幅広・大画面ではsticky）
+- [x] 「対応履歴」は短文・構造化入力（date/category/requested_by/handled_by/topic/action/outcome）に限定し、長文は例外メモへ逃がす
+- [x] 担当履歴は人材マスタ（候補）から選択でき、必要なら自由入力も可能
+
 ## Admin Entrance Cleanup (2026-02-11)
 
 - [x] 「玄関稼働日」ボタン/ページ（`/admin/portal-operating-days`）を撤去（謎の副産物のため）
@@ -204,6 +210,12 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `/jobs/:job/yotei`（閲覧専用）を追加し、自分の `worker_id` の予定をリスト表示できる
 - [x] 玄関ホットバーの「予定」導線を `/jobs/*/yotei` に統一（cleaning/sales/office/dev）
 - [x] 現場側の入力要求（自由記述/評価/提案）を増やさない（閲覧のみ）
+
+## Master Search Spec & Meibo UX (2026-02-15)
+
+- [x] `docs/spec/MASTER_SEARCH_SPEC.md` を追加（torihikisaki/yagou/tenpo 検索の正規・確定ID方針）
+- [x] 取引先名簿の統合検索を NFKC/記号/空白に強い検索へ改善
+- [x] 屋号検索時に `取引先/屋号` グルーピングで店舗が一覧できるUIを追加
 
 ## Yakusoku -> Yotei Operation MVP (2026-02-15)
 

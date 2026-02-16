@@ -287,6 +287,25 @@
 .service-plan-title {
   font-size: 13px;
   color: rgba(233, 238, 248, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.service-plan-title .s {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.62);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 46vw;
+}
+
+.service-plan-actions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .service-plan-head button {
@@ -304,14 +323,101 @@
   gap: 8px;
 }
 
+.month-chip-grid-compact {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
 .month-chip {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.04);
   color: rgba(233, 238, 248, 0.85);
   border-radius: 10px;
-  padding: 8px 6px;
+  padding: 7px 6px;
   cursor: pointer;
   font-size: 12px;
+}
+
+.service-months {
+  display: grid;
+  gap: 10px;
+}
+
+.service-month-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.service-month-presets button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(233, 238, 248, 0.9);
+}
+
+.service-search {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.service-search-pop {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 12, 18, 0.98);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+  z-index: 30;
+}
+
+.service-search-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: transparent;
+  color: rgba(233,238,248,0.95);
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+}
+
+.service-search-item:hover {
+  background: rgba(162, 211, 255, 0.10);
+}
+
+.service-search-item .nm {
+  font-weight: 800;
+}
+
+.service-search-item .id {
+  font-size: 12px;
+  color: rgba(233,238,248,0.65);
+}
+
+.service-search-selected {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 12px;
+  color: rgba(233,238,248,0.78);
+}
+
+.service-search-selected .label {
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.04);
+  padding: 3px 8px;
+  border-radius: 999px;
 }
 
 .month-chip.active {
@@ -322,6 +428,44 @@
 
 .muted.small {
   font-size: 12px;
+}
+
+.tag-picker {
+  display: grid;
+  gap: 8px;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: rgba(233, 238, 248, 0.95);
+  font-size: 12px;
+}
+
+.tag-chip .x {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: rgba(233, 238, 248, 0.75);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.tag-controls select {
+  width: 100%;
 }
 
 .tenpo-karte-err {
@@ -351,8 +495,27 @@
 
 .karte-detail-layout {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Right column is the "対応履歴" area: make it wider and stable. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.7fr);
   gap: 14px;
+  align-items: start;
+}
+
+.karte-detail-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.karte-detail-col-right {
+  align-self: start;
+  position: sticky;
+  top: 12px;
+}
+
+.support-history-card .service-plan-row {
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .card-sub {
@@ -361,6 +524,11 @@
 
 .card-wide {
   grid-column: 1 / -1;
+}
+
+/* In the 3-col detail layout, span the left 2 columns (roughly half width). */
+.card-span-2 {
+  grid-column: 1 / span 2;
 }
 
 .form-grid {
@@ -452,6 +620,10 @@
   .karte-detail-layout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .karte-detail-col-right {
+    position: static;
+    top: auto;
+  }
 }
 
 @media (max-width: 640px) {
@@ -470,6 +642,9 @@
   }
   .month-chip-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .service-plan-title .s {
+    max-width: 74vw;
   }
 }
 .card {
