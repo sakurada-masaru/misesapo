@@ -256,6 +256,9 @@ export default function AdminYoteiTimelinePage() {
     const [timelineBand, setTimelineBand] = useState('both'); // both | night | day
     const [modalData, setModalData] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [handoffLoading, setHandoffLoading] = useState(false);
+    const [handoffError, setHandoffError] = useState('');
+    const [handoffLatest, setHandoffLatest] = useState(null);
     const [viewportHeight, setViewportHeight] = useState(
         typeof window === 'undefined' ? 900 : window.innerHeight
     );
@@ -967,7 +970,14 @@ export default function AdminYoteiTimelinePage() {
             tenpo_name: '',
             work_type: '定期清掃（1ヶ月）',
             memo: '',
-            jotai: 'yuko'
+            jotai: 'yuko',
+            handoff_checks: {
+                key_rule: false,
+                entry_rule: false,
+                caution_points: false,
+                photo_rule: false,
+                unresolved_checked: false,
+            },
         });
     };
 
@@ -978,9 +988,51 @@ export default function AdminYoteiTimelinePage() {
             service_id: s.service_id || '',
             service_name: s.service_name || '',
             start_time: s.start_at ? dayjs(s.start_at).format('HH:mm') : '20:00',
-            end_time: s.end_at ? dayjs(s.end_at).format('HH:mm') : '22:00'
+            end_time: s.end_at ? dayjs(s.end_at).format('HH:mm') : '22:00',
+            handoff_checks: {
+                key_rule: Boolean(s?.handoff_checks?.key_rule),
+                entry_rule: Boolean(s?.handoff_checks?.entry_rule),
+                caution_points: Boolean(s?.handoff_checks?.caution_points),
+                photo_rule: Boolean(s?.handoff_checks?.photo_rule),
+                unresolved_checked: Boolean(s?.handoff_checks?.unresolved_checked),
+            },
         });
     };
+
+    useEffect(() => {
+        let aborted = false;
+        const tenpoId = String(modalData?.tenpo_id || '').trim();
+        if (!modalData || !tenpoId) {
+            setHandoffLatest(null);
+            setHandoffError('');
+            setHandoffLoading(false);
+            return undefined;
+        }
+        const fetchLatestSupport = async () => {
+            setHandoffLoading(true);
+            setHandoffError('');
+            try {
+                const base = MASTER_API_BASE.replace(/\/$/, '');
+                const res = await fetch(`${base}/master/tenpo/${encodeURIComponent(tenpoId)}`, { headers: authHeaders(), cache: 'no-store' });
+                if (!res.ok) throw new Error(`引き継ぎ履歴の取得に失敗: ${res.status}`);
+                const tenpo = await res.json();
+                const rows = Array.isArray(tenpo?.karte_detail?.support_history) ? tenpo.karte_detail.support_history : [];
+                const latest = rows
+                    .slice()
+                    .sort((a, b) => String(b?.date || '').localeCompare(String(a?.date || '')))[0] || null;
+                if (!aborted) setHandoffLatest(latest);
+            } catch (e) {
+                if (!aborted) {
+                    setHandoffLatest(null);
+                    setHandoffError(e?.message || '引き継ぎ履歴の取得に失敗しました');
+                }
+            } finally {
+                if (!aborted) setHandoffLoading(false);
+            }
+        };
+        fetchLatestSupport();
+        return () => { aborted = true; };
+    }, [modalData?.tenpo_id]);
 
     const saveModal = async () => {
         if (!modalData?.yakusoku_id) { window.alert('紐付ける契約(yakusoku)を選択してください'); return; }
@@ -1882,6 +1934,82 @@ export default function AdminYoteiTimelinePage() {
                                     <option value="yuko">有効</option>
                                     <option value="torikeshi">取消</option>
                                 </select>
+                            </div>
+                            <div className="yotei-form-group handoff-group">
+                                <label>引き継ぎ（前回→今回）</label>
+                                <div className="handoff-box">
+                                    {handoffLoading ? <div className="handoff-muted">前回対応を読み込み中...</div> : null}
+                                    {!handoffLoading && handoffError ? <div className="handoff-error">{handoffError}</div> : null}
+                                    {!handoffLoading && !handoffError && handoffLatest ? (
+                                        <div className="handoff-latest">
+                                            <div className="handoff-title">前回対応サマリ</div>
+                                            <div><strong>いつ:</strong> {handoffLatest?.date || '-'}</div>
+                                            <div><strong>誰が:</strong> {handoffLatest?.handled_by || '-'}</div>
+                                            <div><strong>何の件か:</strong> {handoffLatest?.topic || '-'}</div>
+                                            <div><strong>結果:</strong> {handoffLatest?.outcome || '-'}</div>
+                                        </div>
+                                    ) : null}
+                                    {!handoffLoading && !handoffError && !handoffLatest ? (
+                                        <div className="handoff-muted">前回の対応履歴は未登録です。</div>
+                                    ) : null}
+                                    <div className="handoff-checks">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={Boolean(modalData?.handoff_checks?.key_rule)}
+                                                onChange={(e) => setModalData((prev) => ({
+                                                    ...prev,
+                                                    handoff_checks: { ...(prev?.handoff_checks || {}), key_rule: e.target.checked },
+                                                }))}
+                                            />
+                                            鍵ルール確認
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={Boolean(modalData?.handoff_checks?.entry_rule)}
+                                                onChange={(e) => setModalData((prev) => ({
+                                                    ...prev,
+                                                    handoff_checks: { ...(prev?.handoff_checks || {}), entry_rule: e.target.checked },
+                                                }))}
+                                            />
+                                            入館手順確認
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={Boolean(modalData?.handoff_checks?.caution_points)}
+                                                onChange={(e) => setModalData((prev) => ({
+                                                    ...prev,
+                                                    handoff_checks: { ...(prev?.handoff_checks || {}), caution_points: e.target.checked },
+                                                }))}
+                                            />
+                                            注意点確認
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={Boolean(modalData?.handoff_checks?.photo_rule)}
+                                                onChange={(e) => setModalData((prev) => ({
+                                                    ...prev,
+                                                    handoff_checks: { ...(prev?.handoff_checks || {}), photo_rule: e.target.checked },
+                                                }))}
+                                            />
+                                            写真提出ルール確認
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={Boolean(modalData?.handoff_checks?.unresolved_checked)}
+                                                onChange={(e) => setModalData((prev) => ({
+                                                    ...prev,
+                                                    handoff_checks: { ...(prev?.handoff_checks || {}), unresolved_checked: e.target.checked },
+                                                }))}
+                                            />
+                                            未解決課題確認
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className="yotei-modal-footer">

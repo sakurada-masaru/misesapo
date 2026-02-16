@@ -1,8 +1,8 @@
 .my-yotei-head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
 }
 
 .my-yotei-title .report-page-title {
@@ -19,25 +19,45 @@
   font-weight: 600;
 }
 
-.my-yotei-sub-strong {
-  color: var(--text);
+.my-yotei-sub-demo {
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.14);
+  color: #bfdbfe;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.my-yotei-sub-hidden-id {
+  display: none;
 }
 
 .my-yotei-toolbar {
-  margin-top: 14px;
+  margin-top: 12px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .my-yotei-toolbar-left,
 .my-yotei-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
+  width: 100%;
+  justify-content: center;
+}
+
+.my-yotei-toolbar-right {
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.my-yotei-refresh {
+  margin-left: auto;
 }
 
 .my-yotei-date {
@@ -45,25 +65,44 @@
   border: 1px solid var(--card-border);
   border-radius: 10px;
   padding: 10px 12px;
+  min-height: 40px;
   color: var(--text);
+}
+
+.my-yotei-toolbar .btn {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+}
+
+.my-yotei-toolbar-scope {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .my-yotei-seg {
   display: inline-flex;
   border: 1px solid var(--card-border);
   border-radius: 999px;
-  overflow: hidden;
+  overflow-x: auto;
   background: rgba(255, 255, 255, 0.03);
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .my-yotei-seg button {
   border: 0;
   background: transparent;
   color: var(--text);
-  padding: 8px 12px;
+  padding: 8px 11px;
   cursor: pointer;
   font-weight: 800;
   opacity: 0.85;
+  white-space: nowrap;
 }
 
 .my-yotei-seg button.active {
@@ -72,10 +111,10 @@
 }
 
 .my-yotei-summary {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .my-yotei-summary-item {
@@ -158,7 +197,7 @@
 .my-yotei-cards {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 12px;
   padding: 12px;
 }
 
@@ -214,6 +253,12 @@
   background: rgba(245, 158, 11, 0.14);
 }
 
+.pill-mikanryo {
+  border-color: rgba(234, 179, 8, 0.65);
+  background: rgba(234, 179, 8, 0.18);
+  color: #fef08a;
+}
+
 .pill-done {
   border-color: rgba(16, 185, 129, 0.55);
   background: rgba(16, 185, 129, 0.12);
@@ -222,6 +267,12 @@
 .pill-cancel {
   border-color: rgba(239, 68, 68, 0.55);
   background: rgba(239, 68, 68, 0.12);
+}
+
+.pill-unknown {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(100, 116, 139, 0.16);
+  color: #cbd5e1;
 }
 
 .my-yotei-main {
@@ -265,15 +316,305 @@
   line-height: 1.35;
 }
 
+.my-yotei-services {
+  margin-top: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.my-yotei-services-head {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #bfdbfe;
+  margin-bottom: 6px;
+}
+
+.my-yotei-services-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.my-yotei-services-tags .svc-tag {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  border-radius: 999px;
+  background: rgba(2, 132, 199, 0.18);
+  color: #e0f2fe;
+  padding: 2px 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.my-yotei-handoff {
+  margin-top: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.my-yotei-handoff-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+
+.my-yotei-handoff-score {
+  border: 1px solid rgba(147, 197, 253, 0.45);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  color: #dbeafe;
+  font-weight: 900;
+}
+
+.my-yotei-handoff-prev {
+  margin-top: 6px;
+  display: grid;
+  gap: 2px;
+  color: #dbeafe;
+  font-size: 0.82rem;
+}
+
 .my-yotei-card-actions {
   margin-top: 10px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.my-yotei-card-actions .btn {
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.my-yotei-chat {
+  margin-top: 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 8px 10px;
+}
+
+.my-yotei-detail {
+  margin-top: 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.08);
+  padding: 8px 10px;
+}
+
+.my-yotei-detail > summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: #e2e8f0;
+}
+
+.my-yotei-detail-grid {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.my-yotei-detail-grid > div {
+  display: grid;
+  grid-template-columns: 92px 1fr;
   gap: 8px;
 }
 
+.my-yotei-detail-grid .k {
+  color: #93a7c6;
+  font-size: 0.78rem;
+}
+
+.my-yotei-detail-grid .v {
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  word-break: break-word;
+}
+
+.my-yotei-chat > summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: #dbeafe;
+}
+
+.my-yotei-chat-note {
+  margin-top: 8px;
+  color: #93a7c6;
+  font-size: 0.78rem;
+}
+
+.my-yotei-chat-list {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.my-yotei-chat-empty {
+  color: #93a7c6;
+  font-size: 0.82rem;
+}
+
+.my-yotei-chat-row {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.06);
+  padding: 6px 8px;
+}
+
+.my-yotei-chat-row .meta {
+  color: #93a7c6;
+  font-size: 0.74rem;
+}
+
+.my-yotei-chat-row .scope {
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 1px 8px;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.my-yotei-chat-row .scope.tenpo {
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #bfdbfe;
+}
+
+.my-yotei-chat-row .scope.yotei {
+  border-color: rgba(20, 184, 166, 0.5);
+  color: #99f6e4;
+}
+
+.my-yotei-chat-row .tag {
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  background: rgba(250, 204, 21, 0.08);
+  color: #fde68a;
+  padding: 1px 8px;
+  font-size: 0.72rem;
+}
+
+.my-yotei-chat-row .txt {
+  color: #e2e8f0;
+  font-size: 0.84rem;
+}
+
+.my-yotei-chat-compose {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr;
+}
+
+.my-yotei-chat-compose select,
+.my-yotei-chat-compose input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--text);
+}
+
 @media (min-width: 900px) {
-  .my-yotei-cards {
-    grid-template-columns: 1fr 1fr;
+  .my-yotei-head {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .my-yotei-toolbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .my-yotei-toolbar-left,
+  .my-yotei-toolbar-right {
+    width: 100%;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .my-yotei-toolbar-scope {
+    width: 100%;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .my-yotei-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .my-yotei-chat-compose {
+    grid-template-columns: 120px 100px 1fr 80px;
+  }
+}
+
+@media (max-width: 720px) {
+  .my-yotei-sub {
+    font-size: 0.86rem;
+  }
+
+  .my-yotei-time .t {
+    font-size: 1.05rem;
+  }
+
+  .my-yotei-toolbar-left {
+    flex-wrap: nowrap;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .my-yotei-toolbar-right {
+    flex-wrap: nowrap;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .my-yotei-toolbar-left .btn {
+    flex: 0 0 auto;
+    min-width: 56px;
+    padding: 0 10px;
+  }
+
+  .my-yotei-toolbar .my-yotei-date {
+    flex: 1 1 auto;
+    min-width: 128px;
+  }
+
+  .my-yotei-card-actions .btn {
+    flex: 1 1 100%;
+  }
+
+  .my-yotei-toolbar-scope {
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
+  .my-yotei-refresh {
+    margin-left: auto;
+  }
+
+  .my-yotei-toolbar-scope .btn {
+    flex: 0 0 auto;
+    min-width: 76px;
+    padding: 0 12px;
+  }
+
+  .my-yotei-chat-compose {
+    grid-template-columns: 1fr;
   }
 }
