@@ -86,6 +86,30 @@ function authHeaders() {
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function normalizeShokushuList(raw) {
+    if (Array.isArray(raw)) {
+        return raw.map((v) => String(v || '').trim().toLowerCase()).filter(Boolean);
+    }
+    const s = String(raw || '').trim();
+    if (!s) return [];
+    const cleaned = s
+        .replace(/^\[/, '')
+        .replace(/\]$/, '')
+        .replace(/"/g, '')
+        .replace(/'/g, '');
+    return cleaned
+        .split(/[,\s、/]+/)
+        .map((v) => v.trim().toLowerCase())
+        .filter(Boolean);
+}
+
+function isItakuSeisouJinzai(item) {
+    const koyou = String(item?.koyou_kubun || '').trim().toLowerCase();
+    if (koyou !== 'gyomu_itaku') return false;
+    const shokushuList = normalizeShokushuList(item?.shokushu);
+    return shokushuList.includes('seisou') || shokushuList.includes('cleaning');
+}
+
 function todayDateString() {
     return dayjs().format('YYYY-MM-DD');
 }
@@ -109,6 +133,22 @@ function monthRange(baseDate) {
 
 function itemDate(item) {
     return dayjs(item?.start_at || item?.scheduled_date).format('YYYY-MM-DD');
+}
+
+function parseTimeRangeText(raw) {
+    const txt = String(raw || '');
+    const m = txt.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+    if (!m) return { start: '', end: '' };
+    return { start: m[1], end: m[2] };
+}
+
+function minutesToTimeText(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return '';
+    const m = ((Math.floor(n) % 1440) + 1440) % 1440;
+    const hh = String(Math.floor(m / 60)).padStart(2, '0');
+    const mm = String(m % 60).padStart(2, '0');
+    return `${hh}:${mm}`;
 }
 
 function itemYoteiId(item) {
@@ -278,6 +318,40 @@ export default function AdminYoteiTimelinePage() {
         setTenpoNameMap({});
     }, []);
 
+    const resolveScheduleRange = useCallback((s) => {
+        const baseDate = String(s?.scheduled_date || s?.date || date || todayDateString());
+        const slot = parseTimeRangeText(s?.time_slot || s?.scheduled_time);
+        const startFromMin = minutesToTimeText(s?.start_min);
+        const endFromMin = minutesToTimeText(s?.end_min);
+        const startTime = String(s?.start_time || slot.start || startFromMin || '').trim();
+        const endTime = String(s?.end_time || slot.end || endFromMin || '').trim();
+
+        let start = s?.start_at ? dayjs(s.start_at) : (startTime ? dayjs(`${baseDate}T${startTime}:00`) : dayjs.invalid());
+        let end = s?.end_at ? dayjs(s.end_at) : (endTime ? dayjs(`${baseDate}T${endTime}:00`) : dayjs.invalid());
+
+        if (!start.isValid() && Number.isFinite(Number(s?.start_min))) {
+            start = dayjs(baseDate).startOf('day').add(Number(s.start_min), 'minute');
+        }
+        if (!end.isValid() && Number.isFinite(Number(s?.end_min))) {
+            end = dayjs(baseDate).startOf('day').add(Number(s.end_min), 'minute');
+        }
+
+        if (start.isValid() && end.isValid() && !end.isAfter(start)) {
+            end = end.add(1, 'day');
+        }
+        return { start, end };
+    }, [date]);
+
+    const formatScheduleTime = useCallback((s) => {
+        const { start, end } = resolveScheduleRange(s);
+        if (start.isValid() && end.isValid()) return `${start.format('HH:mm')} - ${end.format('HH:mm')}`;
+        const slot = parseTimeRangeText(s?.time_slot || s?.scheduled_time);
+        const st = String(s?.start_time || slot.start || '').trim();
+        const ed = String(s?.end_time || slot.end || '').trim();
+        if (st && ed) return `${st} - ${ed}`;
+        return '--:-- - --:--';
+    }, [resolveScheduleRange]);
+
     useEffect(() => {
         if (typeof window === 'undefined') return undefined;
         const onResize = () => setViewportHeight(window.innerHeight || 900);
@@ -341,11 +415,10 @@ export default function AdminYoteiTimelinePage() {
             const data = await res.json();
             const items = Array.isArray(data) ? data : (data?.items || []);
 
-            // Timeline の縦軸: internal の有効人材は全員表示（清掃専任とは限らないため）。
-            // - `han_type` が未設定の古いデータは internal 扱いに寄せる（移行期の互換）。
+            // Timeline の縦軸: 業務委託の清掃員のみ表示。
             const baseWorkers = items
                 .filter((it) => it?.jotai !== 'torikeshi')
-                .filter((it) => (it?.han_type || 'internal') === 'internal')
+                .filter((it) => isItakuSeisouJinzai(it))
                 .map((it) => ({
                     id: it.jinzai_id || it.sagyouin_id || it.worker_id || it.id,
                     name: it.name || it.email || it.jinzai_id || it.id,
@@ -521,9 +594,8 @@ export default function AdminYoteiTimelinePage() {
             return;
         }
         if (currentView === 'today') {
-            const d = todayDateString();
-            fetchSchedulesRange(d, d);
-            fetchUgokiRange(d, d);
+            fetchSchedulesRange(date, date);
+            fetchUgokiRange(date, date);
             return;
         }
         fetchSchedulesRange(date, date);
@@ -538,8 +610,9 @@ export default function AdminYoteiTimelinePage() {
 
     const schedulesByWorker = useMemo(() => {
         const map = new Map();
-        schedules.forEach(s => {
-            const wId = s.sagyouin_id || s.worker_id || 'unassigned';
+        schedules.forEach((s) => {
+            const raw = s?.sagyouin_id || s?.worker_id || s?.assigned_to || (Array.isArray(s?.worker_ids) ? s.worker_ids[0] : '');
+            const wId = String(raw || '').replace(/^SAG#/, 'SAGYOUIN#') || 'unassigned';
             if (!map.has(wId)) map.set(wId, []);
             map.get(wId).push(s);
         });
@@ -591,20 +664,26 @@ export default function AdminYoteiTimelinePage() {
     }, [ugokiByYoteiId, statusFor]);
 
     const todaySegments = useMemo(() => {
-        const today = todayDateString();
+        const baseDate = date;
         const src = schedules
+            .filter((s) => itemDate(s) === baseDate)
             .slice()
-            .sort((a, b) => dayjs(a.start_at).valueOf() - dayjs(b.start_at).valueOf());
+            .sort((a, b) => {
+                const ar = resolveScheduleRange(a).start;
+                const br = resolveScheduleRange(b).start;
+                return (ar.isValid() ? ar.valueOf() : 0) - (br.isValid() ? br.valueOf() : 0);
+            });
         const totalMinutes = durationHours * 60;
 
         const buildSegment = ({ baseHour, wrapEarlyMorning }) => {
-            const base = dayjs(today).hour(baseHour).minute(0).second(0);
+            const base = dayjs(baseDate).hour(baseHour).minute(0).second(0);
             const lanes = [];
             const placed = [];
 
             src.forEach((s) => {
-                let st = dayjs(s.start_at);
-                let ed = dayjs(s.end_at);
+                let st = resolveScheduleRange(s).start;
+                let ed = resolveScheduleRange(s).end;
+                if (!st.isValid() || !ed.isValid()) return;
                 if (wrapEarlyMorning) {
                     if (st.isBefore(base) && st.hour() < 4) st = st.add(1, 'day');
                     if (ed.isBefore(base) && ed.hour() < 4) ed = ed.add(1, 'day');
@@ -642,7 +721,7 @@ export default function AdminYoteiTimelinePage() {
             night: buildSegment({ baseHour: 16, wrapEarlyMorning: true }),
             day: buildSegment({ baseHour: 4, wrapEarlyMorning: false }),
         };
-    }, [schedules, durationHours]);
+    }, [schedules, durationHours, date, resolveScheduleRange]);
 
     const todaySharedRailHeightPx = useMemo(() => {
         const maxLaneCount = Math.max(todaySegments.night.laneCount, todaySegments.day.laneCount);
@@ -709,6 +788,24 @@ export default function AdminYoteiTimelinePage() {
         if (Array.isArray(arr) && arr.length > 0) return normalizeWorkerId(arr[0]);
         return '';
     }, [normalizeWorkerId]);
+
+    const timelineWorkers = useMemo(() => {
+        const list = [...filteredWorkers];
+        const seen = new Set(list.map((w) => normalizeWorkerId(w?.id)));
+        const q = String(searchQuery || '').trim().toLowerCase();
+        schedules.forEach((s) => {
+            const id = workerKeyFor(s);
+            if (!id || seen.has(id)) return;
+            const name = s?.sagyouin_name || s?.worker_name || workerNameMap[id] || id;
+            if (q) {
+                const hay = `${name} ${id}`.toLowerCase();
+                if (!hay.includes(q)) return;
+            }
+            list.push({ id, name });
+            seen.add(id);
+        });
+        return list;
+    }, [filteredWorkers, schedules, workerKeyFor, workerNameMap, searchQuery, normalizeWorkerId]);
 
     const weeklyCell = useCallback((workerId, day) => {
         const wid = normalizeWorkerId(workerId);
@@ -880,8 +977,8 @@ export default function AdminYoteiTimelinePage() {
     }, [schedules, workers, yakusokus, progressFor, workerKeyFor, normalizeWorkerId]);
 
     const todayUsedCount = useMemo(
-        () => schedules.filter((s) => s.jotai !== 'torikeshi').length,
-        [schedules]
+        () => schedules.filter((s) => itemDate(s) === date && s.jotai !== 'torikeshi').length,
+        [schedules, date]
     );
     const todayCapacity = useMemo(
         () => calcCapacitySummary(todayUsedCount, workers.length, 1),
@@ -982,13 +1079,14 @@ export default function AdminYoteiTimelinePage() {
     };
 
     const openEditModal = (s) => {
+        const { start, end } = resolveScheduleRange(s);
         setModalData({
             ...s,
             isNew: false,
             service_id: s.service_id || '',
             service_name: s.service_name || '',
-            start_time: s.start_at ? dayjs(s.start_at).format('HH:mm') : '20:00',
-            end_time: s.end_at ? dayjs(s.end_at).format('HH:mm') : '22:00',
+            start_time: start.isValid() ? start.format('HH:mm') : (s.start_time || '20:00'),
+            end_time: end.isValid() ? end.format('HH:mm') : (s.end_time || '22:00'),
             handoff_checks: {
                 key_rule: Boolean(s?.handoff_checks?.key_rule),
                 entry_rule: Boolean(s?.handoff_checks?.entry_rule),
@@ -1080,14 +1178,15 @@ export default function AdminYoteiTimelinePage() {
         } catch (e) { window.alert(e.message); }
     };
 
-    const getPositionForSegment = (startAt, endAt, segment) => {
+    const getPositionForSegment = (schedule, segment) => {
         const totalMinutes = durationHours * 60;
         const baseHour = segment === 'day' ? 4 : 16;
         const wrapEarlyMorning = segment === 'night';
         const base = dayjs(date).hour(baseHour).minute(0).second(0);
 
-        let s = dayjs(startAt);
-        let e = dayjs(endAt);
+        let s = resolveScheduleRange(schedule).start;
+        let e = resolveScheduleRange(schedule).end;
+        if (!s.isValid() || !e.isValid()) return { display: 'none' };
         if (wrapEarlyMorning) {
             if (s.isBefore(base) && s.hour() < 4) s = s.add(1, 'day');
             if (e.isBefore(base) && e.hour() < 4) e = e.add(1, 'day');
@@ -1175,9 +1274,8 @@ export default function AdminYoteiTimelinePage() {
                                     return;
                                 }
                                 if (currentView === 'today') {
-                                    const d = todayDateString();
-                                    fetchSchedulesRange(d, d);
-                                    fetchUgokiRange(d, d);
+                                    fetchSchedulesRange(date, date);
+                                    fetchUgokiRange(date, date);
                                     return;
                                 }
                                 fetchSchedulesRange(date, date);
@@ -1247,6 +1345,51 @@ export default function AdminYoteiTimelinePage() {
                                 <div className="sum-card"><div>停滞警告</div><strong>{schedules.filter((s) => warningLevelFor(s) > 0).length}</strong></div>
                             </div>
                         </div>
+                        <div className="timeline-date-strip" aria-label="今日表示 日付選択">
+                            <div className="timeline-date-inline">
+                                <div className="timeline-month-switch" aria-label="今日表示 月切替">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDate(dayjs(date).subtract(1, 'month').startOf('month').format('YYYY-MM-DD'))}
+                                        title="前月"
+                                    >
+                                        ← 前月
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDate(dayjs().startOf('month').format('YYYY-MM-DD'))}
+                                        title="今月"
+                                    >
+                                        今月
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDate(dayjs(date).add(1, 'month').startOf('month').format('YYYY-MM-DD'))}
+                                        title="翌月"
+                                    >
+                                        翌月 →
+                                    </button>
+                                </div>
+                                <div className="timeline-date-strip-head">{dayjs(date).format('YYYY年M月')} 日付選択</div>
+                                <div className="timeline-date-scroll">
+                                    {monthlyDays.map((d) => {
+                                        const isActive = d === date;
+                                        const isToday = d === todayDateString();
+                                        return (
+                                            <button
+                                                key={`today-chip-${d}`}
+                                                type="button"
+                                                className={`timeline-date-chip ${isActive ? 'active' : ''} ${isToday ? 'is-today' : ''}`}
+                                                onClick={() => setDate(d)}
+                                                title={dayjs(d).format('YYYY/MM/DD (dd)')}
+                                            >
+                                                {dayjs(d).format('D')}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
                         <div className="today-scroll-wrap">
                             <div className="today-timeline-inner">
                                 <div className="today-seg">
@@ -1271,7 +1414,7 @@ export default function AdminYoteiTimelinePage() {
                                                     }}
                                                     onClick={() => openEditModal(s)}
                                                 >
-                                                    <div className="today-rail-time">{dayjs(s.start_at).format('HH:mm')} - {dayjs(s.end_at).format('HH:mm')}</div>
+                                                    <div className="today-rail-time">{formatScheduleTime(s)}</div>
                                                     <div className="today-rail-tenpo">{displayTenpoName(s)}</div>
                                                     <div className="today-rail-meta">
                                                         <span>{displayWorkerName(s)}</span>
@@ -1304,7 +1447,7 @@ export default function AdminYoteiTimelinePage() {
                                                     }}
                                                     onClick={() => openEditModal(s)}
                                                 >
-                                                    <div className="today-rail-time">{dayjs(s.start_at).format('HH:mm')} - {dayjs(s.end_at).format('HH:mm')}</div>
+                                                    <div className="today-rail-time">{formatScheduleTime(s)}</div>
                                                     <div className="today-rail-tenpo">{displayTenpoName(s)}</div>
                                                     <div className="today-rail-meta">
                                                         <span>{displayWorkerName(s)}</span>
@@ -1563,12 +1706,12 @@ export default function AdminYoteiTimelinePage() {
                                 return (
                                     <button key={d} className={`month-day ${isToday ? 'is-today' : ''}`} onClick={() => openDayTimeline(d)}>
                                         {isToday ? <span className="month-today-badge">TODAY</span> : null}
-                                        <div>{dayjs(d).format('D')}</div>
-                                        <strong>{cnt}件</strong>
+                                        <div className="month-day-date">{dayjs(d).format('M/D(dd)')}</div>
+                                        <strong className={`month-day-count ${cnt === 0 ? 'is-zero' : ''}`}>{cnt}件</strong>
                                         <div className="aki-indicator month-aki-indicator">
                                             <span className={`aki-mark card-aki-mark is-${aki.key}`} aria-label={aki.label}>{aki.mark}</span>
                                         </div>
-                                        {cnt === 0 ? <span>⚠</span> : null}
+                                        {cnt === 0 ? <span className="month-day-empty">⚠ 予定なし</span> : null}
                                     </button>
                                 );
                             })}
@@ -1711,7 +1854,7 @@ export default function AdminYoteiTimelinePage() {
                                 </div>
                                 )}
                             </div>
-                            {filteredWorkers.map(w => (
+                            {timelineWorkers.map(w => (
                                 <div key={w.id} className="yotei-row">
                                     <div className="yotei-worker-cell">
                                         <div className="yotei-worker-name">{w.name}</div>
@@ -1721,13 +1864,13 @@ export default function AdminYoteiTimelinePage() {
                                         {showNightBand && (
                                         <div className="yotei-timeline-cell is-night" onClick={(e) => { if (e.target === e.currentTarget) openNewModal(w.id); }}>
                                             {(schedulesByWorker.get(w.id) || []).map(s => {
-                                                const style = getPositionForSegment(s.start_at, s.end_at, 'night');
+                                                const style = getPositionForSegment(s, 'night');
                                                 if (style.display === 'none') return null;
                                                 const status = statusFor(s);
                                                 return (
                                                     <div key={`${s.id}-n`} className={`yotei-card status-${status}`} style={style} onClick={() => openEditModal(s)}>
                                                         <div className="yotei-card-tenpo">{displayTenpoName(s)}</div>
-                                                        <div className="yotei-card-time">{dayjs(s.start_at).format('HH:mm')} - {dayjs(s.end_at).format('HH:mm')}</div>
+                                                        <div className="yotei-card-time">{formatScheduleTime(s)}</div>
                                                         <div style={{ fontSize: '9px', opacity: 0.85 }}>{statusLabelFor(s)}</div>
                                                     </div>
                                                 );
@@ -1737,13 +1880,13 @@ export default function AdminYoteiTimelinePage() {
                                         {showDayBand && (
                                         <div className="yotei-timeline-cell is-day" onClick={(e) => { if (e.target === e.currentTarget) openNewModal(w.id); }}>
                                             {(schedulesByWorker.get(w.id) || []).map(s => {
-                                                const style = getPositionForSegment(s.start_at, s.end_at, 'day');
+                                                const style = getPositionForSegment(s, 'day');
                                                 if (style.display === 'none') return null;
                                                 const status = statusFor(s);
                                                 return (
                                                     <div key={`${s.id}-d`} className={`yotei-card status-${status}`} style={style} onClick={() => openEditModal(s)}>
                                                         <div className="yotei-card-tenpo">{displayTenpoName(s)}</div>
-                                                        <div className="yotei-card-time">{dayjs(s.start_at).format('HH:mm')} - {dayjs(s.end_at).format('HH:mm')}</div>
+                                                        <div className="yotei-card-time">{formatScheduleTime(s)}</div>
                                                         <div style={{ fontSize: '9px', opacity: 0.85 }}>{statusLabelFor(s)}</div>
                                                     </div>
                                                 );

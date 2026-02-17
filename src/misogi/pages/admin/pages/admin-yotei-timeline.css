@@ -15,6 +15,59 @@
     min-height: 100vh;
 }
 
+[data-theme="light"] .admin-yotei-timeline-page {
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --line: #000000;
+    --text: #111111;
+    --muted: #374151;
+    --white: #ffffff;
+    background: #ffffff;
+    color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page.capacity-safe {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(34, 197, 94, 0.12) 0%,
+            rgba(34, 197, 94, 0.05) 18%,
+            rgba(34, 197, 94, 0.02) 34%,
+            rgba(34, 197, 94, 0) 56%
+        ),
+        #ffffff;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page.capacity-warn {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(245, 158, 11, 0.14) 0%,
+            rgba(245, 158, 11, 0.06) 18%,
+            rgba(245, 158, 11, 0.02) 34%,
+            rgba(245, 158, 11, 0) 56%
+        ),
+        #ffffff;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page.capacity-danger {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(239, 68, 68, 0.14) 0%,
+            rgba(239, 68, 68, 0.06) 18%,
+            rgba(239, 68, 68, 0.02) 34%,
+            rgba(239, 68, 68, 0) 56%
+        ),
+        #ffffff;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head h1 {
+    background: none;
+    -webkit-text-fill-color: initial;
+    color: #111111;
+}
+
 .admin-yotei-timeline-page.capacity-safe {
     background:
         linear-gradient(
@@ -852,7 +905,7 @@
     border: 1px solid var(--line);
     background: rgba(18, 22, 33, 0.8);
     border-radius: 10px;
-    min-height: 72px;
+    min-height: 92px;
     padding: 8px;
     text-align: left;
     color: var(--text);
@@ -864,8 +917,39 @@
     transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
 }
 
-.month-day strong {
-    font-size: 13px;
+.month-day-date {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+.month-day-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    width: fit-content;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1;
+    color: #f8fafc;
+    background: rgba(37, 99, 235, 0.35);
+    border: 1px solid rgba(147, 197, 253, 0.6);
+}
+
+.month-day-count.is-zero {
+    color: #fef2f2;
+    background: rgba(127, 29, 29, 0.45);
+    border-color: rgba(248, 113, 113, 0.7);
+}
+
+.month-day-empty {
+    margin-top: auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fca5a5;
 }
 
 .month-day.is-today {
@@ -1484,6 +1568,284 @@
     background: var(--torikeshi);
     border-color: var(--torikeshi);
     margin-right: auto;
+}
+
+/* Light mode: force timeline surfaces to white/black contrast */
+[data-theme="light"] .admin-yotei-timeline-page .month-day,
+[data-theme="light"] .admin-yotei-timeline-page .yakusoku-consumption,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-grid-container,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-legend-footer,
+[data-theme="light"] .admin-yotei-timeline-page .timeline-date-strip,
+[data-theme="light"] .admin-yotei-timeline-page .today-switcher,
+[data-theme="light"] .admin-yotei-timeline-page .today-timeline-inner,
+[data-theme="light"] .admin-yotei-timeline-page .today-seg,
+[data-theme="light"] .admin-yotei-timeline-page .today-time-header,
+[data-theme="light"] .admin-yotei-timeline-page .today-time-rail,
+[data-theme="light"] .admin-yotei-timeline-page .today-date-card,
+[data-theme="light"] .admin-yotei-timeline-page .sum-card,
+[data-theme="light"] .admin-yotei-timeline-page .week-row .worker-col,
+[data-theme="light"] .admin-yotei-timeline-page .today-rails,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-modal,
+[data-theme="light"] .admin-yotei-timeline-page .handoff-box {
+    background: #ffffff;
+    color: #111111;
+    border-color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-grid-header,
+[data-theme="light"] .admin-yotei-timeline-page .timeline-band-switch,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-worker-cell {
+    background: #f8fafc;
+    color: #111111;
+    border-color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-grid-header-row.is-night {
+    background: rgba(30, 64, 175, 0.08);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-grid-header-row.is-day {
+    background: rgba(245, 158, 11, 0.08);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-timeline-cell.is-night {
+    background-color: rgba(30, 64, 175, 0.04);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-timeline-cell.is-day {
+    background-color: rgba(245, 158, 11, 0.05);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .timeline-band-switch button,
+[data-theme="light"] .admin-yotei-timeline-page .timeline-month-switch button,
+[data-theme="light"] .admin-yotei-timeline-page .timeline-date-chip,
+[data-theme="light"] .admin-yotei-timeline-page .today-switcher button,
+[data-theme="light"] .admin-yotei-timeline-page .week-switcher button,
+[data-theme="light"] .admin-yotei-timeline-page .month-switcher button,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head-nav,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head-actions input[type="date"],
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head-actions input[type="text"],
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head-actions button,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head-nav button,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head-link,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-form-group input,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-form-group select,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-form-group textarea,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-modal-footer button {
+    background: #ffffff;
+    color: #111111;
+    border-color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .legend-chip {
+    border-color: #111111;
+    color: #374151;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .today-switcher-label {
+    color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .week-switcher button.is-current,
+[data-theme="light"] .admin-yotei-timeline-page .month-switcher button.is-current {
+    background: #1d4ed8;
+    color: #ffffff;
+    border-color: #1d4ed8;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .week-switcher {
+    background: #ffffff !important;
+    color: #111111 !important;
+    border-color: #111111 !important;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .week-switcher button {
+    background: #ffffff !important;
+    color: #111111 !important;
+    border-color: #111111 !important;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .week-switcher .week-switcher-label {
+    color: #111111 !important;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .today-time-cell,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-seg-title {
+    color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .week-grid,
+[data-theme="light"] .admin-yotei-timeline-page .week-row.week-head,
+[data-theme="light"] .admin-yotei-timeline-page .week-cell,
+[data-theme="light"] .admin-yotei-timeline-page .month-trouble-strip,
+[data-theme="light"] .admin-yotei-timeline-page .month-trouble-tag,
+[data-theme="light"] .admin-yotei-timeline-page .month-trouble-pill {
+    background: #ffffff;
+    color: #111111;
+    border-color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .week-row > div,
+[data-theme="light"] .admin-yotei-timeline-page .week-row > button {
+    border-right-color: #111111;
+    border-bottom-color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .week-cell small,
+[data-theme="light"] .admin-yotei-timeline-page .month-trouble-strip-head span,
+[data-theme="light"] .admin-yotei-timeline-page .month-trouble-empty,
+[data-theme="light"] .admin-yotei-timeline-page .month-trouble-tag .shops {
+    color: #374151;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .month-trouble-tag .count {
+    color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .month-day-date {
+    color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .month-day-count {
+    color: #0b1220;
+    background: #dbeafe;
+    border-color: #2563eb;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .month-day-count.is-zero {
+    color: #7f1d1d;
+    background: #fee2e2;
+    border-color: #dc2626;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .month-day-empty {
+    color: #b91c1c;
+}
+
+/* Light mode layout polish: keep monochrome base, add hierarchy and rhythm */
+[data-theme="light"] .admin-yotei-timeline-page .admin-yotei-timeline-content {
+    padding: 14px 14px 20px;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head {
+    padding: 12px 14px;
+    border: 1px solid #111111;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    margin-bottom: 14px;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head-nav,
+[data-theme="light"] .admin-yotei-timeline-page .today-switcher,
+[data-theme="light"] .admin-yotei-timeline-page .month-switcher,
+[data-theme="light"] .admin-yotei-timeline-page .week-switcher,
+[data-theme="light"] .admin-yotei-timeline-page .today-date-card {
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-head-nav button.active,
+[data-theme="light"] .admin-yotei-timeline-page .timeline-band-switch button.active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .month-switcher-label,
+[data-theme="light"] .admin-yotei-timeline-page .week-switcher-label {
+    color: #111111;
+    text-shadow: none;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-summary-cards,
+[data-theme="light"] .admin-yotei-timeline-page .today-summary-cards,
+[data-theme="light"] .admin-yotei-timeline-page .month-summary-cards,
+[data-theme="light"] .admin-yotei-timeline-page .week-summary-cards {
+    gap: 10px;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .sum-card {
+    border-width: 1px;
+    border-color: #111111;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-grid-container {
+    border-radius: 14px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-grid-header-cell,
+[data-theme="light"] .admin-yotei-timeline-page .today-time-cell {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-worker-name {
+    color: #0f172a;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-card {
+    box-shadow: 0 6px 12px rgba(15, 23, 42, 0.16);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-card-time {
+    opacity: 0.95;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .timeline-date-strip {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .timeline-date-chip.active {
+    color: #ffffff;
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    box-shadow: none;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-legend-footer {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* Final override: timeline separators must be clearly dark in light mode */
+[data-theme="light"] .admin-yotei-timeline-page {
+    --line: #000000;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-row {
+    border-bottom: 1px solid #000000;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-grid-header {
+    border-bottom: 1px solid #000000;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-grid-header-cell,
+[data-theme="light"] .admin-yotei-timeline-page .yotei-worker-cell,
+[data-theme="light"] .admin-yotei-timeline-page .week-row > div,
+[data-theme="light"] .admin-yotei-timeline-page .week-row > button {
+    border-right: 1px solid #000000;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .week-row > div,
+[data-theme="light"] .admin-yotei-timeline-page .week-row > button {
+    border-bottom: 1px solid #000000;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .yotei-timeline-cell {
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.55) 1px, transparent 1px);
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .handoff-title,
+[data-theme="light"] .admin-yotei-timeline-page .handoff-latest,
+[data-theme="light"] .admin-yotei-timeline-page .handoff-checks {
+    color: #111111;
+}
+
+[data-theme="light"] .admin-yotei-timeline-page .handoff-muted {
+    color: #4b5563;
 }
 
 @media (max-width: 1024px) {

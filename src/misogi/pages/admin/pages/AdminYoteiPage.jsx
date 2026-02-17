@@ -14,6 +14,9 @@ const IS_LOCAL = import.meta.env?.DEV || isLocalUiHost();
 const API_BASE = IS_LOCAL
   ? '/api'
   : normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
+const JINZAI_API_BASE = IS_LOCAL
+  ? '/api-jinzai'
+  : normalizeGatewayBase(import.meta.env?.VITE_JINZAI_API_BASE, 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 const TIMELINE_START_HOUR = 16;
 const TIMELINE_END_HOUR_NEXT_DAY = 4;
@@ -105,6 +108,30 @@ function canonicalSagyouinId(raw) {
   // 例: SAGYOUIN#W002 -> W002
   const p = s.split('#');
   return p[p.length - 1].toUpperCase();
+}
+
+function normalizeShokushuList(raw) {
+  if (Array.isArray(raw)) {
+    return raw.map((v) => String(v || '').trim().toLowerCase()).filter(Boolean);
+  }
+  const s = String(raw || '').trim();
+  if (!s) return [];
+  const cleaned = s
+    .replace(/^\[/, '')
+    .replace(/\]$/, '')
+    .replace(/"/g, '')
+    .replace(/'/g, '');
+  return cleaned
+    .split(/[,\s、/]+/)
+    .map((v) => v.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isItakuSeisouJinzai(item) {
+  const koyou = String(item?.koyou_kubun || '').trim().toLowerCase();
+  if (koyou !== 'gyomu_itaku') return false;
+  const shokushuList = normalizeShokushuList(item?.shokushu);
+  return shokushuList.includes('seisou') || shokushuList.includes('cleaning');
 }
 
 function normalizeUgokiList(payload) {
@@ -349,19 +376,24 @@ export default function AdminYoteiPage() {
 
   const loadMasters = useCallback(async () => {
     const base = API_BASE.replace(/\/$/, '');
+    const jinzaiBase = JINZAI_API_BASE.replace(/\/$/, '');
     const headers = { ...authHeaders() };
     const [wRes, sRes, ykRes] = await Promise.all([
-      fetch(`${base}/workers?limit=1000`, { headers, cache: 'no-store' }).catch(() => null),
+      fetch(`${jinzaiBase}/jinzai?limit=2000&jotai=yuko`, { headers, cache: 'no-store' }).catch(() => null),
       fetch(`${base}/stores?limit=2000`, { headers, cache: 'no-store' }).catch(() => null),
       fetch(`${base}/yakusoku?limit=1000`, { headers, cache: 'no-store' }).catch(() => null),
     ]);
     if (wRes?.ok) {
       const w = await wRes.json();
-      const list = Array.isArray(w) ? w : (w?.items || w?.workers || []);
+      const list = Array.isArray(w) ? w : (w?.items || []);
       setWorkers(list.map((v) => ({
-        id: v.sagyouin_id || v.worker_id || v.id,
-        name: v.sagyouin_name || v.worker_name || v.name || v.display_name || v.id,
-      })).filter((v) => v.id));
+        raw: v,
+        id: v.jinzai_id || v.sagyouin_id || v.worker_id || v.id,
+        name: v.name || v.display_name || v.jinzai_name || v.id,
+      }))
+      .filter((v) => v.id)
+      .filter((v) => isItakuSeisouJinzai(v.raw))
+      .map(({ raw, ...rest }) => rest));
     }
     if (sRes?.ok) {
       const s = await sRes.json();

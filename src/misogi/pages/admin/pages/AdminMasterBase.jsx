@@ -983,8 +983,8 @@ export default function AdminMasterBase({
 
         {/* Inline editor (avoid fixed/portal overlays; browsers were hard-freezing on modal open). */}
         {modalOpen && editing ? (
-          <section style={{ border: '1px solid #273049', borderRadius: 12, background: '#0f172a', padding: 16, marginBottom: 12 }}>
-            <h2 style={{ margin: '0 0 12px' }}>{pickId(editing, idKey) ? '編集' : '新規登録'}</h2>
+          <section className="admin-master-inline-editor">
+            <h2 className="admin-master-inline-editor-title">{pickId(editing, idKey) ? '編集' : '新規登録'}</h2>
             <div className="admin-master-modal-grid">
               {fields.map((f) => {
                 const options = f.sourceKey

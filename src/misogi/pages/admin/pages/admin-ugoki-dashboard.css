@@ -14,6 +14,44 @@
   padding-bottom: 40px;
 }
 
+[data-theme="light"] .admin-ugoki-dashboard-page {
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --line: #d1d5db;
+  --text: #111111;
+  --muted: #374151;
+  --white: #ffffff;
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-grid-wrap,
+[data-theme="light"] .admin-ugoki-dashboard-page .alert-card,
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-modal {
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-grid-head {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .admin-ugoki-dashboard-page .override-btn {
+  background: #ffffff;
+  color: #111111;
+  border-color: #d1d5db;
+}
+
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-head-actions input,
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-head-actions button,
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-modal-grid select,
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-modal-grid textarea,
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-modal-actions button {
+  background: #ffffff;
+  color: #111111;
+  border-color: #d1d5db;
+}
+
 .admin-ugoki-dashboard-content {
   max-width: 1320px;
   margin: 0 auto;

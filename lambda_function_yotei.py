@@ -8,6 +8,7 @@ import urllib.request
 import urllib.parse
 import re
 import html
+import unicodedata
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
@@ -65,6 +66,43 @@ try:
 except ImportError:
     GOOGLE_CALENDAR_AVAILABLE = False
     print("Warning: Google Calendar API libraries not available. Calendar integration will be disabled.")
+
+STORE_ALIAS_HINTS = [
+    ('ニイハオ', 'ニーハオ'),
+    ('ニーハオ蒲田本店', 'ニーハオ蒲田本店'),
+    ('ニーハオ蒲田別館', 'ニーハオ蒲田別館'),
+    ('ニーハオ大井町', 'ニーハオ大井町店'),
+    ('ニーハオ神田', 'ニーハオ神田店'),
+    ('ニーハオ大森', 'ニーハオ大森店'),
+    ('ニーハオ蒲田工場', 'ニーハオ蒲田工場'),
+    ('モンキーツリー馬喰町', 'monkeytree日本橋店'),
+    ('monkeytree日本橋店', 'monkeytree日本橋店'),
+    ('楽が気新橋本店', '楽が気新橋本店'),
+    ('デイジイ西新宿', 'デイジイ西新宿店'),
+    ('デイジィ麹町', 'デイジイ麹町店'),
+    ('デニーロ神田店', 'デニーロ神田店'),
+    ('ときわ亭池袋西口店', 'ときわ亭池袋西口店'),
+    ('魚豪商コダマ錦糸町', '魚豪商コダマ錦糸町'),
+    ('魚豪商コダマ新橋', '魚豪商コダマ新橋店'),
+    ('魚無双トオダ', '魚無双トオダ'),
+    ('魚焼男弐', '魚焼男弐'),
+    ('魚焼男新橋本店', '魚焼男新橋本店'),
+    ('sbar渋谷', 'sbar渋谷'),
+    ('輝らく', '輝らく'),
+    ('麺処いのこ赤塚', '麺処いのこ赤塚店'),
+    ('麺処いのこ平和台', '麺処いのこ平和台店'),
+    ('富士屋本店日本橋浜町', '富士屋本店日本橋浜町'),
+]
+
+
+def normalize_store_match_text(value):
+    text = unicodedata.normalize('NFKC', str(value or '')).lower().strip()
+    # 法人格や余分語のゆれを吸収
+    for token in ('株式会社', '有限会社', '合同会社', '(株)', '（株）'):
+        text = text.replace(token, '')
+    # 記号・空白を落として比較しやすくする
+    text = re.sub(r'[\s\u3000\-\_\.\,\(\)\[\]【】「」『』/・:：]+', '', text)
+    return text
 
 # ID生成ヘルパー関数をインポート
 def extract_number_from_id(id_str, prefix):
@@ -7332,6 +7370,10 @@ def import_google_ics(event, headers):
         from_date = body_json.get('from', '').strip()
         to_date = body_json.get('to', '').strip()
         dry_run = body_json.get('dry_run', False)
+        summary_allowlist = body_json.get('summary_allowlist')
+        if not isinstance(summary_allowlist, list):
+            summary_allowlist = ['【定期', '【スポット', '【緊急', '【定期隔週', '【定期ゴミ回収】']
+        summary_allowlist = [str(x).strip() for x in summary_allowlist if str(x).strip()]
         
         ics_content = ""
         if ics_content_direct:
@@ -7361,22 +7403,22 @@ def import_google_ics(event, headers):
         
         # ICSをパース
         events = parse_ics_content(ics_content, from_date, to_date)
-        
-        if dry_run:
-            return {
-                'statusCode': 200,
-                'headers': headers,
-                'body': json.dumps({
-                    'success': True,
-                    'dry_run': True,
-                    'found': len(events),
-                    'range': {'from': from_date, 'to': to_date},
-                    'events': events[:10]  # 最初の10件をプレビュー
-                }, ensure_ascii=False, default=str)
-            }
+        skipped_reasons = []
+        filtered_events = []
+        for event_data in events:
+            summary = (event_data.get('summary') or '').strip()
+            if summary_allowlist and not any(k in summary for k in summary_allowlist):
+                skipped_reasons.append({
+                    'uid': event_data.get('uid'),
+                    'summary': summary,
+                    'reason': 'summary_not_allowed'
+                })
+                continue
+            filtered_events.append(event_data)
         
         # 従業員情報を取得（メールアドレスからworker_idを引くため）
         worker_email_map = {}
+        worker_id_pool = []
         # イレギュラーな個人用メールアドレスとワーカーIDのマッピング
         personal_email_to_worker_id = {
             'lemueldesousa@gmail.com': 'W01005',
@@ -7400,6 +7442,9 @@ def import_google_ics(event, headers):
             
             for w in worker_items:
                 email = w.get('email')
+                wid = w.get('id')
+                if wid:
+                    worker_id_pool.append(wid)
                 if email:
                     worker_email_map[email.lower().strip()] = w.get('id')
         except Exception as e:
@@ -7408,11 +7453,15 @@ def import_google_ics(event, headers):
         # 店舗情報を取得（名寄せ・自動紐付けのため）
         all_stores = []
         try:
-            store_scan = STORES_TABLE.scan(ProjectionExpression='id, store_name, brand_name, security_code')
+            store_scan = STORES_TABLE.scan(
+                ProjectionExpression='id, store_name, brand_name, security_code, #n, tenpo_name, yagou_name, torihikisaki_name',
+                ExpressionAttributeNames={'#n': 'name'}
+            )
             all_stores = store_scan.get('Items', [])
             while 'LastEvaluatedKey' in store_scan:
                 store_scan = STORES_TABLE.scan(
-                    ProjectionExpression='id, store_name, brand_name, security_code',
+                    ProjectionExpression='id, store_name, brand_name, security_code, #n, tenpo_name, yagou_name, torihikisaki_name',
+                    ExpressionAttributeNames={'#n': 'name'},
                     ExclusiveStartKey=store_scan['LastEvaluatedKey']
                 )
                 all_stores.extend(store_scan.get('Items', []))
@@ -7423,14 +7472,14 @@ def import_google_ics(event, headers):
         existing_schedules = set() # (external_id, worker_id) のタプル
         try:
             scan_kwargs = {
-                'ProjectionExpression': 'external_id, worker_id',
+                'ProjectionExpression': 'external_id, worker_id, sagyouin_id, assigned_to',
                 'FilterExpression': Attr('external_id').exists()
             }
             while True:
-                scan_response = SCHEDULES_TABLE.scan(**scan_kwargs)
+                scan_response = YOTEI_SCHEDULES_TABLE.scan(**scan_kwargs)
                 for item in scan_response.get('Items', []):
                     ext_id = item.get('external_id')
-                    w_id = item.get('worker_id')
+                    w_id = item.get('sagyouin_id') or item.get('worker_id') or item.get('assigned_to')
                     existing_schedules.add((ext_id, w_id))
                 
                 if 'LastEvaluatedKey' not in scan_response:
@@ -7442,7 +7491,7 @@ def import_google_ics(event, headers):
         # 日付ごとにグループ化して、各日付の最大連番を事前に取得（パフォーマンス最適化）
         date_to_max_seq = {}
         unique_dates = set()
-        for event_data in events:
+        for event_data in filtered_events:
             date_str = event_data.get('date')
             if date_str:
                 unique_dates.add(date_str)
@@ -7466,7 +7515,7 @@ def import_google_ics(event, headers):
         skipped = 0
         errors = []
         
-        for event_data in events:
+        for event_data in filtered_events:
             external_id = event_data.get('uid')
             if not external_id:
                 errors.append({'event': event_data.get('summary', 'Unknown'), 'error': 'UID not found'})
@@ -7493,8 +7542,16 @@ def import_google_ics(event, headers):
                             if w_id and w_id not in matched_worker_ids:
                                 matched_worker_ids.append(w_id)
                 
-                # 作成ターゲット（worker_idのリスト）。マッチしなければNone（未割当）で1件作成
-                targets = matched_worker_ids if matched_worker_ids else [None]
+                # 作成ターゲット（worker_idのリスト）
+                # マッチしない場合は、暫定運用として workers から疑似ランダム割当（UIDベースで安定化）
+                if matched_worker_ids:
+                    targets = matched_worker_ids
+                elif worker_id_pool:
+                    seed = f"{external_id}:{event_data.get('date','')}:{event_data.get('summary','')}"
+                    idx = int(hashlib.sha256(seed.encode('utf-8')).hexdigest()[:8], 16) % len(worker_id_pool)
+                    targets = [worker_id_pool[idx]]
+                else:
+                    targets = [None]
                 
                 date_str = event_data.get('date')
                 if not date_str:
@@ -7508,6 +7565,11 @@ def import_google_ics(event, headers):
                 for worker_id in targets:
                     if (external_id, worker_id) in existing_schedules:
                         skipped += 1
+                        skipped_reasons.append({
+                            'uid': external_id,
+                            'summary': event_data.get('summary', ''),
+                            'reason': 'duplicate_external_worker'
+                        })
                         continue
                         
                     # --- AI情報抽出ロジック ---
@@ -7533,28 +7595,55 @@ def import_google_ics(event, headers):
                     # 2. 店舗の自動同定（名寄せ）
                     matched_store = None
                     # ヒントになる文字列を準備
-                    match_target_text = (summary + " " + target_name).lower()
+                    ev_location = str(event_data.get('location') or '')
+                    match_target_text = (summary + " " + target_name + " " + ev_location)
+                    match_target_norm = normalize_store_match_text(match_target_text)
+                    for alias, canonical in STORE_ALIAS_HINTS:
+                        alias_norm = normalize_store_match_text(alias)
+                        if alias_norm and alias_norm in match_target_norm:
+                            match_target_norm += normalize_store_match_text(canonical)
                     
                     # スコアリングで最も近い店舗を探す（簡易実装）
                     best_match_score = 0
+                    target_name_norm = normalize_store_match_text(target_name)
                     for s in all_stores:
-                        s_name = str(s.get('store_name') or '').lower()
-                        b_name = str(s.get('brand_name') or '').lower()
-                        
+                        candidate_names = [
+                            s.get('store_name'),
+                            s.get('name'),
+                            s.get('tenpo_name'),
+                            s.get('brand_name'),
+                            s.get('yagou_name'),
+                            s.get('torihikisaki_name'),
+                        ]
+                        candidate_norms = []
+                        seen_norms = set()
+                        for raw in candidate_names:
+                            norm = normalize_store_match_text(raw)
+                            if norm and norm not in seen_norms:
+                                seen_norms.add(norm)
+                                candidate_norms.append(norm)
+
                         score = 0
-                        if s_name and s_name in match_target_text:
-                            score += 10
-                        if b_name and b_name in match_target_text:
-                            score += 5
-                        
-                        # 完全に一致する場合
-                        if s_name and s_name == target_name.lower():
-                            score += 50
-                            
+                        for c_norm in candidate_norms:
+                            if c_norm in match_target_norm:
+                                score += 10
+                            if target_name_norm and c_norm == target_name_norm:
+                                score += 50
+
                         if score > best_match_score and score >= 10:
                             best_match_score = score
                             matched_store = s
                     
+                    if not matched_store:
+                        skipped += 1
+                        skipped_reasons.append({
+                            'uid': external_id,
+                            'summary': summary,
+                            'location': event_data.get('location', ''),
+                            'reason': 'tenpo_not_identified'
+                        })
+                        continue
+
                     # 3. セキュリティーコード（キーボックス番号）の抽出
                     security_code = matched_store.get('security_code') if matched_store else ''
                     # 本文から数字を探す (例: 番号：0207, ロックナンバー 1234, キーボックス: 5566 等)
@@ -7577,7 +7666,7 @@ def import_google_ics(event, headers):
                         date_seq_counters[date_str] = 0
                     date_seq_counters[date_str] += 1
                     seq_str = str(date_seq_counters[date_str]).zfill(3)
-                    schedule_id = f"SCH-{date_prefix}-{seq_str}"
+                    schedule_id = f"YOT-{uuid.uuid4().hex[:12]}"
                     
                     now = datetime.utcnow().isoformat() + 'Z'
                     
@@ -7590,7 +7679,8 @@ def import_google_ics(event, headers):
                         'start_min': event_data.get('start_min', 540),
                         'end_min': event_data.get('end_min', 600),
                         'service': 'cleaning',
-                        'status': 'scheduled',
+                        'status': 'yuko',
+                        'jotai': 'yuko',
                         'work_type': work_type,
                         'origin': 'google_ics',
                         'external_id': external_id,
@@ -7618,11 +7708,17 @@ def import_google_ics(event, headers):
                     
                     if worker_id:
                         schedule_item['worker_id'] = worker_id
+                        schedule_item['sagyouin_id'] = worker_id
                         schedule_item['assigned_to'] = worker_id
+                        schedule_item['worker_ids'] = [worker_id]
                     
-                    SCHEDULES_TABLE.put_item(Item=schedule_item)
-                    existing_schedules.add((external_id, worker_id))
-                    inserted += 1
+                    if dry_run:
+                        existing_schedules.add((external_id, worker_id))
+                        inserted += 1
+                    else:
+                        YOTEI_SCHEDULES_TABLE.put_item(Item=schedule_item)
+                        existing_schedules.add((external_id, worker_id))
+                        inserted += 1
 
             except Exception as e:
                 errors.append({
@@ -7631,6 +7727,21 @@ def import_google_ics(event, headers):
                 })
                 print(f"Error creating schedule for {external_id}: {str(e)}")
         
+        if dry_run:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': True,
+                    'dry_run': True,
+                    'found': len(events),
+                    'accepted': len(filtered_events),
+                    'range': {'from': from_date, 'to': to_date},
+                    'events': filtered_events[:10],  # 最初の10件をプレビュー
+                    'skipped_reasons': skipped_reasons[:200]
+                }, ensure_ascii=False, default=str)
+            }
+
         return {
             'statusCode': 200,
             'headers': headers,
@@ -7639,6 +7750,7 @@ def import_google_ics(event, headers):
                 'inserted': inserted,
                 'skipped': skipped,
                 'errors': errors[:10],
+                'skipped_reasons': skipped_reasons[:200],
                 'range': {'from': from_date, 'to': to_date}
             }, ensure_ascii=False, default=str)
         }

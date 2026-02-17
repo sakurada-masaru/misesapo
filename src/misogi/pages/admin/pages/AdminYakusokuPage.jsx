@@ -450,9 +450,9 @@ export default function AdminYakusokuPage() {
         </header>
 
         <div className="yakusoku-list" style={{ padding: '20px', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text)' }}>
             <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '1px solid #444' }}>
+              <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--line)' }}>
                 <th style={{ padding: '10px' }}>ID</th>
                 <th style={{ padding: '10px' }}>現場名</th>
                 <th style={{ padding: '10px' }}>サービス</th>
@@ -469,8 +469,8 @@ export default function AdminYakusokuPage() {
                 const monthKey = dayjs().format('YYYY-MM');
                 const consumed = it.consumption_count ? (it.consumption_count[monthKey] || 0) : 0;
                 return (
-                  <tr key={it.yakusoku_id} style={{ borderBottom: '1px solid #333' }}>
-                    <td style={{ padding: '10px', fontSize: '12px', color: '#888' }}>{it.yakusoku_id}</td>
+                  <tr key={it.yakusoku_id} style={{ borderBottom: '1px solid var(--line)' }}>
+                    <td style={{ padding: '10px', fontSize: '12px', color: 'var(--muted)' }}>{it.yakusoku_id}</td>
                     <td style={{ padding: '10px' }}>{it.tenpo_name || '---'}</td>
                     <td style={{ padding: '10px' }}>
                       {(() => {
@@ -507,7 +507,7 @@ export default function AdminYakusokuPage() {
           <div className="yotei-modal" onClick={e => e.stopPropagation()}>
             <div className="yotei-modal-header">
               <h2>{modalData.isNew ? '新規案件登録' : '案件編集'}</h2>
-              <button onClick={() => setModalData(null)} style={{ background: 'none', border: 'none', color: 'white', fontSize: 24 }}>×</button>
+              <button onClick={() => setModalData(null)} style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: 24 }}>×</button>
             </div>
             <div className="yotei-modal-content">
               <div className="yotei-form-group">
@@ -555,9 +555,9 @@ export default function AdminYakusokuPage() {
                         textAlign: 'left',
                         padding: '8px 10px',
                         borderRadius: 8,
-                        border: '1px solid rgba(255,255,255,0.14)',
-                        background: 'rgba(255,255,255,0.04)',
-                        color: 'white',
+                        border: '1px solid var(--line)',
+                        background: 'var(--panel)',
+                        color: 'var(--text)',
                         cursor: 'pointer',
                       }}
                     >
@@ -617,9 +617,9 @@ export default function AdminYakusokuPage() {
                           });
                         }}
                         style={{
-                          border: '1px solid rgba(255,255,255,0.18)',
-                          background: 'rgba(255,255,255,0.08)',
-                          color: 'white',
+                          border: '1px solid var(--line)',
+                          background: 'var(--panel)',
+                          color: 'var(--text)',
                           borderRadius: 999,
                           padding: '4px 10px',
                           fontSize: 12,
@@ -666,9 +666,9 @@ export default function AdminYakusokuPage() {
                         textAlign: 'left',
                         padding: '8px 10px',
                         borderRadius: 8,
-                        border: '1px solid rgba(255,255,255,0.14)',
-                        background: 'rgba(255,255,255,0.04)',
-                        color: 'white',
+                        border: '1px solid var(--line)',
+                        background: 'var(--panel)',
+                        color: 'var(--text)',
                         cursor: 'pointer',
                       }}
                     >
@@ -700,7 +700,7 @@ export default function AdminYakusokuPage() {
                       const search = String(modalData?._tagSearch?.[b.key] || '');
                       const tagCandidates = serviceCandidatesForTag(search);
                       return (
-                        <div key={b.key} style={{ border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, padding: 10 }}>
+                        <div key={b.key} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
                           <div style={{ fontWeight: 700, marginBottom: 8 }}>{b.label}</div>
                           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                             {tags.length ? tags.map((tag) => (
@@ -709,9 +709,9 @@ export default function AdminYakusokuPage() {
                                 type="button"
                                 onClick={() => removeBucketTag(b.key, tag)}
                                 style={{
-                                  border: '1px solid rgba(255,255,255,0.18)',
-                                  background: 'rgba(255,255,255,0.08)',
-                                  color: 'white',
+                                  border: '1px solid var(--line)',
+                                  background: 'var(--panel)',
+                                  color: 'var(--text)',
                                   borderRadius: 999,
                                   padding: '4px 10px',
                                   fontSize: 12,
@@ -789,7 +789,7 @@ export default function AdminYakusokuPage() {
                     { key: 'trash_pickup_required', label: 'ゴミ回収あり' },
                     { key: 'trash_photo_required', label: 'ゴミ回収時に写真 必須' },
                   ].map((it) => (
-                    <label key={it.key} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: 'rgba(255,255,255,0.92)' }}>
+                    <label key={it.key} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: 'var(--text)' }}>
                       <input
                         type="checkbox"
                         checked={Boolean(modalData?.onsite_flags?.[it.key])}

@@ -125,6 +125,9 @@ export default function AdminTorihikisakiMeiboPage() {
   const [yagous, setYagous] = useState([]);
   const [tenpos, setTenpos] = useState([]);
   const [selectedTorihikisakiId, setSelectedTorihikisakiId] = useState('');
+  const [bulkSelectedTorihikisakiIds, setBulkSelectedTorihikisakiIds] = useState([]);
+  const [showTorikeshiOverlay, setShowTorikeshiOverlay] = useState(false);
+  const [torikeshiSubmitting, setTorikeshiSubmitting] = useState(false);
 
   // NOTE: 取引先一覧は「初回/手動更新」のみでロードする。
   // selectedTorihikisakiId を依存に入れると、クリックのたびに再ロード→子データが空に戻るフラッシュが起きる。
@@ -259,6 +262,25 @@ export default function AdminTorihikisakiMeiboPage() {
     loadChildren(selectedTorihikisakiId);
   }, [selectedTorihikisakiId, loadChildren]);
 
+  const putTorihikisakiTorikeshi = useCallback(async (item) => {
+    const id = item?.torihikisaki_id || item?.id;
+    if (!id) throw new Error('torihikisaki_id が不正です');
+    const base = MASTER_API_BASE.replace(/\/$/, '');
+    const res = await fetch(`${base}/master/torihikisaki/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders(),
+      },
+      body: JSON.stringify({ ...(item || {}), torihikisaki_id: id, jotai: 'torikeshi' }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`torihikisaki 取消 failed: HTTP ${res.status} ${text}`.trim());
+    }
+    return res.json().catch(() => ({}));
+  }, []);
+
   const torihikisakiById = useMemo(() => {
     const m = new Map();
     torihikisakis.forEach((it) => {
@@ -364,6 +386,44 @@ export default function AdminTorihikisakiMeiboPage() {
       });
     });
   }, [torihikisakis, q, searchYagouByTorihikisaki, searchTenpoByTorihikisaki]);
+
+  const bulkSelectedSet = useMemo(() => new Set(bulkSelectedTorihikisakiIds), [bulkSelectedTorihikisakiIds]);
+
+  const toggleBulkSelect = useCallback((id, checked) => {
+    if (!id) return;
+    setBulkSelectedTorihikisakiIds((prev) => {
+      const set = new Set(prev);
+      if (checked) set.add(id);
+      else set.delete(id);
+      return Array.from(set);
+    });
+  }, []);
+
+  const executeTorikeshi = useCallback(async () => {
+    if (!bulkSelectedTorihikisakiIds.length) {
+      setShowTorikeshiOverlay(false);
+      return;
+    }
+    setTorikeshiSubmitting(true);
+    setError('');
+    try {
+      const idSet = new Set(bulkSelectedTorihikisakiIds);
+      const targets = torihikisakis.filter((it) => idSet.has(it?.torihikisaki_id || it?.id));
+      if (!targets.length) throw new Error('取り消し対象が見つかりません');
+      for (const it of targets) {
+        // NOTE: サーバ側の監査整合のため逐次更新
+        // eslint-disable-next-line no-await-in-loop
+        await putTorihikisakiTorikeshi(it);
+      }
+      setBulkSelectedTorihikisakiIds([]);
+      setShowTorikeshiOverlay(false);
+      await loadTorihikisakiOnly();
+    } catch (e) {
+      setError(e?.message || '取り消しに失敗しました');
+    } finally {
+      setTorikeshiSubmitting(false);
+    }
+  }, [bulkSelectedTorihikisakiIds, torihikisakis, putTorihikisakiTorikeshi, loadTorihikisakiOnly]);
 
   const tenpoSearchHits = useMemo(() => {
     const needle = normStr(q);
@@ -606,6 +666,14 @@ export default function AdminTorihikisakiMeiboPage() {
           <div className="meibo-list-head">
             <div className="k">取引先</div>
             <div className="v">{filteredTorihikisakis.length}</div>
+            <button
+              type="button"
+              className="meibo-cancel-btn"
+              disabled={!bulkSelectedTorihikisakiIds.length || torikeshiSubmitting}
+              onClick={() => setShowTorikeshiOverlay(true)}
+            >
+              取り消し
+            </button>
           </div>
           <div className="meibo-list-scroll">
             {filteredTorihikisakis.map((it) => {
@@ -620,6 +688,15 @@ export default function AdminTorihikisakiMeiboPage() {
                   className={`meibo-row ${active ? 'active' : ''}`}
                   onClick={() => setSelectedTorihikisakiId(id)}
                 >
+                  <div className="meibo-row-check">
+                    <input
+                      type="checkbox"
+                      checked={bulkSelectedSet.has(id)}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => toggleBulkSelect(id, e.target.checked)}
+                      aria-label={`${it?.name || id} を取り消し選択`}
+                    />
+                  </div>
                   <div className="name">{it?.name || '(no name)'}</div>
                   <div className="meta">
                     <span className="id">{id}</span>
@@ -712,6 +789,46 @@ export default function AdminTorihikisakiMeiboPage() {
           )}
         </main>
       </div>
+
+      {showTorikeshiOverlay ? (
+        <div className="meibo-overlay-backdrop" role="dialog" aria-modal="true">
+          <div className="meibo-overlay">
+            <h3>取引先の取り消し確認</h3>
+            <p>選択した {bulkSelectedTorihikisakiIds.length} 件を「取り消し」にします。実行しますか？</p>
+            <div className="meibo-overlay-list">
+              {bulkSelectedTorihikisakiIds.slice(0, 20).map((id) => {
+                const found = torihikisakis.find((it) => (it?.torihikisaki_id || it?.id) === id);
+                return (
+                  <div key={id} className="item">
+                    <span className="nm">{found?.name || '(no name)'}</span>
+                    <span className="id">{id}</span>
+                  </div>
+                );
+              })}
+              {bulkSelectedTorihikisakiIds.length > 20 ? (
+                <div className="item">...他 {bulkSelectedTorihikisakiIds.length - 20} 件</div>
+              ) : null}
+            </div>
+            <div className="meibo-overlay-actions">
+              <button
+                type="button"
+                onClick={() => setShowTorikeshiOverlay(false)}
+                disabled={torikeshiSubmitting}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                className="danger"
+                onClick={executeTorikeshi}
+                disabled={torikeshiSubmitting}
+              >
+                {torikeshiSubmitting ? '処理中...' : '取り消し実行'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

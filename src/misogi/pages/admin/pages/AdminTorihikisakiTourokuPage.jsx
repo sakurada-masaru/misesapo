@@ -63,6 +63,30 @@ function norm(v) {
   return String(v || '').trim();
 }
 
+function normalizeKeyPart(v) {
+  return norm(v).toLowerCase().replace(/\s+/g, ' ');
+}
+
+function stableHash(input) {
+  // FNV-1a 32-bit
+  let h = 0x811c9dc5;
+  const s = String(input || '');
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = (h >>> 0) * 0x01000193;
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+function buildOnboardingIdempotencyKey(tName, yName, tenpoName) {
+  const keySource = [
+    normalizeKeyPart(tName),
+    normalizeKeyPart(yName),
+    normalizeKeyPart(tenpoName),
+  ].join('|');
+  return `onboarding-${stableHash(keySource)}`;
+}
+
 export default function AdminTorihikisakiTourokuPage() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -156,6 +180,45 @@ export default function AdminTorihikisakiTourokuPage() {
     return selectedTorihikisakiId ? torihikisakiById.get(selectedTorihikisakiId) : null;
   }, [selectedTorihikisakiId, torihikisakiById]);
 
+  const findExistingTenpoByNames = useCallback(async ({ torihikisakiName, yagouName, tenpoName }) => {
+    const tNameNorm = normalizeKeyPart(torihikisakiName);
+    const yNameNorm = normalizeKeyPart(yagouName);
+    const tenpoNameNorm = normalizeKeyPart(tenpoName);
+    if (!tNameNorm || !yNameNorm || !tenpoNameNorm) return null;
+
+    const toriData = await apiJson('/master/torihikisaki?limit=5000&jotai=yuko');
+    const toriItems = getItems(toriData);
+    const matchedTori = toriItems.find((it) => normalizeKeyPart(it?.name) === tNameNorm);
+    if (!matchedTori?.torihikisaki_id) return null;
+
+    const yagouQs = new URLSearchParams({
+      limit: '5000',
+      jotai: 'yuko',
+      torihikisaki_id: matchedTori.torihikisaki_id,
+    });
+    const yagouData = await apiJson(`/master/yagou?${yagouQs.toString()}`);
+    const yagouItems = getItems(yagouData);
+    const matchedYagou = yagouItems.find((it) => normalizeKeyPart(it?.name) === yNameNorm);
+    if (!matchedYagou?.yagou_id) return null;
+
+    const tenpoQs = new URLSearchParams({
+      limit: '20000',
+      jotai: 'yuko',
+      torihikisaki_id: matchedTori.torihikisaki_id,
+      yagou_id: matchedYagou.yagou_id,
+    });
+    const tenpoData = await apiJson(`/master/tenpo?${tenpoQs.toString()}`);
+    const tenpoItems = getItems(tenpoData);
+    const matchedTenpo = tenpoItems.find((it) => normalizeKeyPart(it?.name) === tenpoNameNorm);
+    if (!matchedTenpo?.tenpo_id) return null;
+
+    return {
+      torihikisaki: matchedTori,
+      yagou: matchedYagou,
+      tenpo: matchedTenpo,
+    };
+  }, []);
+
   const createSoukoIfMissing = useCallback(async (tenpoId, tenpoName) => {
     if (!tenpoId) return;
     const checkQs = new URLSearchParams({ limit: '1', jotai: 'yuko', tenpo_id: tenpoId });
@@ -184,7 +247,22 @@ export default function AdminTorihikisakiTourokuPage() {
     setOkMsg('');
     setLoading(true);
     try {
-      const idempotencyKey = `onboarding-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const existing = await findExistingTenpoByNames({
+        torihikisakiName: tName,
+        yagouName: yName,
+        tenpoName,
+      });
+      if (existing?.tenpo?.tenpo_id) {
+        const go = window.confirm(
+          `同名の既存店舗が見つかりました。\n` +
+          `${existing.torihikisaki?.name} / ${existing.yagou?.name} / ${existing.tenpo?.name}\n\n` +
+          '既存カルテを開きますか？'
+        );
+        if (go) nav(`/admin/tenpo/${encodeURIComponent(existing.tenpo.tenpo_id)}`);
+        return;
+      }
+
+      const idempotencyKey = buildOnboardingIdempotencyKey(tName, yName, tenpoName);
       const result = await apiJson('/master/tenpo', {
         method: 'POST',
         body: {
@@ -248,6 +326,7 @@ export default function AdminTorihikisakiTourokuPage() {
     bulkUrl,
     bulkJouhouTourokuShaName,
     bulkOpenKarteAfterCreate,
+    findExistingTenpoByNames,
     reloadTorihikisaki,
     nav,
   ]);
@@ -299,6 +378,23 @@ export default function AdminTorihikisakiTourokuPage() {
     setOkMsg('');
     setLoading(true);
     try {
+      const dupQs = new URLSearchParams({
+        limit: '20000',
+        jotai: 'yuko',
+        torihikisaki_id: torihikisakiId,
+        yagou_id: yagouId,
+      });
+      const dupData = await apiJson(`/master/tenpo?${dupQs.toString()}`);
+      const dupItems = getItems(dupData);
+      const hit = dupItems.find((it) => normalizeKeyPart(it?.name) === normalizeKeyPart(name));
+      if (hit?.tenpo_id) {
+        const go = window.confirm(
+          `同名の既存店舗が見つかりました: ${hit.name}\n既存カルテを開きますか？`
+        );
+        if (go) nav(`/admin/tenpo/${encodeURIComponent(hit.tenpo_id)}`);
+        return;
+      }
+
       const tenpo = await apiJson('/master/tenpo', {
         method: 'POST',
         body: { name, torihikisaki_id: torihikisakiId, yagou_id: yagouId, jotai: 'yuko' },

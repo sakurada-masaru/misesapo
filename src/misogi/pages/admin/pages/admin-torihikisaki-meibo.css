@@ -300,10 +300,28 @@
 .meibo-list-head {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   padding: 12px 12px;
   border-bottom: 1px solid var(--meibo-border);
   color: var(--meibo-muted);
   font-size: 12px;
+}
+
+.meibo-cancel-btn {
+  margin-left: auto;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255, 90, 90, 0.12);
+  color: var(--meibo-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.meibo-cancel-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .meibo-list-scroll {
@@ -313,6 +331,7 @@
 
 .meibo-row {
   width: 100%;
+  display: block;
   text-align: left;
   border: none;
   border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -320,6 +339,16 @@
   background: transparent;
   color: var(--meibo-text);
   cursor: pointer;
+}
+
+.meibo-row-check {
+  margin-bottom: 8px;
+}
+
+.meibo-row-check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--meibo-accent);
 }
 
 .meibo-row:hover {
@@ -561,6 +590,126 @@
   color: var(--meibo-text);
   text-decoration: none;
   font-size: 12px;
+}
+
+.meibo-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.meibo-overlay {
+  width: min(680px, 94vw);
+  max-height: 80vh;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: #0a1322;
+  color: var(--meibo-text);
+  padding: 14px;
+}
+
+.meibo-overlay h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.meibo-overlay p {
+  margin: 0 0 10px;
+  color: var(--meibo-muted);
+  font-size: 13px;
+}
+
+.meibo-overlay-list {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+.meibo-overlay-list .item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px;
+}
+
+.meibo-overlay-list .item:last-child {
+  border-bottom: none;
+}
+
+.meibo-overlay-list .nm {
+  font-weight: 700;
+}
+
+.meibo-overlay-list .id {
+  color: var(--meibo-muted);
+}
+
+.meibo-overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.meibo-overlay-actions button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: var(--meibo-text);
+  cursor: pointer;
+}
+
+.meibo-overlay-actions .danger {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+[data-theme="light"] .meibo-cancel-btn {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+[data-theme="light"] .meibo-overlay {
+  background: #ffffff;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+[data-theme="light"] .meibo-overlay p,
+[data-theme="light"] .meibo-overlay-list .id {
+  color: #64748b;
+}
+
+[data-theme="light"] .meibo-overlay-list {
+  border-color: #d1d5db;
+  background: #f8fafc;
+}
+
+[data-theme="light"] .meibo-overlay-list .item {
+  border-bottom-color: #e2e8f0;
+}
+
+[data-theme="light"] .meibo-overlay-actions button {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #111827;
+}
+
+[data-theme="light"] .meibo-overlay-actions .danger {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
 }
 
 @media (max-width: 980px) {

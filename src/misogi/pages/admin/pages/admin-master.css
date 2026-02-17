@@ -58,6 +58,19 @@
   margin-bottom: 14px;
 }
 
+.admin-master-inline-editor {
+  border: 1px solid #273049;
+  border-radius: 12px;
+  background: #0f172a;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.admin-master-inline-editor-title {
+  margin: 0 0 12px;
+  color: #e9eefc;
+}
+
 .admin-master-back {
   color: #9aa6c5;
   text-decoration: none;
@@ -918,6 +931,15 @@
 [data-theme="light"] .admin-master-header-tabs,
 [data-theme="light"] .admin-master-content,
 [data-theme="light"] .admin-master-back {
+  color: #000000;
+}
+
+[data-theme="light"] .admin-master-inline-editor {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+[data-theme="light"] .admin-master-inline-editor-title {
   color: #000000;
 }
 
