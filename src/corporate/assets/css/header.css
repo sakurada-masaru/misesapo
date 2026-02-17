@@ -429,7 +429,6 @@
     z-index: 9998;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateY(-100%);
-    border-radius: 0 0 12px 12px;
 }
 
 .normal-header.visible {
@@ -712,8 +711,7 @@
     }
 
     .normal-header-logo {
-        position: static;
-        left: auto;
+        position: absolute;
     }
 
     .normal-header-nav {
@@ -796,4 +794,8 @@
     }
 }
 
-
+@media (max-width: 768px) {
+    .normal-header-logo {
+        position: absolute;
+    }
+}
