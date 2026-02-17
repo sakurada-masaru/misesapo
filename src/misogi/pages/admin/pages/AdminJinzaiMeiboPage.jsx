@@ -41,16 +41,96 @@ function normStr(v) {
 function normArr(v) {
   if (Array.isArray(v)) return v.filter(Boolean).map(String);
   if (typeof v === 'string' && v.trim().startsWith('[')) {
+    const raw = v.trim();
+    const normalized = raw
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'");
     try {
-      const a = JSON.parse(v);
+      const a = JSON.parse(normalized);
       return Array.isArray(a) ? a.filter(Boolean).map(String) : [];
     } catch {
+      const single = normalized.match(/^\[\s*"([^"]+)"\s*\]$/);
+      if (single) return [String(single[1])];
       return [];
     }
   }
   if (!v) return [];
   return [String(v)];
 }
+
+const SHOKUSHU_LABEL = {
+  keiei: '取締役',
+  seisou: '清掃',
+  maintenance: 'メンテナンス',
+  engineer: 'エンジニア',
+  eigyo: '営業',
+  sales: '営業',
+  jimu: '事務',
+  jinji: '人事',
+  keiri: '経理',
+  design: 'デザイン',
+  operator: 'オペレーション',
+  dev: '開発',
+};
+
+function shokushuLabel(v) {
+  const key = normStr(v).toLowerCase();
+  return SHOKUSHU_LABEL[key] || normStr(v);
+}
+
+function normalizeHanType(v) {
+  const s = String(v || '').trim().toLowerCase();
+  if (s === 'internal' || s === '自社') return 'internal';
+  if (s === 'gaibu' || s === '外部') return 'gaibu';
+  if (s === 'kigyou' || s === 'company' || s === '企業') return 'gaibu';
+  if (s === 'kojin' || s === 'personal' || s === '個人') return 'gaibu';
+  return '';
+}
+
+function normalizePartnerType(v) {
+  const s = String(v || '').trim().toLowerCase();
+  if (s === '個人') return 'kojin';
+  if (s === '企業') return 'kigyou';
+  if (s === 'kigyou' || s === 'company') return 'kigyou';
+  if (s === 'kojin' || s === 'personal') return 'kojin';
+  return '';
+}
+
+function normalizeKoyouKubun(v) {
+  const raw = String(v || '').trim();
+  if (!raw) return '';
+  const s = raw.toLowerCase();
+  if (raw === '役員' || s === 'yakuin' || s === 'officer' || s === 'executive') return 'yakuin';
+  if (s === 'seishain' || raw === '正社員') return 'seishain';
+  if (s === 'keiyaku_shain' || s === 'contract_staff' || raw === '契約社員') return 'keiyaku_shain';
+  if (s === 'gyomu_itaku' || raw === '業務委託') return 'gyomu_itaku';
+  if (s === 'arbeit_part' || s === 'part_time' || raw.includes('アルバイト') || raw.includes('パート') || raw.includes('ﾊﾟｰﾄ')) return 'arbeit_part';
+  if (s === 'haken_shain' || s === 'haken' || s === 'dispatch' || raw.includes('派遣')) return 'haken_shain';
+  return '';
+}
+
+function isHakenKoyou(v) {
+  return normalizeKoyouKubun(v) === 'haken_shain';
+}
+
+const HAN_TYPE_LABEL = {
+  internal: '自社',
+  gaibu: '外部',
+};
+
+const PARTNER_TYPE_LABEL = {
+  kojin: '個人',
+  kigyou: '企業',
+};
+
+const KOYOU_KUBUN_LABEL = {
+  yakuin: '役員',
+  seishain: '正社員',
+  keiyaku_shain: '契約社員',
+  gyomu_itaku: '業務委託',
+  arbeit_part: 'アルバイト/パート',
+  haken_shain: '派遣社員',
+};
 
 async function fetchJinzaiList({ limit = 2000, jotai = 'yuko' } = {}) {
   const base = JINZAI_API_BASE.replace(/\/$/, '');
@@ -176,7 +256,7 @@ export default function AdminJinzaiMeiboPage() {
           <span>職種(shokushu)</span>
           <select value={shokushu} onChange={(e) => setShokushu(e.target.value)}>
             <option value="">全て</option>
-            {options.shokushu.map((v) => <option key={v} value={v}>{v}</option>)}
+            {options.shokushu.map((v) => <option key={v} value={v}>{shokushuLabel(v)}</option>)}
           </select>
         </label>
         <div className="count">{filtered.length} 件</div>
@@ -204,6 +284,14 @@ export default function AdminJinzaiMeiboPage() {
               const id = it?.jinzai_id || it?.id || '';
               const ys = normArr(it?.yakuwari);
               const ss = normArr(it?.shokushu);
+              const han = normalizeHanType(it?.han_type);
+              const hanLabel = HAN_TYPE_LABEL[han] || normStr(it?.han_type) || '—';
+              const partner = normalizePartnerType(it?.partner_type);
+              const partnerLabel = partner
+                ? (partner === 'kigyou' && isHakenKoyou(it?.koyou_kubun) ? '派遣会社' : (PARTNER_TYPE_LABEL[partner] || partner))
+                : '—';
+              const koyou = normalizeKoyouKubun(it?.koyou_kubun);
+              const koyouLabel = KOYOU_KUBUN_LABEL[koyou] || normStr(it?.koyou_kubun) || '—';
               return (
                 <tr key={id || Math.random()}>
                   <td className="name">{it?.name || '(no name)'}</td>
@@ -214,12 +302,12 @@ export default function AdminJinzaiMeiboPage() {
                     {ys.map((v) => <span key={v} className="tag">{v}</span>)}
                   </td>
                   <td className="tags">
-                    {ss.map((v) => <span key={v} className="tag">{v}</span>)}
+                    {ss.map((v) => <span key={v} className="tag">{shokushuLabel(v)}</span>)}
                   </td>
                   <td className="busho">{it?.busho_names || normArr(it?.busho_ids).join(', ')}</td>
                   <td className="email">{it?.email || ''}</td>
                   <td className="phone">{it?.phone || ''}</td>
-                  <td className="koyou">{it?.koyou_kubun || ''}</td>
+                  <td className="koyou">{hanLabel} / {partnerLabel} / {koyouLabel}</td>
                   <td className="jotai">{it?.jotai || ''}</td>
                   <td className="actions">
                     <button onClick={() => copy(id)}>IDコピー</button>

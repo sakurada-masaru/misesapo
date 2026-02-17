@@ -1339,6 +1339,14 @@ export default function AdminTenpoKartePage() {
                   <div className="v-main">{tenpo?.phone || '—'}</div>
                 </div>
               </div>
+              <div className="kv">
+                <div className="k">連絡手段</div>
+                <div className="v">
+                  <div className="v-main">
+                    {String(karteDetail?.spec?.contact_method || tenpo?.contact_method || '').trim() || '—'}
+                  </div>
+                </div>
+              </div>
 
               <details className="karte-accordion">
                 <summary>
@@ -1587,6 +1595,14 @@ export default function AdminTenpoKartePage() {
                         value={String(karteDetail?.spec?.breaker_location || '')}
                         onChange={(e) => setKarteField('spec.breaker_location', clampStr(e.target.value, 60))}
                         placeholder="例: 厨房奥"
+                      />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">連絡手段</div>
+                      <input
+                        value={String(karteDetail?.spec?.contact_method || '')}
+                        onChange={(e) => setKarteField('spec.contact_method', clampStr(e.target.value, 80))}
+                        placeholder="例: 電話 / LINE / SMS / メール"
                       />
                     </label>
                   </div>

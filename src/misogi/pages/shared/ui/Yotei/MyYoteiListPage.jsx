@@ -16,6 +16,22 @@ function safeStr(v) {
   return String(v == null ? '' : v).trim();
 }
 
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = String(window.location?.hostname || '').toLowerCase();
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+function masterApiBase() {
+  if (isLocalUiHost()) return '/api-master';
+  return import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod';
+}
+
+function jinzaiApiBase() {
+  if (isLocalUiHost()) return '/api-jinzai';
+  return import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod';
+}
+
 function normalizeIdentity(v) {
   return safeStr(v);
 }
@@ -196,6 +212,12 @@ function formatNameId(name, id) {
   if (n) return n;
   if (i) return i;
   return '';
+}
+
+function stripMasterIdLabel(value) {
+  const s = safeStr(value);
+  if (!s) return '';
+  return s.replace(/\b(?:TENPO|YAGOU|TORI)#[-A-Za-z0-9_]+\b/g, '').trim();
 }
 
 function normalizeJotai(it) {
@@ -382,6 +404,10 @@ export default function MyYoteiListPage() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportTenpoId, setSupportTenpoId] = useState('');
   const [supportTenpoLabel, setSupportTenpoLabel] = useState('');
+  const [jinzaiMasterNameMap, setJinzaiMasterNameMap] = useState(new Map());
+  const [tenpoMetaMap, setTenpoMetaMap] = useState(new Map());
+  const [yagouNameMap, setYagouNameMap] = useState(new Map());
+  const [torihikisakiNameMap, setTorihikisakiNameMap] = useState(new Map());
 
   const range = useMemo(() => {
     const base = dayjs(dateISO);
@@ -491,6 +517,129 @@ export default function MyYoteiListPage() {
     if (!isAuthenticated || !activeJinzaiId) return;
     load();
   }, [isAuthenticated, activeJinzaiId, load]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const base = jinzaiApiBase().replace(/\/$/, '');
+        const res = await fetch(`${base}/jinzai?limit=2000&jotai=yuko`, {
+          headers: authHeaders(),
+          cache: 'no-store',
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data?.items || []);
+        const next = new Map();
+        (list || []).forEach((it) => {
+          const id = normId(it?.jinzai_id || it?.id);
+          const name = safeStr(it?.name || it?.display_name || it?.jinzai_name);
+          if (id && name && !next.has(id)) next.set(id, name);
+        });
+        if (alive) setJinzaiMasterNameMap(next);
+      } catch {
+        // noop
+      }
+    })();
+    return () => { alive = false; };
+  }, [authHeaders]);
+
+  useEffect(() => {
+    let alive = true;
+    const loadMasterRefs = async () => {
+      try {
+        const tIds = Array.from(new Set(
+          (items || [])
+            .map((it) => safeStr(it?.tenpo_id || it?.store_id))
+            .filter(Boolean)
+        ));
+        if (!tIds.length) return;
+        const base = masterApiBase().replace(/\/$/, '');
+        const headers = authHeaders();
+
+        const tenpoEntries = await Promise.all(
+          tIds.map(async (tenpoId) => {
+            try {
+              const res = await fetch(`${base}/master/tenpo/${encodeURIComponent(tenpoId)}`, {
+                headers,
+                cache: 'no-store',
+              });
+              if (!res.ok) return [tenpoId, null];
+              const it = await res.json();
+              return [tenpoId, {
+                yagou_id: safeStr(it?.yagou_id),
+                torihikisaki_id: safeStr(it?.torihikisaki_id),
+                yagou_name: safeStr(it?.yagou_name),
+                torihikisaki_name: safeStr(it?.torihikisaki_name),
+                address: safeStr(it?.address),
+                phone: safeStr(it?.phone || it?.tel || it?.phone_number),
+                contact_method: safeStr(
+                  it?.contact_method
+                  || it?.preferred_contact_method
+                  || it?.karte_detail?.spec?.contact_method
+                ),
+              }];
+            } catch {
+              return [tenpoId, null];
+            }
+          })
+        );
+        if (!alive) return;
+        const nextTenpo = new Map();
+        tenpoEntries.forEach(([id, meta]) => {
+          if (id && meta) nextTenpo.set(id, meta);
+        });
+        setTenpoMetaMap(nextTenpo);
+
+        const yIds = Array.from(new Set(
+          Array.from(nextTenpo.values()).map((m) => safeStr(m?.yagou_id)).filter(Boolean)
+        ));
+        const toriIds = Array.from(new Set(
+          Array.from(nextTenpo.values()).map((m) => safeStr(m?.torihikisaki_id)).filter(Boolean)
+        ));
+
+        const yEntries = await Promise.all(
+          yIds.map(async (yid) => {
+            try {
+              const res = await fetch(`${base}/master/yagou/${encodeURIComponent(yid)}`, { headers, cache: 'no-store' });
+              if (!res.ok) return [yid, ''];
+              const it = await res.json();
+              return [yid, safeStr(it?.name)];
+            } catch {
+              return [yid, ''];
+            }
+          })
+        );
+        if (alive) {
+          const next = new Map();
+          yEntries.forEach(([id, name]) => { if (id && name) next.set(id, name); });
+          setYagouNameMap(next);
+        }
+
+        const toriEntries = await Promise.all(
+          toriIds.map(async (tid) => {
+            try {
+              const res = await fetch(`${base}/master/torihikisaki/${encodeURIComponent(tid)}`, { headers, cache: 'no-store' });
+              if (!res.ok) return [tid, ''];
+              const it = await res.json();
+              return [tid, safeStr(it?.name)];
+            } catch {
+              return [tid, ''];
+            }
+          })
+        );
+        if (alive) {
+          const next = new Map();
+          toriEntries.forEach(([id, name]) => { if (id && name) next.set(id, name); });
+          setTorihikisakiNameMap(next);
+        }
+      } catch {
+        // noop
+      }
+    };
+    loadMasterRefs();
+    return () => { alive = false; };
+  }, [items, authHeaders]);
 
   const filteredItems = useMemo(() => {
     const me = normId(activeJinzaiId);
@@ -655,6 +804,21 @@ export default function MyYoteiListPage() {
                     const jotai = normalizeJotai(it);
                     const tenpoName = safeStr(it?.tenpo_name || it?.store_name || it?.target_name);
                     const tenpoId = safeStr(it?.tenpo_id || it?.store_id);
+                    const tenpoMeta = tenpoMetaMap.get(tenpoId) || null;
+                    const yagouId = safeStr(it?.yagou_id || tenpoMeta?.yagou_id);
+                    const toriId = safeStr(it?.torihikisaki_id || tenpoMeta?.torihikisaki_id);
+                    const yagouName = safeStr(it?.yagou_name || tenpoMeta?.yagou_name || yagouNameMap.get(yagouId));
+                    const torihikisakiName = safeStr(it?.torihikisaki_name || tenpoMeta?.torihikisaki_name || torihikisakiNameMap.get(toriId));
+                    const tenpoAddress = safeStr(it?.address || tenpoMeta?.address);
+                    const tenpoPhone = safeStr(it?.phone || it?.tel || it?.phone_number || tenpoMeta?.phone);
+                    const contactMethod = safeStr(
+                      it?.contact_method
+                      || it?.preferred_contact_method
+                      || tenpoMeta?.contact_method
+                    );
+                    const dispTorihikisaki = stripMasterIdLabel(torihikisakiName) || '-';
+                    const dispYagou = stripMasterIdLabel(yagouName) || '-';
+                    const dispTenpo = stripMasterIdLabel(tenpoName) || '(現場未設定)';
                     const memo = safeStr(it?.memo || it?.notes || it?.description);
                     const workType = safeStr(it?.work_type || it?.type || '');
                     const start = fmtTime(it?.start_at);
@@ -670,6 +834,11 @@ export default function MyYoteiListPage() {
                     const participantDisplay = Array.from(new Set(
                       participantEntries
                         .map((p) => formatNameId(p?.name || '', p?.id || ''))
+                        .filter(Boolean)
+                    ));
+                    const participantNameDisplay = Array.from(new Set(
+                      participantIds
+                        .map((pid) => safeStr(jinzaiMasterNameMap.get(normId(pid)) || jinzaiNameMap.get(normId(pid))))
                         .filter(Boolean)
                     ));
                     const serviceIds = [
@@ -725,9 +894,8 @@ export default function MyYoteiListPage() {
                         </div>
                         <div className="my-yotei-main">
                           <div className="my-yotei-tenpo">
-                            <div className="name">{tenpoName || '(現場未設定)'}</div>
+                            <div className="name">{dispTenpo}</div>
                             <div className="meta">
-                              {tenpoId ? <span className="code">{tenpoId}</span> : null}
                               {workType ? <span className="tag">{workType}</span> : null}
                             </div>
                           </div>
@@ -761,15 +929,20 @@ export default function MyYoteiListPage() {
                           <details className="my-yotei-detail">
                             <summary>詳細を開く</summary>
                             <div className="my-yotei-detail-grid">
-                              <div><span className="k">yotei_id</span><span className="v">{id || '-'}</span></div>
-                              <div><span className="k">yakusoku_id</span><span className="v">{safeStr(it?.yakusoku_id) || '-'}</span></div>
-                              <div><span className="k">店舗</span><span className="v">{formatNameId(tenpoName, tenpoId) || '-'}</span></div>
-                              <div><span className="k">jinzai</span><span className="v">{participantDisplay.length ? participantDisplay.join(', ') : (participantNames.length ? participantNames.join(', ') : (participantIds.length ? participantIds.join(', ') : '-'))}</span></div>
-                              <div><span className="k">service</span><span className="v">{serviceDisplay.length ? serviceDisplay.join(', ') : (serviceNames.length ? serviceNames.join(', ') : (serviceIds.length ? serviceIds.join(', ') : '-'))}</span></div>
+                              <div><span className="k">予定ID</span><span className="v">{id || '-'}</span></div>
+                              <div><span className="k">案件ID</span><span className="v">{safeStr(it?.yakusoku_id) || '-'}</span></div>
+                              <div><span className="k">取引先</span><span className="v">{dispTorihikisaki}</span></div>
+                              <div><span className="k">屋号</span><span className="v">{dispYagou}</span></div>
+                              <div><span className="k">店舗</span><span className="v">{dispTenpo}</span></div>
+                              <div><span className="k">住所</span><span className="v">{tenpoAddress || '-'}</span></div>
+                              <div><span className="k">電話番号</span><span className="v">{tenpoPhone || '-'}</span></div>
+                              <div><span className="k">連絡手段</span><span className="v">{contactMethod || '-'}</span></div>
+                              <div><span className="k">担当者</span><span className="v">{participantNameDisplay.length ? participantNameDisplay.join(', ') : (participantDisplay.length ? participantDisplay.join(', ') : (participantNames.length ? participantNames.join(', ') : (participantIds.length ? participantIds.join(', ') : '-')))}</span></div>
+                              <div><span className="k">サービス</span><span className="v">{serviceDisplay.length ? serviceDisplay.join(', ') : (serviceNames.length ? serviceNames.join(', ') : (serviceIds.length ? serviceIds.join(', ') : '-'))}</span></div>
                               <div><span className="k">サービス内容</span><span className="v">{serviceContents.length ? serviceContents.join(' / ') : '-'}</span></div>
-                              <div><span className="k">handover_to</span><span className="v">{handoverToDisplay.length ? handoverToDisplay.join(', ') : (handoverToIds.join(', ') || '-')}</span></div>
-                              <div><span className="k">handover_from</span><span className="v">{handoverFromDisplay.length ? handoverFromDisplay.join(', ') : (handoverFromIds.join(', ') || '-')}</span></div>
-                              <div><span className="k">status</span><span className="v">{safeStr(it?.jotai || it?.status) || '-'}</span></div>
+                              <div><span className="k">引き継ぎ先</span><span className="v">{handoverToDisplay.length ? handoverToDisplay.join(', ') : (handoverToIds.join(', ') || '-')}</span></div>
+                              <div><span className="k">引き継ぎ元</span><span className="v">{handoverFromDisplay.length ? handoverFromDisplay.join(', ') : (handoverFromIds.join(', ') || '-')}</span></div>
+                              <div><span className="k">状態</span><span className="v">{jotaiLabel(safeStr(it?.jotai || it?.status)) || '-'}</span></div>
                             </div>
                           </details>
                           {isDemo ? (

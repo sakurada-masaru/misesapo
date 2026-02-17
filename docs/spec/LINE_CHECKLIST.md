@@ -298,3 +298,27 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `/admin/kadai` を追加（一覧/新規/編集/取消）
 - [x] `kadai` collection を `lambda_torihikisaki_api.py` に追加（テーブル env `TABLE_KADAI`）
 - [x] 運用手順を `docs/spec/KADAI_LIST_RUNBOOK.md` に追加
+
+## JINZAI Affiliation Normalization (2026-02-16)
+
+- [x] 所属区分（`han_type`）を `internal | gaibu` に一本化する方針を実装
+- [x] 既存の `han_type = kigyou/kojin` は UI 上 `gaibu` として吸収表示
+- [x] 正規化スクリプトで `koyou_kubun` に応じて `han_type` を補正（`gyomu_itaku/haken_shain -> gaibu`）
+- [x] `koyou_kubun=役員` を `seishain` に正規化する吸収ルールを追加
+
+## YOTEI / Tenpo Karte Contact Fields (2026-02-16)
+
+- [x] `MyYoteiListPage` 詳細に `住所` / `電話番号` / `連絡手段` を表示
+- [x] `MyYoteiListPage` は `tenpo` 参照時に `address/phone/contact_method` を取得するよう拡張
+- [x] `AdminTenpoKartePage` の基本情報に `連絡手段` 表示を追加
+- [x] `AdminTenpoKartePage` のカルテ詳細（運用・鍵）に `連絡手段` 入力項目を追加
+
+## Admin Log Simplification (2026-02-16)
+
+- [x] `管理ログ提出` を「日付 / 提出者 / PR本文 / 状態」の最小入力に簡素化
+- [x] `name` 必須制約に対して、保存時に `PR本文` 先頭行から自動補完するよう統一
+
+## Master Visibility & Jinzai Meibo Label Alignment (2026-02-16)
+
+- [x] `人材名簿` の表示を `人材マスタ` と同じ正規化基準（所属区分/契約主体/契約形態）に統一
+- [x] 管理/情報のマスタ系ルートを `sakurada@misesapo.co.jp` 限定で表示するガードを追加

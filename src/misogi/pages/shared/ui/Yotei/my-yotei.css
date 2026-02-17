@@ -524,8 +524,19 @@
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--card-border);
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px 12px;
   color: var(--text);
+  min-height: 44px;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.my-yotei-chat-compose select {
+  font-weight: 700;
+}
+
+.my-yotei-chat-compose select option {
+  font-size: 1rem;
 }
 
 @media (min-width: 900px) {

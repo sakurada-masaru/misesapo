@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 // Hamburger / admin-top are provided by GlobalNav.
 import './admin-master.css';
@@ -34,6 +34,41 @@ function authHeaders() {
     legacyAuth ||
     '';
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function decodeJwtPayload(token) {
+  try {
+    const parts = String(token || '').split('.');
+    if (parts.length < 2) return null;
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    const json = atob(padded);
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function currentActorName() {
+  try {
+    const token =
+      localStorage.getItem('idToken') ||
+      localStorage.getItem('cognito_id_token') ||
+      localStorage.getItem('id_token') ||
+      localStorage.getItem('accessToken') ||
+      localStorage.getItem('cognito_access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const payload = decodeJwtPayload(token);
+    const fromJwt = payload?.name || payload?.email || payload?.['cognito:username'];
+    if (fromJwt) return String(fromJwt);
+  } catch {}
+  try {
+    const legacy = JSON.parse(localStorage.getItem('misesapo_auth') || '{}');
+    return String(legacy?.name || legacy?.email || '').trim() || 'unknown';
+  } catch {
+    return 'unknown';
+  }
 }
 
 function toQuery(query) {
@@ -121,6 +156,19 @@ function formatCellValue(value) {
   return s;
 }
 
+function toSearchText(value) {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) return value.map((v) => toSearchText(v)).join(' ');
+  if (typeof value === 'object') {
+    try {
+      return Object.values(value).map((v) => toSearchText(v)).join(' ');
+    } catch {
+      return '';
+    }
+  }
+  return String(value);
+}
+
 function isDiagMode() {
   try {
     if (typeof window === 'undefined') return false;
@@ -155,9 +203,11 @@ function getDiagStep() {
 
 export default function AdminMasterBase({
   title,
+  onTitleClick = null,
   resource,
   idKey,
   apiBase,
+  pageClassName = '',
   // デフォルトは master API だが、jinzai 等「/master を持たないAPI」もあるため切替可能にする。
   // 例) resourceBasePath="" + resource="jinzai" => "/jinzai"
   resourceBasePath = '/master',
@@ -169,6 +219,20 @@ export default function AdminMasterBase({
   onAfterSave,
   localSearch = null,
   renderModalExtra = null,
+  headerTabs = null,
+  activeHeaderTab = '',
+  onHeaderTabChange = null,
+  clientFilter = null,
+  canDeleteRow = null,
+  beforeDelete = null,
+  enableBulkDelete = false,
+  beforeBulkDelete = null,
+  enableRowDetail = false,
+  rowDetailKeys = null,
+  renderRowDetail = null,
+  showJotaiColumn = true,
+  showJotaiEditor = true,
+  normalizeEditingModel = null,
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -182,11 +246,58 @@ export default function AdminMasterBase({
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [selectedRowIds, setSelectedRowIds] = useState([]);
+  const [expandedRowId, setExpandedRowId] = useState('');
+  const [inlineSaving, setInlineSaving] = useState({});
+  const [multiSelectOverlayField, setMultiSelectOverlayField] = useState('');
   const [searchText, setSearchText] = useState('');
   const [uiDebug, setUiDebug] = useState(null);
+  const textAreaRefs = useRef({});
   const diagMode = isDiagMode();
   const diagStep = getDiagStep();
   const noTableMode = isNoTableMode();
+
+  const setTextAreaRef = useCallback((fieldKey, el) => {
+    if (!fieldKey) return;
+    if (!el) {
+      delete textAreaRefs.current[fieldKey];
+      return;
+    }
+    textAreaRefs.current[fieldKey] = el;
+  }, []);
+
+  const applyTextTool = useCallback((fieldKey, tool) => {
+    const key = String(fieldKey || '');
+    if (!key) return;
+    const el = textAreaRefs.current[key];
+    const current = String(editing?.[key] ?? '');
+    const start = Number.isFinite(el?.selectionStart) ? el.selectionStart : current.length;
+    const end = Number.isFinite(el?.selectionEnd) ? el.selectionEnd : current.length;
+    const selected = current.slice(start, end);
+    let insert = '';
+
+    if (tool === 'date') insert = new Date().toLocaleString('ja-JP');
+    if (tool === 'heading') insert = `## ${selected || '見出し'}`;
+    if (tool === 'bullet') insert = `- ${selected || ''}`;
+    if (tool === 'check') insert = `- [ ] ${selected || ''}`;
+    if (tool === 'separator') insert = '\n---\n';
+
+    if (!insert) return;
+    const next = `${current.slice(0, start)}${insert}${current.slice(end)}`;
+    setEditing((prev) => ({ ...prev, [key]: next }));
+    requestAnimationFrame(() => {
+      const node = textAreaRefs.current[key];
+      if (!node) return;
+      const pos = start + insert.length;
+      node.focus();
+      try {
+        node.setSelectionRange(pos, pos);
+      } catch {
+        // noop
+      }
+    });
+  }, [editing]);
 
   // NOTE: Many pages pass inline arrays/objects for fields/filters/localSearch.
   // If we use those refs directly as memo deps, opening a modal causes full table re-render.
@@ -333,13 +444,16 @@ export default function AdminMasterBase({
     }
 
     // Step6 / normal: setEditing then open.
-    setEditing(initial);
+    const normalized = (typeof normalizeEditingModel === 'function')
+      ? (normalizeEditingModel(initial, { mode: 'create' }) || initial)
+      : initial;
+    setEditing(normalized);
     if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
       window.requestAnimationFrame(() => setModalOpen(true));
     } else {
       setModalOpen(true);
     }
-  }, [fields, diagMode, diagStep, fixedNewValues]);
+  }, [fields, diagMode, diagStep, fixedNewValues, normalizeEditingModel]);
 
   const openEdit = useCallback((row) => {
     if (diagMode && !diagStep) {
@@ -350,16 +464,20 @@ export default function AdminMasterBase({
     if (!diagMode) setUiDebug({ action: 'openEdit', at, id: pickId(row, idKey) });
     const model = { ...row };
     if (!model.jotai) model.jotai = 'yuko';
-    setEditing(model);
+    const normalized = (typeof normalizeEditingModel === 'function')
+      ? (normalizeEditingModel(model, { mode: 'edit' }) || model)
+      : model;
+    setEditing(normalized);
     if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
       window.requestAnimationFrame(() => setModalOpen(true));
     } else {
       setModalOpen(true);
     }
-  }, [diagMode, diagStep, idKey]);
+  }, [diagMode, diagStep, idKey, normalizeEditingModel]);
 
   const closeModal = useCallback(() => {
     setUiDebug({ action: 'closeModal', at: new Date().toISOString() });
+    setMultiSelectOverlayField('');
     setModalOpen(false);
     setEditing(null);
   }, []);
@@ -380,16 +498,35 @@ export default function AdminMasterBase({
     if (!editing) return;
     setSaving(true);
     try {
-      const currentId = pickId(editing, idKey);
+      const preModel = (typeof normalizeEditingModel === 'function')
+        ? (normalizeEditingModel(editing, { mode: pickId(editing, idKey) ? 'edit' : 'create', phase: 'save' }) || editing)
+        : editing;
+
+      const currentId = pickId(preModel, idKey);
       const isUpdate = !!currentId && !String(currentId).startsWith('TMP#');
+      if (!isUpdate) {
+        const missingRequired = (fields || [])
+          .filter((f) => f?.required === true)
+          .filter((f) => {
+            const v = preModel?.[f.key];
+            return v === undefined || v === null || String(v).trim() === '';
+          });
+        if (missingRequired.length) {
+          const labels = missingRequired.map((f) => f.label || f.key).join('\n- ');
+          window.alert(`必須項目が未入力です。\n- ${labels}`);
+          return;
+        }
+      }
       const path = isUpdate
         ? buildResourcePath(`${resource}/${encodeURIComponent(currentId)}`)
         : buildResourcePath(resource);
       const method = isUpdate ? 'PUT' : 'POST';
+      const actor = currentActorName();
+      const payload = { ...preModel, updated_by: actor };
       const res = await apiFetch(apiBase, path, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editing),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -405,8 +542,8 @@ export default function AdminMasterBase({
         try {
           await onAfterSave({
             isUpdate,
-            id: pickId(responseData, idKey) || currentId || editing?.[idKey] || '',
-            editing,
+            id: pickId(responseData, idKey) || currentId || preModel?.[idKey] || '',
+            editing: preModel,
             responseData,
             request: (hookPath, hookOptions = {}) => {
               // 互換: 既存フックは `/souko` のように prefix なしで指定しているため、
@@ -430,20 +567,57 @@ export default function AdminMasterBase({
     } finally {
       setSaving(false);
     }
-  }, [editing, idKey, resource, closeModal, loadItems, onAfterSave, apiBase, buildResourcePath, resourceBasePath]);
+  }, [editing, idKey, resource, closeModal, loadItems, onAfterSave, apiBase, buildResourcePath, resourceBasePath, fields, normalizeEditingModel]);
 
-  const onDelete = useCallback((row) => {
+  const onDelete = useCallback(async (row) => {
+    if (typeof canDeleteRow === 'function' && !canDeleteRow(row)) {
+      return;
+    }
+    if (typeof beforeDelete === 'function') {
+      const ok = await beforeDelete(row);
+      if (!ok) return;
+    }
     setUiDebug({ action: 'openDeleteConfirm', at: new Date().toISOString(), id: pickId(row, idKey) });
     const rowId = pickId(row, idKey);
     if (!rowId) return;
     setDeleteTarget(row);
-  }, [idKey]);
+  }, [idKey, canDeleteRow, beforeDelete]);
 
   const closeDeleteConfirm = useCallback(() => {
     if (deleting) return;
     setUiDebug({ action: 'closeDeleteConfirm', at: new Date().toISOString() });
     setDeleteTarget(null);
   }, [deleting]);
+
+  useEffect(() => {
+    if (!enableBulkDelete) {
+      setSelectedRowIds([]);
+    }
+  }, [enableBulkDelete]);
+
+  const toggleRowSelect = useCallback((rowId, checked) => {
+    setSelectedRowIds((prev) => {
+      const s = new Set(prev);
+      if (checked) s.add(rowId);
+      else s.delete(rowId);
+      return Array.from(s);
+    });
+  }, []);
+
+  const toggleSelectAllVisible = useCallback((checked, rows) => {
+    const ids = (rows || [])
+      .filter((row) => (typeof canDeleteRow !== 'function' || canDeleteRow(row)))
+      .map((row) => pickId(row, idKey))
+      .filter(Boolean);
+    setSelectedRowIds((prev) => {
+      const s = new Set(prev);
+      ids.forEach((rid) => {
+        if (checked) s.add(rid);
+        else s.delete(rid);
+      });
+      return Array.from(s);
+    });
+  }, [idKey, canDeleteRow]);
 
   const confirmDelete = useCallback(async () => {
     const row = deleteTarget;
@@ -467,6 +641,13 @@ export default function AdminMasterBase({
     }
   }, [deleteTarget, idKey, apiBase, buildResourcePath, resource, loadItems]);
 
+  const toggleRowDetail = useCallback((row) => {
+    if (!enableRowDetail) return;
+    const rid = pickId(row, idKey);
+    if (!rid) return;
+    setExpandedRowId((prev) => (prev === rid ? '' : rid));
+  }, [enableRowDetail, idKey]);
+
   const fieldByKey = useMemo(() => {
     const m = new Map();
     (fields || []).forEach((f) => {
@@ -476,22 +657,125 @@ export default function AdminMasterBase({
     return m;
   }, [fieldsSig]); // keep stable even if fields array ref changes
 
+  const rowDetailItems = useCallback((row) => {
+    const keys = Array.isArray(rowDetailKeys) && rowDetailKeys.length
+      ? rowDetailKeys
+      : Object.keys(row || {});
+    const items = keys
+      .filter((k) => Boolean(k))
+      .map((k) => {
+        const f = fieldByKey.get(k);
+        const label = f?.label || (k === idKey ? 'ID' : (k === 'jotai' ? '状態' : k));
+        const raw = row?.[k];
+        const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
+        return { key: k, label, value: formatCellValue(v) };
+      });
+    return items;
+  }, [rowDetailKeys, fieldByKey, idKey]);
+
+  const onInlineFieldChange = useCallback(async (row, field, value) => {
+    const rowId = pickId(row, idKey);
+    if (!rowId || !field?.key) return;
+    const key = String(field.key);
+    const saveKey = `${rowId}:${key}`;
+    setInlineSaving((prev) => ({ ...prev, [saveKey]: true }));
+
+    const prevItems = items;
+    const actor = currentActorName();
+    const nextItems = (items || []).map((it) => (
+      pickId(it, idKey) === rowId ? { ...it, [key]: value, updated_by: actor } : it
+    ));
+    setItems(nextItems);
+
+    try {
+      const path = buildResourcePath(`${resource}/${encodeURIComponent(rowId)}`);
+      const target = nextItems.find((it) => pickId(it, idKey) === rowId) || row;
+      const res = await apiFetch(apiBase, path, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(target),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`${resource} 更新失敗 (${res.status}) ${text}`);
+      }
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+      if (data && typeof data === 'object') {
+        setItems((curr) => (curr || []).map((it) => (
+          pickId(it, idKey) === rowId ? { ...it, ...data } : it
+        )));
+      }
+    } catch (e) {
+      setItems(prevItems);
+      window.alert(e.message || '状況更新に失敗しました');
+    } finally {
+      setInlineSaving((prev) => {
+        const n = { ...prev };
+        delete n[saveKey];
+        return n;
+      });
+    }
+  }, [apiBase, buildResourcePath, idKey, items, resource]);
+
   const columns = useMemo(() => {
-    return [
+    const base = [
       { key: idKey, label: 'ID' },
-      ...fields.map((f) => ({ key: f.key, label: f.label })),
-      { key: 'jotai', label: '状態' },
+      ...fields.map((f) => ({ key: f.key, label: f.columnLabel || f.label })),
     ];
-  }, [fieldsSig, idKey]);
+    if (showJotaiColumn) base.push({ key: 'jotai', label: '状態' });
+    return base;
+  }, [fieldsSig, idKey, showJotaiColumn]);
 
   const visibleItems = useMemo(() => {
     const q = String(searchText || '').trim().toLowerCase();
     const keys = Array.isArray(localSearch?.keys) ? localSearch.keys : [];
-    if (!q || !keys.length) return items;
-    return items.filter((row) =>
-      keys.some((k) => String(row?.[k] ?? '').toLowerCase().includes(q))
+    const baseItems = typeof clientFilter === 'function'
+      ? (items || []).filter((row) => clientFilter(row))
+      : (items || []);
+    if (!q || !keys.length) return baseItems;
+    return baseItems.filter((row) =>
+      keys.some((k) => toSearchText(row?.[k]).toLowerCase().includes(q))
     );
-  }, [items, searchText, localSearchKeysSig]);
+  }, [items, searchText, localSearchKeysSig, clientFilter]);
+
+  const onBulkDelete = useCallback(async () => {
+    const targetRows = (visibleItems || []).filter((row) => selectedRowIds.includes(pickId(row, idKey)));
+    if (!targetRows.length) return;
+    if (typeof beforeBulkDelete === 'function') {
+      const ok = await beforeBulkDelete(targetRows);
+      if (!ok) return;
+    }
+    setBulkDeleting(true);
+    try {
+      let okCount = 0;
+      let ngCount = 0;
+      for (const row of targetRows) {
+        const rid = pickId(row, idKey);
+        if (!rid) continue;
+        try {
+          const res = await apiFetch(apiBase, buildResourcePath(`${resource}/${encodeURIComponent(rid)}`), {
+            method: 'DELETE',
+          });
+          if (!res.ok) throw new Error(`${res.status}`);
+          okCount += 1;
+        } catch {
+          ngCount += 1;
+        }
+      }
+      setSelectedRowIds([]);
+      await loadItems();
+      if (ngCount > 0) {
+        window.alert(`一括削除完了: 成功 ${okCount}件 / 失敗 ${ngCount}件`);
+      }
+    } finally {
+      setBulkDeleting(false);
+    }
+  }, [visibleItems, selectedRowIds, idKey, beforeBulkDelete, apiBase, buildResourcePath, resource, loadItems]);
 
   // Rendering the full table for every modal state change can stall the UI on large lists.
   // Memoize table rows so opening/closing the modal doesn't redo heavy cell formatting work.
@@ -500,6 +784,21 @@ export default function AdminMasterBase({
       <table className="admin-master-table">
         <thead>
           <tr>
+            {enableBulkDelete ? (
+              <th className="bulk-check-col">
+                <input
+                  type="checkbox"
+                  checked={(() => {
+                    const ids = visibleItems
+                      .filter((row) => (typeof canDeleteRow !== 'function' || canDeleteRow(row)))
+                      .map((row) => pickId(row, idKey))
+                      .filter(Boolean);
+                    return ids.length > 0 && ids.every((rid) => selectedRowIds.includes(rid));
+                  })()}
+                  onChange={(e) => toggleSelectAllVisible(e.target.checked, visibleItems)}
+                />
+              </th>
+            ) : null}
             {columns.map((c) => <th key={c.key}>{c.label}</th>)}
             <th>操作</th>
           </tr>
@@ -507,41 +806,170 @@ export default function AdminMasterBase({
         <tbody>
           {visibleItems.length === 0 && !loading && (
             <tr>
-              <td colSpan={columns.length + 1} className="empty">データがありません</td>
+              <td colSpan={columns.length + 1 + (enableBulkDelete ? 1 : 0)} className="empty">データがありません</td>
             </tr>
           )}
           {visibleItems.map((row) => {
             const rid = pickId(row, idKey);
+            const isExpanded = !!rid && expandedRowId === rid;
+            const rowDeletable = typeof canDeleteRow !== 'function' || canDeleteRow(row);
             return (
-              <tr key={rid || Math.random()}>
-                {columns.map((c) => {
-                  const f = fieldByKey.get(c.key);
-                  const raw = row?.[c.key];
-                  const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
-                  return <td key={`${rid}-${c.key}`}>{formatCellValue(v)}</td>;
-                })}
-                <td className="actions">
-                  <button type="button" onClick={() => openEdit(row)}>編集</button>
-                  <button type="button" className="danger" onClick={() => onDelete(row)}>取消</button>
-                </td>
-              </tr>
+              <React.Fragment key={rid || Math.random()}>
+                <tr
+                  className={enableRowDetail ? 'row-clickable' : ''}
+                  onClick={() => toggleRowDetail(row)}
+                >
+                  {enableBulkDelete ? (
+                    <td className="bulk-check-col">
+                      {rowDeletable ? (
+                        <input
+                          type="checkbox"
+                          checked={selectedRowIds.includes(rid)}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleRowSelect(rid, e.target.checked);
+                          }}
+                        />
+                      ) : null}
+                    </td>
+                  ) : null}
+                  {columns.map((c) => {
+                    const f = fieldByKey.get(c.key);
+                    const raw = row?.[c.key];
+                    if (f?.type === 'select' && f?.inlineEdit === true) {
+                      const valueKey = f.valueKey || f.key;
+                      const labelKey = f.labelKey || 'name';
+                      const options = f.options || [];
+                      const rowId = pickId(row, idKey);
+                      const saveKey = `${rowId}:${String(f.key)}`;
+                      const busy = !!inlineSaving[saveKey];
+                      return (
+                        <td key={`${rid}-${c.key}`}>
+                          <select
+                            className="admin-master-inline-select"
+                            value={raw ?? ''}
+                            disabled={busy}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              onInlineFieldChange(row, f, e.target.value);
+                            }}
+                          >
+                            {options.map((opt) => {
+                              const v = opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '';
+                              const l = opt?.[labelKey] ?? opt?.label ?? v;
+                              if (!v) return null;
+                              return <option key={String(v)} value={String(v)}>{l}</option>;
+                            })}
+                          </select>
+                        </td>
+                      );
+                    }
+                    const rendered = typeof f?.render === 'function' ? f.render(raw, row) : null;
+                    if (rendered !== null && rendered !== undefined) {
+                      return <td key={`${rid}-${c.key}`}>{rendered}</td>;
+                    }
+                    const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
+                    return <td key={`${rid}-${c.key}`}>{formatCellValue(v)}</td>;
+                  })}
+                  <td className="actions">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEdit(row);
+                      }}
+                    >
+                      編集
+                    </button>
+                    {rowDeletable ? (
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void onDelete(row);
+                        }}
+                      >
+                        取消
+                      </button>
+                    ) : null}
+                  </td>
+                </tr>
+                {enableRowDetail && isExpanded ? (
+                  <tr className="row-detail">
+                    <td colSpan={columns.length + 1 + (enableBulkDelete ? 1 : 0)}>
+                      {typeof renderRowDetail === 'function'
+                        ? renderRowDetail({
+                          row,
+                          rowId: rid,
+                          items: rowDetailItems(row),
+                          onInlineFieldChange: (field, value) => onInlineFieldChange(row, { key: field }, value),
+                          inlineSaving,
+                        })
+                        : (rowDetailItems(row).length ? (
+                          <div className="row-detail-grid">
+                            {rowDetailItems(row).map((it) => (
+                              <div key={`${rid}-detail-${it.key}`} className="row-detail-item">
+                                <div className="k">{it.label}</div>
+                                <div className="v">{it.value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="row-detail-empty">詳細はありません</div>
+                        ))}
+                    </td>
+                  </tr>
+                ) : null}
+              </React.Fragment>
             );
           })}
         </tbody>
       </table>
     </section>
-  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, idKey]);
+  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, idKey, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail]);
 
   return (
-    <div className="admin-master-page">
+    <div className={`admin-master-page ${pageClassName || ''}`.trim()} data-resource={resource}>
       <div className="admin-master-content">
         <header className="admin-master-header">
           <div className="admin-top-left">
             {/* GlobalNav handles navigation */}
           </div>
-          <h1>{title}</h1>
+          <h1
+            onClick={typeof onTitleClick === 'function' ? onTitleClick : undefined}
+            style={typeof onTitleClick === 'function' ? { cursor: 'pointer', userSelect: 'none' } : undefined}
+          >
+            {title}
+          </h1>
+          {Array.isArray(headerTabs) && headerTabs.length > 0 ? (
+            <div className="admin-master-header-tabs">
+              {headerTabs.map((tab) => (
+                <button
+                  key={String(tab?.value || '')}
+                  type="button"
+                  className={`admin-master-header-tab ${String(activeHeaderTab) === String(tab?.value || '') ? 'is-active' : ''} ${String(tab?.tone || '')}`}
+                  onClick={() => onHeaderTabChange?.(String(tab?.value || ''))}
+                >
+                  {tab?.label || tab?.value}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <div className="admin-master-header-actions">
             <button type="button" onClick={openCreate} className="primary">新規登録</button>
+            {enableBulkDelete ? (
+              <button
+                type="button"
+                className="danger"
+                disabled={bulkDeleting || selectedRowIds.length === 0}
+                onClick={() => void onBulkDelete()}
+              >
+                {bulkDeleting ? '削除中...' : `選択削除(${selectedRowIds.length})`}
+              </button>
+            ) : null}
             <button type="button" onClick={loadItems} disabled={loading}>{loading ? '更新中...' : '更新'}</button>
           </div>
         </header>
@@ -558,12 +986,18 @@ export default function AdminMasterBase({
             <h2 style={{ margin: '0 0 12px' }}>{pickId(editing, idKey) ? '編集' : '新規登録'}</h2>
             <div className="admin-master-modal-grid">
               {fields.map((f) => {
-                const options = f.sourceKey ? (parents[f.sourceKey] || []) : (f.options || []);
+                const options = f.sourceKey
+                  ? (parents[f.sourceKey] || [])
+                  : (typeof f.options === 'function' ? (f.options(parents || EMPTY_OBJ) || []) : (f.options || []));
                 if (f.type === 'select') {
+                  const modalColSpan = Number(f.modalColSpan || 0);
                   const valueKey = f.valueKey || f.key;
                   const labelKey = f.labelKey || 'name';
                   return (
-                    <label key={f.key}>
+                    <label
+                      key={f.key}
+                      style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
+                    >
                       <span>{f.label}</span>
                       <select
                         value={editing[f.key] || ''}
@@ -591,9 +1025,194 @@ export default function AdminMasterBase({
                     </label>
                   );
                 }
+                if (f.type === 'multi_select') {
+                  const modalColSpan = Number(f.modalColSpan || 0);
+                  const valueKey = f.valueKey || f.key;
+                  const labelKey = f.labelKey || 'name';
+                  const currentValue = Array.isArray(editing[f.key]) ? editing[f.key].map(String) : [];
+                  const isOverlay = f.overlay === true;
+                  const selectedLabels = options
+                    .filter((opt) => currentValue.includes(String(opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '')))
+                    .map((opt) => String(opt?.[labelKey] ?? opt?.label ?? opt?.[valueKey] ?? opt?.value ?? opt?.id ?? ''))
+                    .filter(Boolean);
+
+                  if (isOverlay) {
+                    const overlayKey = String(f.key || '');
+                    const opened = multiSelectOverlayField === overlayKey;
+                    const summary = selectedLabels.length
+                      ? `${selectedLabels.slice(0, 2).join(' / ')}${selectedLabels.length > 2 ? ` +${selectedLabels.length - 2}` : ''}`
+                      : '選択してください';
+                    return (
+                      <div
+                        key={f.key}
+                        className="admin-master-multi-select-field"
+                        style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
+                      >
+                        <span>{f.label}</span>
+                        <div className="admin-master-multi-select-wrap">
+                          <button
+                            type="button"
+                            className="admin-master-multi-select-trigger"
+                            disabled={f.readOnly === true}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setMultiSelectOverlayField((prev) => (prev === overlayKey ? '' : overlayKey));
+                            }}
+                          >
+                            {summary}
+                          </button>
+                          {opened ? (
+                            <div
+                              className="admin-master-multi-select-overlay"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                            >
+                              <div className="admin-master-multi-select-overlay-head">
+                                <strong>複数選択</strong>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setMultiSelectOverlayField('');
+                                  }}
+                                >
+                                  閉じる
+                                </button>
+                              </div>
+                              <div className="admin-master-multi-select-overlay-list">
+                                {options.map((opt) => {
+                                  const v = String(opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '');
+                                  const l = String(opt?.[labelKey] ?? opt?.label ?? v);
+                                  if (!v) return null;
+                                  const checked = currentValue.includes(v);
+                                  return (
+                                    <label key={v} className="admin-master-multi-select-option">
+                                      <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          const on = e.target.checked;
+                                          setEditing((prev) => {
+                                            const curr = Array.isArray(prev?.[f.key]) ? prev[f.key].map(String) : [];
+                                            const nextValue = on
+                                              ? [...new Set([...curr, v])]
+                                              : curr.filter((x) => x !== v);
+                                            let next = { ...prev, [f.key]: nextValue };
+                                            if (typeof f.onChange === 'function') {
+                                              const patch = f.onChange({ value: next[f.key], prev: next });
+                                              if (patch && typeof patch === 'object') next = { ...next, ...patch };
+                                            }
+                                            return next;
+                                          });
+                                        }}
+                                      />
+                                      <span>{l}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <label
+                      key={f.key}
+                      style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
+                    >
+                      <span>{f.label}</span>
+                      <select
+                        multiple
+                        size={Math.min(10, Math.max(4, options.length || 4))}
+                        value={currentValue}
+                        onChange={(e) => {
+                          const value = Array.from(e.target.selectedOptions || []).map((opt) => String(opt.value || ''));
+                          setEditing((prev) => {
+                            let next = { ...prev, [f.key]: value.filter(Boolean) };
+                            if (typeof f.onChange === 'function') {
+                              const patch = f.onChange({ value: next[f.key], prev: next });
+                              if (patch && typeof patch === 'object') next = { ...next, ...patch };
+                            }
+                            return next;
+                          });
+                        }}
+                        disabled={f.readOnly === true}
+                      >
+                        {options.map((opt) => {
+                          const v = opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '';
+                          const l = opt?.[labelKey] ?? opt?.label ?? v;
+                          if (!v) return null;
+                          return <option key={String(v)} value={String(v)}>{l}</option>;
+                        })}
+                      </select>
+                    </label>
+                  );
+                }
+
+                if (f.type === 'textarea') {
+                  const modalColSpan = Number(f.modalColSpan || 0);
+                  const toolItems = f.enableTools === true
+                    ? [
+                      { key: 'date', label: '日付' },
+                      { key: 'heading', label: '見出し' },
+                      { key: 'bullet', label: '箇条書き' },
+                      { key: 'check', label: 'チェック' },
+                      { key: 'separator', label: '区切り' },
+                    ]
+                    : [];
+                  return (
+                    <label
+                      key={f.key}
+                      style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
+                    >
+                      <span>{f.label}</span>
+                      {toolItems.length ? (
+                        <div className="admin-master-text-tools" role="toolbar" aria-label={`${f.label} 入力ツール`}>
+                          {toolItems.map((tool) => (
+                            <button
+                              key={tool.key}
+                              type="button"
+                              onClick={() => applyTextTool(f.key, tool.key)}
+                              disabled={f.readOnly === true}
+                            >
+                              {tool.label}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                      <textarea
+                        ref={(el) => setTextAreaRef(f.key, el)}
+                        value={editing[f.key] ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setEditing((prev) => {
+                            let next = { ...prev, [f.key]: value };
+                            if (typeof f.onChange === 'function') {
+                              const patch = f.onChange({ value, prev: next });
+                              if (patch && typeof patch === 'object') next = { ...next, ...patch };
+                            }
+                            return next;
+                          });
+                        }}
+                        disabled={f.readOnly === true}
+                        rows={Number.isFinite(Number(f.rows)) ? Number(f.rows) : 8}
+                      />
+                    </label>
+                  );
+                }
 
                 return (
-                  <label key={f.key}>
+                  <label
+                    key={f.key}
+                    style={Number(f.modalColSpan || 0) > 1 ? { gridColumn: `span ${Number(f.modalColSpan)}` } : undefined}
+                  >
                     <span>{f.label}</span>
                     <input
                       type={f.type === 'number' ? 'number' : 'text'}
@@ -615,21 +1234,23 @@ export default function AdminMasterBase({
                 );
               })}
 
-              <label>
-                <span>状態 (jotai)</span>
-                <select
-                  value={editing.jotai || 'yuko'}
-                  onChange={(e) => setEditing((prev) => ({ ...prev, jotai: e.target.value }))}
-                >
-                  <option value="yuko">yuko</option>
-                  <option value="torikeshi">torikeshi</option>
-                </select>
-              </label>
+              {showJotaiEditor ? (
+                <label>
+                  <span>状態 (jotai)</span>
+                  <select
+                    value={editing.jotai || 'yuko'}
+                    onChange={(e) => setEditing((prev) => ({ ...prev, jotai: e.target.value }))}
+                  >
+                    <option value="yuko">yuko</option>
+                    <option value="torikeshi">torikeshi</option>
+                  </select>
+                </label>
+              ) : null}
             </div>
 
             {typeof renderModalExtra === 'function' ? (
               <div style={{ marginTop: 12 }}>
-                {renderModalExtra({ editing, setEditing })}
+                {renderModalExtra({ editing, setEditing, parents })}
               </div>
             ) : null}
 
@@ -680,7 +1301,9 @@ export default function AdminMasterBase({
             </label>
           ) : null}
           {filters.map((f) => {
-            const options = f.sourceKey ? (parents[f.sourceKey] || []) : (f.options || []);
+            const options = f.sourceKey
+              ? (parents[f.sourceKey] || [])
+              : (typeof f.options === 'function' ? (f.options(parents || EMPTY_OBJ) || []) : (f.options || []));
             const valueKey = f.valueKey || f.key;
             const labelKey = f.labelKey || 'name';
             return (
