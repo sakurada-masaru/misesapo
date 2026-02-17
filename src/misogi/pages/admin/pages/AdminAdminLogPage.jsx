@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
 function isLocalUiHost() {
@@ -22,6 +22,30 @@ function todayYmd() {
   } catch {
     return '';
   }
+}
+
+function shiftMonth(ymd, delta) {
+  const raw = String(ymd || todayYmd());
+  const [ys, ms] = raw.split('-');
+  const y = Number(ys || 0);
+  const m = Number(ms || 1);
+  const d = new Date(y, Math.max(0, m - 1 + Number(delta || 0)), 1);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${yyyy}-${mm}-01`;
+}
+
+function monthDays(ymd) {
+  const raw = String(ymd || todayYmd());
+  const [ys, ms] = raw.split('-');
+  const y = Number(ys || 0);
+  const m = Number(ms || 1);
+  const last = new Date(y, m, 0).getDate();
+  const result = [];
+  for (let i = 1; i <= last; i += 1) {
+    result.push(`${ys}-${String(ms).padStart(2, '0')}-${String(i).padStart(2, '0')}`);
+  }
+  return result;
 }
 
 function authHeaders() {
@@ -165,6 +189,7 @@ function formatJpDateTime(value) {
 }
 
 export default function AdminAdminLogPage() {
+  const [selectedDate, setSelectedDate] = useState(todayYmd());
   const [detailDrafts, setDetailDrafts] = useState({});
   const [tomorrowDrafts, setTomorrowDrafts] = useState({});
   const [rowSelectedTask, setRowSelectedTask] = useState({});
@@ -172,6 +197,11 @@ export default function AdminAdminLogPage() {
   const [modalTaskSearch, setModalTaskSearch] = useState('');
   const [creatingFromRowId, setCreatingFromRowId] = useState('');
   const [creatingFromModal, setCreatingFromModal] = useState(false);
+  const dayList = useMemo(() => monthDays(selectedDate), [selectedDate]);
+  const monthLabel = useMemo(() => {
+    const [y, m] = String(selectedDate || '').split('-');
+    return `${y || ''}年${Number(m || 0)}月`;
+  }, [selectedDate]);
 
   const appendTaskToPlan = (baseText, task) => {
     const current = String(baseText || '').trim();
@@ -227,7 +257,55 @@ export default function AdminAdminLogPage() {
       pageClassName="admin-admin-log-page"
       resource="kadai"
       idKey="kadai_id"
-      fixedQuery={{ category: 'admin_log', jotai: 'yuko' }}
+      fixedQuery={{ category: 'admin_log', jotai: 'yuko', reported_at: selectedDate }}
+      renderHeaderExtra={() => (
+        <div className="admin-log-date-strip" aria-label="管理ログ 日付選択">
+          <div className="admin-log-date-inline">
+            <div className="admin-log-month-switch" aria-label="管理ログ 月切替">
+              <button
+                type="button"
+                onClick={() => setSelectedDate(shiftMonth(selectedDate, -1))}
+                title="前月"
+              >
+                ← 前月
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDate(todayYmd())}
+                title="今月"
+              >
+                今月
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDate(shiftMonth(selectedDate, 1))}
+                title="翌月"
+              >
+                翌月 →
+              </button>
+            </div>
+            <div className="admin-log-date-strip-head">{monthLabel} 日付選択</div>
+            <div className="admin-log-date-scroll">
+              {dayList.map((d) => {
+                const day = String(d).slice(-2).replace(/^0/, '');
+                const isActive = d === selectedDate;
+                const isToday = d === todayYmd();
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    className={`admin-log-date-chip ${isActive ? 'active' : ''} ${isToday ? 'is-today' : ''}`}
+                    onClick={() => setSelectedDate(d)}
+                    title={d}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       fixedNewValues={{
         category: 'admin_log',
         status: 'open',

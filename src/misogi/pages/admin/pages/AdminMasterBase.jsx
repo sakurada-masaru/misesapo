@@ -222,6 +222,7 @@ export default function AdminMasterBase({
   headerTabs = null,
   activeHeaderTab = '',
   onHeaderTabChange = null,
+  renderHeaderExtra = null,
   clientFilter = null,
   canDeleteRow = null,
   beforeDelete = null,
@@ -974,6 +975,11 @@ export default function AdminMasterBase({
             <button type="button" onClick={loadItems} disabled={loading}>{loading ? '更新中...' : '更新'}</button>
           </div>
         </header>
+        {typeof renderHeaderExtra === 'function' ? (
+          <div className="admin-master-header-extra">
+            {renderHeaderExtra()}
+          </div>
+        ) : null}
 
         {uiDebug ? (
           <div style={{ fontSize: 12, color: '#9aa6c5', marginBottom: 8 }}>
