@@ -860,12 +860,20 @@ export default function MyYoteiListPage() {
                     const handoverFromIds = toIdList(it?.handover_from);
                     const handoverToDisplay = Array.from(new Set(
                       handoverToIds
-                        .map((x) => formatNameId(jinzaiNameMap.get(normId(x)) || '', x))
+                        .map((x) => safeStr(
+                          jinzaiMasterNameMap.get(normId(x))
+                          || jinzaiNameMap.get(normId(x))
+                          || x
+                        ))
                         .filter(Boolean)
                     ));
                     const handoverFromDisplay = Array.from(new Set(
                       handoverFromIds
-                        .map((x) => formatNameId(jinzaiNameMap.get(normId(x)) || '', x))
+                        .map((x) => safeStr(
+                          jinzaiMasterNameMap.get(normId(x))
+                          || jinzaiNameMap.get(normId(x))
+                          || x
+                        ))
                         .filter(Boolean)
                     ));
                     const handoffChecks = it?.handoff_checks || {};

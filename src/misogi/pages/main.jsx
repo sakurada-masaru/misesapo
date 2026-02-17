@@ -8,6 +8,22 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './app/App.jsx';
+import { I18nProvider } from './shared/i18n/I18nProvider';
+
+function resolveInitialTheme() {
+  if (typeof window === 'undefined') return 'dark';
+  try {
+    const stored = localStorage.getItem('misogi-v2-theme');
+    if (stored === 'light' || stored === 'dark') return stored;
+  } catch {
+    // ignore
+  }
+  return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+if (typeof document !== 'undefined') {
+  document.documentElement.setAttribute('data-theme', resolveInitialTheme());
+}
 
 // DevTools / UI freeze mitigation:
 // Some pages emit very chatty console.log() (sometimes with big objects). This can hang Chrome
@@ -34,9 +50,11 @@ if (!rootEl) {
 } else {
   try {
     ReactDOM.createRoot(rootEl).render(
-      <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <App />
-      </HashRouter>
+      <I18nProvider>
+        <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <App />
+        </HashRouter>
+      </I18nProvider>
     );
   } catch (e) {
     rootEl.innerHTML = '<div style="padding:1rem;color:red"><p>起動エラー:</p><pre>' + (e && e.message) + '</pre></div>';

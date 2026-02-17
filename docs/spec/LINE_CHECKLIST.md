@@ -237,6 +237,14 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [ ] 報告書1/2/3 を各1枚アップロードできる（差し替え可能）
 - [ ] 3/3 揃うまで提出できない
 
+## MISOGI Portuguese i18n Rollout (2026-02-17)
+
+- [x] `I18nProvider` を `main.jsx` に適用（全ページ共通）
+- [x] パンくず右上に `日本語 / Português(BR)` 切替を配置
+- [x] 入口ページでも言語切替を表示（breadcrumbs非表示条件から独立）
+- [x] `ptJaMap.js` を拡張し、Portal/Entrance/管理主要ラベルを翻訳
+- [x] `npm -C src/misogi run build` が通る
+
 ## YOTEI Monthly Trouble Event Strip (2026-02-13)
 
 - [x] 月間ビューに清掃トラブルイベント（再清掃/不足清掃消化/クレーム再対応）の全幅エリアを追加
@@ -322,3 +330,10 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 - [x] `人材名簿` の表示を `人材マスタ` と同じ正規化基準（所属区分/契約主体/契約形態）に統一
 - [x] 管理/情報のマスタ系ルートを `sakurada@misesapo.co.jp` 限定で表示するガードを追加
+
+## MISOGI Portuguese i18n Rollout (2026-02-17)
+
+- [x] `ptJaMap.js` に入口・日次運用の頻出ラベル（営業/清掃/事務/開発/予定/報告/完了系/再清掃系）を追加
+- [x] 追加後に `npm -C src/misogi run build` を実行し、ビルド成功を確認
+- [x] 管理ページ系の未設定/エラー/定期清掃バリエーション文言を追加し、再ビルド成功を確認
+- [x] ログイン/工程案内/清掃運用エラー文言を追加し、再ビルド成功を確認

@@ -7,6 +7,15 @@
   --meibo-accent: #37B7FF;
 }
 
+[data-theme="light"] .meibo-page {
+  --meibo-bg: #ffffff;
+  --meibo-panel: #ffffff;
+  --meibo-border: #d1d5db;
+  --meibo-text: #111827;
+  --meibo-muted: #475569;
+  --meibo-accent: #2563eb;
+}
+
 .meibo-page {
   min-height: 100vh;
   background:
@@ -28,6 +37,18 @@
   position: sticky;
   top: 0;
   z-index: 20;
+}
+
+[data-theme="light"] .meibo-page {
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(59, 130, 246, 0.09), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(16, 185, 129, 0.08), transparent 55%),
+    radial-gradient(800px 600px at 60% 120%, rgba(245, 158, 11, 0.06), transparent 60%),
+    #ffffff;
+}
+
+[data-theme="light"] .meibo-head {
+  background: rgba(255, 255, 255, 0.88);
 }
 
 .meibo-back {
@@ -64,6 +85,12 @@
   outline: none;
 }
 
+[data-theme="light"] .meibo-head-right input {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #111827;
+}
+
 .meibo-head-right button {
   padding: 10px 12px;
   border-radius: 10px;
@@ -71,6 +98,12 @@
   background: rgba(55, 183, 255, 0.12);
   color: var(--meibo-text);
   cursor: pointer;
+}
+
+[data-theme="light"] .meibo-head-right button {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #111827;
 }
 
 .meibo-head-right button:disabled {
@@ -112,6 +145,14 @@
   color: rgba(255,255,255,0.80);
 }
 
+[data-theme="light"] .meibo-search-hits-head .k,
+[data-theme="light"] .hit-group-title,
+[data-theme="light"] .hit-meta code,
+[data-theme="light"] .hit-meta .val,
+[data-theme="light"] .hit-sub .val {
+  color: #111827;
+}
+
 .meibo-search-hits-head .v {
   margin-left: auto;
   font-weight: 900;
@@ -139,6 +180,11 @@
   padding: 10px 12px;
   background: rgba(0,0,0,0.18);
   border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+[data-theme="light"] .hit-group-head {
+  background: #f8fafc;
+  border-bottom-color: #e2e8f0;
 }
 
 .hit-group-title {
@@ -174,6 +220,11 @@
 
 .hit-row:hover {
   background: rgba(255,255,255,0.03);
+}
+
+[data-theme="light"] .hit-row:hover,
+[data-theme="light"] .meibo-row:hover {
+  background: #f8fafc;
 }
 
 .hit-main {
@@ -280,6 +331,11 @@
   outline: 1px solid rgba(55, 183, 255, 0.22);
 }
 
+[data-theme="light"] .meibo-row.active {
+  background: #dbeafe;
+  outline-color: #93c5fd;
+}
+
 .meibo-row .name {
   font-size: 13px;
   font-weight: 600;
@@ -305,6 +361,11 @@
   background: rgba(0,0,0,0.25);
 }
 
+[data-theme="light"] .meibo-row .meta .count {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
 .meibo-detail {
   border: 1px solid var(--meibo-border);
   background: var(--meibo-panel);
@@ -327,6 +388,10 @@
   gap: 14px;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+[data-theme="light"] .meibo-detail-head {
+  border-bottom-color: #e2e8f0;
 }
 
 .meibo-detail-head .tname {
@@ -358,6 +423,17 @@
   font-size: 12px;
 }
 
+[data-theme="light"] .meibo-detail-head button,
+[data-theme="light"] .meibo-detail-head .link,
+[data-theme="light"] .hit-actions button,
+[data-theme="light"] .hit-actions .link,
+[data-theme="light"] .tenpo-actions button,
+[data-theme="light"] .tenpo-actions .link {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #111827;
+}
+
 .meibo-yagou {
   margin-top: 14px;
   overflow: auto;
@@ -373,6 +449,12 @@
   overflow: hidden;
 }
 
+[data-theme="light"] .yagou-block,
+[data-theme="light"] .tenpo-row {
+  border-color: #d1d5db;
+  background: #ffffff;
+}
+
 .yagou-block summary {
   cursor: pointer;
   list-style: none;
@@ -381,6 +463,18 @@
   gap: 10px;
   align-items: center;
   border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+[data-theme="light"] .yagou-block summary {
+  border-bottom-color: #e2e8f0;
+}
+
+[data-theme="light"] .meibo-page code,
+[data-theme="light"] .meibo-page .name,
+[data-theme="light"] .meibo-page .tname,
+[data-theme="light"] .meibo-page .tenpo-name,
+[data-theme="light"] .meibo-page .tenpo-address .txt {
+  color: #111827;
 }
 
 .yagou-block summary::-webkit-details-marker {

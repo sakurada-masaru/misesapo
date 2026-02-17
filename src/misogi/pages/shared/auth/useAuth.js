@@ -8,6 +8,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getCognitoIdToken, getCognitoUser } from './cognitoStorage';
 
+const MASTER_OWNER_EMAIL = 'sakurada@misesapo.co.jp';
+
 /** JWT の exp（秒）を読む。無効なら null */
 function getTokenExp(token) {
   if (!token || typeof token !== 'string') return null;
@@ -42,8 +44,15 @@ export function useAuth() {
       setIsAuthenticated(false);
       return;
     }
-    const u = getCognitoUser();
-    setUser(u || { id: 'unknown', role: 'staff' });
+    const rawUser = getCognitoUser() || { id: 'unknown', role: 'staff' };
+    const email = String(rawUser?.email || rawUser?.attributes?.email || '').trim().toLowerCase();
+    if (email === MASTER_OWNER_EMAIL) {
+      const roles = Array.isArray(rawUser.roles) ? rawUser.roles : [];
+      const mergedRoles = roles.includes('admin') ? roles : [...roles, 'admin'];
+      setUser({ ...rawUser, role: 'admin', roles: mergedRoles });
+    } else {
+      setUser(rawUser);
+    }
     setIsAuthenticated(true);
   }, []);
 

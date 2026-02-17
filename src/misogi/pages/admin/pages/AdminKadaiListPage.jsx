@@ -1,15 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
-const CATEGORY_OPTIONS = [
-  { value: 'create_request', label: '作成依頼' },
-  { value: 'fix_request', label: '修正依頼' },
-  { value: 'response_request', label: '対応依頼' },
-  { value: 'improvement_request', label: '改善要望' },
-  { value: 'investigation_request', label: '調査依頼' },
-  { value: 'confirmation_request', label: '確認依頼' },
-  { value: 'spec_change_request', label: '仕様変更依頼' },
-  { value: 'approval_request', label: '承認依頼' },
+const REQUEST_OPTIONS = [
+  { value: '確認', label: '確認' },
+  { value: '対応', label: '対応' },
+  { value: '承認', label: '承認' },
+  { value: '作成', label: '作成' },
+  { value: '修正', label: '修正' },
+  { value: '変更', label: '変更' },
+  { value: '実施', label: '実施' },
+  { value: '提出', label: '提出' },
 ];
 
 const FLOW_STAGE_OPTIONS = [
@@ -274,7 +274,7 @@ export default function AdminKadaiListPage() {
       }}
       localSearch={{
         label: '統合検索',
-        placeholder: '業務フロー段階/課題内容/店舗IDなど',
+        placeholder: '業務フロー段階/課題/要望など',
         keys: [
           'flow_stage',
           'list_scope',
@@ -298,9 +298,9 @@ export default function AdminKadaiListPage() {
           labelKey: 'label',
         },
         {
-          key: 'category',
-          label: '課題種別',
-          options: CATEGORY_OPTIONS,
+          key: 'request',
+          label: '要望',
+          options: REQUEST_OPTIONS,
           valueKey: 'value',
           labelKey: 'label',
         },
@@ -336,7 +336,8 @@ export default function AdminKadaiListPage() {
       fixedNewValues={{
         flow_stage: 'yotei',
         list_scope: activeScope,
-        category: 'create_request',
+        category: '',
+        request: '確認',
         status: 'open',
         task_state: 'mikanryo',
         jotai: 'yuko',
@@ -350,16 +351,9 @@ export default function AdminKadaiListPage() {
       }}
       normalizeEditingModel={(model) => {
         const m = { ...(model || {}) };
-        const req = String(m.request ?? '').trim();
-        const legacyFact = String(m.fact ?? '').trim();
-        if (!req && legacyFact) {
-          m.request = legacyFact;
-        }
-        // API requires `name`; this page uses category as the canonical task title.
+        const categoryText = String(m.category ?? '').trim();
         if (!String(m.name || '').trim()) {
-          const catKey = String(m.category || '').trim();
-          const catLabel = (CATEGORY_OPTIONS.find((x) => x.value === catKey)?.label) || '';
-          m.name = catLabel || '未分類';
+          m.name = categoryText || '未分類';
         }
         const rawScope = String(m.list_scope || '').trim();
         if (!rawScope) m.list_scope = activeScope;
@@ -372,6 +366,7 @@ export default function AdminKadaiListPage() {
           m.target_to = [];
         }
         if (!String(m.task_state ?? '').trim()) m.task_state = 'mikanryo';
+        if (!String(m.request ?? '').trim()) m.request = '確認';
         if (!String(m.jotai ?? '').trim()) m.jotai = 'yuko';
         return m;
       }}
@@ -587,37 +582,26 @@ export default function AdminKadaiListPage() {
         },
         {
           key: 'category',
-          label: '⑤課題種別（何を）',
-          columnLabel: '⑤課題種別',
-          type: 'select',
-          options: CATEGORY_OPTIONS,
-          valueKey: 'value',
-          labelKey: 'label',
-          defaultValue: 'create_request',
+          label: '⑤課題（何を）',
+          columnLabel: '⑤課題',
           required: true,
-          format: (v) => {
-            const key = String(v || '').trim();
-            const hit = CATEGORY_OPTIONS.find((x) => x.value === key);
-            return hit?.label || key || '-';
-          },
-          render: (v) => {
-            const key = String(v || '').trim();
-            const hit = CATEGORY_OPTIONS.find((x) => x.value === key);
-            const label = hit?.label || key || '-';
-            return renderMetaTag(label, 'is-category');
-          },
         },
         {
           key: 'request',
-          label: '⑥要望（どうして欲しいのか）',
+          label: '⑥要望（どうする）',
           columnLabel: '⑥要望',
+          type: 'select',
+          options: REQUEST_OPTIONS,
+          valueKey: 'value',
+          labelKey: 'label',
+          defaultValue: '確認',
           required: true,
-          format: (v, row) => {
-            const req = String(v ?? '').trim();
-            if (req) return req;
-            const legacy = String(row?.fact ?? '').trim();
-            return legacy || '-';
+          format: (v) => {
+            const key = String(v || '').trim();
+            const hit = REQUEST_OPTIONS.find((x) => x.value === key);
+            return hit?.label || key || '-';
           },
+          render: (v) => renderMetaTag(String(v || '').trim() || '-', 'is-category'),
         },
         {
           key: 'status',

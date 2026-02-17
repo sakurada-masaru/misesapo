@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
 function isLocalUiHost() {
@@ -111,25 +111,44 @@ function clipText(value, limit) {
   return `${s.slice(0, limit)}…`;
 }
 
-function extractKadaiIds(text) {
-  const raw = String(text || '');
-  const matches = raw.match(/KADAI#[A-Za-z0-9_-]+/gi) || [];
-  const normalized = matches.map((v) => {
-    const s = String(v || '').trim();
-    if (!s) return '';
-    if (/^kadai#/i.test(s)) return `KADAI#${s.slice(6)}`;
-    return s;
-  }).filter(Boolean);
-  return Array.from(new Set(normalized));
+function parseRelatedIds(value) {
+  return Array.from(new Set(
+    String(value || '')
+      .split(/[,\s]+/)
+      .map((v) => String(v || '').trim())
+      .filter(Boolean)
+      .filter((v) => /^KADAI#/i.test(v))
+      .map((v) => (/^kadai#/i.test(v) ? `KADAI#${v.slice(6)}` : v))
+  ));
 }
 
-function computeRelatedKadaiIds(model) {
-  const text = [
-    String(model?.name || ''),
-    String(model?.request || ''),
-    String(model?.tomorrow_plan || ''),
-  ].join('\n');
-  return extractKadaiIds(text);
+function mergeRelatedIds(currentValue, addingId) {
+  const now = parseRelatedIds(currentValue);
+  const add = String(addingId || '').trim();
+  if (!add) return now.join(', ');
+  const normalizedAdd = /^kadai#/i.test(add) ? `KADAI#${add.slice(6)}` : add;
+  if (!/^KADAI#/i.test(normalizedAdd)) return now.join(', ');
+  return Array.from(new Set([...now, normalizedAdd])).join(', ');
+}
+
+function filterTaskOptions(taskOptions, query) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return taskOptions;
+  return taskOptions.filter((opt) => (
+    String(opt?.label || '').toLowerCase().includes(q)
+    || String(opt?.value || '').toLowerCase().includes(q)
+  ));
+}
+
+function normalizeTaskOptions(parents) {
+  const items = Array.isArray(parents?.kadai) ? parents.kadai : [];
+  const filtered = items.filter((x) => String(x?.category || '') !== 'admin_log');
+  const mapped = filtered.map((x) => ({
+    value: String(x?.kadai_id || ''),
+    label: `${String(x?.kadai_id || '')} ${String(x?.name || '').trim() || '課題'}`.trim(),
+    item: x,
+  })).filter((x) => x.value);
+  return mapped.slice(0, 500);
 }
 
 function formatJpDateTime(value) {
@@ -149,6 +168,8 @@ export default function AdminAdminLogPage() {
   const [detailDrafts, setDetailDrafts] = useState({});
   const [tomorrowDrafts, setTomorrowDrafts] = useState({});
   const [rowSelectedTask, setRowSelectedTask] = useState({});
+  const [rowTaskSearch, setRowTaskSearch] = useState({});
+  const [modalTaskSearch, setModalTaskSearch] = useState('');
   const [creatingFromRowId, setCreatingFromRowId] = useState('');
   const [creatingFromModal, setCreatingFromModal] = useState(false);
 
@@ -161,17 +182,6 @@ export default function AdminAdminLogPage() {
     if (!current) return line;
     if (current.includes(taskId)) return current;
     return `${current}\n${line}`;
-  };
-
-  const normalizeTaskOptions = (parents) => {
-    const items = Array.isArray(parents?.kadai) ? parents.kadai : [];
-    const filtered = items.filter((x) => String(x?.category || '') !== 'admin_log');
-    const mapped = filtered.map((x) => ({
-      value: String(x?.kadai_id || ''),
-      label: `${String(x?.kadai_id || '')} ${String(x?.name || '').trim() || '課題'}`.trim(),
-      item: x,
-    })).filter((x) => x.value);
-    return mapped.slice(0, 500);
   };
 
   const createKadaiFromLog = async (source) => {
@@ -246,104 +256,104 @@ export default function AdminAdminLogPage() {
             : '';
           m.name = first ? first.slice(0, 60) : `管理ログ ${String(m.reported_at || todayYmd())}`;
         }
-        m.related_kadai_ids = computeRelatedKadaiIds(m).join(', ');
+        m.related_kadai_ids = parseRelatedIds(m.related_kadai_ids).join(', ');
         return m;
       }}
       renderModalExtra={({ editing, setEditing, parents }) => {
-        const ids = computeRelatedKadaiIds(editing || {});
-        const hasIds = ids.length > 0;
+        const ids = parseRelatedIds(editing?.related_kadai_ids);
         const taskOptions = normalizeTaskOptions(parents || {});
+        const filteredTaskOptions = filterTaskOptions(taskOptions, modalTaskSearch);
         const modalSelectedId = String(editing?.selected_kadai_id || '');
         const selectedTask = taskOptions.find((x) => x.value === modalSelectedId)?.item || null;
         return (
-          <>
-            <div className="admin-log-related-box">
-              <div className="admin-log-related-head">
-                <div>課題番号（自動読み取り）</div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditing((prev) => ({
-                      ...(prev || {}),
-                      related_kadai_ids: computeRelatedKadaiIds(prev || {}).join(', '),
-                    }));
-                  }}
-                >
-                  読み取り更新
-                </button>
-              </div>
-              {hasIds ? (
-                <div className="admin-log-related-tags">
-                  {ids.map((id) => (
-                    <a key={id} className="admin-log-related-tag" href={`#/admin/kadai?focus=${encodeURIComponent(id)}`}>
-                      {id}
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <div className="admin-log-related-empty">課題番号が見つかりません</div>
-              )}
+          <div className="admin-log-related-box">
+            <div className="admin-log-related-head">
+              <div>関連課題（検索して追加）</div>
             </div>
-
-            <div className="admin-log-related-box">
-              <div className="admin-log-related-head">
-                <div>既存課題を明日の予定へ貼り付け</div>
-              </div>
-              <div className="admin-log-task-picker">
-                <select
-                  value={modalSelectedId}
-                  onChange={(e) => setEditing((prev) => ({ ...(prev || {}), selected_kadai_id: e.target.value }))}
-                >
-                  <option value="">課題を選択</option>
-                  {taskOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  disabled={!selectedTask}
-                  onClick={() => {
-                    if (!selectedTask) return;
+            <div className="admin-log-task-picker">
+              <input
+                type="text"
+                placeholder="課題番号/タイトルで検索"
+                value={modalTaskSearch}
+                onChange={(e) => setModalTaskSearch(e.target.value)}
+              />
+              <select
+                value={modalSelectedId}
+                onChange={(e) => setEditing((prev) => ({ ...(prev || {}), selected_kadai_id: e.target.value }))}
+              >
+                <option value="">課題を選択</option>
+                {filteredTaskOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={!selectedTask}
+                onClick={() => {
+                  if (!selectedTask) return;
+                  setEditing((prev) => {
+                    const next = { ...(prev || {}) };
+                    next.related_kadai_ids = mergeRelatedIds(next.related_kadai_ids, selectedTask.kadai_id);
+                    return next;
+                  });
+                }}
+              >
+                関連課題に追加
+              </button>
+              <button
+                type="button"
+                disabled={!selectedTask}
+                onClick={() => {
+                  if (!selectedTask) return;
+                  setEditing((prev) => {
+                    const next = { ...(prev || {}) };
+                    next.tomorrow_plan = appendTaskToPlan(next.tomorrow_plan, selectedTask);
+                    return next;
+                  });
+                }}
+              >
+                明日の予定へ貼り付け
+              </button>
+              <button
+                type="button"
+                disabled={creatingFromModal}
+                onClick={async () => {
+                  try {
+                    setCreatingFromModal(true);
+                    const created = await createKadaiFromLog(editing || {});
                     setEditing((prev) => {
                       const next = { ...(prev || {}) };
-                      next.tomorrow_plan = appendTaskToPlan(next.tomorrow_plan, selectedTask);
-                      next.related_kadai_ids = computeRelatedKadaiIds(next).join(', ');
+                      next.related_kadai_ids = mergeRelatedIds(next.related_kadai_ids, created.kadai_id);
+                      next.tomorrow_plan = appendTaskToPlan(next.tomorrow_plan, created);
                       return next;
                     });
-                  }}
-                >
-                  明日の予定へ貼り付け
-                </button>
-                <button
-                  type="button"
-                  disabled={creatingFromModal}
-                  onClick={async () => {
-                    try {
-                      setCreatingFromModal(true);
-                      const created = await createKadaiFromLog(editing || {});
-                      setEditing((prev) => {
-                        const next = { ...(prev || {}) };
-                        next.tomorrow_plan = appendTaskToPlan(next.tomorrow_plan, created);
-                        next.related_kadai_ids = computeRelatedKadaiIds(next).join(', ');
-                        return next;
-                      });
-                    } catch (e) {
-                      window.alert(`課題作成に失敗しました: ${String(e?.message || e)}`);
-                    } finally {
-                      setCreatingFromModal(false);
-                    }
-                  }}
-                >
-                  {creatingFromModal ? '課題作成中...' : 'このログから課題を作成'}
-                </button>
-              </div>
+                  } catch (e) {
+                    window.alert(`課題作成に失敗しました: ${String(e?.message || e)}`);
+                  } finally {
+                    setCreatingFromModal(false);
+                  }
+                }}
+              >
+                {creatingFromModal ? '課題作成中...' : 'このログから課題を作成'}
+              </button>
             </div>
-          </>
+            {ids.length ? (
+              <div className="admin-log-related-tags">
+                {ids.map((id) => (
+                  <a key={id} className="admin-log-related-tag" href={`#/admin/kadai?focus=${encodeURIComponent(id)}`}>
+                    {id}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div className="admin-log-related-empty">関連課題は未設定です</div>
+            )}
+          </div>
         );
       }}
       localSearch={{
         label: '検索',
-        placeholder: '日付/提出者/PR本文/明日の予定/課題番号で検索',
+        placeholder: '日付/提出者/PR本文/明日の予定/関連課題で検索',
         keys: [
           'kadai_id',
           'reported_at',
@@ -364,7 +374,7 @@ export default function AdminAdminLogPage() {
         'work_time',
         'updated_at',
       ]}
-      renderRowDetail={({ row, rowId, onInlineFieldChange, inlineSaving }) => {
+      renderRowDetail={({ row, rowId, onInlineFieldChange, inlineSaving, parents }) => {
         const draft = Object.prototype.hasOwnProperty.call(detailDrafts, rowId)
           ? detailDrafts[rowId]
           : String(row?.request || '');
@@ -374,34 +384,12 @@ export default function AdminAdminLogPage() {
         const bodySaving = !!inlineSaving?.[`${rowId}:request`];
         const tomorrowSaving = !!inlineSaving?.[`${rowId}:tomorrow_plan`];
         const titleSaving = !!inlineSaving?.[`${rowId}:name`];
-        const relatedSaving = !!inlineSaving?.[`${rowId}:related_kadai_ids`];
-        const taskOptions = normalizeTaskOptions({ kadai: [] });
-        const relatedIds = (() => {
-          const fromField = String(row?.related_kadai_ids || '').trim();
-          if (fromField) {
-            return Array.from(new Set(
-              fromField
-                .split(/[,\s]+/)
-                .map((v) => String(v || '').trim())
-                .filter((v) => /^KADAI#/i.test(v))
-                .map((v) => (/^kadai#/i.test(v) ? `KADAI#${v.slice(6)}` : v))
-            ));
-          }
-          return computeRelatedKadaiIds({
-            name: row?.name,
-            request: draft,
-            tomorrow_plan: tomorrowDraft,
-          });
-        })();
-
-        const saveRelatedIds = (nameValue, bodyValue, tomorrowValue) => {
-          const joined = computeRelatedKadaiIds({
-            name: nameValue,
-            request: bodyValue,
-            tomorrow_plan: tomorrowValue,
-          }).join(', ');
-          onInlineFieldChange('related_kadai_ids', joined);
-        };
+        const taskOptions = normalizeTaskOptions(parents || {});
+        const query = String(rowTaskSearch[rowId] || '');
+        const filteredTaskOptions = filterTaskOptions(taskOptions, query);
+        const selectedTaskId = String(rowSelectedTask[rowId] || '');
+        const selectedTask = taskOptions.find((x) => x.value === selectedTaskId)?.item || null;
+        const relatedIds = parseRelatedIds(row?.related_kadai_ids);
 
         return (
           <div className="kadai-detail-two-col">
@@ -423,7 +411,7 @@ export default function AdminAdminLogPage() {
                 <div className="v">{formatJpDateTime(row?.updated_at)}</div>
               </div>
               <div className="kadai-detail-row">
-                <div className="k">課題番号</div>
+                <div className="k">関連課題</div>
                 <div className="v">
                   {relatedIds.length ? (
                     <div className="admin-log-related-tags in-detail">
@@ -445,11 +433,7 @@ export default function AdminAdminLogPage() {
                   <div className="v">
                     <input
                       value={String(row?.name || '')}
-                      onChange={(e) => {
-                        const nextName = e.target.value;
-                        onInlineFieldChange('name', nextName);
-                        saveRelatedIds(nextName, draft, tomorrowDraft);
-                      }}
+                      onChange={(e) => onInlineFieldChange('name', e.target.value)}
                       disabled={titleSaving}
                       style={{ width: '100%' }}
                     />
@@ -496,7 +480,7 @@ export default function AdminAdminLogPage() {
                       el.style.height = 'auto';
                       el.style.height = `${Math.max(220, el.scrollHeight)}px`;
                     }}
-                    placeholder="明日の予定を入力（例: KADAI#xxxx）"
+                    placeholder="明日の予定を入力"
                     style={{
                       minHeight: 220,
                       overflow: 'hidden',
@@ -505,33 +489,66 @@ export default function AdminAdminLogPage() {
                   />
                 </div>
               </div>
+
+              <div className="admin-log-related-box">
+                <div className="admin-log-related-head">
+                  <div>関連課題を検索</div>
+                </div>
+                <div className="admin-log-task-picker">
+                  <input
+                    type="text"
+                    placeholder="課題番号/タイトルで検索"
+                    value={query}
+                    onChange={(e) => setRowTaskSearch((prev) => ({ ...prev, [rowId]: e.target.value }))}
+                  />
+                  <select
+                    value={selectedTaskId}
+                    onChange={(e) => setRowSelectedTask((prev) => ({ ...prev, [rowId]: e.target.value }))}
+                  >
+                    <option value="">課題を選択</option>
+                    {filteredTaskOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={!selectedTask}
+                    onClick={() => {
+                      if (!selectedTask) return;
+                      onInlineFieldChange('related_kadai_ids', mergeRelatedIds(row?.related_kadai_ids, selectedTask.kadai_id));
+                    }}
+                  >
+                    関連課題に追加
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!selectedTask}
+                    onClick={() => {
+                      if (!selectedTask) return;
+                      const nextTomorrow = appendTaskToPlan(tomorrowDraft, selectedTask);
+                      setTomorrowDrafts((prev) => ({ ...prev, [rowId]: nextTomorrow }));
+                      onInlineFieldChange('tomorrow_plan', nextTomorrow);
+                    }}
+                  >
+                    明日の予定へ貼り付け
+                  </button>
+                </div>
+              </div>
+
               <div className="kadai-detail-note-actions">
                 <button
                   type="button"
                   disabled={bodySaving}
-                  onClick={() => {
-                    onInlineFieldChange('request', draft);
-                    saveRelatedIds(row?.name, draft, tomorrowDraft);
-                  }}
+                  onClick={() => onInlineFieldChange('request', draft)}
                 >
                   {bodySaving ? '保存中...' : '本文を保存'}
                 </button>
                 <button
                   type="button"
                   disabled={tomorrowSaving}
-                  onClick={() => {
-                    onInlineFieldChange('tomorrow_plan', tomorrowDraft);
-                    saveRelatedIds(row?.name, draft, tomorrowDraft);
-                  }}
+                  onClick={() => onInlineFieldChange('tomorrow_plan', tomorrowDraft)}
                 >
                   {tomorrowSaving ? '保存中...' : '明日の予定を保存'}
-                </button>
-                <button
-                  type="button"
-                  disabled={relatedSaving}
-                  onClick={() => saveRelatedIds(row?.name, draft, tomorrowDraft)}
-                >
-                  {relatedSaving ? '読み取り中...' : '課題番号を読み取り'}
                 </button>
                 <button
                   type="button"
@@ -548,7 +565,7 @@ export default function AdminAdminLogPage() {
                       const nextTomorrow = appendTaskToPlan(tomorrowDraft, created);
                       setTomorrowDrafts((prev) => ({ ...prev, [rowId]: nextTomorrow }));
                       onInlineFieldChange('tomorrow_plan', nextTomorrow);
-                      saveRelatedIds(row?.name, draft, nextTomorrow);
+                      onInlineFieldChange('related_kadai_ids', mergeRelatedIds(row?.related_kadai_ids, created.kadai_id));
                     } catch (e) {
                       window.alert(`課題作成に失敗しました: ${String(e?.message || e)}`);
                     } finally {
@@ -623,11 +640,10 @@ export default function AdminAdminLogPage() {
         },
         {
           key: 'related_kadai_ids',
-          label: '課題番号（自動読み取り）',
+          label: '関連課題',
           modalColSpan: 4,
-          readOnly: true,
           render: (v) => {
-            const raw = String(v || '').trim();
+            const raw = parseRelatedIds(v).join(', ');
             const clipped = clipText(raw, 48);
             return <span title={raw || ''}>{clipped || '-'}</span>;
           },

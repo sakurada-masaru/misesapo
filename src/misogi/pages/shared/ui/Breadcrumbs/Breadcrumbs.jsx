@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './breadcrumbs.css';
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
+import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 
 function isEntrancePath(pathname) {
   const p = String(pathname || '/');
@@ -100,23 +102,38 @@ export default function Breadcrumbs() {
   const hidden = isEntrancePath(pathname) || isWorkerReportPath(pathname);
   const crumbs = useMemo(() => crumbsForPath(pathname), [pathname]);
 
-  if (hidden) return null;
+  if (hidden) {
+    return (
+      <nav className="breadcrumbs breadcrumbs-lang-only" aria-label="言語切替">
+        <div className="breadcrumbs-lang-wrap">
+          <HamburgerMenu />
+          <LanguageSwitcher />
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="breadcrumbs" aria-label="パンくず">
-      {crumbs.map((c, idx) => {
-        const isLast = idx === crumbs.length - 1;
-        return (
-          <span key={`${c.to}-${idx}`} className="breadcrumbs-item">
-            {isLast ? (
-              <span className="breadcrumbs-current">{c.label}</span>
-            ) : (
-              <Link className="breadcrumbs-link" to={c.to}>{c.label}</Link>
-            )}
-            {!isLast ? <span className="breadcrumbs-sep" aria-hidden="true">/</span> : null}
-          </span>
-        );
-      })}
+      <div className="breadcrumbs-main">
+        {crumbs.map((c, idx) => {
+          const isLast = idx === crumbs.length - 1;
+          return (
+            <span key={`${c.to}-${idx}`} className="breadcrumbs-item">
+              {isLast ? (
+                <span className="breadcrumbs-current">{c.label}</span>
+              ) : (
+                <Link className="breadcrumbs-link" to={c.to}>{c.label}</Link>
+              )}
+              {!isLast ? <span className="breadcrumbs-sep" aria-hidden="true">/</span> : null}
+            </span>
+          );
+        })}
+      </div>
+      <div className="breadcrumbs-controls-wrap">
+        <HamburgerMenu />
+        <LanguageSwitcher />
+      </div>
     </nav>
   );
 }

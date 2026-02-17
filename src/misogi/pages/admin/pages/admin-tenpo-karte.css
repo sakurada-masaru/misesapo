@@ -912,3 +912,149 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ========================================= */
+/* ライトモード対応（店舗カルテ）            */
+/* ========================================= */
+[data-theme="light"] .tenpo-karte-page {
+  color: #111827;
+  background: #ffffff;
+}
+
+[data-theme="light"] .tenpo-karte-head {
+  border-bottom-color: #d1d5db;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+[data-theme="light"] .tenpo-karte-head .back,
+[data-theme="light"] .tenpo-karte-head button,
+[data-theme="light"] .tenpo-karte-head .link {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #111827;
+}
+
+[data-theme="light"] .tenpo-karte-head .btn-primary {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+[data-theme="light"] .tenpo-karte-head .titles .kicker,
+[data-theme="light"] .tenpo-karte-head .pathline,
+[data-theme="light"] .tenpo-karte-head .pathline .seg,
+[data-theme="light"] .card-accordion > summary .sum-hint,
+[data-theme="light"] .haccp-group-title,
+[data-theme="light"] .service-plan-title .s,
+[data-theme="light"] .muted.small,
+[data-theme="light"] .muted,
+[data-theme="light"] .muted-inline,
+[data-theme="light"] .file-meta,
+[data-theme="light"] .filelist-head .label,
+[data-theme="light"] .filelist-head .count {
+  color: #475569;
+}
+
+[data-theme="light"] .tenpo-karte-head h1,
+[data-theme="light"] .tenpo-karte-head .link,
+[data-theme="light"] .card-title,
+[data-theme="light"] .card-title-row .card-title,
+[data-theme="light"] .haccp-item-label .label,
+[data-theme="light"] .service-plan-title,
+[data-theme="light"] .kv .k,
+[data-theme="light"] .kv .v .v-main,
+[data-theme="light"] .upload-last .label,
+[data-theme="light"] .file-name,
+[data-theme="light"] .karte-accordion > summary .label,
+[data-theme="light"] .card-accordion > summary .sum-title,
+[data-theme="light"] .subhead {
+  color: #0f172a;
+}
+
+[data-theme="light"] .tenpo-karte-head code,
+[data-theme="light"] .haccp-group,
+[data-theme="light"] .haccp-item,
+[data-theme="light"] .service-plan-row,
+[data-theme="light"] .service-search-item,
+[data-theme="light"] .service-search-selected,
+[data-theme="light"] .tag-chip,
+[data-theme="light"] .card,
+[data-theme="light"] .card-sub,
+[data-theme="light"] .upload,
+[data-theme="light"] .file-row,
+[data-theme="light"] .karte-accordion > summary,
+[data-theme="light"] .card-accordion > summary,
+[data-theme="light"] .month-chip,
+[data-theme="light"] .pill,
+[data-theme="light"] .chk {
+  border-color: #d1d5db;
+  background: #ffffff;
+  color: #111827;
+}
+
+[data-theme="light"] .month-chip.active,
+[data-theme="light"] .seg-tabs .seg.active,
+[data-theme="light"] .radio.active {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+[data-theme="light"] .seg-tabs .seg,
+[data-theme="light"] .radio {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #111827;
+}
+
+[data-theme="light"] .form-grid input,
+[data-theme="light"] .form-grid select,
+[data-theme="light"] .memo,
+[data-theme="light"] .row input,
+[data-theme="light"] .row button,
+[data-theme="light"] .service-month-presets button,
+[data-theme="light"] .service-plan-head button,
+[data-theme="light"] .tenpo-karte-page input,
+[data-theme="light"] .tenpo-karte-page select,
+[data-theme="light"] .tenpo-karte-page textarea,
+[data-theme="light"] .file-actions button {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #111827;
+}
+
+[data-theme="light"] .form-grid .f .lbl,
+[data-theme="light"] .kv .v .v-sub,
+[data-theme="light"] .karte-accordion > summary .hint {
+  color: #64748b;
+}
+
+[data-theme="light"] .tenpo-karte-err {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* ラベル/本文の取りこぼし防止 */
+[data-theme="light"] .tenpo-karte-page .card,
+[data-theme="light"] .tenpo-karte-page .card *:not(button):not(code):not(.muted):not(.muted *):not(.pill-on):not(.pill-on *):not(.pill-off):not(.pill-off *):not(.month-chip.active):not(.month-chip.active *):not(.seg-tabs .seg.active):not(.seg-tabs .seg.active *):not(.radio.active):not(.radio.active *) {
+  color: #111827;
+}
+
+[data-theme="light"] .tenpo-karte-page .lbl,
+[data-theme="light"] .tenpo-karte-page label,
+[data-theme="light"] .tenpo-karte-page .kv .k,
+[data-theme="light"] .tenpo-karte-page .file-key,
+[data-theme="light"] .tenpo-karte-page .haccp-item-label .code {
+  color: #334155;
+}
+
+[data-theme="light"] .tenpo-karte-page .muted,
+[data-theme="light"] .tenpo-karte-page .muted-inline,
+[data-theme="light"] .tenpo-karte-page .sum-hint,
+[data-theme="light"] .tenpo-karte-page .hint,
+[data-theme="light"] .tenpo-karte-page .file-meta,
+[data-theme="light"] .tenpo-karte-page .filelist-head .label,
+[data-theme="light"] .tenpo-karte-page .filelist-head .count {
+  color: #64748b;
+}

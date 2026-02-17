@@ -12,6 +12,14 @@
   background: var(--card-border);
 }
 
+a {
+  color: #1d4ed8;
+}
+
+a:hover {
+  color: #1e40af;
+}
+
 /* Global affordance: buttons should feel clickable unless disabled. */
 button:not(:disabled) {
   cursor: pointer;
@@ -19,6 +27,38 @@ button:not(:disabled) {
 
 button:disabled {
   cursor: not-allowed;
+}
+
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #94a3b8;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #64748b;
+}
+
+[data-theme="light"] input:focus,
+[data-theme="light"] select:focus,
+[data-theme="light"] textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+}
+
+[data-theme="light"] button {
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+[data-theme="light"] .card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 .card {
@@ -295,14 +335,6 @@ button:disabled {
   background:
     radial-gradient(800px 500px at 50% 40%, rgba(70, 140, 255, 0.18), transparent 55%),
     radial-gradient(900px 700px at 50% 65%, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.92));
-}
-
-/* Entrance-only hamburger (job entrances + admin entrance). */
-.entrance-hamburger{
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  z-index: var(--z-header, 100);
 }
 
 [data-theme="light"] .job-entrance-page {

@@ -905,6 +905,7 @@ export default function AdminMasterBase({
                           row,
                           rowId: rid,
                           items: rowDetailItems(row),
+                          parents,
                           onInlineFieldChange: (field, value) => onInlineFieldChange(row, { key: field }, value),
                           inlineSaving,
                         })

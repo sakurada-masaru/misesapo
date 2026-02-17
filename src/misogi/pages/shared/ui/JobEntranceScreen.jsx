@@ -4,12 +4,13 @@ import Visualizer from './Visualizer/Visualizer';
 import Hotbar from './Hotbar/Hotbar';
 import { useReportStyleTransition, TRANSITION_CLASS_PAGE, TRANSITION_CLASS_UI } from './ReportTransition/reportTransition.jsx';
 import { JOBS } from '../utils/constants';
-import HamburgerMenu from './HamburgerMenu/HamburgerMenu';
+import { useI18n } from '../i18n/I18nProvider';
 
 const JOB_KEYS = ['sales', 'cleaning', 'office', 'dev', 'admin'];
 
 export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowGuideButton = true }) {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { isTransitioning, startTransition } = useReportStyleTransition(navigate);
   const job = jobKey && JOBS[jobKey];
   const valid = job && JOB_KEYS.includes(jobKey);
@@ -35,14 +36,14 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   if (!valid) {
     return (
       <div style={{ padding: 24, textAlign: 'center' }}>
-        <p>ジョブが見つかりません。</p>
-        <Link to="/">Portal へ戻る</Link>
+        <p>{t('ジョブが見つかりません。')}</p>
+        <Link to="/">{t('Portal へ戻る')}</Link>
       </div>
     );
   }
 
   const currentAction = actions?.find((a) => a.id === tab);
-  const tabLabel = currentAction?.label ?? tab;
+  const tabLabel = t(currentAction?.label ?? tab ?? '');
   // 遷移時の「MODE CHANGE」演出は無効化したいので、Visualizer の log モードは使わない。
   const vizMode = currentAction?.role === 'log' ? 'base' : (currentAction?.role ?? 'base');
   const showTransition = isTransitioning;
@@ -53,7 +54,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
 
     const groups = new Map(); // preserve insertion order
     items.forEach((it) => {
-      const g = (it && it.group) ? String(it.group) : 'その他';
+      const g = (it && it.group) ? String(it.group) : t('その他');
       if (!groups.has(g)) groups.set(g, []);
       groups.get(g).push(it);
     });
@@ -82,9 +83,6 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
 
   return (
     <div className={`job-entrance-page ${showTransition ? TRANSITION_CLASS_PAGE : ''}`} data-job={jobKey} style={{ paddingBottom: 110 }}>
-      <div className="entrance-hamburger">
-        <HamburgerMenu />
-      </div>
       <div className="job-entrance-viz">
         <Visualizer mode={vizMode} />
       </div>
@@ -96,7 +94,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           {Array.isArray(currentAction?.subItems) && currentAction.subItems.length > 0 && (
             <div className="sub-hotbar-wrap">
               {subGroups?.keys?.length > 1 && (
-                <div className="sub-hotbar-groups" role="tablist" aria-label="カテゴリ">
+                <div className="sub-hotbar-groups" role="tablist" aria-label={t('カテゴリ')}>
                   {subGroups.keys.map((k) => {
                     const active = (activeSubGroupKey || subGroups.keys[0]) === k;
                     return (
@@ -107,7 +105,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                         onClick={() => setSubGroupByTab((prev) => ({ ...prev, [currentAction.id]: k }))}
                         disabled={isTransitioning}
                       >
-                        {k}
+                        {t(k)}
                       </button>
                     );
                   })}
@@ -128,7 +126,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                     }}
                     disabled={isTransitioning}
                   >
-                    {item.label}
+                    {t(item.label)}
                   </button>
                 ))}
               </div>
@@ -136,9 +134,9 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           )}
 
           {!currentAction?.subItems && (
-            <p className="job-entrance-dummy">{actions ? `タブ: ${tabLabel}` : '（ダミー画面）'}</p>
+            <p className="job-entrance-dummy">{actions ? `${t('タブ:')} ${tabLabel}` : t('（ダミー画面）')}</p>
           )}
-          <p style={{ marginTop: 16 }}><Link to="/">Portal へ戻る</Link></p>
+          <p style={{ marginTop: 16 }}><Link to="/">{t('Portal へ戻る')}</Link></p>
         </main>
       </div>
       {actions && <Hotbar actions={actions} active={tab} onChange={onHotbar} showFlowGuideButton={showFlowGuideButton} />}

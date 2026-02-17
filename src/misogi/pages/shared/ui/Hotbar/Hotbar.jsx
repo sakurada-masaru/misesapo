@@ -6,6 +6,7 @@ import VisualizerBubble from '../VisualizerBubble/VisualizerBubble';
 import EXHotbar from './EXHotbar';
 import { ROLES, ISSUES, FLOW_RULES, ROLE_ALLOWED_ISSUES, BASE_STEPS } from '../../../../flow/flowData';
 import { useAuth } from '../../auth/useAuth';
+import { useI18n } from '../../i18n/I18nProvider';
 
 /**
  * アクションボタン。ジョブごとに内容は変えるが、仕組みは機能呼び出しだけ。
@@ -13,8 +14,9 @@ import { useAuth } from '../../auth/useAuth';
 export default function Hotbar({ actions = [], active, onChange, showFlowGuideButton = true }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { user } = useAuth();
-  const userName = user?.name || user?.displayName || user?.username || user?.id || 'ユーザー';
+  const userName = user?.name || user?.displayName || user?.username || user?.id || t('ユーザー');
   const [flowOpen, setFlowOpen] = useState(false);
   const [bubbleOpen, setBubbleOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState(null);
@@ -57,7 +59,7 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
       const allowed = ROLE_ALLOWED_ISSUES[selectedRole.key] || [];
       return ISSUES.filter(i => allowed.includes(i.key)).map(i => ({ key: i.key, label: i.label, data: i }));
     }
-    if (flowStep === 'result') return [{ key: 'reset', label: '最初から', action: resetFlow }];
+    if (flowStep === 'result') return [{ key: 'reset', label: t('最初から'), action: resetFlow }];
     return [];
   }, [flowStep, selectedRole]);
 
@@ -66,8 +68,8 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
     if (flowStep === 'issue') return `${userName} 様、了解しました。何かお困りごとはありますか？`;
     if (flowStep === 'result') {
       const rule = FLOW_RULES[currentStepId]?.[selectedIssue.key];
-      if (!rule) return "確認しましたが、ルールが見当たりませんでした。";
-      return `【${rule.title}】\n\n推奨アクション：\n${rule.actions.map(a => `・${a}`).join('\n')}`;
+      if (!rule) return t('確認しましたが、ルールが見当たりませんでした。');
+      return `【${t(rule.title)}】\n\n${t('推奨アクション：')}\n${rule.actions.map(a => `・${t(a)}`).join('\n')}`;
     }
     return "";
   }, [flowStep, userName, selectedIssue, currentStepId]);
@@ -88,7 +90,7 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
 
   return (
     <>
-      <div className="hotbar" role="navigation">
+      <div className="hotbar" role={t('navigation')}>
         {actions.map((a) => {
           const isDisabled = a.disabled === true;
           return (
@@ -99,7 +101,7 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
               disabled={isDisabled}
               onClick={() => !isDisabled && onChange?.(a.id)}
             >
-              {a.label}
+              {t(a.label)}
             </button>
           );
         })}
@@ -110,7 +112,7 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
             style={{ borderStyle: 'dashed' }}
             onClick={navigateToFlow}
           >
-            {isFlowGuidePage ? '🏠 ポータルへ' : '📘 業務フロー'}
+            {isFlowGuidePage ? t('🏠 ポータルへ') : t('📘 業務フロー')}
           </button>
         )}
       </div>
@@ -137,7 +139,7 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
         open={bubbleOpen}
         anchorRect={anchorRect}
         placement="bottom"
-        title="MISOGI / 業務フロー"
+        title={t('MISOGI / 業務フロー')}
         text={bubbleText}
         onClose={() => {
           setBubbleOpen(false);
