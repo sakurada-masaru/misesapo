@@ -794,4 +794,8 @@
     }
 }
 
-
+@media (max-width: 768px) {
+    .normal-header-logo {
+        position: absolute;
+    }
+}

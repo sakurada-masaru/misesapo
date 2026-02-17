@@ -105,3 +105,9 @@
         background: rgba(255, 103, 156, 0.06);
     }
 }
+
+@media (max-width: 768px) {
+    .normal-header-logo {
+        position: absolute;
+    }
+}
