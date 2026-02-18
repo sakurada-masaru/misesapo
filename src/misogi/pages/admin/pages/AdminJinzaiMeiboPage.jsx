@@ -73,9 +73,25 @@ const SHOKUSHU_LABEL = {
   dev: '開発',
 };
 
+const YAKUWARI_LABEL = {
+  admin: '管理',
+  worker: '作業員',
+  office: '事務',
+  sales: '営業',
+  dev: '開発',
+  operator: 'オペレーター',
+  jinji: '人事',
+  keiri: '経理',
+};
+
 function shokushuLabel(v) {
   const key = normStr(v).toLowerCase();
   return SHOKUSHU_LABEL[key] || normStr(v);
+}
+
+function yakuwariLabel(v) {
+  const key = normStr(v).toLowerCase();
+  return YAKUWARI_LABEL[key] || normStr(v);
 }
 
 function normalizeHanType(v) {
@@ -145,6 +161,19 @@ async function fetchJinzaiList({ limit = 2000, jotai = 'yuko' } = {}) {
   return Array.isArray(items) ? items : [];
 }
 
+async function fetchBushoList({ limit = 2000, jotai = 'yuko' } = {}) {
+  const base = JINZAI_API_BASE.replace(/\/$/, '');
+  const qs = new URLSearchParams({ limit: String(limit), jotai: String(jotai) }).toString();
+  const res = await fetch(`${base}/jinzai/busho?${qs}`, { headers: authHeaders(), cache: 'no-store' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`BUSHO HTTP ${res.status} ${text}`.trim());
+  }
+  const data = await res.json();
+  const items = Array.isArray(data) ? data : (data?.items || []);
+  return Array.isArray(items) ? items : [];
+}
+
 export default function AdminJinzaiMeiboPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -152,13 +181,24 @@ export default function AdminJinzaiMeiboPage() {
   const [yakuwari, setYakuwari] = useState('');
   const [shokushu, setShokushu] = useState('');
   const [items, setItems] = useState([]);
+  const [bushoMap, setBushoMap] = useState({});
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await fetchJinzaiList({ limit: 2000, jotai: 'yuko' });
+      const [data, bushos] = await Promise.all([
+        fetchJinzaiList({ limit: 2000, jotai: 'yuko' }),
+        fetchBushoList({ limit: 2000, jotai: 'yuko' }),
+      ]);
       setItems(data);
+      const map = {};
+      bushos.forEach((b) => {
+        const id = normStr(b?.busho_id || b?.id);
+        const name = normStr(b?.name);
+        if (id && name) map[id] = name;
+      });
+      setBushoMap(map);
     } catch (e) {
       setError(e?.message || '読み込みに失敗しました');
     } finally {
@@ -292,6 +332,8 @@ export default function AdminJinzaiMeiboPage() {
                 : '—';
               const koyou = normalizeKoyouKubun(it?.koyou_kubun);
               const koyouLabel = KOYOU_KUBUN_LABEL[koyou] || normStr(it?.koyou_kubun) || '—';
+              const bushoText = normStr(it?.busho_names)
+                || normArr(it?.busho_ids).map((idCode) => bushoMap[idCode] || idCode).join(', ');
               return (
                 <tr key={id || Math.random()}>
                   <td className="name">{it?.name || '(no name)'}</td>
@@ -299,12 +341,12 @@ export default function AdminJinzaiMeiboPage() {
                     <code>{id}</code>
                   </td>
                   <td className="tags">
-                    {ys.map((v) => <span key={v} className="tag">{v}</span>)}
+                    {ys.map((v) => <span key={v} className="tag">{yakuwariLabel(v)}</span>)}
                   </td>
                   <td className="tags">
                     {ss.map((v) => <span key={v} className="tag">{shokushuLabel(v)}</span>)}
                   </td>
-                  <td className="busho">{it?.busho_names || normArr(it?.busho_ids).join(', ')}</td>
+                  <td className="busho">{bushoText}</td>
                   <td className="email">{it?.email || ''}</td>
                   <td className="phone">{it?.phone || ''}</td>
                   <td className="koyou">{hanLabel} / {partnerLabel} / {koyouLabel}</td>

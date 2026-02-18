@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './breadcrumbs.css';
-import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 
 function isEntrancePath(pathname) {
@@ -96,18 +95,28 @@ function crumbsForPath(pathname) {
 }
 
 export default function Breadcrumbs() {
+  const navigate = useNavigate();
   const location = useLocation();
   const pathname = location?.pathname || '/';
 
   const hidden = isEntrancePath(pathname) || isWorkerReportPath(pathname);
   const crumbs = useMemo(() => crumbsForPath(pathname), [pathname]);
+  const onBack = () => {
+    if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/');
+  };
 
   if (hidden) {
     return (
-      <nav className="breadcrumbs breadcrumbs-lang-only" aria-label="言語切替">
+      <nav className="breadcrumbs breadcrumbs-lang-only" aria-label="ヘッダーメニュー">
+        <button type="button" className="breadcrumbs-back" onClick={onBack} aria-label="一つ前の画面に戻る">
+          ← 戻る
+        </button>
         <div className="breadcrumbs-lang-wrap">
           <HamburgerMenu />
-          <LanguageSwitcher />
         </div>
       </nav>
     );
@@ -115,6 +124,9 @@ export default function Breadcrumbs() {
 
   return (
     <nav className="breadcrumbs" aria-label="パンくず">
+      <button type="button" className="breadcrumbs-back" onClick={onBack} aria-label="一つ前の画面に戻る">
+        ← 戻る
+      </button>
       <div className="breadcrumbs-main">
         {crumbs.map((c, idx) => {
           const isLast = idx === crumbs.length - 1;
@@ -132,7 +144,6 @@ export default function Breadcrumbs() {
       </div>
       <div className="breadcrumbs-controls-wrap">
         <HamburgerMenu />
-        <LanguageSwitcher />
       </div>
     </nav>
   );

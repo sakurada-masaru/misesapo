@@ -22,6 +22,24 @@
   align-items: center;
 }
 
+.breadcrumbs-back{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.75);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.breadcrumbs-back:hover{
+  background: rgba(15, 23, 42, 0.92);
+}
+
 .breadcrumbs-lang-wrap{
   margin-left: auto;
   display: inline-flex;
@@ -113,4 +131,10 @@
 
 [data-theme="light"] .breadcrumbs-current{
   color: #0f172a;
+}
+
+[data-theme="light"] .breadcrumbs-back{
+  background: rgba(255, 255, 255, 0.85);
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.24);
 }

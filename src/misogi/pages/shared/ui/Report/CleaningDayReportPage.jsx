@@ -482,6 +482,11 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
         <Visualizer mode="base" className="report-page-visualizer" />
       </div>
       <div className="report-page-content cleaning-day-content">
+        <p className="cleaning-day-back-row">
+          <Link className="cleaning-day-back-link" to={isAdmin ? "/admin/entrance" : "/jobs/cleaning/entrance"}>
+            ← {isAdmin ? "管理エントランスに戻る" : "入口に戻る"}
+          </Link>
+        </p>
         <h1 className="cleaning-day-title">業務報告</h1>
 
         {/* ヘッダー */}

@@ -175,6 +175,26 @@
   box-shadow: none;
 }
 
+.hamburger-menu-footer .lang-switcher {
+  width: 100%;
+  justify-content: space-between;
+  color: var(--fg);
+}
+
+.hamburger-menu-footer .lang-switcher > span {
+  font-size: var(--fs-13, 13px);
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.hamburger-menu-footer .lang-switcher > select {
+  min-width: 145px;
+  height: 36px;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
 .hamburger-menu-button {
   display: block;
   width: 100%;

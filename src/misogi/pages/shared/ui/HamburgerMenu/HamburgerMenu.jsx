@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import { useAuth } from '../../auth/useAuth';
 import './hamburger-menu.css';
 
@@ -143,6 +144,7 @@ export default function HamburgerMenu() {
             <div className="hamburger-menu-section" style={{ marginTop: '20px' }}>
               <div className="hamburger-menu-section-title">設定</div>
               <div className="hamburger-menu-section-content">
+                <LanguageSwitcher />
                 <ThemeToggle />
               </div>
             </div>
