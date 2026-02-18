@@ -69,7 +69,7 @@
                 if (isOpen) closeDrawer(); else openDrawer();
             });
             backdrop.addEventListener('click', closeDrawer);
-            var drawerLinks = drawer.querySelectorAll('.normal-header-drawer-nav a');
+            var drawerLinks = drawer.querySelectorAll('.normal-header-drawer-nav a[href]');
             drawerLinks.forEach(function (a) {
                 a.addEventListener('click', closeDrawer);
             });
@@ -79,12 +79,61 @@
         }
     }
 
+    /** ドロップダウン（企業情報・規約＆ポリシー）をクリックで開閉（PC・モバイル共通） */
+    function initDropdown() {
+        var header = document.querySelector('.normal-header-with-hamburger');
+        if (!header) return;
+
+        var dropdowns = header.querySelectorAll('.normal-header-nav-dropdown');
+        if (!dropdowns.length) return;
+
+        dropdowns.forEach(function (dropdown) {
+            var trigger = dropdown.querySelector(':scope > a');
+            var menu = dropdown.querySelector('.normal-header-dropdown-menu');
+            if (!trigger || !menu) return;
+
+            trigger.setAttribute('role', 'button');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.setAttribute('aria-haspopup', 'true');
+
+            trigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                var wasOpen = dropdown.classList.contains('is-dropdown-open');
+                header.querySelectorAll('.normal-header-nav-dropdown').forEach(function (d) {
+                    d.classList.remove('is-dropdown-open');
+                    var t = d.querySelector(':scope > a');
+                    if (t) t.setAttribute('aria-expanded', 'false');
+                });
+                if (!wasOpen) {
+                    dropdown.classList.add('is-dropdown-open');
+                    trigger.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!header.contains(e.target)) {
+                header.querySelectorAll('.normal-header-nav-dropdown').forEach(function (d) {
+                    d.classList.remove('is-dropdown-open');
+                    var t = d.querySelector(':scope > a');
+                    if (t) t.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+    }
+
     function run() {
         var mount = document.getElementById('normal-header-mount');
         var src = mount && mount.getAttribute('data-src');
 
         if (mount && src) {
-            var url = new URL(src, document.baseURI || window.location.href).href;
+            // 相対パス（/ や http で始まらない）はサイトルート基準で解決（/about/message.html などサブパスでも同じモジュールを取得）
+            var url;
+            if (src.charAt(0) === '/' || src.indexOf('http') === 0) {
+                url = new URL(src, window.location.origin).href;
+            } else {
+                url = window.location.origin + '/' + src.replace(/^\.\//, '');
+            }
             fetch(url)
                 .then(function (res) { return res.ok ? res.text() : Promise.reject(new Error('load failed')); })
                 .then(function (html) {
@@ -95,12 +144,14 @@
                         normalHeader.classList.add('visible');
                     }
                     initHamburger();
+                    initDropdown();
                 })
                 .catch(function () {
                     mount.innerHTML = '<!-- header load error -->';
                 });
         } else {
             initHamburger();
+            initDropdown();
         }
     }
 

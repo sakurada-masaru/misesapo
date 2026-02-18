@@ -20,7 +20,7 @@
     display: block;
     width: 24px;
     height: 2px;
-    background: #333;
+    background: #FF679C;
     border-radius: 1px;
     transition: transform 0.3s ease, opacity 0.3s ease;
 }
@@ -104,10 +104,140 @@
         color: #FF679C;
         background: rgba(255, 103, 156, 0.06);
     }
+    /* ドロッワー内：企業情報・規約＆ポリシーをクリックで開閉 */
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown > a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        user-select: none;
+    }
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown > a::after {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin-left: 8px;
+        border-right: 2px solid #fff;
+        border-bottom: 2px solid #fff;
+        transform: rotate(45deg);
+        transition: transform 0.2s ease;
+    }
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown.is-dropdown-open > a::after {
+        transform: rotate(-135deg);
+    }
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown .normal-header-dropdown-menu {
+        position: static;
+        max-height: 0;
+        margin: 0;
+        padding: 0 0 0 16px;
+        overflow: hidden;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        transition: max-height 0.3s ease;
+    }
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown.is-dropdown-open .normal-header-dropdown-menu {
+        max-height: 400px;
+        padding: 0 0 8px 16px;
+    }
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown .normal-header-dropdown-menu li {
+        border-bottom: none;
+        width: 100%;
+    }
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown .normal-header-dropdown-menu a {
+        padding: 10px 0;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+    }
+    .normal-header-with-hamburger .normal-header-drawer-nav .normal-header-nav-dropdown .normal-header-dropdown-menu a:hover {
+        color: #fff;
+        background: transparent;
+    }
 }
 
 @media (max-width: 768px) {
     .normal-header-logo {
-        position: absolute;
+        position: absolute !important;
+        left: 10px;
     }
+
+}
+
+/* 企業情報などのドロップダウンメニュー（768px超＝PCはホバーで表示、768px以下はドロッワー内でクリック） */
+.normal-header-with-hamburger .normal-header-nav .normal-header-nav-dropdown {
+    position: relative;
+}
+.normal-header-with-hamburger .normal-header-nav .normal-header-nav-dropdown > a {
+    cursor: pointer;
+}
+.normal-header-with-hamburger .normal-header-nav .normal-header-nav-dropdown h3 {
+    margin: 0;
+    padding: 0.5em 0;
+    cursor: pointer;
+    font-size: inherit;
+    font-weight: inherit;
+}
+.normal-header-with-hamburger .normal-header-nav .normal-header-nav-dropdown .normal-header-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 250px;
+    margin: 10px 0;
+    list-style: none;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    z-index: 1000;
+    border: 1px solid #FF679C;
+}
+/* PC（768px超）：ホバーでメニュー表示 */
+@media (min-width: 769px) {
+    .normal-header-with-hamburger .normal-header-nav .normal-header-nav-dropdown:hover .normal-header-dropdown-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+}
+.normal-header-with-hamburger .normal-header-nav .normal-header-nav-dropdown .normal-header-dropdown-menu li {
+    margin: auto;
+    width: 90%;
+    border-bottom: 1px solid #eee;
+}
+.normal-header-with-hamburger .normal-header-nav .normal-header-nav-dropdown .normal-header-dropdown-menu a {
+    display: block;
+    padding: 10px 16px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+.normal-header-with-hamburger .normal-header-nav .normal-header-nav-dropdown .normal-header-dropdown-menu a:hover {
+    background: rgba(255, 103, 156, 0.1);
+    color: #FF679C;
+}
+
+@media screen and (min-width: 933px) {
+    main {
+        margin-top: 8rem;
+    }
+}
+.normal-header {
+    border-bottom: 1px solid #FF679C;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }

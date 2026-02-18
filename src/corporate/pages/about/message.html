@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代表挨拶・CEO MESSAGE｜企業情報｜ミセサポ</title>
+    <meta name="description" content="株式会社ミセサポ代表取締役社長・正田和輝のメッセージ。店舗運営の非効率を再設計する、店舗向けBPaaSについてご紹介します。">
+    <meta name="keywords" content="ミセサポ,代表挨拶,CEO MESSAGE,正田和輝,BPaaS,店舗運営,企業情報">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://misesapo.co.jp/about/message.html">
+    <meta property="og:title" content="代表挨拶・CEO MESSAGE｜ミセサポ">
+    <meta property="og:description" content="店舗運営の非効率そのものを再設計する、店舗向けBPaaS。代表・正田和輝からのことば。">
+    <meta property="og:image" content="https://misesapo.co.jp/images/about/ceo_shoda.png">
+    <meta property="og:site_name" content="ミセサポ">
+    <meta property="og:locale" content="ja_JP">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="代表挨拶・CEO MESSAGE｜ミセサポ">
+    <meta name="twitter:description" content="店舗運営の非効率そのものを再設計する、店舗向けBPaaS。代表・正田和輝からのことば。">
+    <meta name="twitter:image" content="https://misesapo.co.jp/images/about/ceo_shoda.png">
+
+    <link rel="canonical" href="https://misesapo.co.jp/about/message.html">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/normal-header-hamburger.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fff;
+            color: #333;
+            line-height: 1.8;
+        }
+        main { margin-top: 8rem; }
+
+        /* ヒーロー：ピンク帯＋右寄せ白ボックス */
+        .message-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            width: 100%;
+            padding: 48px 24px 56px;
+            position: relative;
+            color: #fff;
+        }
+        .message-hero h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: 0.1em;
+}
+.message-hero p {
+    font-size: 16px;
+    opacity: 0.95;
+}
+        .message-hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .message-hero-box {
+            background: #fff;
+            padding: 28px 40px 32px;
+            border-radius: 8px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+            text-align: left;
+        }
+        .message-hero-box h1 {
+            font-size: clamp(28px, 4vw, 36px);
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+        .message-hero-box .message-hero-sub {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* パンくず */
+        .breadcrumb {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 16px 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .breadcrumb-inner { display: inline-block; padding-bottom: 8px; border-bottom: 1px solid #e5e5e5; }
+        .breadcrumb a { color: #666; text-decoration: none; transition: color 0.3s ease; }
+        .breadcrumb a:hover { color: #FF679C; }
+        .breadcrumb span { margin: 0 8px; color: #999; }
+        .breadcrumb .current { color: #333; font-weight: 500; }
+
+        /* CEO MESSAGE セクション */
+        .message-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+        .message-section-title {
+            font-size: clamp(40px, 3vw, 32px);
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+            border-bottom: 5px solid #FF679C;
+            width: fit-content;
+
+        }
+   
+        .message-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: start;
+            margin-top: 40px;
+        }
+        .message-body h2 {
+            font-size: clamp(16px, 2vw, 16px);
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .message-body p {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 1.2em;
+        }
+        .message-body .message-sign {
+            margin-top: 32px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .message-figure {
+            position: relative;
+        }
+        .message-figure img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            background: #f0f0f0;
+        }
+
+        /* フッター */
+        .message-footer {
+            background: #FF679C;
+            color: #fff;
+            text-align: center;
+            padding: 24px 20px;
+            font-size: 14px;
+        }
+        .message-footer-inner { max-width: 1000px; margin: 0 auto; }
+
+        @media (max-width: 768px) {
+            .message-hero-inner { 
+                justify-content: center; 
+            }
+            .message-hero-box { padding: 20px 24px; }
+            .message-two-col {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .message-section-title{
+                margin: auto;
+            }
+            .message-figure { order: -1; max-width: 320px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
+
+    <main>
+        <!-- ヒーロー：代表者挨拶 -->
+        <section class="message-hero" aria-label="代表者挨拶">
+            <div class="message-hero-inner">
+                    <h1>代表者挨拶</h1>
+                    <p class="message-hero-sub">正田和輝からのことば</p>
+            </div>
+        </section>
+
+        <!-- パンくず -->
+        <div class="breadcrumb">
+            <div class="breadcrumb-inner">
+                <a href="/">TOP</a>
+                <span>&gt;</span>
+                <a href="/about/">企業情報</a>
+                <span>&gt;</span>
+                <span class="current">代表挨拶</span>
+            </div>
+        </div>
+
+        <!-- CEO MESSAGE -->
+        <div class="message-content">
+            <h2 class="message-section-title">CEO MESSAGE</h2>
+            <div class="message-two-col">
+                <div class="message-body">
+                    <h2>店舗運営の非効率そのものを再設計する、店舗向け BPaaS</h2>
+                    <p>私たちミセサポは、店舗の「清掃」と「設備まわり」に特化した BPaaS（Business Process as a Service）を提供しています。多くの店舗では、清掃や点検・メンテナンスが属人化し、品質のばらつきやスケジュールの非効率が課題になっていました。</p>
+                    <p>そこで私たちは、プロセスとスケジュールを標準化し、報告の可視化まで一気通貫で担う仕組みを整えました。店舗側は「いつ・何を・誰が」やったかが一目で分かり、運用負荷を大きく削減できます。</p>
+                    <p>「店舗運営の非効率そのものを再設計する」——それを実現するために、これからも現場に寄り添いながら、BPaaS の価値を高めていきます。</p>
+                    <p class="message-sign">代表取締役社長　正田和輝</p>
+                </div>
+                <figure class="message-figure">
+                    <img src="/images/about/ceo_shoda.png" alt="代表取締役社長 正田和輝" width="400" height="auto">
+                </figure>
+            </div>
+        </div>
+    </main>
+
+    <!-- フッター -->
+    <footer class="message-footer">
+        <div class="message-footer-inner">©2026 ミセサポ | 株式会社ミセサポ</div>
+    </footer>
+
+    <script src="/js/script.js"></script>
+    <script>
+        // パスを解決（GitHub Pages対応）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                resolvedPath = '/misesapo' + path;
+            } else {
+                resolvedPath = '/misesapo/' + path;
+            }
+            return window.location.origin + resolvedPath;
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const normalHeader = document.querySelector('.normal-header');
+            if (normalHeader) {
+                normalHeader.classList.add('visible');
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== 'visible') {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+            document.querySelectorAll('a[href^="/"]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                    link.href = resolvePath(href);
+                }
+            });
+            document.querySelectorAll('img[src^="/"]').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+    <script src="/js/normal-header-hamburger.js"></script>
+</body>
+</html>
