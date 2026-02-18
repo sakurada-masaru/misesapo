@@ -300,9 +300,8 @@ export default function AdminKadaiListPage() {
         {
           key: 'request',
           label: '要望',
-          options: REQUEST_OPTIONS,
-          valueKey: 'value',
-          labelKey: 'label',
+          type: 'text',
+          placeholder: '例: 確認 / 対応 / 作成 / 修正 など',
         },
         {
           key: 'status',
@@ -590,18 +589,12 @@ export default function AdminKadaiListPage() {
           key: 'request',
           label: '⑥要望（どうする）',
           columnLabel: '⑥要望',
-          type: 'select',
-          options: REQUEST_OPTIONS,
-          valueKey: 'value',
-          labelKey: 'label',
           defaultValue: '確認',
           required: true,
-          format: (v) => {
-            const key = String(v || '').trim();
-            const hit = REQUEST_OPTIONS.find((x) => x.value === key);
-            return hit?.label || key || '-';
+          render: (v) => {
+            const raw = String(v || '').trim();
+            return <span title={raw || ''}>{raw || '-'}</span>;
           },
-          render: (v) => renderMetaTag(String(v || '').trim() || '-', 'is-category'),
         },
         {
           key: 'status',

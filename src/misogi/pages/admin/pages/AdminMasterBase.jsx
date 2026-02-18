@@ -1333,19 +1333,28 @@ export default function AdminMasterBase({
             return (
               <label key={f.key}>
                 <span>{f.label}</span>
-                <select
-                  value={filtersValue[f.key] || ''}
-                  onChange={(e) => setFiltersValue((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                >
-                  <option value="">全て</option>
-                  {options.map((opt) => {
-                    // Support { value, label } shape too (used by Kadai filters etc.)
-                    const v = opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '';
-                    const l = opt?.[labelKey] ?? opt?.label ?? v;
-                    if (!v) return null;
-                    return <option key={v} value={v}>{l}</option>;
-                  })}
-                </select>
+                {f.type === 'text' ? (
+                  <input
+                    type="text"
+                    placeholder={f.placeholder || ''}
+                    value={filtersValue[f.key] || ''}
+                    onChange={(e) => setFiltersValue((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                  />
+                ) : (
+                  <select
+                    value={filtersValue[f.key] || ''}
+                    onChange={(e) => setFiltersValue((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                  >
+                    <option value="">全て</option>
+                    {options.map((opt) => {
+                      // Support { value, label } shape too (used by Kadai filters etc.)
+                      const v = opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '';
+                      const l = opt?.[labelKey] ?? opt?.label ?? v;
+                      if (!v) return null;
+                      return <option key={v} value={v}>{l}</option>;
+                    })}
+                  </select>
+                )}
               </label>
             );
           })}
