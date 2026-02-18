@@ -1314,7 +1314,7 @@ export default function AdminMasterBase({
 
         <section className="admin-master-toolbar">
           {localSearch?.keys?.length ? (
-            <label>
+            <label data-local-search="1">
               <span>{localSearch.label || '検索'}</span>
               <input
                 type="text"
@@ -1331,7 +1331,7 @@ export default function AdminMasterBase({
             const valueKey = f.valueKey || f.key;
             const labelKey = f.labelKey || 'name';
             return (
-              <label key={f.key}>
+              <label key={f.key} data-filter-key={String(f.key || '')}>
                 <span>{f.label}</span>
                 {f.type === 'text' ? (
                   <input

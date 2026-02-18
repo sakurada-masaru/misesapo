@@ -605,9 +605,31 @@
     grid-template-columns: 1fr;
   }
 
+  /* Kadai mobile: show only requester + status + task_state filters (plus keyword search). */
+  .admin-master-page[data-resource="kadai"] .admin-master-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-toolbar label[data-local-search="1"] {
+    grid-column: 1 / -1;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-toolbar label[data-local-search="1"] input {
+    min-width: 0;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-toolbar label[data-filter-key]:not([data-filter-key="reported_by"]):not([data-filter-key="status"]):not([data-filter-key="task_state"]) {
+    display: none;
+  }
+
   /* Kadai mobile: collapsible list (summary-only; tap to expand details). */
   .admin-master-page[data-resource="kadai"] .admin-master-table-wrap {
-    overflow-x: visible;
+    /* Avoid horizontal scroll on mobile (grid min-content can overflow). */
+    overflow-x: hidden;
+    overflow-y: visible;
+    max-width: 100%;
   }
 
   .admin-master-page[data-resource="kadai"] .admin-master-table {
@@ -678,6 +700,7 @@
     white-space: normal;
     word-break: normal;
     overflow-wrap: anywhere;
+    min-width: 0; /* allow grid to shrink without forcing overflow */
   }
 
   .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_at"],
@@ -700,6 +723,12 @@
     color: #e2e8f0;
     font-weight: 900;
     letter-spacing: 0.01em;
+    line-height: 1.35;
+    /* Prevent long titles from causing horizontal overflow; keep it readable. */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_by"] {
