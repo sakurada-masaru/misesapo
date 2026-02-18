@@ -519,6 +519,7 @@
 
     .cosmetic-logo img {
         height: 70px;
+        margin: 10px 0;
     }
 
     .misesapo-mega-menu.ishikawa-style .mega-menu-link {
@@ -794,8 +795,4 @@
     }
 }
 
-@media (max-width: 768px) {
-    .normal-header-logo {
-        position: absolute;
-    }
-}
+
