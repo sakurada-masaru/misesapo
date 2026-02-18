@@ -1,17 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
-function isLocalUiHost() {
-  if (typeof window === 'undefined') return false;
-  const h = String(window.location?.hostname || '').toLowerCase();
-  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
-}
-
-const MASTER_API_BASE =
-  (import.meta.env?.DEV || isLocalUiHost())
-    ? '/api-master'
-    : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
-
 function todayYmd() {
   try {
     const d = new Date();
@@ -195,8 +184,6 @@ export default function AdminAdminLogPage() {
   const [rowSelectedTask, setRowSelectedTask] = useState({});
   const [rowTaskSearch, setRowTaskSearch] = useState({});
   const [modalTaskSearch, setModalTaskSearch] = useState('');
-  const [creatingFromRowId, setCreatingFromRowId] = useState('');
-  const [creatingFromModal, setCreatingFromModal] = useState(false);
   const dayList = useMemo(() => monthDays(selectedDate), [selectedDate]);
   const monthLabel = useMemo(() => {
     const [y, m] = String(selectedDate || '').split('-');
@@ -212,43 +199,6 @@ export default function AdminAdminLogPage() {
     if (!current) return line;
     if (current.includes(taskId)) return current;
     return `${current}\n${line}`;
-  };
-
-  const createKadaiFromLog = async (source) => {
-    const src = source && typeof source === 'object' ? source : {};
-    const title = String(src.name || '').trim();
-    const request = String(src.request || '').trim();
-    const tomorrow = String(src.tomorrow_plan || '').trim();
-    const reportedBy = String(src.reported_by || '').trim() || '管理';
-    const body = tomorrow || request || title || '管理ログ起票';
-    const name = title || body.split('\n').map((v) => String(v || '').trim()).filter(Boolean)[0] || '管理ログ起票';
-    const payload = {
-      name: name.slice(0, 80),
-      category: 'create_request',
-      flow_stage: 'other',
-      status: 'open',
-      task_state: 'mikanryo',
-      source: 'internal',
-      reported_at: todayYmd(),
-      reported_by: reportedBy,
-      target_to: '',
-      request: body,
-      jotai: 'yuko',
-    };
-    const res = await fetch(`${MASTER_API_BASE.replace(/\/$/, '')}/master/kadai`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders(),
-      },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const msg = String(data?.message || data?.error || `HTTP ${res.status}`);
-      throw new Error(msg);
-    }
-    return data;
   };
 
   return (
@@ -317,6 +267,8 @@ export default function AdminAdminLogPage() {
       }}
       parentSources={{
         jinzai: {
+          apiBase: '/api-jinzai',
+          resourceBasePath: '',
           resource: 'jinzai',
           query: { limit: 2000, jotai: 'yuko' },
         },
@@ -391,28 +343,6 @@ export default function AdminAdminLogPage() {
                 }}
               >
                 明日の予定へ貼り付け
-              </button>
-              <button
-                type="button"
-                disabled={creatingFromModal}
-                onClick={async () => {
-                  try {
-                    setCreatingFromModal(true);
-                    const created = await createKadaiFromLog(editing || {});
-                    setEditing((prev) => {
-                      const next = { ...(prev || {}) };
-                      next.related_kadai_ids = mergeRelatedIds(next.related_kadai_ids, created.kadai_id);
-                      next.tomorrow_plan = appendTaskToPlan(next.tomorrow_plan, created);
-                      return next;
-                    });
-                  } catch (e) {
-                    window.alert(`課題作成に失敗しました: ${String(e?.message || e)}`);
-                  } finally {
-                    setCreatingFromModal(false);
-                  }
-                }}
-              >
-                {creatingFromModal ? '課題作成中...' : 'このログから課題を作成'}
               </button>
             </div>
             {ids.length ? (
@@ -627,31 +557,6 @@ export default function AdminAdminLogPage() {
                   onClick={() => onInlineFieldChange('tomorrow_plan', tomorrowDraft)}
                 >
                   {tomorrowSaving ? '保存中...' : '明日の予定を保存'}
-                </button>
-                <button
-                  type="button"
-                  disabled={creatingFromRowId === rowId}
-                  onClick={async () => {
-                    try {
-                      setCreatingFromRowId(rowId);
-                      const created = await createKadaiFromLog({
-                        name: row?.name,
-                        request: draft,
-                        tomorrow_plan: tomorrowDraft,
-                        reported_by: row?.reported_by,
-                      });
-                      const nextTomorrow = appendTaskToPlan(tomorrowDraft, created);
-                      setTomorrowDrafts((prev) => ({ ...prev, [rowId]: nextTomorrow }));
-                      onInlineFieldChange('tomorrow_plan', nextTomorrow);
-                      onInlineFieldChange('related_kadai_ids', mergeRelatedIds(row?.related_kadai_ids, created.kadai_id));
-                    } catch (e) {
-                      window.alert(`課題作成に失敗しました: ${String(e?.message || e)}`);
-                    } finally {
-                      setCreatingFromRowId('');
-                    }
-                  }}
-                >
-                  {creatingFromRowId === rowId ? '課題作成中...' : 'このログから課題を作成'}
                 </button>
               </div>
             </div>

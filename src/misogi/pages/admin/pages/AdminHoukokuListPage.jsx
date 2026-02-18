@@ -52,6 +52,14 @@ function getMonthRange(anchorYmd) {
     return { from, to, days, yyyyMm: `${y}-${String(m + 1).padStart(2, '0')}` };
 }
 
+function shiftMonthYmd(anchorYmd, deltaMonths) {
+    const d = parseYmd(anchorYmd);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const next = new Date(y, m + Number(deltaMonths || 0), 1, 0, 0, 0, 0);
+    return toYmd(next);
+}
+
 function normalizeNameKey(name) {
     return String(name || '')
         .trim()
@@ -460,6 +468,15 @@ const AdminHoukokuListPage = () => {
         return { ...r, weeks };
     }, [date, viewMode]);
 
+    const monthStrip = useMemo(() => {
+        const r = getMonthRange(date);
+        const [y, m] = String(r.yyyyMm || '').split('-');
+        return {
+            ...r,
+            monthLabel: `${y || ''}年${Number(m || 0)}月`,
+        };
+    }, [date]);
+
     return (
         <Container>
             <Header>
@@ -492,6 +509,34 @@ const AdminHoukokuListPage = () => {
                     </SearchBox>
                 </Controls>
             </Header>
+
+            <DateStrip aria-label="日付選択（1〜31）">
+                <DateStripInline>
+                    <MonthSwitch aria-label="月切替">
+                        <button type="button" onClick={() => setDate((d) => shiftMonthYmd(d, -1))}>←</button>
+                        <div className="head">{monthStrip.monthLabel} 日付選択</div>
+                        <button type="button" onClick={() => setDate((d) => shiftMonthYmd(d, 1))}>→</button>
+                    </MonthSwitch>
+                    <DateChips>
+                        {monthStrip.days.map((d) => {
+                            const day = Number(String(d).split('-')[2] || 0);
+                            const isSelected = d === date;
+                            const isToday = d === toYmd(new Date());
+                            return (
+                                <button
+                                    key={d}
+                                    type="button"
+                                    className={`chip ${isSelected ? 'is-active' : ''} ${isToday ? 'is-today' : ''}`}
+                                    onClick={() => setDate(d)}
+                                    title={d}
+                                >
+                                    {day}
+                                </button>
+                            );
+                        })}
+                    </DateChips>
+                </DateStripInline>
+            </DateStrip>
 
             {viewMode !== 'day' && (
                 <SummaryRow>
@@ -614,6 +659,79 @@ const Container = styled.div`
     margin: 0 auto;
     min-height: 100vh;
     color: #1e293b;
+`;
+
+const DateStrip = styled.section`
+    margin-bottom: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    padding: 10px 12px;
+`;
+
+const DateStripInline = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+`;
+
+const MonthSwitch = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+
+    .head {
+        font-size: 12px;
+        color: rgba(15, 23, 42, 0.7);
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    button {
+        height: 32px;
+        width: 34px;
+        border-radius: 10px;
+        border: 1px solid rgba(15, 23, 42, 0.16);
+        background: #ffffff;
+        color: #0f172a;
+        font-weight: 900;
+        cursor: pointer;
+    }
+`;
+
+const DateChips = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 1;
+    padding-bottom: 2px;
+
+    .chip {
+        min-width: 36px;
+        height: 32px;
+        border-radius: 10px;
+        border: 1px solid rgba(15, 23, 42, 0.16);
+        background: #ffffff;
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+        flex: 0 0 auto;
+    }
+
+    .chip.is-today {
+        border-color: rgba(59, 130, 246, 0.9);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+    }
+
+    .chip.is-active {
+        background: rgba(59, 130, 246, 0.12);
+        border-color: rgba(59, 130, 246, 0.65);
+    }
 `;
 
 const Header = styled.div`

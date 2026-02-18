@@ -333,11 +333,22 @@ export default function AdminMasterBase({
     await Promise.all(
       entries.map(async ([key, source]) => {
         try {
+          const buildPath = (basePath, suffixPath) => {
+            const p = String(basePath || '').replace(/\/$/, '');
+            const s = String(suffixPath || '');
+            if (!p) return s.startsWith('/') ? s : `/${s}`;
+            if (s.startsWith('/')) return `${p}${s}`;
+            return `${p}/${s}`;
+          };
+
+          // Allow parent sources to override API base/path shape (ex: jinzai is not under /master).
+          const parentApiBase = source?.apiBase ?? apiBase;
+          const parentResourceBasePath = source?.resourceBasePath ?? resourceBasePath;
           const query = toQuery(source.query || {});
           const path = query
-            ? `${buildResourcePath(source.resource)}?${query}`
-            : buildResourcePath(source.resource);
-          const res = await apiFetch(apiBase, path);
+            ? `${buildPath(parentResourceBasePath, source.resource)}?${query}`
+            : buildPath(parentResourceBasePath, source.resource);
+          const res = await apiFetch(parentApiBase, path);
           if (!res.ok) throw new Error(`${source.resource} HTTP ${res.status}`);
           const data = await res.json();
           next[key] = getItems(data);
@@ -348,7 +359,7 @@ export default function AdminMasterBase({
       })
     );
     setParents(next);
-  }, [parentSources, apiBase, buildResourcePath]);
+  }, [parentSources, apiBase, resourceBasePath, buildResourcePath]);
 
   const loadItems = useCallback(async () => {
     setLoading(true);

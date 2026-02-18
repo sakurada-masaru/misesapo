@@ -296,14 +296,31 @@
 
 /* Kadai は横スクロール前提にしない: 列を折り返して全体表示を優先 */
 .admin-master-page[data-resource="kadai"] .admin-master-table-wrap {
-  overflow-x: hidden;
+  /* If we force wrap on a narrow table, content becomes "vertical writing" (1 char per line).
+     Prefer minimum table width + allow horizontal scroll as a last resort. */
+  overflow-x: auto;
 }
 
 .admin-master-page[data-resource="kadai"] .admin-master-table th,
 .admin-master-page[data-resource="kadai"] .admin-master-table td {
   white-space: normal;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   vertical-align: top;
+}
+
+.admin-master-page[data-resource="kadai"] .admin-master-table {
+  min-width: 1100px;
+}
+
+/* Keep ID column readable even on small screens (bulk-delete adds a checkbox column). */
+.admin-master-page[data-resource="kadai"] .admin-master-table th:nth-child(1),
+.admin-master-page[data-resource="kadai"] .admin-master-table td:nth-child(1),
+.admin-master-page[data-resource="kadai"] .admin-master-table th:nth-child(2),
+.admin-master-page[data-resource="kadai"] .admin-master-table td:nth-child(2) {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .admin-master-page[data-resource="kadai"] .admin-master-table td.actions {
