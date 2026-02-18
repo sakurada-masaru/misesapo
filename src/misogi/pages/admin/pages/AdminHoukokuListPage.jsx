@@ -350,9 +350,16 @@ const AdminHoukokuListPage = () => {
                 '開発報告'
             );
         }
-        if (report?.template_id === 'OFFICE_V1') {
+        if (String(report?.template_id || '').startsWith('OFFICE_')) {
+            const items = Array.isArray(payload?.work_items) ? payload.work_items : [];
+            const counts = payload?.counts && typeof payload.counts === 'object' ? payload.counts : {};
+            const sum = Object.values(counts).reduce((a, v) => a + (Number(v) || 0), 0);
+            const totalMin = Number(payload?.total_minutes) || 0;
             return (
-                pick('summary', 'memo') ||
+                pick('exception_note', 'summary', 'memo') ||
+                (items.length ? `事務: ${items.length}項目` : '') ||
+                (sum ? `事務: ${sum}件` : '') ||
+                (totalMin ? `総時間: ${totalMin}分` : '') ||
                 '事務報告'
             );
         }

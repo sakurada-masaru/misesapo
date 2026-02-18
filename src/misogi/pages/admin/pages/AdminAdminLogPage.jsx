@@ -224,9 +224,7 @@ export default function AdminAdminLogPage() {
   const [selectedDate, setSelectedDate] = useState(todayYmd());
   const [detailDrafts, setDetailDrafts] = useState({});
   const [tomorrowDrafts, setTomorrowDrafts] = useState({});
-  const [rowSelectedTask, setRowSelectedTask] = useState({});
-  const [rowTaskSearch, setRowTaskSearch] = useState({});
-  const [modalTaskSearch, setModalTaskSearch] = useState('');
+  // related_kadai_ids は自由入力（検索/タグ運用は廃止）
   const selectedYmd = useMemo(() => normalizeYmd(selectedDate) || todayYmd(), [selectedDate]);
   const dayList = useMemo(() => monthDays(selectedDate), [selectedDate]);
   const monthLabel = useMemo(() => {
@@ -337,72 +335,19 @@ export default function AdminAdminLogPage() {
         return m;
       }}
       renderModalExtra={({ editing, setEditing, parents }) => {
-        const ids = parseRelatedIds(editing?.related_kadai_ids);
-        const taskOptions = normalizeTaskOptions(parents || {});
-        const filteredTaskOptions = filterTaskOptions(taskOptions, modalTaskSearch);
-        const modalSelectedId = String(editing?.selected_kadai_id || '');
-        const selectedTask = taskOptions.find((x) => x.value === modalSelectedId)?.item || null;
         return (
           <div className="admin-log-related-box">
             <div className="admin-log-related-head">
-              <div>関連課題（検索して追加）</div>
+              <div>関連課題（自由入力）</div>
             </div>
-            <div className="admin-log-task-picker">
-              <input
-                type="text"
-                placeholder="課題番号/タイトルで検索"
-                value={modalTaskSearch}
-                onChange={(e) => setModalTaskSearch(e.target.value)}
+            <div style={{ marginTop: 8 }}>
+              <textarea
+                value={String(editing?.related_kadai_ids || '')}
+                onChange={(e) => setEditing((prev) => ({ ...(prev || {}), related_kadai_ids: e.target.value }))}
+                placeholder="例: KADAI#0001, KADAI#0002"
+                style={{ width: '100%', minHeight: 84 }}
               />
-              <select
-                value={modalSelectedId}
-                onChange={(e) => setEditing((prev) => ({ ...(prev || {}), selected_kadai_id: e.target.value }))}
-              >
-                <option value="">課題を選択</option>
-                {filteredTaskOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <button
-                type="button"
-                disabled={!selectedTask}
-                onClick={() => {
-                  if (!selectedTask) return;
-                  setEditing((prev) => {
-                    const next = { ...(prev || {}) };
-                    next.related_kadai_ids = mergeRelatedIds(next.related_kadai_ids, selectedTask.kadai_id);
-                    return next;
-                  });
-                }}
-              >
-                関連課題に追加
-              </button>
-              <button
-                type="button"
-                disabled={!selectedTask}
-                onClick={() => {
-                  if (!selectedTask) return;
-                  setEditing((prev) => {
-                    const next = { ...(prev || {}) };
-                    next.tomorrow_plan = appendTaskToPlan(next.tomorrow_plan, selectedTask);
-                    return next;
-                  });
-                }}
-              >
-                明日の予定へ貼り付け
-              </button>
             </div>
-            {ids.length ? (
-              <div className="admin-log-related-tags">
-                {ids.map((id) => (
-                  <a key={id} className="admin-log-related-tag" href={`#/admin/kadai?focus=${encodeURIComponent(id)}`}>
-                    {id}
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <div className="admin-log-related-empty">関連課題は未設定です</div>
-            )}
           </div>
         );
       }}
@@ -439,11 +384,6 @@ export default function AdminAdminLogPage() {
         const bodySaving = !!inlineSaving?.[`${rowId}:request`];
         const tomorrowSaving = !!inlineSaving?.[`${rowId}:tomorrow_plan`];
         const titleSaving = !!inlineSaving?.[`${rowId}:name`];
-        const taskOptions = normalizeTaskOptions(parents || {});
-        const query = String(rowTaskSearch[rowId] || '');
-        const filteredTaskOptions = filterTaskOptions(taskOptions, query);
-        const selectedTaskId = String(rowSelectedTask[rowId] || '');
-        const selectedTask = taskOptions.find((x) => x.value === selectedTaskId)?.item || null;
         const relatedIds = parseRelatedIds(row?.related_kadai_ids);
 
         return (
@@ -468,15 +408,7 @@ export default function AdminAdminLogPage() {
               <div className="kadai-detail-row">
                 <div className="k">関連課題</div>
                 <div className="v">
-                  {relatedIds.length ? (
-                    <div className="admin-log-related-tags in-detail">
-                      {relatedIds.map((id) => (
-                        <a key={id} className="admin-log-related-tag" href={`#/admin/kadai?focus=${encodeURIComponent(id)}`}>
-                          {id}
-                        </a>
-                      ))}
-                    </div>
-                  ) : '-'}
+                  {relatedIds.length ? relatedIds.join(', ') : '-'}
                 </div>
               </div>
             </div>
@@ -547,46 +479,15 @@ export default function AdminAdminLogPage() {
 
               <div className="admin-log-related-box">
                 <div className="admin-log-related-head">
-                  <div>関連課題を検索</div>
+                  <div>関連課題（自由入力）</div>
                 </div>
-                <div className="admin-log-task-picker">
-                  <input
-                    type="text"
-                    placeholder="課題番号/タイトルで検索"
-                    value={query}
-                    onChange={(e) => setRowTaskSearch((prev) => ({ ...prev, [rowId]: e.target.value }))}
+                <div style={{ marginTop: 8 }}>
+                  <textarea
+                    value={String(row?.related_kadai_ids || '')}
+                    onChange={(e) => onInlineFieldChange('related_kadai_ids', e.target.value)}
+                    placeholder="例: KADAI#0001, KADAI#0002"
+                    style={{ width: '100%', minHeight: 84 }}
                   />
-                  <select
-                    value={selectedTaskId}
-                    onChange={(e) => setRowSelectedTask((prev) => ({ ...prev, [rowId]: e.target.value }))}
-                  >
-                    <option value="">課題を選択</option>
-                    {filteredTaskOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    disabled={!selectedTask}
-                    onClick={() => {
-                      if (!selectedTask) return;
-                      onInlineFieldChange('related_kadai_ids', mergeRelatedIds(row?.related_kadai_ids, selectedTask.kadai_id));
-                    }}
-                  >
-                    関連課題に追加
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!selectedTask}
-                    onClick={() => {
-                      if (!selectedTask) return;
-                      const nextTomorrow = appendTaskToPlan(tomorrowDraft, selectedTask);
-                      setTomorrowDrafts((prev) => ({ ...prev, [rowId]: nextTomorrow }));
-                      onInlineFieldChange('tomorrow_plan', nextTomorrow);
-                    }}
-                  >
-                    明日の予定へ貼り付け
-                  </button>
                 </div>
               </div>
 

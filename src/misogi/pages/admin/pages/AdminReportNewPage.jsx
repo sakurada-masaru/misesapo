@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../../shared/auth/useAuth';
@@ -14,6 +14,25 @@ const TEMPLATE_CLEANING = 'CLEANING_V1';
 const TEMPLATE_ENGINEERING = 'ENGINEERING_V1';
 const TEMPLATE_OFFICE = 'OFFICE_ADMIN_V1';
 const TEMPLATE_DAY = 'CLEANING_DAY_V1';
+
+// Office (事務) report: structured fields only (no narratives).
+const OFFICE_WORK_ITEMS = [
+    { code: 'inquiry', label: '問合せ対応' },
+    { code: 'schedule', label: '日程調整' },
+    { code: 'billing', label: '請求処理' },
+    { code: 'payment', label: '入金確認' },
+    { code: 'order', label: '発注/手配' },
+    { code: 'doc', label: '書類作成' },
+    { code: 'master_update', label: 'マスタ更新' },
+    { code: 'other', label: 'その他(分類)' },
+];
+
+const OFFICE_EXCEPTIONS = [
+    { code: 'blocked', label: '詰まり' },
+    { code: 'return_required', label: '差し戻し' },
+    { code: 'urgent', label: '至急' },
+    { code: 'unconfirmed', label: '未確認' },
+];
 
 const SERVICE_TO_TEMPLATE = {
     'グリストラップ': 'CLEAN_GREASE_TRAP_V1',
@@ -99,6 +118,51 @@ const emptyStore = (enabled = false) => ({
     confirmed: false,
     saved: { log_id: null, version: null, state: null },
 });
+
+function uniqStrings(list) {
+    const a = Array.isArray(list) ? list : [];
+    return Array.from(new Set(a.map((v) => String(v || '').trim()).filter(Boolean)));
+}
+
+function parseKadaiIds(value) {
+    return uniqStrings(
+        String(value || '')
+            .split(/[,\s]+/)
+            .map((v) => String(v || '').trim())
+            .filter(Boolean)
+            .map((v) => (/^kadai#/i.test(v) ? `KADAI#${v.slice(6)}` : v))
+            .filter((v) => /^KADAI#/i.test(v))
+    );
+}
+
+function timeToMin(hhmm) {
+    const m = String(hhmm || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    const hh = Number(m[1]);
+    const mm = Number(m[2]);
+    if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+    if (hh < 0 || hh > 23) return null;
+    if (mm < 0 || mm > 59) return null;
+    return hh * 60 + mm;
+}
+
+function calcSessionMinutes(start, end) {
+    const s = timeToMin(start);
+    const e = timeToMin(end);
+    if (s == null || e == null) return 0;
+    let diff = e - s;
+    if (diff < 0) diff += 24 * 60; // allow cross-midnight
+    return Math.max(0, diff);
+}
+
+function formatMinutes(totalMin) {
+    const m = Math.max(0, Number(totalMin) || 0);
+    const hh = Math.floor(m / 60);
+    const mm = m % 60;
+    if (hh <= 0) return `${mm}分`;
+    if (mm <= 0) return `${hh}時間`;
+    return `${hh}時間${mm}分`;
+}
 
 function serializeStoreReport(store) {
     return {
@@ -233,10 +297,14 @@ export default function AdminReportNewPage() {
 
     // --- State: Office Admin ---
     const [office, setOffice] = useState({
-        counts: { billing: 0, payment: 0, scanning: 0 },
-        done: '',
-        needs_decision: '',
-        next_actions: '',
+        user_name: '',
+        work_sessions: [{ start: '', end: '' }],
+        work_items: [],
+        related_kadai_ids: '',
+        counts: { inquiry: 0, schedule: 0, billing: 0, payment: 0, master_update: 0, other: 0 },
+        exception_flags: [],
+        exception_note: '',
+        total_minutes: 0,
         attachments: []
     });
 
@@ -275,8 +343,24 @@ export default function AdminReportNewPage() {
                     user_name: prev.user_name || name
                 };
             });
+
+            // 事務テンプレートの初期値設定（提出者）
+            setOffice(prev => {
+                if (prev.user_name) return prev;
+                return { ...prev, user_name: name };
+            });
         }
     }, [user, authLoading, header.reporter_name]);
+
+    const officeTotalMinutes = useCallback((sessions) => {
+        const list = Array.isArray(sessions) ? sessions : [];
+        return list.reduce((sum, s) => sum + calcSessionMinutes(s?.start, s?.end), 0);
+    }, []);
+
+    const officeTotalLabel = useMemo(() => {
+        const total = officeTotalMinutes(office?.work_sessions);
+        return formatMinutes(total);
+    }, [office?.work_sessions, officeTotalMinutes]);
 
     const loadData = useCallback(async () => {
         // getToken() は期限切れを null 返すので、直接 localStorage からも取得
@@ -522,7 +606,17 @@ export default function AdminReportNewPage() {
         } else if (activeTemplate === TEMPLATE_ENGINEERING) {
             setEng({ project: '', status: '進行中', tasks_done: '', tasks_next: '', issues: '', attachments: [] });
         } else if (activeTemplate === TEMPLATE_OFFICE) {
-            setOffice({ counts: { billing: 0, payment: 0, scanning: 0 }, done: '', needs_decision: '', next_actions: '', attachments: [] });
+            setOffice({
+                user_name: header.reporter_name || '',
+                work_sessions: [{ start: '', end: '' }],
+                work_items: [],
+                related_kadai_ids: '',
+                counts: { inquiry: 0, schedule: 0, billing: 0, payment: 0, master_update: 0, other: 0 },
+                exception_flags: [],
+                exception_note: '',
+                total_minutes: 0,
+                attachments: []
+            });
         }
     };
 
@@ -572,7 +666,22 @@ export default function AdminReportNewPage() {
         }
         else if (templateId === TEMPLATE_SALES) payload = sales;
         else if (templateId === TEMPLATE_ENGINEERING) payload = eng;
-        else if (templateId === TEMPLATE_OFFICE) payload = office;
+        else if (templateId === TEMPLATE_OFFICE) {
+            const sessions = Array.isArray(office?.work_sessions) ? office.work_sessions : [];
+            const totalMin = officeTotalMinutes(sessions);
+            const starts = sessions.map((s) => String(s?.start || '').trim()).filter(Boolean);
+            const ends = sessions.map((s) => String(s?.end || '').trim()).filter(Boolean);
+            const workStart = starts[0] || '';
+            const workEnd = ends.length ? ends[ends.length - 1] : '';
+            payload = {
+                ...office,
+                user_name: office.user_name || header.reporter_name || '',
+                work_sessions: sessions,
+                work_start_time: workStart,
+                work_end_time: workEnd,
+                total_minutes: totalMin,
+            };
+        }
 
         try {
             const token = getToken() || localStorage.getItem('cognito_id_token');
@@ -1091,13 +1200,215 @@ export default function AdminReportNewPage() {
                         <Card>
                             <SectionHeader><CardTitle>事務報告</CardTitle></SectionHeader>
                             <FormGrid>
+                                <Field>
+                                    <Label htmlFor="office_user_name">アカウント名</Label>
+                                    <Input
+                                        id="office_user_name"
+                                        name="user_name"
+                                        value={office.user_name || header.reporter_name || ''}
+                                        readOnly
+                                        aria-readonly="true"
+                                    />
+                                </Field>
+                                <Field>
+                                    <Label htmlFor="office_work_date">日付</Label>
+                                    <Input
+                                        id="office_work_date"
+                                        name="work_date"
+                                        value={header.work_date}
+                                        readOnly
+                                        aria-readonly="true"
+                                    />
+                                </Field>
                                 <Field $full>
-                                    <Label htmlFor="office_done">完了事項</Label>
-                                    <FormTextarea
-                                        id="office_done"
-                                        name="done"
-                                        value={office.done}
-                                        onChange={e => setOffice(p => ({ ...p, done: e.target.value }))}
+                                    <Label>業務時間（複数OK）</Label>
+                                    <div style={{ display: 'grid', gap: 10 }}>
+                                        {(Array.isArray(office.work_sessions) ? office.work_sessions : [{ start: '', end: '' }]).map((s, idx) => (
+                                            <div key={`office-session-${idx}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'end' }}>
+                                                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>開始</span>
+                                                    <Input
+                                                        type="time"
+                                                        value={String(s?.start || '')}
+                                                        onChange={(e) => {
+                                                            const v = e.target.value;
+                                                            setOffice((p) => {
+                                                                const cur = Array.isArray(p.work_sessions) ? [...p.work_sessions] : [];
+                                                                while (cur.length <= idx) cur.push({ start: '', end: '' });
+                                                                cur[idx] = { ...(cur[idx] || { start: '', end: '' }), start: v };
+                                                                return { ...p, work_sessions: cur };
+                                                            });
+                                                        }}
+                                                    />
+                                                </label>
+                                                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>終了</span>
+                                                    <Input
+                                                        type="time"
+                                                        value={String(s?.end || '')}
+                                                        onChange={(e) => {
+                                                            const v = e.target.value;
+                                                            setOffice((p) => {
+                                                                const cur = Array.isArray(p.work_sessions) ? [...p.work_sessions] : [];
+                                                                while (cur.length <= idx) cur.push({ start: '', end: '' });
+                                                                cur[idx] = { ...(cur[idx] || { start: '', end: '' }), end: v };
+                                                                return { ...p, work_sessions: cur };
+                                                            });
+                                                        }}
+                                                    />
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setOffice((p) => {
+                                                            const cur = Array.isArray(p.work_sessions) ? [...p.work_sessions] : [];
+                                                            cur.splice(idx, 1);
+                                                            if (cur.length === 0) cur.push({ start: '', end: '' });
+                                                            return { ...p, work_sessions: cur };
+                                                        });
+                                                    }}
+                                                    style={{
+                                                        height: 42,
+                                                        padding: '0 12px',
+                                                        borderRadius: 10,
+                                                        border: '1px solid #334155',
+                                                        background: '#1e293b',
+                                                        color: '#e2e8f0',
+                                                        cursor: 'pointer',
+                                                    }}
+                                                    disabled={(Array.isArray(office.work_sessions) ? office.work_sessions.length : 1) <= 1}
+                                                    title="この行を削除"
+                                                >
+                                                    −
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setOffice((p) => {
+                                                        const cur = Array.isArray(p.work_sessions) ? [...p.work_sessions] : [];
+                                                        if (cur.length >= 8) return p;
+                                                        cur.push({ start: '', end: '' });
+                                                        return { ...p, work_sessions: cur };
+                                                    });
+                                                }}
+                                                style={{
+                                                    height: 42,
+                                                    padding: '0 14px',
+                                                    borderRadius: 10,
+                                                    border: '1px solid #334155',
+                                                    background: '#0b1220',
+                                                    color: '#e2e8f0',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                ＋ 追加
+                                            </button>
+                                            <div style={{ color: '#e2e8f0', fontWeight: 700 }}>
+                                                総時間: {officeTotalLabel}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Field>
+                                <Field $full>
+                                    <Label>今日やったこと（チェック）</Label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                        {OFFICE_WORK_ITEMS.map((it) => {
+                                            const checked = Array.isArray(office.work_items) && office.work_items.includes(it.code);
+                                            return (
+                                                <label key={it.code} style={{ display: 'flex', alignItems: 'center', gap: 10, userSelect: 'none' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={(e) => {
+                                                            const on = e.target.checked;
+                                                            setOffice((p) => {
+                                                                const cur = Array.isArray(p.work_items) ? p.work_items : [];
+                                                                const next = on
+                                                                    ? uniqStrings([...cur, it.code])
+                                                                    : cur.filter((x) => x !== it.code);
+                                                                return { ...p, work_items: next };
+                                                            });
+                                                        }}
+                                                    />
+                                                    <span style={{ fontSize: '0.9rem', color: '#e2e8f0' }}>{it.label}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </Field>
+                                <Field $full>
+                                    <Label htmlFor="office_related_kadai">関連課題（KADAI#... 複数OK）</Label>
+                                    <Input
+                                        id="office_related_kadai"
+                                        value={office.related_kadai_ids || ''}
+                                        onChange={(e) => setOffice((p) => ({ ...p, related_kadai_ids: e.target.value }))}
+                                        placeholder="例: KADAI#0001 KADAI#0002"
+                                    />
+                                </Field>
+                                <Field $full>
+                                    <Label>件数</Label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+                                        {[
+                                            { key: 'inquiry', label: '問合せ' },
+                                            { key: 'schedule', label: '日程' },
+                                            { key: 'billing', label: '請求' },
+                                            { key: 'payment', label: '入金' },
+                                            { key: 'master_update', label: '更新' },
+                                            { key: 'other', label: 'その他' },
+                                        ].map((c) => (
+                                            <label key={c.key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{c.label}</span>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    value={String(office?.counts?.[c.key] ?? 0)}
+                                                    onChange={(e) => {
+                                                        const n = Math.max(0, parseInt(e.target.value || '0', 10) || 0);
+                                                        setOffice((p) => ({ ...p, counts: { ...(p.counts || {}), [c.key]: n } }));
+                                                    }}
+                                                />
+                                            </label>
+                                        ))}
+                                    </div>
+                                </Field>
+                                <Field $full>
+                                    <Label>例外フラグ（あれば）</Label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                        {OFFICE_EXCEPTIONS.map((it) => {
+                                            const checked = Array.isArray(office.exception_flags) && office.exception_flags.includes(it.code);
+                                            return (
+                                                <label key={it.code} style={{ display: 'flex', alignItems: 'center', gap: 10, userSelect: 'none' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={(e) => {
+                                                            const on = e.target.checked;
+                                                            setOffice((p) => {
+                                                                const cur = Array.isArray(p.exception_flags) ? p.exception_flags : [];
+                                                                const next = on
+                                                                    ? uniqStrings([...cur, it.code])
+                                                                    : cur.filter((x) => x !== it.code);
+                                                                return { ...p, exception_flags: next };
+                                                            });
+                                                        }}
+                                                    />
+                                                    <span style={{ fontSize: '0.9rem', color: '#e2e8f0' }}>{it.label}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </Field>
+                                <Field $full>
+                                    <Label htmlFor="office_exception_note">例外メモ（短文）</Label>
+                                    <Input
+                                        id="office_exception_note"
+                                        value={office.exception_note || ''}
+                                        onChange={(e) => setOffice((p) => ({ ...p, exception_note: e.target.value }))}
+                                        maxLength={120}
+                                        placeholder="例: 入金不明1件 / 先方折返し待ち"
                                     />
                                 </Field>
                             </FormGrid>

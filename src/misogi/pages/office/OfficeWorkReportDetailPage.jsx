@@ -35,10 +35,46 @@ function templateLabel(templateId) {
   if (!templateId) return '—';
   if (templateId.startsWith('SALES') || templateId.includes('SALES')) return '営業';
   if (templateId.startsWith('CLEANING') || templateId.includes('CLEANING')) return '清掃';
+  if (templateId.startsWith('OFFICE') || templateId.includes('OFFICE')) return '事務';
   return 'その他';
 }
 
 const TOUCH_LABELS = { visit: '訪問', call: '電話', email: 'メール', other: 'その他' };
+const OFFICE_WORK_ITEM_LABELS = {
+  inquiry: '問合せ対応',
+  schedule: '日程調整',
+  billing: '請求処理',
+  payment: '入金確認',
+  order: '発注/手配',
+  doc: '書類作成',
+  master_update: 'マスタ更新',
+  other: 'その他(分類)',
+};
+const OFFICE_EXCEPTION_LABELS = {
+  blocked: '詰まり',
+  return_required: '差し戻し',
+  urgent: '至急',
+  unconfirmed: '未確認',
+};
+
+function parseKadaiIds(value) {
+  const list = String(value || '')
+    .split(/[,\s]+/)
+    .map((v) => String(v || '').trim())
+    .filter(Boolean)
+    .map((v) => (/^kadai#/i.test(v) ? `KADAI#${v.slice(6)}` : v))
+    .filter((v) => /^KADAI#/i.test(v));
+  return Array.from(new Set(list));
+}
+
+function formatMinutes(totalMin) {
+  const m = Math.max(0, Number(totalMin) || 0);
+  const hh = Math.floor(m / 60);
+  const mm = m % 60;
+  if (hh <= 0) return `${mm}分`;
+  if (mm <= 0) return `${hh}時間`;
+  return `${hh}時間${mm}分`;
+}
 
 /**
  * 業務報告の詳細ページ（社内・認証必須）
@@ -90,6 +126,7 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
   const attachments = collectAttachmentUrls(report);
   const isDay = report.template_id === 'SALES_DAY_V1';
   const isCase = report.template_id === 'SALES_CASE_V1';
+  const isOffice = String(report.template_id || '').startsWith('OFFICE_');
 
   const handlePrint = () => {
     window.print();
@@ -218,7 +255,84 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
         </section>
       )}
 
-      {!isDay && !isCase && Object.keys(desc).length > 0 && (
+      {isOffice && (
+        <section style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+          <h2 style={{ fontSize: '1rem', margin: '0 0 12px', color: 'var(--muted)' }}>事務報告</h2>
+          <dl style={{ margin: 0, display: 'grid', gap: '8px 16px', gridTemplateColumns: 'auto 1fr' }}>
+            {(desc.user_name || report.user_name) && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>提出者</dt>
+                <dd style={{ margin: 0 }}>{desc.user_name || report.user_name}</dd>
+              </>
+            )}
+            {(Array.isArray(desc.work_sessions) && desc.work_sessions.length > 0) ? (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>業務時間</dt>
+                <dd style={{ margin: 0 }}>
+                  <div style={{ display: 'grid', gap: 6 }}>
+                    {desc.work_sessions.map((s, i) => (
+                      <div key={i}>{String(s?.start || '—')} ～ {String(s?.end || '—')}</div>
+                    ))}
+                    {desc.total_minutes != null && Number(desc.total_minutes) >= 0 && (
+                      <div style={{ marginTop: 6, fontWeight: 700 }}>総時間: {formatMinutes(desc.total_minutes)}</div>
+                    )}
+                  </div>
+                </dd>
+              </>
+            ) : ((desc.work_start_time || desc.work_end_time) && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>業務時間</dt>
+                <dd style={{ margin: 0 }}>{desc.work_start_time || '—'} ～ {desc.work_end_time || '—'}</dd>
+              </>
+            ))}
+            {Array.isArray(desc.work_items) && desc.work_items.length > 0 && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>実施項目</dt>
+                <dd style={{ margin: 0 }}>
+                  {desc.work_items.map((c) => OFFICE_WORK_ITEM_LABELS[c] || c).join(' / ')}
+                </dd>
+              </>
+            )}
+            {String(desc.related_kadai_ids || '').trim() && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>関連課題</dt>
+                <dd style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {parseKadaiIds(desc.related_kadai_ids).length
+                    ? parseKadaiIds(desc.related_kadai_ids).join(', ')
+                    : String(desc.related_kadai_ids || '').trim()}
+                </dd>
+              </>
+            )}
+            {desc.counts && typeof desc.counts === 'object' && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>件数</dt>
+                <dd style={{ margin: 0 }}>
+                  {Object.entries(desc.counts)
+                    .filter(([, v]) => Number(v) > 0)
+                    .map(([k, v]) => `${k}:${v}`)
+                    .join(' / ') || '—'}
+                </dd>
+              </>
+            )}
+            {Array.isArray(desc.exception_flags) && desc.exception_flags.length > 0 && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>例外</dt>
+                <dd style={{ margin: 0 }}>
+                  {desc.exception_flags.map((c) => OFFICE_EXCEPTION_LABELS[c] || c).join(' / ')}
+                </dd>
+              </>
+            )}
+            {desc.exception_note && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>例外メモ</dt>
+                <dd style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{String(desc.exception_note)}</dd>
+              </>
+            )}
+          </dl>
+        </section>
+      )}
+
+      {!isDay && !isCase && !isOffice && Object.keys(desc).length > 0 && (
         <section style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
           <h2 style={{ fontSize: '1rem', margin: '0 0 12px', color: 'var(--muted)' }}>内容</h2>
           <pre style={{ margin: 0, fontSize: '0.85rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>

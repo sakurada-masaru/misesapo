@@ -1,17 +1,52 @@
-/** 4枠 */
+/**
+ * 事務エントランス用ホットバー（4枠）
+ * 要望: 管理と同等の「登録/名簿/人材」閲覧を可能にする（入口導線を追加）。
+ * 左から: 報告 / 予定 / 情報 / 運用（業務フローは運用に入れる）
+ */
 export const OFFICE_HOTBAR = [
   {
-    id: 'task',
-    role: 'target',
-    label: '顧客',
+    id: 'reports',
+    role: 'log',
+    label: '報告',
     subItems: [
-      // 旧 /office/clients/* は廃止。新マスター体系に統一。
-      { id: 'torihikisaki-touroku', label: '登録(新)', path: '/admin/torihikisaki-touroku' },
-      { id: 'torihikisaki-meibo', label: '名簿(新)', path: '/admin/torihikisaki-meibo' },
-      { id: 'tenpo-master', label: '店舗(新)', path: '/admin/master/tenpo' },
-    ]
+      { id: 'houkoku-new', label: '報告(作成)', path: '/houkoku', group: '提出' },
+      { id: 'houkoku-list', label: '報告一覧', path: '/admin/houkoku', group: '閲覧' },
+    ],
   },
-  { id: 'status', role: 'status', label: '進捗' },
-  { id: 'plan', role: 'plan', label: '予定', to: '/jobs/office/yotei' },
-  { id: 'memo', role: 'log', label: '報告', to: '/houkoku' },
+  {
+    id: 'schedule',
+    label: '予定',
+    subItems: [
+      { id: 'office-yotei', label: '自分の予定', path: '/jobs/office/yotei', group: '自分' },
+      { id: 'yotei', label: 'Yotei', path: '/admin/yotei', group: '管理' },
+      { id: 'ugoki', label: 'Ugoki', path: '/admin/ugoki', group: '管理' },
+      { id: 'yakusoku', label: 'Yakusoku', path: '/admin/yakusoku', group: '管理' },
+    ],
+  },
+  {
+    id: 'info',
+    role: 'target',
+    label: '情報',
+    subItems: [
+      { id: 'torihikisaki-touroku', label: '顧客登録(新)', path: '/admin/torihikisaki-touroku', group: '登録' },
+      { id: 'torihikisaki-meibo', label: '取引先名簿', path: '/admin/torihikisaki-meibo', group: '名簿' },
+      { id: 'jinzai-meibo', label: '人材名簿', path: '/admin/jinzai-meibo', group: '名簿' },
+      { id: 'master-torihikisaki', label: '取引先マスタ', path: '/admin/master/torihikisaki', group: 'マスタ(顧客)' },
+      { id: 'master-yagou', label: '屋号マスタ', path: '/admin/master/yagou', group: 'マスタ(顧客)' },
+      { id: 'master-tenpo', label: '店舗マスタ', path: '/admin/master/tenpo', group: 'マスタ(顧客)' },
+      { id: 'master-souko', label: '顧客ストレージ', path: '/admin/master/souko', group: 'マスタ(顧客)' },
+      { id: 'master-jinzai', label: '人材マスタ', path: '/admin/master/jinzai', group: 'マスタ(人材)' },
+      { id: 'master-jinzai-busho', label: '人材部署', path: '/admin/master/jinzai-busho', group: 'マスタ(人材)' },
+      { id: 'master-jinzai-shokushu', label: '人材職種', path: '/admin/master/jinzai-shokushu', group: 'マスタ(人材)' },
+      { id: 'master-service', label: 'サービスマスタ', path: '/admin/master/service', group: 'マスタ(運用)' },
+    ],
+  },
+  {
+    id: 'ops',
+    label: '運用',
+    subItems: [
+      { id: 'flow-guide', label: '業務フロー', path: '/flow-guide', group: '基本' },
+      { id: 'kadai', label: 'Kadaiリスト', path: '/admin/kadai', group: '基本' },
+    ],
+  },
 ];
