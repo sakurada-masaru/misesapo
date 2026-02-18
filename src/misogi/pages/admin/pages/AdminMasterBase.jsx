@@ -208,6 +208,7 @@ export default function AdminMasterBase({
   idKey,
   apiBase,
   pageClassName = '',
+  listLimit = 50,
   // デフォルトは master API だが、jinzai 等「/master を持たないAPI」もあるため切替可能にする。
   // 例) resourceBasePath="" + resource="jinzai" => "/jinzai"
   resourceBasePath = '/master',
@@ -366,8 +367,13 @@ export default function AdminMasterBase({
     setError('');
     try {
       // master API の scan を前提にしているため、過大な limit は 500/timeout の原因になる。
-      // 一覧はまず 50 件に抑え、必要ならフィルタ/検索で絞る運用にする（UIフリーズ回避）。
-      const query = toQuery({ limit: 50, ...filtersValue, ...(fixedQuery || EMPTY_OBJ) });
+      // 一覧はデフォルト 50 件に抑えつつ、ページ側で必要があれば listLimit を上げられるようにする。
+      const limit = (() => {
+        const n = Number(listLimit);
+        if (!Number.isFinite(n) || n <= 0) return 50;
+        return Math.trunc(n);
+      })();
+      const query = toQuery({ limit, ...filtersValue, ...(fixedQuery || EMPTY_OBJ) });
       const path = query
         ? `${buildResourcePath(resource)}?${query}`
         : buildResourcePath(resource);
@@ -382,7 +388,7 @@ export default function AdminMasterBase({
     } finally {
       setLoading(false);
     }
-  }, [resource, filtersValue, apiBase, buildResourcePath, fixedQuery]);
+  }, [resource, filtersValue, apiBase, buildResourcePath, fixedQuery, listLimit]);
 
   useEffect(() => {
     loadParents();

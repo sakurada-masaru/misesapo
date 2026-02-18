@@ -13,6 +13,49 @@ function todayYmd() {
   }
 }
 
+function normalizeYmd(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  // Find YYYY-MM-DD or YYYY/MM/DD anywhere (allow suffix like "(We)" or time).
+  const m1 = raw.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  if (m1) {
+    const y = m1[1];
+    const mo = String(Number(m1[2]) || 0).padStart(2, '0');
+    const d = String(Number(m1[3]) || 0).padStart(2, '0');
+    return `${y}-${mo}-${d}`;
+  }
+
+  // Allow compact YYYYMMDD (ex: 20260218) anywhere.
+  const m2 = raw.match(/(\d{4})(\d{2})(\d{2})/);
+  if (m2) {
+    const y = m2[1];
+    const mo = String(Number(m2[2]) || 0).padStart(2, '0');
+    const d = String(Number(m2[3]) || 0).padStart(2, '0');
+    return `${y}-${mo}-${d}`;
+  }
+
+  // Allow Japanese date "YYYY年M月D日" anywhere.
+  const m3 = raw.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+  if (m3) {
+    const y = m3[1];
+    const mo = String(Number(m3[2]) || 0).padStart(2, '0');
+    const d = String(Number(m3[3]) || 0).padStart(2, '0');
+    return `${y}-${mo}-${d}`;
+  }
+
+  // Fallback: Date parse (handles RFC3339-ish).
+  const dt = new Date(raw);
+  if (!Number.isNaN(dt.getTime())) {
+    const y = dt.getFullYear();
+    const mo = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${mo}-${d}`;
+  }
+
+  return '';
+}
+
 function shiftMonth(ymd, delta) {
   const raw = String(ymd || todayYmd());
   const [ys, ms] = raw.split('-');
@@ -184,6 +227,7 @@ export default function AdminAdminLogPage() {
   const [rowSelectedTask, setRowSelectedTask] = useState({});
   const [rowTaskSearch, setRowTaskSearch] = useState({});
   const [modalTaskSearch, setModalTaskSearch] = useState('');
+  const selectedYmd = useMemo(() => normalizeYmd(selectedDate) || todayYmd(), [selectedDate]);
   const dayList = useMemo(() => monthDays(selectedDate), [selectedDate]);
   const monthLabel = useMemo(() => {
     const [y, m] = String(selectedDate || '').split('-');
@@ -207,7 +251,10 @@ export default function AdminAdminLogPage() {
       pageClassName="admin-admin-log-page"
       resource="kadai"
       idKey="kadai_id"
-      fixedQuery={{ category: 'admin_log', jotai: 'yuko', reported_at: selectedDate }}
+      // NOTE: API 側の scan 順が不定なため、admin_log は reported_at で絞って取得する。
+      // (全件scan+UIフィルタだと limit 範囲外で「データがありません」になりやすい)
+      listLimit={200}
+      fixedQuery={{ category: 'admin_log', jotai: 'yuko', reported_at: selectedYmd }}
       renderHeaderExtra={() => (
         <div className="admin-log-date-strip" aria-label="管理ログ 日付選択">
           <div className="admin-log-date-inline">
@@ -238,8 +285,8 @@ export default function AdminAdminLogPage() {
             <div className="admin-log-date-scroll">
               {dayList.map((d) => {
                 const day = String(d).slice(-2).replace(/^0/, '');
-                const isActive = d === selectedDate;
-                const isToday = d === todayYmd();
+                const isActive = normalizeYmd(d) === selectedYmd;
+                const isToday = normalizeYmd(d) === normalizeYmd(todayYmd());
                 return (
                   <button
                     key={d}
