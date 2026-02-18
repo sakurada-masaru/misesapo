@@ -14,7 +14,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const { isTransitioning, startTransition } = useReportStyleTransition(navigate);
   const job = jobKey && JOBS[jobKey];
   const valid = job && JOB_KEYS.includes(jobKey);
-  const actions = Array.isArray(hotbarConfig) && hotbarConfig.length === 4 ? hotbarConfig : null;
+  const actions = Array.isArray(hotbarConfig) && hotbarConfig.length > 0 ? hotbarConfig : null;
   const [tab, setTab] = useState(actions?.[0]?.id ?? null);
   const [subGroupByTab, setSubGroupByTab] = useState({});
 

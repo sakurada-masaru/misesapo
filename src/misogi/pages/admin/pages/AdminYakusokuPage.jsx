@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css'; // Reuse styling
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
+import GlobalBackButton from '../../shared/ui/BackButton/GlobalBackButton';
 // Hamburger / admin-top are provided by GlobalNav.
 
 function isLocalUiHost() {
@@ -440,7 +441,7 @@ export default function AdminYakusokuPage() {
       <div className="admin-yotei-timeline-content">
         <header className="yotei-head">
           <div className="admin-top-left">
-                        {/* GlobalNav handles navigation */}
+            <GlobalBackButton />
           </div>
           <h1>実案件・定期管理 (yakusoku)</h1>
           <div className="yotei-head-actions">

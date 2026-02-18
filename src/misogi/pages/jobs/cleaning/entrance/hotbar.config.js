@@ -1,11 +1,10 @@
-/** 4枠 */
+/** 清掃ホットバー */
 export const CLEANING_HOTBAR = [
   {
     id: 'report',
     role: 'log',
     label: '報告',
     subItems: [
-      { id: 'attendance', label: '出勤', path: '/admin/hr/attendance' },
       { id: 'work-report', label: '業務報告', path: '/jobs/cleaning/report' },
     ],
   },
@@ -18,5 +17,4 @@ export const CLEANING_HOTBAR = [
       { id: 'flow-guide', label: '業務フロー', path: '/flow-guide' },
     ],
   },
-  { id: 'site', role: 'target', label: '店舗', to: '/jobs/cleaning/clients/list' },
 ];

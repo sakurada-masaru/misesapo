@@ -528,7 +528,13 @@ const StaticPlusTextSection = ({ section, payload, onChange, mode }) => {
 
 const PhotosSection = ({ section, payload, onFileUpload, onFileRemove, mode }) => {
     const isEdit = mode === 'edit';
-    const photoGroups = section.presets || section.groups || [];
+    let photoGroups = section.presets || section.groups || [];
+    if (section.dynamic_groups_key) {
+        const dyn = getNestedValue(payload, section.dynamic_groups_key) || [];
+        if (Array.isArray(dyn) && dyn.length > 0) {
+            photoGroups = dyn;
+        }
+    }
 
     const handleFileChange = (key, e) => {
         const files = Array.from(e.target.files);

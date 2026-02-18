@@ -1,6 +1,6 @@
 {
   "template_id": "CLEANING_SHEETS_3_V1",
-  "title": "清掃 報告書（3枚提出）",
+  "title": "清掃 業務報告書（3枚提出）",
   "schema_version": 1,
   "sections": [
     {
@@ -22,27 +22,34 @@
     },
     {
       "id": "sheets",
-      "label": "報告書（3枚）",
+      "label": "業務報告書（3枚）",
       "type": "photos",
       "required": true,
       "min_items": 3,
-      "validation_summary": "提出には「報告書1〜3」の画像が必要です（3/3）。",
-      "helper": "紙の報告書を撮影して、報告書1/2/3に1枚ずつアップロードしてください。差し替えは何度でも可能です。",
+      "validation_summary": "提出には「作業記録証明書 / 作業項目チェックリスト / 作業レポート」の画像が必要です（3/3）。",
+      "helper": "紙の報告書を撮影して、作業記録証明書 / 作業項目チェックリスト / 作業レポートに1枚ずつアップロードしてください。差し替えは何度でも可能です。",
       "presets": [
         {
           "key": "sheets.sheet1",
-          "label": "報告書1"
+          "label": "作業記録証明書"
         },
         {
           "key": "sheets.sheet2",
-          "label": "報告書2"
+          "label": "作業項目チェックリスト"
         },
         {
           "key": "sheets.sheet3",
-          "label": "報告書3"
+          "label": "作業レポート"
         }
       ]
+    },
+    {
+      "id": "supplement",
+      "label": "補助資料",
+      "type": "photos",
+      "required": false,
+      "helper": "清掃項目ごとにフォルダ分けして写真をアップできます（任意）。",
+      "dynamic_groups_key": "supplement.folders"
     }
   ]
 }
-

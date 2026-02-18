@@ -6,6 +6,9 @@ import { apiFetchWorkReport } from '../../api/client';
 import { useAuth } from '../../auth/useAuth';
 
 const TEMPLATE_ID = 'CLEANING_SHEETS_3_V1';
+const SUPPLEMENT_FOLDERS_KEY = 'supplement.folders';
+const SUPPLEMENT_GROUP_PREFIX = 'supplement.groups.';
+const MAX_SUPPLEMENT_PHOTOS_PER_FOLDER = 30;
 
 function todayYmd() {
   try {
@@ -23,6 +26,30 @@ function coerceArray(v) {
   return Array.isArray(v) ? v : [];
 }
 
+function toSafeFolderLabel(v) {
+  const s = String(v ?? '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  return s.slice(0, 20);
+}
+
+function newFolderId() {
+  // Stable enough for client-side grouping; not used as a DB primary key.
+  return `f_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      const comma = dataUrl.indexOf(',');
+      resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+    };
+    reader.onerror = () => reject(new Error('ファイル変換に失敗しました'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function CleaningSheets3UploadPage() {
   const { user, isLoading: authLoading, isAuthenticated, login, getToken } = useAuth();
   const template = useMemo(() => getTemplateById(TEMPLATE_ID), []);
@@ -30,6 +57,12 @@ export default function CleaningSheets3UploadPage() {
     work_date: todayYmd(),
     user_name: user?.name || '',
     sheets: { sheet1: [], sheet2: [], sheet3: [] },
+    supplement: {
+      folders: [
+        { id: 'misc', label: '未分類', key: 'supplement.groups.misc' },
+      ],
+      groups: { misc: [] },
+    },
   }));
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState(null); // {type,text}
@@ -50,6 +83,21 @@ export default function CleaningSheets3UploadPage() {
 
   const canSubmit = sheetCounts.filled === 3 && !saving;
 
+  const supplementFolders = useMemo(() => {
+    const folders = coerceArray(getNestedValue(payload, SUPPLEMENT_FOLDERS_KEY));
+    // Normalize shape to {id,label,key}. If broken, fallback to a single folder.
+    const normalized = folders
+      .map((f) => {
+        const id = String(f?.id || '').trim();
+        const label = toSafeFolderLabel(f?.label);
+        const key = String(f?.key || '').trim();
+        if (!id || !key) return null;
+        return { id, label: label || '（無題）', key };
+      })
+      .filter(Boolean);
+    return normalized.length ? normalized : [{ id: 'misc', label: '未分類', key: 'supplement.groups.misc' }];
+  }, [payload]);
+
   const authHeaders = useCallback(() => {
     const token = getToken() || localStorage.getItem('cognito_id_token');
     return token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
@@ -62,31 +110,119 @@ export default function CleaningSheets3UploadPage() {
       headers,
       body: JSON.stringify({ filename: file.name, mime: file.type }),
     });
-    await fetch(res.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    const fileBase64 = await fileToBase64(file);
+    await apiFetchWorkReport('/upload-put', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        uploadUrl: res.uploadUrl,
+        contentType: file.type || 'application/octet-stream',
+        fileBase64,
+      }),
     });
-    return { url: res.url, key: res.key, name: file.name };
+    return {
+      url: res.url,
+      key: res.key,
+      name: file.name,
+      mime: file.type || 'application/octet-stream',
+      size: file.size,
+      uploaded_at: new Date().toISOString(),
+    };
   }, [authHeaders]);
+
+  const ensureSupplementGroup = useCallback((prev, folderId) => {
+    const cur = prev?.supplement?.groups || {};
+    if (cur[folderId]) return prev;
+    return {
+      ...prev,
+      supplement: {
+        ...(prev.supplement || {}),
+        groups: { ...cur, [folderId]: [] },
+      },
+    };
+  }, []);
+
+  const addSupplementFolder = useCallback(() => {
+    setPayload((prev) => {
+      const id = newFolderId();
+      const prevFolders = coerceArray(getNestedValue(prev, SUPPLEMENT_FOLDERS_KEY));
+      const nextFolders = [
+        ...prevFolders,
+        { id, label: `項目${prevFolders.length + 1}`, key: `${SUPPLEMENT_GROUP_PREFIX}${id}` },
+      ];
+      const next = {
+        ...prev,
+        supplement: {
+          ...(prev.supplement || {}),
+          folders: nextFolders,
+        },
+      };
+      return ensureSupplementGroup(next, id);
+    });
+  }, [ensureSupplementGroup]);
+
+  const renameSupplementFolder = useCallback((folderId, label) => {
+    const safe = toSafeFolderLabel(label) || '（無題）';
+    setPayload((prev) => {
+      const folders = coerceArray(getNestedValue(prev, SUPPLEMENT_FOLDERS_KEY));
+      const nextFolders = folders.map((f) => (f?.id === folderId ? { ...f, label: safe } : f));
+      return setNestedValue(prev, SUPPLEMENT_FOLDERS_KEY, nextFolders);
+    });
+  }, []);
+
+  const removeSupplementFolder = useCallback((folderId) => {
+    setPayload((prev) => {
+      const folders = coerceArray(getNestedValue(prev, SUPPLEMENT_FOLDERS_KEY));
+      const nextFolders = folders.filter((f) => f?.id !== folderId);
+      const curGroups = prev?.supplement?.groups || {};
+      const { [folderId]: _omit, ...rest } = curGroups;
+      const next = setNestedValue(prev, SUPPLEMENT_FOLDERS_KEY, nextFolders.length ? nextFolders : [{ id: 'misc', label: '未分類', key: 'supplement.groups.misc' }]);
+      return {
+        ...next,
+        supplement: {
+          ...(next.supplement || {}),
+          groups: rest.misc ? rest : { ...rest, misc: [] },
+        },
+      };
+    });
+  }, []);
 
   const onFileUpload = useCallback(async (keyPath, file) => {
     setSaving(true);
     setStatus(null);
     try {
+      if (String(keyPath).startsWith(SUPPLEMENT_GROUP_PREFIX)) {
+        const current = coerceArray(getNestedValue(payload, keyPath));
+        if (current.length >= MAX_SUPPLEMENT_PHOTOS_PER_FOLDER) {
+          throw new Error(`補助資料はフォルダごとに最大 ${MAX_SUPPLEMENT_PHOTOS_PER_FOLDER} 枚までです`);
+        }
+      }
+
       const att = await uploadOne(file);
-      // Force 1-per-slot: overwrite with a single-item array.
-      setPayload((prev) => setNestedValue(prev, keyPath, [att]));
+      setPayload((prev) => {
+        // For report sheets: force 1-per-slot by overwriting.
+        if (!String(keyPath).startsWith(SUPPLEMENT_GROUP_PREFIX)) {
+          return setNestedValue(prev, keyPath, [att]);
+        }
+
+        // For supplement groups: append up to limit per folder.
+        const current = coerceArray(getNestedValue(prev, keyPath));
+        return setNestedValue(prev, keyPath, [...current, att]);
+      });
     } catch (e) {
       console.error(e);
       setStatus({ type: 'error', text: `アップロード失敗: ${e?.message || e}` });
     } finally {
       setSaving(false);
     }
-  }, [uploadOne]);
+  }, [payload, uploadOne]);
 
-  const onFileRemove = useCallback((keyPath) => {
-    setPayload((prev) => setNestedValue(prev, keyPath, []));
+  const onFileRemove = useCallback((keyPath, index) => {
+    setPayload((prev) => {
+      const arr = coerceArray(getNestedValue(prev, keyPath));
+      if (typeof index !== 'number') return setNestedValue(prev, keyPath, []);
+      return setNestedValue(prev, keyPath, arr.filter((_, i) => i !== index));
+    });
   }, []);
 
   const onMetaChange = useCallback((key, value) => {
@@ -102,7 +238,7 @@ export default function CleaningSheets3UploadPage() {
       const errs = validateTemplatePayload(template, payload);
       const perSlotOk = sheetCounts.filled === 3;
       if (errs.length || !perSlotOk) {
-        throw new Error('報告書1〜3の画像をアップロードしてください（3/3）。');
+        throw new Error('作業記録証明書 / 作業項目チェックリスト / 作業レポート の画像をアップロードしてください（3/3）。');
       }
 
       const workDate = String(payload.work_date || todayYmd());
@@ -130,10 +266,10 @@ export default function CleaningSheets3UploadPage() {
   }, [authHeaders, payload, sheetCounts.filled, template, user?.name]);
 
   if (authLoading) return <Wrap>読み込み中...</Wrap>;
-  if (!isAuthenticated) {
-    return (
-      <Wrap>
-        <Card>
+    if (!isAuthenticated) {
+      return (
+        <Wrap>
+          <Card>
           <h1>清掃 報告（画像アップロード）</h1>
           <p>ログインが必要です。</p>
           <button type="button" onClick={login}>Portalへ</button>
@@ -149,6 +285,38 @@ export default function CleaningSheets3UploadPage() {
           {status.text}
         </Toast>
       ) : null}
+
+      <FoldersCard aria-label="補助資料フォルダ">
+        <FoldersHead>
+          <div className="t">補助資料フォルダ</div>
+          <button type="button" className="add" onClick={addSupplementFolder}>
+            ＋ フォルダ追加
+          </button>
+        </FoldersHead>
+        <FoldersList>
+          {supplementFolders.map((f) => (
+            <FolderRow key={f.id}>
+              <input
+                type="text"
+                value={f.label}
+                onChange={(e) => renameSupplementFolder(f.id, e.target.value)}
+                aria-label={`フォルダ名 ${f.label}`}
+                maxLength={20}
+              />
+              <button
+                type="button"
+                className="del"
+                onClick={() => removeSupplementFolder(f.id)}
+                disabled={supplementFolders.length <= 1}
+                title="フォルダ削除"
+              >
+                削除
+              </button>
+            </FolderRow>
+          ))}
+        </FoldersList>
+        <FoldersHint>例: トイレ / 厨房 / 床 / ガラス / エアコン</FoldersHint>
+      </FoldersCard>
 
       <TemplateRenderer
         template={template}
@@ -209,6 +377,79 @@ const FooterBar = styled.div`
   gap: 12px;
 `;
 
+const FoldersCard = styled.section`
+  max-width: 800px;
+  margin: 12px auto 12px;
+  padding: 14px 14px 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+`;
+
+const FoldersHead = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  .t {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: rgba(233,238,252,0.92);
+  }
+  .add {
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(59, 130, 246, 0.95);
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+  }
+`;
+
+const FoldersList = styled.div`
+  display: grid;
+  gap: 8px;
+`;
+
+const FolderRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  gap: 8px;
+  input {
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04);
+    color: rgba(233,238,252,0.95);
+    padding: 0 12px;
+    font-weight: 700;
+    outline: none;
+  }
+  .del {
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(239, 68, 68, 0.18);
+    color: rgba(255,255,255,0.95);
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .del:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const FoldersHint = styled.p`
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: rgba(233,238,252,0.72);
+`;
+
 const Progress = styled.div`
   display: inline-flex;
   align-items: baseline;
@@ -248,4 +489,3 @@ const Toast = styled.div`
   box-shadow: 0 12px 24px rgba(0,0,0,0.35);
   font-weight: 800;
 `;
-
