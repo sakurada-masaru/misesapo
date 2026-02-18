@@ -834,11 +834,11 @@ export default function AdminMasterBase({
             return (
               <React.Fragment key={rid || Math.random()}>
                 <tr
-                  className={enableRowDetail ? 'row-clickable' : ''}
+                  className={`${enableRowDetail ? 'row-clickable' : ''} ${isExpanded ? 'is-expanded' : ''}`.trim()}
                   onClick={() => toggleRowDetail(row)}
                 >
                   {enableBulkDelete ? (
-                    <td className="bulk-check-col">
+                    <td className="bulk-check-col" data-col="選択" data-key="bulk">
                       {rowDeletable ? (
                         <input
                           type="checkbox"
@@ -863,7 +863,7 @@ export default function AdminMasterBase({
                       const saveKey = `${rowId}:${String(f.key)}`;
                       const busy = !!inlineSaving[saveKey];
                       return (
-                        <td key={`${rid}-${c.key}`}>
+                        <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>
                           <select
                             className="admin-master-inline-select"
                             value={raw ?? ''}
@@ -886,12 +886,12 @@ export default function AdminMasterBase({
                     }
                     const rendered = typeof f?.render === 'function' ? f.render(raw, row) : null;
                     if (rendered !== null && rendered !== undefined) {
-                      return <td key={`${rid}-${c.key}`}>{rendered}</td>;
+                      return <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>{rendered}</td>;
                     }
                     const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
-                    return <td key={`${rid}-${c.key}`}>{formatCellValue(v)}</td>;
+                    return <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>{formatCellValue(v)}</td>;
                   })}
-                  <td className="actions">
+                  <td className="actions" data-col="操作" data-key="actions">
                     <button
                       type="button"
                       onClick={(e) => {

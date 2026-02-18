@@ -604,6 +604,141 @@
   .admin-master-page[data-resource="kadai"] .admin-master-modal-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Kadai mobile: collapsible list (summary-only; tap to expand details). */
+  .admin-master-page[data-resource="kadai"] .admin-master-table-wrap {
+    overflow-x: visible;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table {
+    min-width: 0;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table thead {
+    display: none;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tbody,
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr,
+  .admin-master-page[data-resource="kadai"] .admin-master-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "date date"
+      "cat cat"
+      "req tar";
+    margin: 10px 0;
+    border: 1px solid #273049;
+    border-radius: 14px;
+    background: rgba(2, 6, 23, 0.46);
+    overflow: hidden;
+    position: relative;
+    padding: 12px 14px;
+    gap: 8px 10px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable:hover {
+    background: rgba(59, 130, 246, 0.10);
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable:active {
+    transform: translateY(1px);
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable::after {
+    content: "›";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 22px;
+    line-height: 1;
+    color: rgba(148, 163, 184, 0.95);
+    transition: transform 0.12s ease, color 0.12s ease;
+    pointer-events: none;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable.is-expanded::after {
+    transform: translateY(-50%) rotate(90deg);
+    color: rgba(96, 165, 250, 0.95);
+  }
+
+  /* Hide everything except: 起票日 / 依頼者 / 対象者 / 課題 */
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td {
+    display: none;
+    padding: 0;
+    border: none;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_at"],
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_by"],
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="target_to"],
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="category"] {
+    display: block;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_at"] {
+    grid-area: date;
+    font-size: 12px;
+    color: #9aa6c5;
+    font-weight: 800;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="category"] {
+    grid-area: cat;
+    font-size: 15px;
+    color: #e2e8f0;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_by"] {
+    grid-area: req;
+    font-size: 12px;
+    color: #dbeafe;
+    font-weight: 800;
+    opacity: 0.95;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="target_to"] {
+    grid-area: tar;
+    font-size: 12px;
+    color: #bbf7d0;
+    font-weight: 800;
+    opacity: 0.95;
+    text-align: right;
+    padding-right: 18px; /* room for chevron */
+  }
+
+  /* Expanded detail row is appended as a separate <tr class=row-detail>. Make it look connected. */
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-detail {
+    margin-top: -6px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-color: #273049;
+    background: rgba(15, 23, 42, 0.88);
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-detail td {
+    display: block;
+    padding: 10px 12px;
+    border: none;
+  }
+
+  /* Don't show per-cell "data-col" labels on mobile summary rows. */
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td::before {
+    display: none;
+  }
 }
 
 .admin-master-modal-backdrop {
