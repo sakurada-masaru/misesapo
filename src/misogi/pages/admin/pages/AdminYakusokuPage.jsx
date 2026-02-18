@@ -445,6 +445,11 @@ export default function AdminYakusokuPage() {
           </div>
           <h1>実案件・定期管理 (yakusoku)</h1>
           <div className="yotei-head-actions">
+            <div className="yotei-head-nav" aria-label="ページ移動">
+              <Link to="/admin/yotei" className="yotei-head-link">YOTEI</Link>
+              <Link to="/admin/ugoki" className="yotei-head-link">UGOKI</Link>
+              <span className="yotei-head-link active" aria-current="page">YAKUSOKU</span>
+            </div>
             <button className="primary" onClick={openNew}>新規案件登録</button>
             <button onClick={fetchItems} disabled={loading}>{loading ? '...' : '更新'}</button>
           </div>

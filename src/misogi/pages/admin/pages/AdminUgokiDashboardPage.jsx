@@ -296,6 +296,11 @@ export default function AdminUgokiDashboardPage() {
           </div>
           <h1>管制ダッシュボード（ugoki）</h1>
           <div className="ugoki-head-actions">
+            <div className="ugoki-head-nav" aria-label="ページ移動">
+              <Link to="/admin/yotei" className="ugoki-head-link">YOTEI</Link>
+              <span className="ugoki-head-link active" aria-current="page">UGOKI</span>
+              <Link to="/admin/yakusoku" className="ugoki-head-link">YAKUSOKU</Link>
+            </div>
             <label>
               業務日
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />

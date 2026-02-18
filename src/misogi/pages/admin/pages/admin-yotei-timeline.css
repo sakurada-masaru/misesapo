@@ -167,6 +167,12 @@
     font-weight: 700;
 }
 
+.yotei-head-link.active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    font-weight: 700;
+}
+
 .yotei-head-actions input[type="date"],
 .yotei-head-actions input[type="text"],
 .yotei-head-actions button {

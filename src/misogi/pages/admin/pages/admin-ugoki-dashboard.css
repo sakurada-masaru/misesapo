@@ -84,6 +84,41 @@
   margin-left: auto;
 }
 
+.ugoki-head-nav {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(18, 22, 33, 0.92);
+}
+
+[data-theme="light"] .admin-ugoki-dashboard-page .ugoki-head-nav {
+  background: #ffffff;
+}
+
+.ugoki-head-link {
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0 10px;
+  font-size: 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.ugoki-head-link.active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  font-weight: 700;
+}
+
 .ugoki-head-actions label {
   display: grid;
   gap: 4px;
