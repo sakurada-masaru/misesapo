@@ -40,6 +40,8 @@
 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<link rel="stylesheet" href="/css/normal-header-hamburger.css">
+
 <style>
   body { font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; }
   /* Brand theme variables (default + variants) */
@@ -175,31 +177,11 @@
     gtag('config', 'G-ZJ1XD60S84');
   </script>
   <body class="theme-pink ">
-    <header class="normal-header visible">
-      <div class="normal-header-inner">
-        <div class="normal-header-logo">
-          <a href="/">
-              <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
-          </a>
-      </div>
-  
-          <nav class="normal-header-nav">
-              <a href="/">TOP</a>
-             <a href="/service/service.html">対応可能サービス</a>
-              <a href="/lp#voice">お客様の声</a>
-              <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
-              <a href="/#event">イベント</a>
-              <a href="/privacy-policy">規約＆ポリシー</a>
-          </nav>
-      </div>
-  </header>
+    <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
+
 
     <main id="main">
       
-
-
-
-
 <!-- Splash Screen -->
 <div id="splash-screen" class="splash-screen">
   <img src="/images/logo_144x144.png" alt="ミセサポ" class="splash-logo" />
@@ -954,59 +936,65 @@
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
     <script>
+      // パスを解決（GitHub Pages対応）
+      function resolvePath(path) {
+          if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+              return path;
+          }
+
+          const hostname = window.location.hostname;
+          const isLocalDev = hostname === 'localhost' ||
+              hostname === '127.0.0.1' ||
+              hostname === '';
+
+          const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+          if (isLocalDev || isCustomDomain) {
+              return path.startsWith('/') ? path : '/' + path;
+          }
+
+          // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+          let resolvedPath;
+          if (path.startsWith('/misesapo/')) {
+              resolvedPath = path;
+          } else if (path.startsWith('/')) {
+              resolvedPath = '/misesapo' + path;
+          } else {
+              resolvedPath = '/misesapo/' + path;
+          }
+
+          return window.location.origin + resolvedPath;
+      }
+
       document.addEventListener('DOMContentLoaded', function () {
-        const heroSwiper = document.querySelector('.hero-swiper');
-        if (heroSwiper && window.Swiper) {
-          new Swiper(heroSwiper, {
-            loop: true,
-            speed: 800,
-            autoplay: {
-              delay: 4500,
-              disableOnInteraction: false,
-            },
-            pagination: {
-              el: '.hero-swiper .swiper-pagination',
-              clickable: true,
-            },
-          });
-        }
-
-        document.querySelectorAll('.hero-category-link').forEach((link) => {
-          link.addEventListener('click', (event) => {
-            event.preventDefault();
-            const category = link.getAttribute('data-category') || '';
-            if (!category) return;
-            const tab = document.querySelector(`.tab[data-category="${category}"]`);
-            if (tab) {
-              tab.click();
-            }
-          });
-        });
-      });
-
-      // ログイン画面では通常ヘッダーを表示
-      (function() {
-        const path = window.location.pathname || '';
-        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
-        
-        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
-        if (isSigninPage) {
-          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
-          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
-          if (defaultHeaderWrapper) {
-            defaultHeaderWrapper.style.display = 'none';
-          }
-          if (normalHeaderWrapper) {
-            normalHeaderWrapper.style.display = 'block';
-            // ログイン画面では通常ヘッダーを常に表示
-            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
-            if (normalHeader) {
+          const normalHeader = document.querySelector('.normal-header');
+          if (normalHeader) {
               normalHeader.classList.add('visible');
-            }
+              const originalRemove = normalHeader.classList.remove;
+              normalHeader.classList.remove = function (...args) {
+                  if (args[0] !== 'visible') {
+                      originalRemove.apply(this, args);
+                  }
+              };
           }
-        }
-      })();
-    </script>
+
+          document.querySelectorAll('a[href^="/"]').forEach(link => {
+              const href = link.getAttribute('href');
+              if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                  link.href = resolvePath(href);
+              }
+          });
+
+          document.querySelectorAll('img[src^="/"]').forEach(img => {
+              const src = img.getAttribute('src');
+              if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                  img.src = resolvePath(src);
+              }
+          });
+      });
+  </script>
+  <script src="/js/header.js"></script>
+  <script src="/js/normal-header-hamburger.js"></script>
   </body>
   </html>
 

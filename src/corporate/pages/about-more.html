@@ -18,7 +18,9 @@
     <link rel="stylesheet" href="/css/swiper-bundle.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/header.css">
-    <style>
+    <link rel="stylesheet" href="/css/normal-header-hamburger.css">
+
+<style>
         .breadcrumb {
             max-width: 1000px;
             margin: 0 auto;
@@ -153,33 +155,15 @@ transform: translateY(0);
 </script>
 
 <body style="color: #FDEDED;">
-    <!-- 通常ヘッダー -->
-    <header class="normal-header visible">
-        <div class="normal-header-inner">
-            <div class="normal-header-logo">
-                <a href="/">
-                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
-                        onerror="this.style.display='none'">
-                </a>
-            </div>
-            <nav class="normal-header-nav">
-                <a href="/">TOP</a>
-                <a href="/service/service.html">対応可能サービス</a>
-                <a href="/voice/">お客様の声</a>
-                <a href="mailto:info@misesapo.com">カスタマーズサポート</a>
-                <a href="/#event">イベント</a>
-                <a href="/privacy-policy/">規約＆ポリシー</a>
-            </nav>
-        </div>
-    </header>
+    <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
 
-    <main style="background: #FDEDED;">
+    <main>
         <!-- パンくずリスト -->
         <div class="breadcrumb">
             <div class="breadcrumb-inner">
                 <a href="/">TOP</a>
                 <span>></span>
-                <a href="/index.html#about">トピック</a>
+                <a href="/index.html#about">トピック一覧</a>
             </div>
         </div>
 
@@ -190,7 +174,7 @@ transform: translateY(0);
 
         <section class="about-coverage-content">
             <a href="/lp/fan-belt.html"><img src="/images/lp/fan-belt_kv_sp.png" alt="清掃不足"></a>
-            <a href="top5.html"><img src="/images/top5_kv_sp.webp" alt="清掃不足"></a>
+            <a href="/lp/top5.html"><img src="/images/top5_kv_sp.webp" alt="清掃不足"></a>
             <a href="ductcleaning.html"><img src="/images/ductcleaning_kv_sp.webp" alt="清掃不足"></a>
             <a href="decline.html"><img src="/images/decline_kv_sp.webp" alt="清掃不足"></a>
             <a href="nighttime.html"><img src="/images/nighttime_kv_sp.webp" alt="夜間清掃"></a>
@@ -223,7 +207,65 @@ transform: translateY(0);
 
     <script src="/js/swiper-bundle.min.js"></script>
     <script src="/js/script.js"></script>
-    <script src="/js/header.js"></script>
-</body>
+    <script>
+        // パスを解決（GitHub Pages対応）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
 
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '';
+
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                resolvedPath = '/misesapo' + path;
+            } else {
+                resolvedPath = '/misesapo/' + path;
+            }
+
+            return window.location.origin + resolvedPath;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const normalHeader = document.querySelector('.normal-header');
+            if (normalHeader) {
+                normalHeader.classList.add('visible');
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== 'visible') {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+
+            document.querySelectorAll('a[href^="/"]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                    link.href = resolvePath(href);
+                }
+            });
+
+            document.querySelectorAll('img[src^="/"]').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+    <script src="/js/normal-header-hamburger.js"></script>
+</body>
 </html>
