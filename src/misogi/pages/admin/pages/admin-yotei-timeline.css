@@ -1576,6 +1576,106 @@
     margin-right: auto;
 }
 
+/* Yakusoku: service picker overlay (wide, searchable, checkable). */
+.yakusoku-service-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    background: rgba(2, 6, 23, 0.68);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 10px;
+}
+
+.yakusoku-service-panel {
+    width: min(1100px, calc(100vw - 20px));
+    max-height: calc(100vh - 48px);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--text);
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+}
+
+.yakusoku-service-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.yakusoku-service-head button {
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text);
+    padding: 0 12px;
+    cursor: pointer;
+}
+
+.yakusoku-service-count {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.yakusoku-service-list {
+    max-height: calc(100vh - 210px);
+    overflow: auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding-right: 2px;
+}
+
+.yakusoku-service-option {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    align-items: start;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.45);
+    padding: 10px;
+    cursor: pointer;
+}
+
+.yakusoku-service-option input[type="checkbox"] {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+}
+
+.yakusoku-service-foot {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.yakusoku-service-foot button {
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #2563eb;
+    background: #2563eb;
+    color: #eff6ff;
+    padding: 0 12px;
+    cursor: pointer;
+}
+
+@media (max-width: 1080px) {
+    .yakusoku-service-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .yakusoku-service-list {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Light mode: force timeline surfaces to white/black contrast */
 [data-theme="light"] .admin-yotei-timeline-page .month-day,
 [data-theme="light"] .admin-yotei-timeline-page .yakusoku-consumption,

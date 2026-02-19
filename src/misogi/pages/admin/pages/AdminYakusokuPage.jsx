@@ -82,6 +82,7 @@ export default function AdminYakusokuPage() {
   const [tenpos, setTenpos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalData, setModalData] = useState(null);
+  const [servicePickerOpen, setServicePickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const normalizeServiceConcept = useCallback((svc) => {
@@ -221,6 +222,7 @@ export default function AdminYakusokuPage() {
   }, []);
 
   const openNew = () => {
+    setServicePickerOpen(false);
     setModalData({
       isNew: true,
       type: 'teiki',
@@ -247,6 +249,7 @@ export default function AdminYakusokuPage() {
       ? item.recurrence_rule
       : { type: 'flexible' };
     const multiSvc = normalizeServiceSelection(item);
+    setServicePickerOpen(false);
     setModalData({
       ...item,
       ...multiSvc,
@@ -262,6 +265,38 @@ export default function AdminYakusokuPage() {
     });
   };
 
+  const toggleServiceSelection = useCallback((svc, checked) => {
+    const sid = String(svc?.service_id || '');
+    if (!sid) return;
+    const sname = String(svc?.name || sid);
+    setModalData((prev) => {
+      if (!prev) return prev;
+      const ids = Array.isArray(prev.service_ids) ? [...prev.service_ids].map(String) : [];
+      const names = Array.isArray(prev.service_names) ? [...prev.service_names].map(String) : [];
+      const hit = ids.indexOf(sid);
+      if (checked) {
+        if (hit < 0) {
+          ids.push(sid);
+          names.push(sname);
+        }
+      } else if (hit >= 0) {
+        ids.splice(hit, 1);
+        names.splice(hit, 1);
+      }
+      return {
+        ...prev,
+        service_ids: ids,
+        service_names: names,
+        service_id: ids[0] || '',
+        service_name: names[0] || '',
+        price:
+          prev.isNew && checked && Number(svc?.default_price || 0) > 0 && ids.length === 1
+            ? Number(svc.default_price)
+            : prev.price,
+      };
+    });
+  }, []);
+
   const tenpoCandidates = useMemo(() => {
     const q = String(modalData?.tenpo_name || '').trim().toLowerCase();
     if (!q) return tenpos.slice(0, 12);
@@ -272,7 +307,7 @@ export default function AdminYakusokuPage() {
 
   const serviceCandidates = useMemo(() => {
     const q = String(modalData?.service_query || '').trim().toLowerCase();
-    if (!q) return services.slice(0, 12);
+    if (!q) return services;
     return services
       .filter((s) => {
         const blob = [
@@ -285,8 +320,7 @@ export default function AdminYakusokuPage() {
           .join(' ')
           .toLowerCase();
         return blob.includes(q);
-      })
-      .slice(0, 20);
+      });
   }, [modalData?.service_query, services]);
 
   const setBucketDraft = useCallback((bucketKey, value) => {
@@ -589,18 +623,14 @@ export default function AdminYakusokuPage() {
               </div>
               <div className="yotei-form-group">
                 <label>サービス</label>
-                <input
-                  type="text"
-                  value={modalData.service_query || ''}
-                  onChange={(e) => {
-                    const q = e.target.value;
-                    setModalData({
-                      ...modalData,
-                      service_query: q,
-                    });
-                  }}
-                  placeholder="サービス名 / ID / カテゴリで検索"
-                />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button type="button" onClick={() => setServicePickerOpen(true)}>
+                    サービスを選択（オーバーレイ）
+                  </button>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                    選択件数: {(modalData.service_ids || []).length} 件
+                  </span>
+                </div>
                 <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Array.isArray(modalData.service_names) ? modalData.service_names : []).map((nm, idx) => {
                     const sid = String((modalData.service_ids || [])[idx] || '');
@@ -640,59 +670,6 @@ export default function AdminYakusokuPage() {
                   {!(modalData.service_ids || []).length ? (
                     <span style={{ fontSize: 12, color: 'var(--muted)' }}>未選択</span>
                   ) : null}
-                </div>
-                <div style={{ marginTop: 8, display: 'grid', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
-                  {serviceCandidates.map((s) => (
-                    <button
-                      key={String(s?.service_id || '')}
-                      type="button"
-                      onClick={() => {
-                        const sid = String(s?.service_id || '');
-                        const sname = String(s?.name || sid);
-                        const ids = [...(modalData.service_ids || [])];
-                        const names = [...(modalData.service_names || [])];
-                        if (!ids.includes(sid)) {
-                          ids.push(sid);
-                          names.push(sname);
-                        }
-                        setModalData({
-                          ...modalData,
-                          service_query: '',
-                          service_ids: ids,
-                          service_names: names,
-                          service_id: ids[0] || '',
-                          service_name: names[0] || '',
-                          price:
-                            modalData.isNew && Number(s?.default_price || 0) > 0 && ids.length === 1
-                              ? Number(s.default_price)
-                              : modalData.price,
-                        });
-                      }}
-                      style={{
-                        textAlign: 'left',
-                        padding: '8px 10px',
-                        borderRadius: 8,
-                        border: '1px solid var(--line)',
-                        background: 'var(--panel)',
-                        color: 'var(--text)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ fontWeight: 600 }}>{String(s?.name || s?.service_id || '')}</div>
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>
-                        {normalizeServiceConcept(s)} / {String(s?.category || '未分類')}
-                      </div>
-                      <div style={{ fontSize: 11, opacity: 0.65 }}>
-                        {String(s?.service_id || '-')} ・ 標準単価 ¥{Number(s?.default_price || 0).toLocaleString()}
-                      </div>
-                    </button>
-                  ))}
-                  {!serviceCandidates.length ? (
-                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>候補がありません。サービスマスタを確認してください。</div>
-                  ) : null}
-                </div>
-                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)' }}>
-                  選択件数: {(modalData.service_ids || []).length} 件
                 </div>
               </div>
               {modalData.type === 'teiki' && (
@@ -816,6 +793,53 @@ export default function AdminYakusokuPage() {
             <div className="yotei-modal-footer">
               <button onClick={() => setModalData(null)}>キャンセル</button>
               <button className="primary" onClick={save} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {modalData && servicePickerOpen && (
+        <div className="yakusoku-service-overlay" onClick={() => setServicePickerOpen(false)}>
+          <div className="yakusoku-service-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="yakusoku-service-head">
+              <strong>サービス選択</strong>
+              <button type="button" onClick={() => setServicePickerOpen(false)}>閉じる</button>
+            </div>
+            <input
+              type="text"
+              value={modalData.service_query || ''}
+              onChange={(e) => setModalData({ ...modalData, service_query: e.target.value })}
+              placeholder="サービス名 / ID / カテゴリで検索"
+            />
+            <div className="yakusoku-service-count">候補 {serviceCandidates.length} 件 / 選択 {(modalData.service_ids || []).length} 件</div>
+            <div className="yakusoku-service-list">
+              {serviceCandidates.map((s) => {
+                const sid = String(s?.service_id || '');
+                const checked = Array.isArray(modalData?.service_ids) && modalData.service_ids.includes(sid);
+                return (
+                  <label key={sid} className="yakusoku-service-option">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => toggleServiceSelection(s, e.target.checked)}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{String(s?.name || sid)}</div>
+                      <div style={{ fontSize: 12, opacity: 0.82 }}>
+                        {normalizeServiceConcept(s)} / {String(s?.category || '未分類')}
+                      </div>
+                      <div style={{ fontSize: 11, opacity: 0.68 }}>
+                        {sid || '-'} ・ 標準単価 ¥{Number(s?.default_price || 0).toLocaleString()}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+              {!serviceCandidates.length ? (
+                <div style={{ fontSize: 12, color: 'var(--muted)' }}>候補がありません。サービスマスタを確認してください。</div>
+              ) : null}
+            </div>
+            <div className="yakusoku-service-foot">
+              <button type="button" onClick={() => setServicePickerOpen(false)}>選択を反映して閉じる</button>
             </div>
           </div>
         </div>

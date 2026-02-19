@@ -95,6 +95,12 @@ function formatTargetSummary(value) {
   return `${list[0]} ...`;
 }
 
+function clipText(value, max = 30) {
+  const s = String(value || '').trim();
+  if (!s) return '';
+  return s.length > max ? `${s.slice(0, max)}...` : s;
+}
+
 function renderMetaTag(text, cls = '') {
   const s = String(text || '').trim();
   if (!s || s === '-') return '-';
@@ -163,6 +169,10 @@ function fmtUpdateLog(row) {
   if (at) return `最終更新: ${at}`;
   if (who) return `操作: ${who}`;
   return '最終更新: -';
+}
+
+function hasReplyLog(row) {
+  return String(row?.detail_note || '').trim().length > 0;
 }
 
 function decodeJwtPayload(token) {
@@ -274,7 +284,7 @@ export default function AdminKadaiListPage() {
       }}
       localSearch={{
         label: '統合検索',
-        placeholder: '業務フロー段階/課題/要望など',
+        placeholder: '業務フロー段階/課題/内容など',
         keys: [
           'flow_stage',
           'list_scope',
@@ -299,7 +309,7 @@ export default function AdminKadaiListPage() {
         },
         {
           key: 'request',
-          label: '要望',
+          label: '内容',
           type: 'text',
           placeholder: '例: 確認 / 対応 / 作成 / 修正 など',
         },
@@ -581,19 +591,27 @@ export default function AdminKadaiListPage() {
         },
         {
           key: 'category',
-          label: '⑤課題（何を）',
-          columnLabel: '⑤課題',
+          label: '⑤タイトル（何を）',
+          columnLabel: '⑤タイトル',
           required: true,
+          render: (v) => {
+            const raw = String(v || '').trim();
+            const clipped = clipText(raw, 30);
+            return <span title={raw || ''}>{clipped || '-'}</span>;
+          },
         },
         {
           key: 'request',
-          label: '⑥要望（どうする）',
-          columnLabel: '⑥要望',
+          label: '⑥内容（どうする）',
+          columnLabel: '⑥内容',
+          type: 'textarea',
+          rows: 12,
           defaultValue: '確認',
           required: true,
           render: (v) => {
             const raw = String(v || '').trim();
-            return <span title={raw || ''}>{raw || '-'}</span>;
+            const clipped = clipText(raw, 30);
+            return <span title={raw || ''}>{clipped || '-'}</span>;
           },
         },
         {
@@ -607,7 +625,7 @@ export default function AdminKadaiListPage() {
           labelKey: 'label',
           defaultValue: 'open',
           format: (v) => STATUS_LABEL_MAP[String(v || '')] || (v || '-'),
-          render: (v) => {
+          render: (v, row) => {
             const key = String(v || '');
             const label = STATUS_LABEL_MAP[key] || (v || '-');
             const cls = {
@@ -615,7 +633,14 @@ export default function AdminKadaiListPage() {
               in_progress: 'kadai-status-badge is-progress',
               blocked: 'kadai-status-badge is-blocked',
             }[key] || 'kadai-status-badge';
-            return <span className={cls}>{label}</span>;
+            const replyCls = hasReplyLog(row) ? 'kadai-reply-badge is-replied' : 'kadai-reply-badge is-pending';
+            const replyLabel = hasReplyLog(row) ? '返信あり' : '未返信';
+            return (
+              <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className={cls}>{label}</span>
+                <span className={replyCls}>{replyLabel}</span>
+              </span>
+            );
           },
         },
         {

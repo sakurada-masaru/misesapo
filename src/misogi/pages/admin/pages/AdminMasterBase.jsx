@@ -707,11 +707,11 @@ export default function AdminMasterBase({
 
     try {
       const path = buildResourcePath(`${resource}/${encodeURIComponent(rowId)}`);
-      const target = nextItems.find((it) => pickId(it, idKey) === rowId) || row;
+      const patch = { [key]: value, updated_by: actor };
       const res = await apiFetch(apiBase, path, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(target),
+        body: JSON.stringify(patch),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -1004,11 +1004,15 @@ export default function AdminMasterBase({
           </div>
         ) : null}
 
-        {/* Inline editor (avoid fixed/portal overlays; browsers were hard-freezing on modal open). */}
+        {/* Overlay editor */}
         {modalOpen && editing ? (
-          <section className="admin-master-inline-editor">
-            <h2 className="admin-master-inline-editor-title">{pickId(editing, idKey) ? '編集' : '新規登録'}</h2>
-            <div className="admin-master-modal-grid">
+          <div className="admin-master-modal-backdrop" onClick={closeModal}>
+            <section
+              className="admin-master-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="admin-master-inline-editor-title">{pickId(editing, idKey) ? '編集' : '新規登録'}</h2>
+              <div className="admin-master-modal-grid">
               {fields.map((f) => {
                 const options = f.sourceKey
                   ? (parents[f.sourceKey] || [])
@@ -1020,6 +1024,7 @@ export default function AdminMasterBase({
                   return (
                     <label
                       key={f.key}
+                      className={`admin-master-field field-${String(f.key || '').replace(/[^a-zA-Z0-9_-]/g, '_')}`}
                       style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
                     >
                       <span>{f.label}</span>
@@ -1069,7 +1074,7 @@ export default function AdminMasterBase({
                     return (
                       <div
                         key={f.key}
-                        className="admin-master-multi-select-field"
+                        className={`admin-master-multi-select-field admin-master-field field-${String(f.key || '').replace(/[^a-zA-Z0-9_-]/g, '_')}`}
                         style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
                       >
                         <span>{f.label}</span>
@@ -1149,6 +1154,7 @@ export default function AdminMasterBase({
                   return (
                     <label
                       key={f.key}
+                      className={`admin-master-field field-${String(f.key || '').replace(/[^a-zA-Z0-9_-]/g, '_')}`}
                       style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
                     >
                       <span>{f.label}</span>
@@ -1194,6 +1200,7 @@ export default function AdminMasterBase({
                   return (
                     <label
                       key={f.key}
+                      className={`admin-master-field field-${String(f.key || '').replace(/[^a-zA-Z0-9_-]/g, '_')}`}
                       style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
                     >
                       <span>{f.label}</span>
@@ -1235,6 +1242,7 @@ export default function AdminMasterBase({
                 return (
                   <label
                     key={f.key}
+                    className={`admin-master-field field-${String(f.key || '').replace(/[^a-zA-Z0-9_-]/g, '_')}`}
                     style={Number(f.modalColSpan || 0) > 1 ? { gridColumn: `span ${Number(f.modalColSpan)}` } : undefined}
                   >
                     <span>{f.label}</span>
@@ -1270,21 +1278,22 @@ export default function AdminMasterBase({
                   </select>
                 </label>
               ) : null}
-            </div>
-
-            {typeof renderModalExtra === 'function' ? (
-              <div style={{ marginTop: 12 }}>
-                {renderModalExtra({ editing, setEditing, parents })}
               </div>
-            ) : null}
 
-            <div className="admin-master-modal-actions">
-              <button type="button" onClick={closeModal}>キャンセル</button>
-              <button type="button" className="primary" onClick={onSave} disabled={saving}>
-                {saving ? '保存中...' : '保存'}
-              </button>
-            </div>
-          </section>
+              {typeof renderModalExtra === 'function' ? (
+                <div style={{ marginTop: 12 }}>
+                  {renderModalExtra({ editing, setEditing, parents })}
+                </div>
+              ) : null}
+
+              <div className="admin-master-modal-actions">
+                <button type="button" onClick={closeModal}>キャンセル</button>
+                <button type="button" className="primary" onClick={onSave} disabled={saving}>
+                  {saving ? '保存中...' : '保存'}
+                </button>
+              </div>
+            </section>
+          </div>
         ) : null}
 
         {deleteTarget ? (
