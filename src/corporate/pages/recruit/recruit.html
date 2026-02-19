@@ -1,6 +1,7 @@
 @layout('layouts.base')
 @json('data/meta/recruit_title.json', $title)
 @json('data/meta/recruit_body_class.json', $body_class)
+<link rel="stylesheet" href="/css/normal-header-hamburger.css">
 
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZJ1XD60S84"></script>
 <script>
@@ -10,25 +11,9 @@
 
   gtag('config', 'G-ZJ1XD60S84');
 </script>
-<!-- 通常ヘッダー（about-more.html と同じ） -->
-<header class="normal-header visible">
-  <div class="normal-header-inner">
-    <div class="normal-header-logo">
-      <a href="/">
-        <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
-          onerror="this.style.display='none'">
-      </a>
-    </div>
-    <nav class="normal-header-nav">
-      <a href="/">TOP</a>
-      <a href="/service/service.html">対応可能サービス</a>
-      <a href="/voice/">お客様の声</a>
-      <a href="mailto:info@misesapo.com">カスタマーズサポート</a>
-      <a href="/#event">イベント</a>
-      <a href="/privacy-policy/">規約＆ポリシー</a>
-    </nav>
-  </div>
-</header>
+
+<div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
+
 
 <div class="recruit-page">
   <!-- Splash Screen -->
@@ -842,5 +827,65 @@
       });
     }
   </script>
+      <script>
+        // パスを解決（GitHub Pages対応）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '';
+
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                resolvedPath = '/misesapo' + path;
+            } else {
+                resolvedPath = '/misesapo/' + path;
+            }
+
+            return window.location.origin + resolvedPath;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const normalHeader = document.querySelector('.normal-header');
+            if (normalHeader) {
+                normalHeader.classList.add('visible');
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== 'visible') {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+
+            document.querySelectorAll('a[href^="/"]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                    link.href = resolvePath(href);
+                }
+            });
+
+            document.querySelectorAll('img[src^="/"]').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+    <script src="/js/normal-header-hamburger.js"></script>
 </div>
 

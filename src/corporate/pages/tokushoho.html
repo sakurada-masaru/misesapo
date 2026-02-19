@@ -17,6 +17,8 @@
         <link rel="stylesheet" href="/css/swiper-bundle.min.css">
         <link rel="stylesheet" href="/css/style.css">
         <link rel="stylesheet" href="/css/header.css">
+        <link rel="stylesheet" href="/css/normal-header-hamburger.css">
+
         <style>
             * {
                 margin: 0;
@@ -237,25 +239,8 @@
       gtag('config', 'G-ZJ1XD60S84');
     </script>
     <body>
-        <!-- 通常ヘッダー（about-more.html と同じ） -->
-        <header class="normal-header visible">
-            <div class="normal-header-inner">
-                <div class="normal-header-logo">
-                    <a href="/">
-                        <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
-                            onerror="this.style.display='none'">
-                    </a>
-                </div>
-                <nav class="normal-header-nav">
-                    <a href="/">TOP</a>
-                    <a href="/service/service.html">対応可能サービス</a>
-                    <a href="/voice/">お客様の声</a>
-                    <a href="mailto:info@misesapo.com">カスタマーズサポート</a>
-                    <a href="/#event">イベント</a>
-                    <a href="/privacy-policy/">規約＆ポリシー</a>
-                </nav>
-            </div>
-        </header>
+        <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
+
 
         <main style="margin-top: 8rem;">
             <!-- ヒーローセクション -->
@@ -372,7 +357,7 @@
                         </tr>
                         <tr>
                             <th>連絡先（メール）</th>
-                            <td><a href="mailto:info@misesapo.app" style="color: #FF679C; text-decoration: none; font-weight: 600;">info@misesapo.app</a></td>
+                            <td><a href="mailto:info@misesapo.co.jp" style="color: #FF679C; text-decoration: none; font-weight: 600;">info@misesapo.co.jp</a></td>
                         </tr>
                     </table>
                 </section>
@@ -392,18 +377,18 @@
                 if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                     return path;
                 }
-                
+    
                 const hostname = window.location.hostname;
-                const isLocalDev = hostname === 'localhost' || 
-                                  hostname === '127.0.0.1' ||
-                                  hostname === '';
-                
+                const isLocalDev = hostname === 'localhost' ||
+                    hostname === '127.0.0.1' ||
+                    hostname === '';
+    
                 const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
-                
+    
                 if (isLocalDev || isCustomDomain) {
                     return path.startsWith('/') ? path : '/' + path;
                 }
-                
+    
                 // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
                 let resolvedPath;
                 if (path.startsWith('/misesapo/')) {
@@ -413,33 +398,29 @@
                 } else {
                     resolvedPath = '/misesapo/' + path;
                 }
-                
+    
                 return window.location.origin + resolvedPath;
             }
-            
-            // 特定商取引法ページでは通常ヘッダーを常時表示
-            document.addEventListener('DOMContentLoaded', function() {
+    
+            document.addEventListener('DOMContentLoaded', function () {
                 const normalHeader = document.querySelector('.normal-header');
                 if (normalHeader) {
                     normalHeader.classList.add('visible');
-                    // スクロールイベントでクラスを削除しないようにする
                     const originalRemove = normalHeader.classList.remove;
-                    normalHeader.classList.remove = function(...args) {
+                    normalHeader.classList.remove = function (...args) {
                         if (args[0] !== 'visible') {
                             originalRemove.apply(this, args);
                         }
                     };
                 }
-                
-                // リンクを解決
+    
                 document.querySelectorAll('a[href^="/"]').forEach(link => {
                     const href = link.getAttribute('href');
                     if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
                         link.href = resolvePath(href);
                     }
                 });
-                
-                // 画像を解決
+    
                 document.querySelectorAll('img[src^="/"]').forEach(img => {
                     const src = img.getAttribute('src');
                     if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
@@ -449,6 +430,7 @@
             });
         </script>
         <script src="/js/header.js"></script>
+        <script src="/js/normal-header-hamburger.js"></script>
     </body>
 </html>
 

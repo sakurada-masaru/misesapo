@@ -232,12 +232,13 @@
     color: #FF679C;
 }
 
-@media screen and (min-width: 933px) {
-    main {
-        margin-top: 8rem;
-    }
-}
+
 .normal-header {
     border-bottom: 1px solid #FF679C;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+ul {
+padding-inline-start: 0px;
+list-style: none !important;
 }
