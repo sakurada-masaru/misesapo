@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/" />
+    <title>飲食店の消防法と厨房ダクト清掃義務｜ミセサポ</title>
+    <meta name="description" content="飲食店の厨房ダクト清掃は衛生管理だけでなく消防法・火災予防条例に基づく義務です。法的根拠、清掃頻度の目安、罰則、対策をわかりやすく解説します。">
+    <meta name="keywords" content="ミセサポ,ダクト清掃,消防法,火災予防条例,厨房設備,飲食店">
+
+    <!--GoogleFonts(Noto Sans JP)-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <!--GoogleFonts(Noto Sans JP) end-->
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <style>
+        .breadcrumb {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
+
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .lp-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .lp-hero h1 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .lp-hero p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            max-width: 820px;
+            margin: 0 auto 30px;
+        }
+
+        .lp-hero-cta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-hero-cta a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #fff;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .lp-hero-cta a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .lp-section {
+            max-width: 900px;
+            margin: 60px auto 0;
+        }
+
+        .lp-section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            display: block;
+            margin: auto;
+            max-width: 900px;
+            padding-bottom: 20px;
+        }
+
+        .lp-section-text {
+            font-size: 16px;
+            padding-top: 10px;
+            color: #666;
+            max-width: 900px;
+        }
+
+        .lp-reasons {
+            background: #FDEDED;
+        }
+
+        .lp-reasons-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-reasons-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 5px;
+        }
+
+        .lp-reasons-box p {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #666;
+        }
+
+        .lp-reasons-box ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 20px 0;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+
+        .lp-reasons-box ul li {
+            padding: 5px 0 5px 30px;
+            position: relative;
+            font-size: 16px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .lp-reasons-box ul li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-image: url('/images/check_pk.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-top: 5px;
+        }
+
+        .lp-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .lp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #fff;
+        }
+
+        .lp-table th,
+        .lp-table td {
+            border: 1px solid #ddd;
+            padding: 12px 10px;
+            text-align: left;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .lp-table th {
+            background: #ffe8f3;
+        }
+
+        .lp-points {
+            background: #fff;
+        }
+
+        .lp-points-list {
+            max-width: 900px;
+            margin: 30px auto 0;
+        }
+
+        .lp-point-item {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .lp-point-item h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FF679C;
+            margin-bottom: 8px;
+        }
+
+        .lp-point-item p {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .lp-cta {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .lp-cta h2 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .lp-cta p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            line-height: 1.8;
+            margin-bottom: 30px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .lp-cta-sub-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffff00;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .lp-cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .lp-cta-buttons a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #ffff00;
+            color: #FF679C;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 18px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .lp-cta-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background: #ffeb3b;
+        }
+
+        .lp-main-text-box {
+            margin: 60px auto 0;
+            color: #000;
+            max-width: 900px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .lp-main-text-box h3 {
+            font-size: 24px;
+            border-bottom: #000 2px solid;
+            width: fit-content;
+            padding-bottom: 5px;
+            margin: auto auto 20px;
+        }
+
+        .lp-main-text-box h2 {
+            font-size: 32px;
+            color: #FF679C;
+            margin-bottom: 20px;
+        }
+
+        .lp-main-text-box ul {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            list-style: none;
+            padding: 0;
+            margin: 0 0 30px 0;
+        }
+
+        .lp-main-text-box ul li {
+            color: #FF679C;
+            background: #ffd1ed;
+            width: fit-content;
+            margin: 0 10px 30px;
+            font-size: 16px;
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .lp-hero {
+                padding: 50px 15px;
+            }
+
+            .lp-section {
+                padding: 0px 15px;
+            }
+
+            .lp-hero-cta,
+            .lp-cta-buttons {
+                flex-direction: column;
+            }
+
+            .lp-hero-cta a,
+            .lp-cta-buttons a {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZJ1XD60S84"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZJ1XD60S84');
+</script>
+<body style="color: #FDEDED;">
+    <!-- 通常ヘッダー -->
+    <header class="normal-header visible">
+        <div class="normal-header-inner">
+            <div class="normal-header-logo">
+                <a href="/">
+                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                        onerror="this.style.display='none'">
+                </a>
+            </div>
+            <nav class="normal-header-nav">
+                <a href="/">TOP</a>
+                <a href="/service/service.html">対応可能サービス</a>
+                <a href="/lp#voice">お客様の声</a>
+                <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
+                <a href="/#event">イベント</a>
+                <a href="/privacy-policy">規約＆ポリシー</a>
+            </nav>
+        </div>
+    </header>
+
+    <main style="background: #FDEDED;">
+        <!-- パンくずリスト -->
+        <div class="breadcrumb">
+            <div class="breadcrumb-inner">
+                <a href="/">TOP</a>
+                <span>></span>
+                <span class="current">消防法と厨房ダクト清掃の義務</span>
+            </div>
+        </div>
+
+        <section class="lp-hero-new" style="position: relative; background-size: cover; background-position: center;">
+            <picture>
+                <source media="(max-width: 768px)" srcset="/images/duct-legal_kv_sp.png">
+                <img src="/images/duct-legal_kv.png" style="width: 100%; height: auto; display: block;">
+            </picture>
+        </section>
+
+        <section class="lp-main-text-box">
+            <ul>
+                <li>#消防法</li>
+                <li>#ダクト清掃</li>
+                <li>#火災予防</li>
+                <li>#飲食店</li>
+            </ul>
+            <div>
+                <h3>飲食店の厨房ダクト清掃</h3>
+                <h2>消防法・火災予防条例に基づく義務とリスク</h2>
+            </div>
+        </section>
+
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">はじめに</h2>
+                <p class="lp-section-text">飲食店における清掃は、単なる「衛生管理（食中毒予防）」だけでなく、「消防法（火災予防）」の観点からも極めて重要であり、法律上の義務が課せられています。特に重要なのが、<strong>厨房の排気ダクト（換気設備）</strong>です。</p>
+                <p class="lp-section-text" style="margin-top: 10px;">飲食店の火災原因の多くは、ダクト内に蓄積した「油脂（油汚れ）」への引火（ダクト火災）です。以下に、飲食店経営者や店長が知っておくべき「消防法と清掃の関係」について、法的根拠・義務内容・罰則などをわかりやすく解説します。</p>
+            </div>
+        </section>
+
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">1. 法律の仕組み：消防法と火災予防条例</h2>
+                <p class="lp-section-text">まず、基本となる法律の構造を理解しましょう。</p>
+                <ul>
+                    <li><strong>消防法（国の法律）：</strong>建物の管理権原者（オーナーや店長）に、火災予防のための管理義務を課します。一定規模以上の店舗には「防火管理者」の選任と「消防計画」の作成を義務付けています。この計画の中に「設備の点検・清掃」が含まれます。</li>
+                    <li><strong>火災予防条例（各自治体の条例）：</strong>ここが実務上の最重要ポイントです。消防法に基づき、各市町村が定めている条例で、<strong>「厨房設備（ダクトやフードなど）の清掃義務」</strong>について具体的に明記されています。（例：東京都火災予防条例 第3条の4など）</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">2. 具体的な清掃義務と頻度の目安</h2>
+                <p class="lp-section-text">自治体によって細かな規定は異なりますが、一般的に消防署の指導基準（ガイドライン）等で推奨されている頻度は以下の通りです。</p>
+                <div class="lp-table-wrapper" style="margin-top: 20px;">
+                    <table class="lp-table">
+                        <thead>
+                            <tr>
+                                <th>対象設備</th>
+                                <th>具体的な場所</th>
+                                <th>清掃・点検頻度の目安</th>
+                                <th>備考</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>グリスフィルター</strong></td>
+                                <td>フード内の油除去フィルター</td>
+                                <td>1週間に1回以上</td>
+                                <td>最も油が付着しやすく、引火の入り口になる。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>排気フード（天蓋）</strong></td>
+                                <td>コンロ上部の傘状カバー</td>
+                                <td>1週間に1回以上</td>
+                                <td>外側だけでなく、内側の油だまりを除去する。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>排気ダクト（内部）</strong></td>
+                                <td>天井裏を通る排気管</td>
+                                <td>1年に1回以上</td>
+                                <td><strong>最重要・盲点</strong>。外部から見えないため放置されがちだが、火災時の延焼ルートになる。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>排気ファン</strong></td>
+                                <td>換気扇の羽根や内部</td>
+                                <td>1年に1回以上</td>
+                                <td>油が付着すると排気能力が落ち、熱がこもりやすくなる。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="lp-section-text" style="margin-top: 20px; font-weight: 700; color: #FF679C;">※油を大量に使う業態（中華、焼肉、揚げ物メインなど）は、上記の目安よりも高頻度での清掃が必要です。</p>
+            </div>
+        </section>
+
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">3. なぜ「ダクト清掃」が消防法で重視されるのか？</h2>
+                <p class="lp-section-text">「見えない場所の油」が燃料になるからです。</p>
+                <ul>
+                    <li>調理中に鍋から上がった炎が、グリスフィルターの油に引火する。</li>
+                    <li>火のついた油や熱気が、換気扇の吸引力でダクト内部へ吸い込まれる。</li>
+                    <li>ダクト内部に長年堆積したヘドロ状の油に引火し、天井裏で一気に燃え広がる（ダクト火災）。</li>
+                    <li>消火器では手が届かず、建物全体を巻き込む大規模火災になる。</li>
+                </ul>
+                <p class="lp-section-text">消防署の立入検査でも、「ダクトの清掃状況」は重点的にチェックされます。</p>
+            </div>
+        </section>
+
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">4. 違反した場合のリスクと罰則</h2>
+                <h3 style="margin-top: 20px;">① 消防法に基づく命令・罰則</h3>
+                <p>改善命令・使用停止命令: 危険と判断された場合、消防署から清掃などの改善命令が出されます。最悪の場合、改善されるまで厨房の使用停止（営業停止）を命じられることがあります。</p>
+                <p style="margin-top: 10px; font-weight: 700; color: #FF679C;">罰則: 命令に従わない場合、30万円以下の罰金や拘留などが科される可能性があります（消防法第44条など）。</p>
+                <h3 style="margin-top: 40px;">② 重大な法的責任（火災発生時）</h3>
+                <p>もし清掃を怠ったことが原因で火災を起こし、怪我人や死者が出た場合、以下に問われる可能性があります。</p>
+                <ul>
+                    <li><strong>業務上失火罪 / 業務上過失致死傷罪：</strong>「予見できた危険（油汚れ）を放置した」として罪が重くなります。</li>
+                    <li><strong>損害賠償請求：</strong>ビルオーナーや近隣店舗からの巨額の賠償請求。</li>
+                    <li><strong>保険が下りない：</strong>「重大な過失（清掃を長期間していなかった等）」と認定されると、火災保険が適用されないケースがあります。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="lp-section">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">5. 店長・オーナーが今すぐやるべきこと</h2>
+                <p class="lp-section-text">消防署の立入検査が来た際に「やっていません」では済みません。以下の対策を確認してください。</p>
+                <ul>
+                    <li><strong>清掃記録をつける：</strong>いつ、誰が、どこを掃除したか記録を残してください。消防署への証明になります。</li>
+                    <li><strong>専門業者による定期清掃（年1回推奨）：</strong>ダクト内部やファンなど、素人では手が届かない場所は、プロの清掃業者に依頼してください。清掃前後の写真付き報告書は「法令遵守の証拠」になります。</li>
+                    <li><strong>防火管理者への確認：</strong>防火管理者が作成している「消防計画」に、厨房設備の清掃計画が記載されているか確認し、実態と合わせてください。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">まとめ</h2>
+                <p class="lp-section-text"><strong>「汚いから掃除する」のではなく「火事を出さないために掃除する」</strong>という意識が必要です。長期間（1年以上）ダクト内部の本格的な清掃をしていない場合は、目に見えない部分に大量の油が溜まっている可能性が高いため、早急に専門業者へ点検・見積もりを依頼することをお勧めします。</p>
+            </div>
+        </section>
+
+        <section id="contact" class="lp-cta">
+            <h2>お問い合わせ・無料お見積り</h2>
+            <p>ダクト清掃の頻度や記録の整理が不安な方、<br>前回の清掃から1年以上経過している店舗様は<br>まずは無料診断をご利用ください。</p>
+            <p class="lp-cta-sub-text">＼お気軽にご相談ください／</p>
+            <div class="lp-cta-buttons">
+                <a href="mailto:info@misesapo.co.jp">お問い合わせをする</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/swiper-bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        // パスを解決（GitHub Pages対応）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '';
+
+            const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith('/') ? path : '/' + path;
+            }
+
+            // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+            let resolvedPath;
+            if (path.startsWith('/misesapo/')) {
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                resolvedPath = '/misesapo' + path;
+            } else {
+                resolvedPath = '/misesapo/' + path;
+            }
+
+            return window.location.origin + resolvedPath;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const normalHeader = document.querySelector('.normal-header');
+            if (normalHeader) {
+                normalHeader.classList.add('visible');
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== 'visible') {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+
+            document.querySelectorAll('a[href^="/"]').forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                    link.href = resolvePath(href);
+                }
+            });
+
+            document.querySelectorAll('img[src^="/"]').forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+</body>
+
+</html>
