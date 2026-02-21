@@ -66,6 +66,7 @@ const PLAN_BUCKETS = [
 
 const DEFAULT_ONSITE_FLAGS = {
   has_spare_key: false,
+  has_keybox: false,
   key_loss_replacement_risk: false,
   require_gas_valve_check: false,
   trash_pickup_required: false,
@@ -387,6 +388,16 @@ export default function AdminYakusokuPage() {
       .slice(0, 20);
   }, [modalData?.tenpo_name, tenpos]);
 
+  const tenpoMetaById = useMemo(() => {
+    const m = new Map();
+    (tenpos || []).forEach((tp) => {
+      const id = String(tp?.tenpo_id || '').trim();
+      if (!id) return;
+      m.set(id, tp);
+    });
+    return m;
+  }, [tenpos]);
+
   const serviceCandidates = useMemo(() => {
     const q = String(modalData?.service_query || '').trim().toLowerCase();
     if (!q) return services;
@@ -705,13 +716,9 @@ export default function AdminYakusokuPage() {
     });
   }, [normalizeTaskMatrix]);
 
-  const renderBucketEditor = useCallback((bucket, compact = false) => {
+  const renderBucketEditor = useCallback((bucket) => {
     const tags = activeTaskMatrix[bucket.key] || [];
-    const draft = String(modalData?._tagDrafts?.[bucket.key] || '');
-    const search = String(modalData?._tagSearch?.[bucket.key] || '');
-    const advancedOpen = Boolean(modalData?._tagAdvanced?.[bucket.key]);
     const quickAddServices = pooledServicesForModal;
-    const tagCandidates = serviceCandidatesForTag(search);
     return (
       <div key={bucket.key} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
         <div style={{ fontWeight: 700, marginBottom: 8 }}>{bucket.label}</div>
@@ -737,7 +744,7 @@ export default function AdminYakusokuPage() {
           )) : <span style={{ fontSize: 12, color: 'var(--muted)' }}>未設定</span>}
         </div>
         <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6 }}>選択済みサービスから追加</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6 }}>未割当プールから追加</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {quickAddServices.length ? quickAddServices.map((svc) => (
               <button
@@ -764,63 +771,15 @@ export default function AdminYakusokuPage() {
             )}
           </div>
         </div>
-        {selectedServicesForModal.length > 0 && (
-          <div style={{ marginBottom: 8 }}>
-            <button
-              type="button"
-              onClick={() => setBucketAdvanced(bucket.key, !advancedOpen)}
-              style={{ fontSize: 12 }}
-            >
-              {advancedOpen ? '検索追加を閉じる' : '選択済み以外を検索して追加'}
-            </button>
-          </div>
-        )}
-        {(selectedServicesForModal.length === 0 || advancedOpen) ? (
-          <>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setBucketSearch(bucket.key, e.target.value)}
-                placeholder="検索 (サービス名/ID/カテゴリ)"
-                style={{ minWidth: compact ? 180 : 220 }}
-              />
-              <select value={draft} onChange={(e) => setBucketDraft(bucket.key, e.target.value)}>
-                <option value="">追加するタグを選択</option>
-                {tagCandidates.map((s) => (
-                  <option key={String(s?.service_id || '')} value={String(s?.service_id || '')}>
-                    {String(s?.name || s?.service_id || '')}
-                  </option>
-                ))}
-              </select>
-              <button type="button" onClick={() => addBucketTag(bucket.key)}>追加</button>
-            </div>
-            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
-              候補 {tagCandidates.length} 件（検索はこのバケット内のみ適用）
-            </div>
-          </>
-        ) : (
-          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
-            検索追加は必要なときだけ「選択済み以外を検索して追加」を開いてください
-          </div>
-        )}
       </div>
     );
   }, [
     activeTaskMatrix,
-    modalData?._tagDrafts,
-    modalData?._tagSearch,
-    modalData?._tagAdvanced,
-    serviceCandidatesForTag,
     removeBucketTag,
     toServiceTagLabel,
     selectedServicesForModal,
     pooledServicesForModal,
     addBucketTagValue,
-    setBucketSearch,
-    setBucketDraft,
-    setBucketAdvanced,
-    addBucketTag,
   ]);
 
   return (
@@ -861,7 +820,15 @@ export default function AdminYakusokuPage() {
                 return (
                   <tr key={it.yakusoku_id} style={{ borderBottom: '1px solid var(--line)' }}>
                     <td style={{ padding: '10px', fontSize: '12px', color: 'var(--muted)' }}>{it.yakusoku_id}</td>
-                    <td style={{ padding: '10px' }}>{it.tenpo_name || '---'}</td>
+                    <td style={{ padding: '10px' }}>
+                      {(() => {
+                        const tenpoName = String(it.tenpo_name || '').trim();
+                        const meta = tenpoMetaById.get(String(it.tenpo_id || '').trim());
+                        const yagouName = String(it.yagou_name || meta?.yagou_name || '').trim();
+                        if (!tenpoName) return '---';
+                        return yagouName ? `${yagouName} / ${tenpoName}` : tenpoName;
+                      })()}
+                    </td>
                     <td style={{ padding: '10px' }}>
                       {(() => {
                         const ids = Array.isArray(it.service_ids) ? it.service_ids : [];
@@ -1026,27 +993,35 @@ export default function AdminYakusokuPage() {
                 <div className="yotei-form-group">
                   <label>定期メニュー（月別タグ）</label>
                   <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10, marginBottom: 10 }}>
-                    <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>
-                      選択済みサービス {selectedServicesForModal.length}件 / 未割当プール {pooledServicesForModal.length}件 / 割当済み {assignedServicesForModal.length}件
+                    <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>
+                      選択済みサービス {selectedServicesForModal.length}件
                     </div>
-                    <div style={{ display: 'grid', gap: 6 }}>
+
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 8, marginBottom: 8, background: 'rgba(16,185,129,0.08)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>
+                        割当済み ({assignedServicesForModal.length})
+                      </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>未割当プール:</span>
-                        {pooledServicesForModal.length ? pooledServicesForModal.map((svc) => (
+                        {assignedServicesForModal.length ? assignedServicesForModal.map((svc) => (
                           <span
-                            key={`pool-${svc.service_id}`}
-                            style={{ border: '1px solid var(--line)', borderRadius: 999, padding: '2px 8px', fontSize: 12 }}
+                            key={`assigned-${svc.service_id}`}
+                            style={{ border: '1px solid var(--line)', borderRadius: 999, padding: '2px 8px', fontSize: 12, background: 'var(--panel)' }}
                           >
                             {svc.name}
                           </span>
                         )) : <span style={{ fontSize: 12, color: 'var(--muted)' }}>なし</span>}
                       </div>
+                    </div>
+
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 8, background: 'rgba(59,130,246,0.08)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>
+                        未割当プール ({pooledServicesForModal.length})
+                      </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>割当済み:</span>
-                        {assignedServicesForModal.length ? assignedServicesForModal.map((svc) => (
+                        {pooledServicesForModal.length ? pooledServicesForModal.map((svc) => (
                           <span
-                            key={`assigned-${svc.service_id}`}
-                            style={{ border: '1px solid var(--line)', borderRadius: 999, padding: '2px 8px', fontSize: 12, opacity: 0.9 }}
+                            key={`pool-${svc.service_id}`}
+                            style={{ border: '1px solid var(--line)', borderRadius: 999, padding: '2px 8px', fontSize: 12, background: 'var(--panel)' }}
                           >
                             {svc.name}
                           </span>
@@ -1225,7 +1200,8 @@ export default function AdminYakusokuPage() {
                 <label>現場チェック（構造化）</label>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {[
-                    { key: 'has_spare_key', label: '合鍵あり' },
+                    { key: 'has_spare_key', label: '鍵預かり' },
+                    { key: 'has_keybox', label: 'キーボックスあり' },
                     { key: 'key_loss_replacement_risk', label: '鍵紛失＝鍵交換（注意）' },
                     { key: 'require_gas_valve_check', label: 'ガス栓確認 必須' },
                     { key: 'trash_pickup_required', label: 'ゴミ回収あり' },

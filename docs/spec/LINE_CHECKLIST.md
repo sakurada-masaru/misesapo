@@ -533,3 +533,22 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] プールから各バケットへ手動配分する減数方式へ変更
 - [x] 同一サービスを別バケットへ追加した場合は元バケットから移動（重複排除）
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku List Tenpo + Yagou Name Display (2026-02-21)
+
+- [x] yakusoku 一覧の現場名を「店舗名 / 屋号名（名前のみ）」表示へ変更
+- [x] `tenpo_id` から屋号名を逆引きして、`item.yagou_name` 未保持時も表示可能にした
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Monthly Tags Visual Clarity (2026-02-21)
+
+- [x] 定期メニューのサービス状態表示を「割当済み（上）/ 未割当プール（下）」の順へ変更
+- [x] 割当済み/未割当をカード化し、色分けで視認性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Monthly Tags Pool-Only Add (2026-02-21)
+
+- [x] 各周期バケット内の文言を「選択済みサービスから追加」→「未割当プールから追加」へ変更
+- [x] 各バケット内の検索追加UI（検索/セレクト/追加ボタン）を撤廃
+- [x] 未割当プールの配分のみでタグ追加する運用へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
