@@ -76,6 +76,10 @@ function createEmptyTaskMatrix() {
   return Object.fromEntries(PLAN_BUCKETS.map((b) => [b.key, []]));
 }
 
+function createEmptyBucketEnabled() {
+  return Object.fromEntries(PLAN_BUCKETS.map((b) => [b.key, false]));
+}
+
 function authHeaders() {
   const legacyAuth = (() => {
     try {
@@ -301,6 +305,7 @@ export default function AdminYakusokuPage() {
       _tagDrafts: {},
       _tagSearch: {},
       _tagAdvanced: {},
+      _bucketEnabled: createEmptyBucketEnabled(),
     });
   };
 
@@ -309,6 +314,7 @@ export default function AdminYakusokuPage() {
       ? item.recurrence_rule
       : { type: 'flexible' };
     const multiSvc = normalizeServiceSelection(item);
+    const normalizedTaskMatrix = normalizeTaskMatrix(rr.task_matrix);
     setServicePickerOpen(false);
     setModalData({
       ...item,
@@ -319,11 +325,15 @@ export default function AdminYakusokuPage() {
       onsite_flags: normalizeOnsiteFlags(item?.onsite_flags),
       recurrence_rule: {
         ...rr,
-        task_matrix: normalizeTaskMatrix(rr.task_matrix),
+        task_matrix: normalizedTaskMatrix,
       },
       _tagDrafts: {},
       _tagSearch: {},
       _tagAdvanced: {},
+      _bucketEnabled: {
+        ...createEmptyBucketEnabled(),
+        ...Object.fromEntries(PLAN_BUCKETS.map((b) => [b.key, (normalizedTaskMatrix[b.key] || []).length > 0])),
+      },
     });
   };
 
@@ -345,12 +355,22 @@ export default function AdminYakusokuPage() {
         ids.splice(hit, 1);
         names.splice(hit, 1);
       }
+      const nextTaskMatrix = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
+      if (!checked) {
+        for (const k of Object.keys(nextTaskMatrix)) {
+          nextTaskMatrix[k] = (nextTaskMatrix[k] || []).filter((x) => String(x) !== sid);
+        }
+      }
       return {
         ...prev,
         service_ids: ids,
         service_names: names,
         service_id: ids[0] || '',
         service_name: names[0] || '',
+        recurrence_rule: {
+          ...(prev?.recurrence_rule || { type: 'flexible' }),
+          task_matrix: nextTaskMatrix,
+        },
         price:
           prev.isNew && checked && Number(svc?.default_price || 0) > 0 && ids.length === 1
             ? Number(svc.default_price)
@@ -500,6 +520,9 @@ export default function AdminYakusokuPage() {
     if (!value) return;
     setModalData((prev) => {
       const tm = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
+      Object.keys(tm).forEach((k) => {
+        tm[k] = (tm[k] || []).filter((x) => String(x) !== value);
+      });
       const nextSet = new Set(tm[bucketKey] || []);
       nextSet.add(value);
       return {
@@ -511,6 +534,10 @@ export default function AdminYakusokuPage() {
             [bucketKey]: [...nextSet],
           },
         },
+        _bucketEnabled: {
+          ...(prev?._bucketEnabled || createEmptyBucketEnabled()),
+          [bucketKey]: true,
+        },
       };
     });
   }, [normalizeTaskMatrix]);
@@ -520,6 +547,9 @@ export default function AdminYakusokuPage() {
       const draft = String(prev?._tagDrafts?.[bucketKey] || '').trim();
       if (!draft) return prev;
       const tm = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
+      Object.keys(tm).forEach((k) => {
+        tm[k] = (tm[k] || []).filter((x) => String(x) !== draft);
+      });
       const nextSet = new Set(tm[bucketKey] || []);
       nextSet.add(draft);
       return {
@@ -534,6 +564,10 @@ export default function AdminYakusokuPage() {
         _tagDrafts: {
           ...(prev?._tagDrafts || {}),
           [bucketKey]: '',
+        },
+        _bucketEnabled: {
+          ...(prev?._bucketEnabled || createEmptyBucketEnabled()),
+          [bucketKey]: true,
         },
       };
     });
@@ -597,6 +631,7 @@ export default function AdminYakusokuPage() {
       delete payload._tagDrafts;
       delete payload._tagSearch;
       delete payload._tagAdvanced;
+      delete payload._bucketEnabled;
       payload.onsite_flags = normalizeOnsiteFlags(payload.onsite_flags);
       const res = await fetchYakusokuWithFallback(path, {
         method,
@@ -625,6 +660,10 @@ export default function AdminYakusokuPage() {
   };
 
   const activeTaskMatrix = normalizeTaskMatrix(modalData?.recurrence_rule?.task_matrix);
+  const isBucketEnabled = useCallback(
+    (bucketKey) => Boolean(modalData?._bucketEnabled?.[bucketKey]) || (activeTaskMatrix[bucketKey] || []).length > 0,
+    [modalData?._bucketEnabled, activeTaskMatrix]
+  );
   const assignedServiceIdsAcrossBuckets = useMemo(() => {
     const ids = new Set();
     Object.values(activeTaskMatrix || {}).forEach((arr) => {
@@ -636,21 +675,20 @@ export default function AdminYakusokuPage() {
     });
     return ids;
   }, [activeTaskMatrix]);
+  const pooledServicesForModal = useMemo(
+    () => selectedServicesForModal.filter((svc) => !assignedServiceIdsAcrossBuckets.has(String(svc.service_id || ''))),
+    [selectedServicesForModal, assignedServiceIdsAcrossBuckets]
+  );
+  const assignedServicesForModal = useMemo(
+    () => selectedServicesForModal.filter((svc) => assignedServiceIdsAcrossBuckets.has(String(svc.service_id || ''))),
+    [selectedServicesForModal, assignedServiceIdsAcrossBuckets]
+  );
 
   const toggleBucketGroupOption = useCallback((bucketKey, checked) => {
     setModalData((prev) => {
       if (!prev) return prev;
       const tm = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
-      if (checked) {
-        const defaults = Array.isArray(prev?.service_ids)
-          ? prev.service_ids.map((x) => String(x)).filter(Boolean)
-          : [];
-        if (!(tm[bucketKey] || []).length && !defaults.length) {
-          window.alert('先に「サービス」を1件以上選択してください');
-          return prev;
-        }
-        tm[bucketKey] = (tm[bucketKey] || []).length ? (tm[bucketKey] || []) : defaults;
-      } else {
+      if (!checked) {
         tm[bucketKey] = [];
       }
       return {
@@ -658,6 +696,10 @@ export default function AdminYakusokuPage() {
         recurrence_rule: {
           ...(prev?.recurrence_rule || { type: 'flexible' }),
           task_matrix: tm,
+        },
+        _bucketEnabled: {
+          ...(prev?._bucketEnabled || createEmptyBucketEnabled()),
+          [bucketKey]: Boolean(checked),
         },
       };
     });
@@ -668,9 +710,7 @@ export default function AdminYakusokuPage() {
     const draft = String(modalData?._tagDrafts?.[bucket.key] || '');
     const search = String(modalData?._tagSearch?.[bucket.key] || '');
     const advancedOpen = Boolean(modalData?._tagAdvanced?.[bucket.key]);
-    const quickAddServices = selectedServicesForModal.filter(
-      (svc) => !assignedServiceIdsAcrossBuckets.has(String(svc.service_id || ''))
-    );
+    const quickAddServices = pooledServicesForModal;
     const tagCandidates = serviceCandidatesForTag(search);
     return (
       <div key={bucket.key} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
@@ -719,9 +759,7 @@ export default function AdminYakusokuPage() {
               </button>
             )) : (
               <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                {selectedServicesForModal.length
-                  ? 'このバケットに追加可能な選択済みサービスはありません'
-                  : '先に上の「サービス」で選択してください'}
+                {selectedServicesForModal.length ? '未割当プールにサービスがありません' : '先に上の「サービス」で選択してください'}
               </span>
             )}
           </div>
@@ -777,7 +815,7 @@ export default function AdminYakusokuPage() {
     removeBucketTag,
     toServiceTagLabel,
     selectedServicesForModal,
-    assignedServiceIdsAcrossBuckets,
+    pooledServicesForModal,
     addBucketTagValue,
     setBucketSearch,
     setBucketDraft,
@@ -987,6 +1025,35 @@ export default function AdminYakusokuPage() {
               {modalData.type === 'teiki' && (
                 <div className="yotei-form-group">
                   <label>定期メニュー（月別タグ）</label>
+                  <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10, marginBottom: 10 }}>
+                    <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>
+                      選択済みサービス {selectedServicesForModal.length}件 / 未割当プール {pooledServicesForModal.length}件 / 割当済み {assignedServicesForModal.length}件
+                    </div>
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>未割当プール:</span>
+                        {pooledServicesForModal.length ? pooledServicesForModal.map((svc) => (
+                          <span
+                            key={`pool-${svc.service_id}`}
+                            style={{ border: '1px solid var(--line)', borderRadius: 999, padding: '2px 8px', fontSize: 12 }}
+                          >
+                            {svc.name}
+                          </span>
+                        )) : <span style={{ fontSize: 12, color: 'var(--muted)' }}>なし</span>}
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>割当済み:</span>
+                        {assignedServicesForModal.length ? assignedServicesForModal.map((svc) => (
+                          <span
+                            key={`assigned-${svc.service_id}`}
+                            style={{ border: '1px solid var(--line)', borderRadius: 999, padding: '2px 8px', fontSize: 12, opacity: 0.9 }}
+                          >
+                            {svc.name}
+                          </span>
+                        )) : <span style={{ fontSize: 12, color: 'var(--muted)' }}>なし</span>}
+                      </div>
+                    </div>
+                  </div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {renderBucketEditor(MONTHLY_BUCKET)}
 
@@ -994,7 +1061,7 @@ export default function AdminYakusokuPage() {
                       <div style={{ fontWeight: 700, marginBottom: 8 }}>四半期（月次）</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                         {QUARTERLY_BUCKETS.map((b) => {
-                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          const checked = isBucketEnabled(b.key);
                           return (
                             <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                               <input
@@ -1009,7 +1076,7 @@ export default function AdminYakusokuPage() {
                       </div>
                       <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
                         {QUARTERLY_BUCKETS
-                          .filter((b) => (activeTaskMatrix[b.key] || []).length > 0)
+                          .filter((b) => isBucketEnabled(b.key))
                           .map((b) => renderBucketEditor(b, true))}
                       </div>
                     </div>
@@ -1018,7 +1085,7 @@ export default function AdminYakusokuPage() {
                       <div style={{ fontWeight: 700, marginBottom: 8 }}>半年（月次）</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                         {HALF_YEAR_BUCKETS.map((b) => {
-                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          const checked = isBucketEnabled(b.key);
                           return (
                             <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                               <input
@@ -1033,7 +1100,7 @@ export default function AdminYakusokuPage() {
                       </div>
                       <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
                         {HALF_YEAR_BUCKETS
-                          .filter((b) => (activeTaskMatrix[b.key] || []).length > 0)
+                          .filter((b) => isBucketEnabled(b.key))
                           .map((b) => renderBucketEditor(b, true))}
                       </div>
                     </div>
@@ -1042,7 +1109,7 @@ export default function AdminYakusokuPage() {
                       <div style={{ fontWeight: 700, marginBottom: 8 }}>隔月（月次）</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                         {BIMONTHLY_BUCKETS.map((b) => {
-                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          const checked = isBucketEnabled(b.key);
                           return (
                             <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                               <input
@@ -1057,7 +1124,7 @@ export default function AdminYakusokuPage() {
                       </div>
                       <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
                         {BIMONTHLY_BUCKETS
-                          .filter((b) => (activeTaskMatrix[b.key] || []).length > 0)
+                          .filter((b) => isBucketEnabled(b.key))
                           .map((b) => renderBucketEditor(b, true))}
                       </div>
                     </div>
@@ -1068,7 +1135,7 @@ export default function AdminYakusokuPage() {
                       <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>週次A</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                         {WEEKLY_A_BUCKETS.map((b) => {
-                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          const checked = isBucketEnabled(b.key);
                           return (
                             <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                               <input
@@ -1085,7 +1152,7 @@ export default function AdminYakusokuPage() {
                       <div style={{ fontSize: 12, color: 'var(--muted)', margin: '10px 0 6px' }}>隔週A (1/3/5週)</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                         {BIWEEKLY_A_BUCKETS.map((b) => {
-                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          const checked = isBucketEnabled(b.key);
                           return (
                             <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                               <input
@@ -1102,7 +1169,7 @@ export default function AdminYakusokuPage() {
                       <div style={{ fontSize: 12, color: 'var(--muted)', margin: '10px 0 6px' }}>隔週B (2/4週)</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                         {BIWEEKLY_B_BUCKETS.map((b) => {
-                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          const checked = isBucketEnabled(b.key);
                           return (
                             <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
                               <input
@@ -1118,7 +1185,7 @@ export default function AdminYakusokuPage() {
 
                       <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
                         {[...WEEKLY_A_BUCKETS, ...BIWEEKLY_A_BUCKETS, ...BIWEEKLY_B_BUCKETS]
-                          .filter((b) => (activeTaskMatrix[b.key] || []).length > 0)
+                          .filter((b) => isBucketEnabled(b.key))
                           .map((b) => renderBucketEditor(b, true))}
                       </div>
                     </div>
