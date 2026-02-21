@@ -1,19 +1,7 @@
 import React from 'react';
 import AdminMasterBase from './AdminMasterBase';
 import { formatMasterDateTime } from './masterDateTime';
-
-const CATEGORY_OPTIONS = [
-  { category: 'kitchen_haccp', name: '厨房衛生(HACCP)' },
-  { category: 'aircon', name: '空調設備' },
-  { category: 'floor', name: 'フロア清掃' },
-  { category: 'pest_hygiene', name: '害虫衛生' },
-  { category: 'maintenance', name: '設備メンテナンス' },
-  { category: 'window_wall', name: '窓・壁面' },
-  { category: 'other', name: 'その他' },
-  // legacy
-  { category: 'cleaning', name: '(互換) cleaning' },
-  { category: 'pest', name: '(互換) pest' },
-];
+import { SERVICE_CATEGORY_OPTIONS, SERVICE_CONCEPT_OPTIONS } from './serviceCategoryCatalog';
 
 function asNumber(v) {
   if (v === null || v === undefined || v === '') return null;
@@ -65,14 +53,14 @@ export default function AdminMasterServicePage() {
         {
           key: 'category',
           label: 'カテゴリ',
-          options: CATEGORY_OPTIONS,
+          options: SERVICE_CATEGORY_OPTIONS,
           valueKey: 'category',
           labelKey: 'name',
         },
         {
           key: 'category_concept',
           label: '簡易概念',
-          options: CATEGORY_OPTIONS,
+          options: SERVICE_CONCEPT_OPTIONS,
           valueKey: 'category',
           labelKey: 'name',
         },
@@ -93,19 +81,19 @@ export default function AdminMasterServicePage() {
           key: 'category',
           label: 'カテゴリ',
           type: 'select',
-          options: CATEGORY_OPTIONS,
+          options: SERVICE_CATEGORY_OPTIONS,
           valueKey: 'category',
           labelKey: 'name',
-          defaultValue: 'cleaning',
+          defaultValue: 'general_cleaning',
         },
         {
           key: 'category_concept',
           label: '簡易概念',
           type: 'select',
-          options: CATEGORY_OPTIONS,
+          options: SERVICE_CONCEPT_OPTIONS,
           valueKey: 'category',
           labelKey: 'name',
-          defaultValue: 'kitchen_haccp',
+          defaultValue: 'cleaning',
         },
         {
           key: 'default_duration_min',

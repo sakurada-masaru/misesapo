@@ -1586,6 +1586,8 @@
     justify-content: center;
     align-items: flex-start;
     padding: 24px 10px;
+    overflow: hidden;
+    overscroll-behavior: contain;
 }
 
 .yakusoku-service-panel {
@@ -1597,7 +1599,9 @@
     color: var(--text);
     padding: 12px;
     display: grid;
+    grid-template-rows: auto auto auto 1fr auto;
     gap: 10px;
+    overflow: hidden;
 }
 
 .yakusoku-service-head {
@@ -1653,11 +1657,13 @@
 }
 
 .yakusoku-service-list {
-    max-height: calc(100vh - 210px);
+    min-height: 0;
     overflow: auto;
     display: grid;
     gap: 8px;
     padding-right: 2px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .yakusoku-service-group {

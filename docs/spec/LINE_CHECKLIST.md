@@ -460,3 +460,68 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 店舗追加 API (`POST /master/tenpo`) に基本情報を保存するよう連携
 - [x] 追加成功後に入力欄をクリアし、情報登録者名はログイン名で再初期化
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Torihikisaki Touroku Mobile Tabs (2026-02-21)
+
+- [x] スマホ版 顧客登録で「新規追加 / 既存に追加」をタブ切替に変更
+- [x] PC版は従来どおり2カラム同時表示を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Torihikisaki Touroku Mobile Tab Sticky Note UI (2026-02-21)
+
+- [x] スマホ版タブ（新規追加 / 既存に追加）を付箋風デザインへ変更
+- [x] 2つのタブで色味と傾きを変え、アクティブ時の浮き上がり表現を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Torihikisaki Touroku Mobile Tabs Color Tuning (2026-02-21)
+
+- [x] スマホ版タブの傾きを撤廃（水平表示に統一）
+- [x] アクティブ/非アクティブ状態を明確に色分け
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Header Back Button Dedup (2026-02-21)
+
+- [x] `AdminYakusokuPage` 内のローカル戻るボタン（重複分）を削除
+- [x] グローバルヘッダー側の戻る導線のみを残す
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Service Category Legacy Option Cleanup (2026-02-21)
+
+- [x] サービスカテゴリ選択肢から `(互換)` 項目を削除
+- [x] 旧カテゴリ値はラベル変換フォールバックのみ維持（表示崩れ防止）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Service Modal Scroll Containment (2026-02-21)
+
+- [x] サービス選択オーバーレイ表示中は `html/body` の背景スクロールを抑止
+- [x] モーダルパネルを固定グリッド化し、候補リストのみ内部スクロール化
+- [x] リストに `overscroll-behavior: contain` を適用し、スクロール伝播を抑制
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Monthly Tags UX (2026-02-21)
+
+- [x] 定期メニュー（月別タグ）に「選択済みサービスから追加」導線を追加
+- [x] サービス選択後は再検索なしで月別タグへワンタップ追加可能にした
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Monthly Tag Name Display (2026-02-21)
+
+- [x] 定期メニュー（月別タグ）の表示を `service_id` から `サービス名` 優先へ変更
+- [x] 保存値は従来どおり `service_id` を維持（互換性維持）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Quarterly/Half-Year Checkbox Buckets (2026-02-21)
+
+- [x] 定期メニュー（月別タグ）を「毎月」「四半期」「半年」の3構成に再編
+- [x] 四半期を A(1/5/9) B(2/6/10) C(3/7/11) D(4/8/12) チェックボックス化
+- [x] 半年を A(1/7) B(2/8) C(3/9) D(4/10) E(5/11) F(6/12) チェックボックス化
+- [x] 旧 `odd/even/yearly` バケット値は `monthly` へ集約する互換処理を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Extended Recurrence Buckets (2026-02-21)
+
+- [x] 隔月を A(1/3/5/7/9/11) / B(2/4/6/8/10/12) チェックボックスで追加
+- [x] 週次Aを 曜日チェック（⽉〜日）で追加
+- [x] 隔週A(1/3/5週) / 隔週B(2/4週) を曜日チェックで追加
+- [x] 新バケットを `task_matrix` キーとして保存対象に追加
+- [x] `npm -C src/misogi run build` でビルド確認

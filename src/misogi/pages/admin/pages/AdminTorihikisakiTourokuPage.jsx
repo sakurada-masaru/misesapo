@@ -132,6 +132,7 @@ export default function AdminTorihikisakiTourokuPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [okMsg, setOkMsg] = useState('');
+  const [mobileTab, setMobileTab] = useState('new');
 
   // 既存選択用
   const [torihikisakiList, setTorihikisakiList] = useState([]);
@@ -674,8 +675,29 @@ export default function AdminTorihikisakiTourokuPage() {
         {err ? <div className="admin-touroku-err">{err}</div> : null}
         {okMsg ? <div className="admin-touroku-ok">{okMsg}</div> : null}
 
+        <div className="admin-touroku-mobile-tabs" role="tablist" aria-label="顧客登録モード切替">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'new'}
+            className={mobileTab === 'new' ? 'active' : ''}
+            onClick={() => setMobileTab('new')}
+          >
+            新規追加
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'existing'}
+            className={mobileTab === 'existing' ? 'active' : ''}
+            onClick={() => setMobileTab('existing')}
+          >
+            既存に追加
+          </button>
+        </div>
+
         <div className="admin-touroku-grid">
-          <section className="card">
+          <section className={`card mobile-tab-panel ${mobileTab === 'new' ? 'is-active' : ''}`}>
             <div className="card-h">
               <div className="t">新規一括作成</div>
               <div className="d">取引先・屋号・店舗を一発で作ります</div>
@@ -731,7 +753,7 @@ export default function AdminTorihikisakiTourokuPage() {
             </div>
           </section>
 
-          <section className="card">
+          <section className={`card mobile-tab-panel ${mobileTab === 'existing' ? 'is-active' : ''}`}>
             <div className="card-h">
               <div className="t">既存に追加</div>
               <div className="d">既存の取引先に屋号・店舗を追加します</div>

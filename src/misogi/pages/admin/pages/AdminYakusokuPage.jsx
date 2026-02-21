@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css'; // Reuse styling
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
-import GlobalBackButton from '../../shared/ui/BackButton/GlobalBackButton';
+import { getServiceCategoryLabel } from './serviceCategoryCatalog';
 // Hamburger / admin-top are provided by GlobalNav.
 
 function isLocalUiHost() {
@@ -23,15 +23,45 @@ const MASTER_API_BASE = IS_LOCAL
   ? '/api-master'
   : normalizeGatewayBase(import.meta.env?.VITE_MASTER_API_BASE, 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
 
+const MONTHLY_BUCKET = { key: 'monthly', label: '毎月 (1〜12月)' };
+const QUARTERLY_BUCKETS = [
+  { key: 'quarterly_a', label: 'A (1/5/9月)' },
+  { key: 'quarterly_b', label: 'B (2/6/10月)' },
+  { key: 'quarterly_c', label: 'C (3/7/11月)' },
+  { key: 'quarterly_d', label: 'D (4/8/12月)' },
+];
+const HALF_YEAR_BUCKETS = [
+  { key: 'half_year_a', label: 'A (1/7月)' },
+  { key: 'half_year_b', label: 'B (2/8月)' },
+  { key: 'half_year_c', label: 'C (3/9月)' },
+  { key: 'half_year_d', label: 'D (4/10月)' },
+  { key: 'half_year_e', label: 'E (5/11月)' },
+  { key: 'half_year_f', label: 'F (6/12月)' },
+];
+const BIMONTHLY_BUCKETS = [
+  { key: 'bimonthly_a', label: 'A (1/3/5/7/9/11月)' },
+  { key: 'bimonthly_b', label: 'B (2/4/6/8/10/12月)' },
+];
+const WEEKDAY_OPTIONS = [
+  { key: 'mon', label: '月' },
+  { key: 'tue', label: '火' },
+  { key: 'wed', label: '水' },
+  { key: 'thu', label: '木' },
+  { key: 'fri', label: '金' },
+  { key: 'sat', label: '土' },
+  { key: 'sun', label: '日' },
+];
+const WEEKLY_A_BUCKETS = WEEKDAY_OPTIONS.map((d) => ({ key: `weekly_a_${d.key}`, label: `${d.label}` }));
+const BIWEEKLY_A_BUCKETS = WEEKDAY_OPTIONS.map((d) => ({ key: `biweekly_a_${d.key}`, label: `${d.label}` }));
+const BIWEEKLY_B_BUCKETS = WEEKDAY_OPTIONS.map((d) => ({ key: `biweekly_b_${d.key}`, label: `${d.label}` }));
 const PLAN_BUCKETS = [
-  { key: 'monthly', label: '毎月' },
-  { key: 'odd_month', label: '奇数月' },
-  { key: 'even_month', label: '偶数月' },
-  { key: 'quarterly_a', label: '四半期A (1/5/9月)' },
-  { key: 'quarterly_b', label: '四半期B (3/7/11月)' },
-  { key: 'half_year_a', label: '半年A (1/7月)' },
-  { key: 'half_year_b', label: '半年B (5/11月)' },
-  { key: 'yearly', label: '年1回' },
+  MONTHLY_BUCKET,
+  ...QUARTERLY_BUCKETS,
+  ...HALF_YEAR_BUCKETS,
+  ...BIMONTHLY_BUCKETS,
+  ...WEEKLY_A_BUCKETS,
+  ...BIWEEKLY_A_BUCKETS,
+  ...BIWEEKLY_B_BUCKETS,
 ];
 
 const DEFAULT_ONSITE_FLAGS = {
@@ -86,22 +116,11 @@ export default function AdminYakusokuPage() {
   const [saving, setSaving] = useState(false);
 
   const getServiceCategoryMeta = useCallback((svc) => {
-    const raw = String(svc?.category_concept || svc?.category || '').trim();
-    const map = {
-      kitchen_haccp: '厨房衛生(HACCP)',
-      aircon: '空調設備',
-      floor: 'フロア清掃',
-      pest_hygiene: '害虫衛生',
-      maintenance: '設備メンテ',
-      window_wall: '窓・壁面',
-      cleaning: '清掃',
-      pest: '害虫',
-      other: 'その他',
-    };
+    const raw = String(svc?.category || svc?.category_concept || '').trim();
     const normalized = raw || 'uncategorized';
     return {
       key: normalized,
-      label: map[raw] || raw || '未分類',
+      label: getServiceCategoryLabel(raw),
     };
   }, []);
 
@@ -115,6 +134,20 @@ export default function AdminYakusokuPage() {
     for (const b of PLAN_BUCKETS) {
       const arr = taskMatrix[b.key];
       base[b.key] = Array.isArray(arr) ? arr.map((x) => String(x)).filter(Boolean) : [];
+    }
+    // Backward compatibility: legacy buckets are folded into the new monthly/quarterly/half-year model.
+    const legacyBucketMap = {
+      odd_month: 'monthly',
+      even_month: 'monthly',
+      yearly: 'monthly',
+    };
+    for (const [legacyKey, nextKey] of Object.entries(legacyBucketMap)) {
+      const legacy = Array.isArray(taskMatrix[legacyKey])
+        ? taskMatrix[legacyKey].map((x) => String(x)).filter(Boolean)
+        : [];
+      if (!legacy.length) continue;
+      const merged = new Set([...(base[nextKey] || []), ...legacy]);
+      base[nextKey] = [...merged];
     }
     return base;
   }, []);
@@ -173,6 +206,23 @@ export default function AdminYakusokuPage() {
     };
     run();
   }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    if (servicePickerOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    }
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, [servicePickerOpen]);
 
   useEffect(() => {
     const run = async () => {
@@ -250,6 +300,7 @@ export default function AdminYakusokuPage() {
       recurrence_rule: { type: 'flexible', task_matrix: createEmptyTaskMatrix() },
       _tagDrafts: {},
       _tagSearch: {},
+      _tagAdvanced: {},
     });
   };
 
@@ -272,6 +323,7 @@ export default function AdminYakusokuPage() {
       },
       _tagDrafts: {},
       _tagSearch: {},
+      _tagAdvanced: {},
     });
   };
 
@@ -379,6 +431,16 @@ export default function AdminYakusokuPage() {
     }));
   }, []);
 
+  const setBucketAdvanced = useCallback((bucketKey, open) => {
+    setModalData((prev) => ({
+      ...prev,
+      _tagAdvanced: {
+        ...(prev?._tagAdvanced || {}),
+        [bucketKey]: Boolean(open),
+      },
+    }));
+  }, []);
+
   const serviceCandidatesForTag = useCallback((qRaw) => {
     const q = String(qRaw || '').trim().toLowerCase();
     const list = Array.isArray(services) ? services : [];
@@ -398,6 +460,60 @@ export default function AdminYakusokuPage() {
       })
       .slice(0, 80);
   }, [services]);
+
+  const selectedServicesForModal = useMemo(() => {
+    const ids = Array.isArray(modalData?.service_ids) ? modalData.service_ids.map((x) => String(x)).filter(Boolean) : [];
+    const names = Array.isArray(modalData?.service_names) ? modalData.service_names.map((x) => String(x)).filter(Boolean) : [];
+    const byId = new Map((services || []).map((s) => [String(s?.service_id || ''), s]));
+    return ids.map((sid, idx) => ({
+      service_id: sid,
+      name: names[idx] || String(byId.get(sid)?.name || sid),
+    }));
+  }, [modalData?.service_ids, modalData?.service_names, services]);
+
+  const serviceDisplayNameById = useMemo(() => {
+    const m = new Map();
+    (services || []).forEach((s) => {
+      const sid = String(s?.service_id || '').trim();
+      if (!sid) return;
+      m.set(sid, String(s?.name || sid));
+    });
+    const ids = Array.isArray(modalData?.service_ids) ? modalData.service_ids : [];
+    const names = Array.isArray(modalData?.service_names) ? modalData.service_names : [];
+    ids.forEach((sid, idx) => {
+      const key = String(sid || '').trim();
+      if (!key) return;
+      const nm = String(names[idx] || '').trim();
+      if (nm) m.set(key, nm);
+    });
+    return m;
+  }, [services, modalData?.service_ids, modalData?.service_names]);
+
+  const toServiceTagLabel = useCallback((rawTag) => {
+    const key = String(rawTag || '').trim();
+    if (!key) return '';
+    return serviceDisplayNameById.get(key) || key;
+  }, [serviceDisplayNameById]);
+
+  const addBucketTagValue = useCallback((bucketKey, tagValue) => {
+    const value = String(tagValue || '').trim();
+    if (!value) return;
+    setModalData((prev) => {
+      const tm = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
+      const nextSet = new Set(tm[bucketKey] || []);
+      nextSet.add(value);
+      return {
+        ...prev,
+        recurrence_rule: {
+          ...(prev?.recurrence_rule || { type: 'flexible' }),
+          task_matrix: {
+            ...tm,
+            [bucketKey]: [...nextSet],
+          },
+        },
+      };
+    });
+  }, [normalizeTaskMatrix]);
 
   const addBucketTag = useCallback((bucketKey) => {
     setModalData((prev) => {
@@ -480,6 +596,7 @@ export default function AdminYakusokuPage() {
       delete payload.service_category;
       delete payload._tagDrafts;
       delete payload._tagSearch;
+      delete payload._tagAdvanced;
       payload.onsite_flags = normalizeOnsiteFlags(payload.onsite_flags);
       const res = await fetchYakusokuWithFallback(path, {
         method,
@@ -507,13 +624,171 @@ export default function AdminYakusokuPage() {
     }
   };
 
+  const activeTaskMatrix = normalizeTaskMatrix(modalData?.recurrence_rule?.task_matrix);
+  const assignedServiceIdsAcrossBuckets = useMemo(() => {
+    const ids = new Set();
+    Object.values(activeTaskMatrix || {}).forEach((arr) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((v) => {
+        const sid = String(v || '').trim();
+        if (sid) ids.add(sid);
+      });
+    });
+    return ids;
+  }, [activeTaskMatrix]);
+
+  const toggleBucketGroupOption = useCallback((bucketKey, checked) => {
+    setModalData((prev) => {
+      if (!prev) return prev;
+      const tm = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
+      if (checked) {
+        const defaults = Array.isArray(prev?.service_ids)
+          ? prev.service_ids.map((x) => String(x)).filter(Boolean)
+          : [];
+        if (!(tm[bucketKey] || []).length && !defaults.length) {
+          window.alert('先に「サービス」を1件以上選択してください');
+          return prev;
+        }
+        tm[bucketKey] = (tm[bucketKey] || []).length ? (tm[bucketKey] || []) : defaults;
+      } else {
+        tm[bucketKey] = [];
+      }
+      return {
+        ...prev,
+        recurrence_rule: {
+          ...(prev?.recurrence_rule || { type: 'flexible' }),
+          task_matrix: tm,
+        },
+      };
+    });
+  }, [normalizeTaskMatrix]);
+
+  const renderBucketEditor = useCallback((bucket, compact = false) => {
+    const tags = activeTaskMatrix[bucket.key] || [];
+    const draft = String(modalData?._tagDrafts?.[bucket.key] || '');
+    const search = String(modalData?._tagSearch?.[bucket.key] || '');
+    const advancedOpen = Boolean(modalData?._tagAdvanced?.[bucket.key]);
+    const quickAddServices = selectedServicesForModal.filter(
+      (svc) => !assignedServiceIdsAcrossBuckets.has(String(svc.service_id || ''))
+    );
+    const tagCandidates = serviceCandidatesForTag(search);
+    return (
+      <div key={bucket.key} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
+        <div style={{ fontWeight: 700, marginBottom: 8 }}>{bucket.label}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+          {tags.length ? tags.map((tag) => (
+            <button
+              key={`${bucket.key}-${tag}`}
+              type="button"
+              onClick={() => removeBucketTag(bucket.key, tag)}
+              style={{
+                border: '1px solid var(--line)',
+                background: 'var(--panel)',
+                color: 'var(--text)',
+                borderRadius: 999,
+                padding: '4px 10px',
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+              title="クリックで削除"
+            >
+              {toServiceTagLabel(tag)} ×
+            </button>
+          )) : <span style={{ fontSize: 12, color: 'var(--muted)' }}>未設定</span>}
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6 }}>選択済みサービスから追加</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {quickAddServices.length ? quickAddServices.map((svc) => (
+              <button
+                key={`${bucket.key}-selected-${svc.service_id}`}
+                type="button"
+                onClick={() => addBucketTagValue(bucket.key, svc.service_id)}
+                style={{
+                  border: '1px solid var(--line)',
+                  background: 'rgba(37,99,235,0.14)',
+                  color: 'var(--text)',
+                  borderRadius: 999,
+                  padding: '4px 10px',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                }}
+                title={`追加: ${svc.name} (${svc.service_id})`}
+              >
+                + {svc.name}
+              </button>
+            )) : (
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                {selectedServicesForModal.length
+                  ? 'このバケットに追加可能な選択済みサービスはありません'
+                  : '先に上の「サービス」で選択してください'}
+              </span>
+            )}
+          </div>
+        </div>
+        {selectedServicesForModal.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            <button
+              type="button"
+              onClick={() => setBucketAdvanced(bucket.key, !advancedOpen)}
+              style={{ fontSize: 12 }}
+            >
+              {advancedOpen ? '検索追加を閉じる' : '選択済み以外を検索して追加'}
+            </button>
+          </div>
+        )}
+        {(selectedServicesForModal.length === 0 || advancedOpen) ? (
+          <>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setBucketSearch(bucket.key, e.target.value)}
+                placeholder="検索 (サービス名/ID/カテゴリ)"
+                style={{ minWidth: compact ? 180 : 220 }}
+              />
+              <select value={draft} onChange={(e) => setBucketDraft(bucket.key, e.target.value)}>
+                <option value="">追加するタグを選択</option>
+                {tagCandidates.map((s) => (
+                  <option key={String(s?.service_id || '')} value={String(s?.service_id || '')}>
+                    {String(s?.name || s?.service_id || '')}
+                  </option>
+                ))}
+              </select>
+              <button type="button" onClick={() => addBucketTag(bucket.key)}>追加</button>
+            </div>
+            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
+              候補 {tagCandidates.length} 件（検索はこのバケット内のみ適用）
+            </div>
+          </>
+        ) : (
+          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
+            検索追加は必要なときだけ「選択済み以外を検索して追加」を開いてください
+          </div>
+        )}
+      </div>
+    );
+  }, [
+    activeTaskMatrix,
+    modalData?._tagDrafts,
+    modalData?._tagSearch,
+    modalData?._tagAdvanced,
+    serviceCandidatesForTag,
+    removeBucketTag,
+    toServiceTagLabel,
+    selectedServicesForModal,
+    assignedServiceIdsAcrossBuckets,
+    addBucketTagValue,
+    setBucketSearch,
+    setBucketDraft,
+    setBucketAdvanced,
+    addBucketTag,
+  ]);
+
   return (
     <div className="admin-yotei-timeline-page">
       <div className="admin-yotei-timeline-content">
         <header className="yotei-head">
-          <div className="admin-top-left">
-            <GlobalBackButton />
-          </div>
           <h1>実案件・定期管理 (yakusoku)</h1>
           <div className="yotei-head-actions">
             <div className="yotei-head-nav" aria-label="ページ移動">
@@ -713,60 +988,140 @@ export default function AdminYakusokuPage() {
                 <div className="yotei-form-group">
                   <label>定期メニュー（月別タグ）</label>
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {PLAN_BUCKETS.map((b) => {
-                      const matrix = normalizeTaskMatrix(modalData?.recurrence_rule?.task_matrix);
-                      const tags = matrix[b.key] || [];
-                      const draft = String(modalData?._tagDrafts?.[b.key] || '');
-                      const search = String(modalData?._tagSearch?.[b.key] || '');
-                      const tagCandidates = serviceCandidatesForTag(search);
-                      return (
-                        <div key={b.key} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
-                          <div style={{ fontWeight: 700, marginBottom: 8 }}>{b.label}</div>
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                            {tags.length ? tags.map((tag) => (
-                              <button
-                                key={`${b.key}-${tag}`}
-                                type="button"
-                                onClick={() => removeBucketTag(b.key, tag)}
-                                style={{
-                                  border: '1px solid var(--line)',
-                                  background: 'var(--panel)',
-                                  color: 'var(--text)',
-                                  borderRadius: 999,
-                                  padding: '4px 10px',
-                                  fontSize: 12,
-                                  cursor: 'pointer',
-                                }}
-                                title="クリックで削除"
-                              >
-                                {tag} ×
-                              </button>
-                            )) : <span style={{ fontSize: 12, color: 'var(--muted)' }}>未設定</span>}
-                          </div>
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                            <input
-                              type="text"
-                              value={search}
-                              onChange={(e) => setBucketSearch(b.key, e.target.value)}
-                              placeholder="検索 (サービス名/ID/カテゴリ)"
-                              style={{ minWidth: 220 }}
-                            />
-                            <select value={draft} onChange={(e) => setBucketDraft(b.key, e.target.value)}>
-                              <option value="">追加するタグを選択</option>
-                              {tagCandidates.map((s) => (
-                                <option key={String(s?.service_id || '')} value={String(s?.service_id || '')}>
-                                  {String(s?.name || s?.service_id || '')}
-                                </option>
-                              ))}
-                            </select>
-                            <button type="button" onClick={() => addBucketTag(b.key)}>追加</button>
-                          </div>
-                          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
-                            候補 {tagCandidates.length} 件（検索はこのバケット内のみ適用）
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {renderBucketEditor(MONTHLY_BUCKET)}
+
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>四半期（月次）</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {QUARTERLY_BUCKETS.map((b) => {
+                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          return (
+                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
+                              />
+                              <span>{b.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                        {QUARTERLY_BUCKETS
+                          .filter((b) => (activeTaskMatrix[b.key] || []).length > 0)
+                          .map((b) => renderBucketEditor(b, true))}
+                      </div>
+                    </div>
+
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>半年（月次）</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {HALF_YEAR_BUCKETS.map((b) => {
+                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          return (
+                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
+                              />
+                              <span>{b.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                        {HALF_YEAR_BUCKETS
+                          .filter((b) => (activeTaskMatrix[b.key] || []).length > 0)
+                          .map((b) => renderBucketEditor(b, true))}
+                      </div>
+                    </div>
+
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>隔月（月次）</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {BIMONTHLY_BUCKETS.map((b) => {
+                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          return (
+                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
+                              />
+                              <span>{b.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                        {BIMONTHLY_BUCKETS
+                          .filter((b) => (activeTaskMatrix[b.key] || []).length > 0)
+                          .map((b) => renderBucketEditor(b, true))}
+                      </div>
+                    </div>
+
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>週次・隔週</div>
+
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>週次A</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {WEEKLY_A_BUCKETS.map((b) => {
+                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          return (
+                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
+                              />
+                              <span>{b.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ fontSize: 12, color: 'var(--muted)', margin: '10px 0 6px' }}>隔週A (1/3/5週)</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {BIWEEKLY_A_BUCKETS.map((b) => {
+                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          return (
+                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
+                              />
+                              <span>{b.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ fontSize: 12, color: 'var(--muted)', margin: '10px 0 6px' }}>隔週B (2/4週)</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {BIWEEKLY_B_BUCKETS.map((b) => {
+                          const checked = (activeTaskMatrix[b.key] || []).length > 0;
+                          return (
+                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
+                              />
+                              <span>{b.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                        {[...WEEKLY_A_BUCKETS, ...BIWEEKLY_A_BUCKETS, ...BIWEEKLY_B_BUCKETS]
+                          .filter((b) => (activeTaskMatrix[b.key] || []).length > 0)
+                          .map((b) => renderBucketEditor(b, true))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
