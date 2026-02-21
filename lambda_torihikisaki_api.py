@@ -16,7 +16,7 @@ HEADERS = {
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
 }
 
-ALLOWED_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko", "jinzai", "service", "kadai"}
+ALLOWED_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko", "jinzai", "service", "kadai", "kanri_log", "zaiko", "zaiko_hacchu"}
 
 PK_MAP = {
     "torihikisaki": "torihikisaki_id",
@@ -26,6 +26,9 @@ PK_MAP = {
     "jinzai": "jinzai_id",
     "service": "service_id",
     "kadai": "kadai_id",
+    "kanri_log": "kanri_log_id",
+    "zaiko": "zaiko_id",
+    "zaiko_hacchu": "hacchu_id",
 }
 
 # 子テーブルの最低限親キー
@@ -43,6 +46,9 @@ ID_PREFIX = {
     "jinzai": "JINZAI",
     "service": "SERVICE",
     "kadai": "KADAI",
+    "kanri_log": "KANRI",
+    "zaiko": "ZAIKO",
+    "zaiko_hacchu": "HACCHU",
 }
 
 TABLE_MAP = {
@@ -53,6 +59,9 @@ TABLE_MAP = {
     "jinzai": os.environ.get("TABLE_JINZAI", "jinzai"),
     "service": os.environ.get("TABLE_SERVICE", "service"),
     "kadai": os.environ.get("TABLE_KADAI", "kadai"),
+    "kanri_log": os.environ.get("TABLE_KANRI_LOG", "kanri_log"),
+    "zaiko": os.environ.get("TABLE_ZAIKO", "zaiko"),
+    "zaiko_hacchu": os.environ.get("TABLE_ZAIKO_HACCHU", "zaiko_hacchu"),
 }
 
 TENPO_KARTE_TABLE = os.environ.get("TABLE_TENPO_KARTE", "tenpo_karte")
@@ -133,8 +142,22 @@ def _build_filter(collection: str, q: dict):
             c_expr = Attr("category").eq(category)
             expr = c_expr if expr is None else expr & c_expr
 
-    if collection == "kadai":
-        for k in ["category", "status", "source", "priority", "torihikisaki_id", "yagou_id", "tenpo_id", "jinzai_id"]:
+    if collection in {"kadai", "kanri_log"}:
+        for k in ["category", "status", "source", "priority", "list_scope", "log_type", "reported_by", "torihikisaki_id", "yagou_id", "tenpo_id", "jinzai_id"]:
+            v = q.get(k)
+            if v:
+                k_expr = Attr(k).eq(v)
+                expr = k_expr if expr is None else expr & k_expr
+
+    if collection == "zaiko":
+        for k in ["category", "supplier_name"]:
+            v = q.get(k)
+            if v:
+                k_expr = Attr(k).eq(v)
+                expr = k_expr if expr is None else expr & k_expr
+
+    if collection == "zaiko_hacchu":
+        for k in ["status", "zaiko_id", "supplier_name", "ordered_by"]:
             v = q.get(k)
             if v:
                 k_expr = Attr(k).eq(v)

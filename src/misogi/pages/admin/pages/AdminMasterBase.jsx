@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 // Hamburger / admin-top are provided by GlobalNav.
 import './admin-master.css';
 
@@ -206,6 +207,7 @@ export default function AdminMasterBase({
   onTitleClick = null,
   resource,
   idKey,
+  apiIdKey = '',
   apiBase,
   pageClassName = '',
   listLimit = 50,
@@ -225,6 +227,7 @@ export default function AdminMasterBase({
   onHeaderTabChange = null,
   renderHeaderExtra = null,
   clientFilter = null,
+  rowClassName = null,
   canDeleteRow = null,
   beforeDelete = null,
   enableBulkDelete = false,
@@ -235,6 +238,7 @@ export default function AdminMasterBase({
   showJotaiColumn = true,
   showJotaiEditor = true,
   normalizeEditingModel = null,
+  hideIdColumn = false,
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -255,10 +259,12 @@ export default function AdminMasterBase({
   const [multiSelectOverlayField, setMultiSelectOverlayField] = useState('');
   const [searchText, setSearchText] = useState('');
   const [uiDebug, setUiDebug] = useState(null);
+  const [overlayRoot, setOverlayRoot] = useState(null);
   const textAreaRefs = useRef({});
   const diagMode = isDiagMode();
   const diagStep = getDiagStep();
   const noTableMode = isNoTableMode();
+  const operationalIdKey = String(apiIdKey || idKey || 'id');
 
   const setTextAreaRef = useCallback((fieldKey, el) => {
     if (!fieldKey) return;
@@ -475,11 +481,11 @@ export default function AdminMasterBase({
 
   const openEdit = useCallback((row) => {
     if (diagMode && !diagStep) {
-      window.alert(`[diag] openEdit clicked id=${pickId(row, idKey)}`);
+      window.alert(`[diag] openEdit clicked id=${pickId(row, operationalIdKey)}`);
       return;
     }
     const at = new Date().toISOString();
-    if (!diagMode) setUiDebug({ action: 'openEdit', at, id: pickId(row, idKey) });
+    if (!diagMode) setUiDebug({ action: 'openEdit', at, id: pickId(row, operationalIdKey) });
     const model = { ...row };
     if (!model.jotai) model.jotai = 'yuko';
     const normalized = (typeof normalizeEditingModel === 'function')
@@ -510,6 +516,18 @@ export default function AdminMasterBase({
     return () => document.removeEventListener('keydown', onKey);
   }, [modalOpen, closeModal]);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const host = document.createElement('div');
+    host.className = 'admin-master-overlay-host';
+    document.body.appendChild(host);
+    setOverlayRoot(host);
+    return () => {
+      setOverlayRoot(null);
+      if (host.parentNode) host.parentNode.removeChild(host);
+    };
+  }, []);
+
   // NOTE: Avoid forcing body scroll lock here; it can trigger expensive reflow on some setups.
 
   const onSave = useCallback(async () => {
@@ -517,10 +535,10 @@ export default function AdminMasterBase({
     setSaving(true);
     try {
       const preModel = (typeof normalizeEditingModel === 'function')
-        ? (normalizeEditingModel(editing, { mode: pickId(editing, idKey) ? 'edit' : 'create', phase: 'save' }) || editing)
+        ? (normalizeEditingModel(editing, { mode: pickId(editing, operationalIdKey) ? 'edit' : 'create', phase: 'save' }) || editing)
         : editing;
 
-      const currentId = pickId(preModel, idKey);
+      const currentId = pickId(preModel, operationalIdKey);
       const isUpdate = !!currentId && !String(currentId).startsWith('TMP#');
       if (!isUpdate) {
         const missingRequired = (fields || [])
@@ -560,7 +578,7 @@ export default function AdminMasterBase({
         try {
           await onAfterSave({
             isUpdate,
-            id: pickId(responseData, idKey) || currentId || preModel?.[idKey] || '',
+            id: pickId(responseData, operationalIdKey) || currentId || preModel?.[operationalIdKey] || '',
             editing: preModel,
             responseData,
             request: (hookPath, hookOptions = {}) => {
@@ -595,8 +613,8 @@ export default function AdminMasterBase({
       const ok = await beforeDelete(row);
       if (!ok) return;
     }
-    setUiDebug({ action: 'openDeleteConfirm', at: new Date().toISOString(), id: pickId(row, idKey) });
-    const rowId = pickId(row, idKey);
+    setUiDebug({ action: 'openDeleteConfirm', at: new Date().toISOString(), id: pickId(row, operationalIdKey) });
+    const rowId = pickId(row, operationalIdKey);
     if (!rowId) return;
     setDeleteTarget(row);
   }, [idKey, canDeleteRow, beforeDelete]);
@@ -625,7 +643,7 @@ export default function AdminMasterBase({
   const toggleSelectAllVisible = useCallback((checked, rows) => {
     const ids = (rows || [])
       .filter((row) => (typeof canDeleteRow !== 'function' || canDeleteRow(row)))
-      .map((row) => pickId(row, idKey))
+      .map((row) => pickId(row, operationalIdKey))
       .filter(Boolean);
     setSelectedRowIds((prev) => {
       const s = new Set(prev);
@@ -639,7 +657,7 @@ export default function AdminMasterBase({
 
   const confirmDelete = useCallback(async () => {
     const row = deleteTarget;
-    const rowId = pickId(row, idKey);
+    const rowId = pickId(row, operationalIdKey);
     if (!rowId) return;
     setDeleting(true);
     try {
@@ -661,7 +679,7 @@ export default function AdminMasterBase({
 
   const toggleRowDetail = useCallback((row) => {
     if (!enableRowDetail) return;
-    const rid = pickId(row, idKey);
+    const rid = pickId(row, operationalIdKey);
     if (!rid) return;
     setExpandedRowId((prev) => (prev === rid ? '' : rid));
   }, [enableRowDetail, idKey]);
@@ -692,7 +710,7 @@ export default function AdminMasterBase({
   }, [rowDetailKeys, fieldByKey, idKey]);
 
   const onInlineFieldChange = useCallback(async (row, field, value) => {
-    const rowId = pickId(row, idKey);
+    const rowId = pickId(row, operationalIdKey);
     if (!rowId || !field?.key) return;
     const key = String(field.key);
     const saveKey = `${rowId}:${key}`;
@@ -701,7 +719,7 @@ export default function AdminMasterBase({
     const prevItems = items;
     const actor = currentActorName();
     const nextItems = (items || []).map((it) => (
-      pickId(it, idKey) === rowId ? { ...it, [key]: value, updated_by: actor } : it
+      pickId(it, operationalIdKey) === rowId ? { ...it, [key]: value, updated_by: actor } : it
     ));
     setItems(nextItems);
 
@@ -725,7 +743,7 @@ export default function AdminMasterBase({
       }
       if (data && typeof data === 'object') {
         setItems((curr) => (curr || []).map((it) => (
-          pickId(it, idKey) === rowId ? { ...it, ...data } : it
+          pickId(it, operationalIdKey) === rowId ? { ...it, ...data } : it
         )));
       }
     } catch (e) {
@@ -742,12 +760,12 @@ export default function AdminMasterBase({
 
   const columns = useMemo(() => {
     const base = [
-      { key: idKey, label: 'ID' },
+      ...(!hideIdColumn ? [{ key: idKey, label: 'ID' }] : []),
       ...fields.map((f) => ({ key: f.key, label: f.columnLabel || f.label })),
     ];
     if (showJotaiColumn) base.push({ key: 'jotai', label: '状態' });
     return base;
-  }, [fieldsSig, idKey, showJotaiColumn]);
+  }, [fieldsSig, idKey, showJotaiColumn, hideIdColumn]);
 
   const visibleItems = useMemo(() => {
     const q = String(searchText || '').trim().toLowerCase();
@@ -762,7 +780,7 @@ export default function AdminMasterBase({
   }, [items, searchText, localSearchKeysSig, clientFilter]);
 
   const onBulkDelete = useCallback(async () => {
-    const targetRows = (visibleItems || []).filter((row) => selectedRowIds.includes(pickId(row, idKey)));
+    const targetRows = (visibleItems || []).filter((row) => selectedRowIds.includes(pickId(row, operationalIdKey)));
     if (!targetRows.length) return;
     if (typeof beforeBulkDelete === 'function') {
       const ok = await beforeBulkDelete(targetRows);
@@ -773,7 +791,7 @@ export default function AdminMasterBase({
       let okCount = 0;
       let ngCount = 0;
       for (const row of targetRows) {
-        const rid = pickId(row, idKey);
+        const rid = pickId(row, operationalIdKey);
         if (!rid) continue;
         try {
           const res = await apiFetch(apiBase, buildResourcePath(`${resource}/${encodeURIComponent(rid)}`), {
@@ -809,7 +827,7 @@ export default function AdminMasterBase({
                   checked={(() => {
                     const ids = visibleItems
                       .filter((row) => (typeof canDeleteRow !== 'function' || canDeleteRow(row)))
-                      .map((row) => pickId(row, idKey))
+                      .map((row) => pickId(row, operationalIdKey))
                       .filter(Boolean);
                     return ids.length > 0 && ids.every((rid) => selectedRowIds.includes(rid));
                   })()}
@@ -828,13 +846,14 @@ export default function AdminMasterBase({
             </tr>
           )}
           {visibleItems.map((row) => {
-            const rid = pickId(row, idKey);
+            const rid = pickId(row, operationalIdKey);
             const isExpanded = !!rid && expandedRowId === rid;
             const rowDeletable = typeof canDeleteRow !== 'function' || canDeleteRow(row);
+            const customRowClass = typeof rowClassName === 'function' ? String(rowClassName(row) || '').trim() : '';
             return (
               <React.Fragment key={rid || Math.random()}>
                 <tr
-                  className={`${enableRowDetail ? 'row-clickable' : ''} ${isExpanded ? 'is-expanded' : ''}`.trim()}
+                  className={`${enableRowDetail ? 'row-clickable' : ''} ${isExpanded ? 'is-expanded' : ''} ${customRowClass}`.trim()}
                   onClick={() => toggleRowDetail(row)}
                 >
                   {enableBulkDelete ? (
@@ -859,7 +878,7 @@ export default function AdminMasterBase({
                       const valueKey = f.valueKey || f.key;
                       const labelKey = f.labelKey || 'name';
                       const options = f.options || [];
-                      const rowId = pickId(row, idKey);
+                      const rowId = pickId(row, operationalIdKey);
                       const saveKey = `${rowId}:${String(f.key)}`;
                       const busy = !!inlineSaving[saveKey];
                       return (
@@ -948,7 +967,7 @@ export default function AdminMasterBase({
         </tbody>
       </table>
     </section>
-  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, idKey, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail]);
+  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, idKey, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName]);
 
   return (
     <div className={`admin-master-page ${pageClassName || ''}`.trim()} data-resource={resource}>
@@ -1005,13 +1024,14 @@ export default function AdminMasterBase({
         ) : null}
 
         {/* Overlay editor */}
-        {modalOpen && editing ? (
-          <div className="admin-master-modal-backdrop" onClick={closeModal}>
+        {overlayRoot && modalOpen && editing ? createPortal(
+          <>
+            <div className="admin-master-modal-backdrop" onClick={closeModal} />
             <section
               className="admin-master-modal"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="admin-master-inline-editor-title">{pickId(editing, idKey) ? '編集' : '新規登録'}</h2>
+              <h2 className="admin-master-inline-editor-title">{pickId(editing, operationalIdKey) ? '編集' : '新規登録'}</h2>
               <div className="admin-master-modal-grid">
               {fields.map((f) => {
                 const options = f.sourceKey
@@ -1293,8 +1313,8 @@ export default function AdminMasterBase({
                 </button>
               </div>
             </section>
-          </div>
-        ) : null}
+          </>
+        , overlayRoot) : null}
 
         {deleteTarget ? (
           <section style={{ border: '1px solid #ef4444', borderRadius: 12, background: 'rgba(127,29,29,0.20)', padding: 16, marginBottom: 12 }}>
@@ -1304,7 +1324,7 @@ export default function AdminMasterBase({
             </p>
             <div style={{ marginBottom: 12, padding: 10, border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8, background: 'rgba(2,6,23,0.35)' }}>
               <div style={{ color: '#fecaca', fontSize: 12 }}>対象ID</div>
-              <div>{pickId(deleteTarget, idKey)}</div>
+              <div>{pickId(deleteTarget, idKey) || pickId(deleteTarget, operationalIdKey)}</div>
               {deleteTarget?.name ? (
                 <>
                   <div style={{ color: '#fecaca', fontSize: 12, marginTop: 6 }}>名称</div>

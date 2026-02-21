@@ -157,7 +157,7 @@ function daysSinceYmd(ymd) {
 
 function fmtUpdateLog(row) {
   const rawAt = String(row?.updated_at || '').trim();
-  const who = String(row?.updated_by || row?.reported_by || '').trim();
+  const who = normalizeActorName(row?.updated_by || row?.reported_by || '');
   let at = rawAt;
   if (rawAt) {
     const d = new Date(rawAt);
@@ -175,6 +175,81 @@ function hasReplyLog(row) {
   return String(row?.detail_note || '').trim().length > 0;
 }
 
+const KADAI_MSG_MARKER = '<<<KADAI_MSG>>>';
+
+function parseKadaiMessages(raw) {
+  const text = String(raw || '');
+  if (!text.trim()) return [];
+  const out = [];
+  const re = new RegExp(`${KADAI_MSG_MARKER}\\n(\\{.*?\\})(?=\\n${KADAI_MSG_MARKER}|$)`, 'gs');
+  const hits = [...text.matchAll(re)];
+  if (hits.length) {
+    for (const m of hits) {
+      const payload = String(m?.[1] || '');
+      if (!payload) continue;
+      try {
+        const obj = JSON.parse(payload);
+        const body = String(obj?.body || '').trim();
+        if (!body) continue;
+        out.push({
+          at: String(obj?.at || '').trim(),
+          actor: normalizeActorName(obj?.actor || obj?.from || ''),
+          from: normalizeActorName(obj?.from || obj?.actor || ''),
+          to: normalizeActorName(obj?.to || ''),
+          body,
+        });
+      } catch {
+        // skip broken chunk
+      }
+    }
+    return out;
+  }
+
+  // Legacy fallback: treat whole text as one message
+  return [{
+    at: '',
+    actor: '',
+    from: '',
+    to: '',
+    body: text.trim(),
+  }];
+}
+
+function serializeKadaiMessages(messages) {
+  const list = Array.isArray(messages) ? messages : [];
+  return list
+    .map((msg) => {
+      const body = String(msg?.body || '').trim();
+      if (!body) return '';
+      return `${KADAI_MSG_MARKER}\n${JSON.stringify({
+        at: String(msg?.at || '').trim(),
+        actor: normalizeActorName(msg?.actor || msg?.from || ''),
+        from: normalizeActorName(msg?.from || msg?.actor || ''),
+        to: normalizeActorName(msg?.to || ''),
+        body,
+      })}`;
+    })
+    .filter(Boolean)
+    .join('\n');
+}
+
+function lastReplyAt(row) {
+  const msgs = parseKadaiMessages(row?.detail_note || '');
+  if (msgs.length) {
+    const at = String(msgs[msgs.length - 1]?.at || '').trim();
+    if (at) return at;
+  }
+  const log = String(row?.detail_note || '');
+  if (!log.trim()) return '';
+  const m = [...log.matchAll(/\d{4}\/\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{2}(?::\d{2})?/g)];
+  if (m.length) return String(m[m.length - 1]?.[0] || '').trim();
+  const rawAt = String(row?.updated_at || '').trim();
+  if (!rawAt) return '';
+  const d = new Date(rawAt);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString('ja-JP', { hour12: false });
+}
+
 function decodeJwtPayload(token) {
   try {
     const parts = String(token || '').split('.');
@@ -186,6 +261,49 @@ function decodeJwtPayload(token) {
   } catch {
     return null;
   }
+}
+
+function countJapaneseChars(value) {
+  const s = String(value || '');
+  const m = s.match(/[\u3040-\u30ff\u3400-\u9fff\uff66-\uff9f]/g);
+  return m ? m.length : 0;
+}
+
+function tryRepairUtf8Mojibake(value) {
+  const input = String(value || '');
+  if (!input) return '';
+  try {
+    const bytes = Uint8Array.from(input.split('').map((ch) => ch.charCodeAt(0) & 0xff));
+    const repaired = new TextDecoder('utf-8', { fatal: true }).decode(bytes).trim();
+    if (!repaired) return '';
+    return repaired;
+  } catch {
+    return '';
+  }
+}
+
+function normalizeActorName(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const hasMojibakePattern = /[ÃÂæçðÐ]/.test(raw);
+  if (hasMojibakePattern) {
+    const repaired = tryRepairUtf8Mojibake(raw);
+    if (repaired && countJapaneseChars(repaired) >= countJapaneseChars(raw)) return repaired;
+  }
+  return raw;
+}
+
+function normalizeToken(value) {
+  return String(value || '').trim().toLowerCase().replace(/[\s_\-]/g, '');
+}
+
+function isAdminDiaryLike(row) {
+  const allow = new Set(['kanrilog', 'adminlog', 'admindiary', '管理ログ', '管理日誌'].map((v) => normalizeToken(v)));
+  const listScope = normalizeToken(row?.list_scope);
+  const category = normalizeToken(row?.category);
+  const source = normalizeToken(row?.source);
+  const type = normalizeToken(row?.log_type || row?.type || row?.kind);
+  return allow.has(listScope) || allow.has(category) || allow.has(source) || allow.has(type);
 }
 
 function getCurrentRole() {
@@ -210,12 +328,35 @@ function getCurrentRole() {
   return '';
 }
 
+function getCurrentActorName() {
+  try {
+    const token =
+      localStorage.getItem('idToken') ||
+      localStorage.getItem('cognito_id_token') ||
+      localStorage.getItem('id_token') ||
+      localStorage.getItem('accessToken') ||
+      localStorage.getItem('cognito_access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const payload = decodeJwtPayload(token);
+    const actor = normalizeActorName(payload?.name || payload?.email || payload?.['cognito:username'] || '');
+    if (actor) return actor;
+  } catch {}
+  try {
+    const legacy = JSON.parse(localStorage.getItem('misesapo_auth') || '{}');
+    const actor = normalizeActorName(legacy?.name || legacy?.email || '');
+    if (actor) return actor;
+  } catch {}
+  return 'unknown';
+}
+
 export default function AdminKadaiListPage() {
   const [detailDrafts, setDetailDrafts] = useState({});
   const [kadaiScopeTab, setKadaiScopeTab] = useState('general');
   const [titleClickCount, setTitleClickCount] = useState(0);
   const [deleteUiUnlocked, setDeleteUiUnlocked] = useState(false);
-  const currentRole = useMemo(() => getCurrentRole(), []);
+  const currentRole = getCurrentRole();
+  const currentActor = getCurrentActorName();
   const isAdminOrAbove = currentRole === 'admin' || currentRole === 'headquarters';
   const deleteSecret = 'MandC280408';
   const activeScope = isAdminOrAbove ? kadaiScopeTab : 'general';
@@ -231,7 +372,7 @@ export default function AdminKadaiListPage() {
 
   return (
     <AdminMasterBase
-      title="Kadaiリスト"
+      title="タスクリスト"
       onTitleClick={() => {
         if (deleteUiUnlocked) return;
         setTitleClickCount((prev) => {
@@ -278,13 +419,15 @@ export default function AdminKadaiListPage() {
       activeHeaderTab={activeScope}
       onHeaderTabChange={(v) => setKadaiScopeTab(v === 'admin' ? 'admin' : 'general')}
       clientFilter={(row) => {
+        if (isAdminDiaryLike(row)) return false;
         const scope = String(row?.list_scope || 'general').trim() || 'general';
         if (scope === 'admin' && !isAdminOrAbove) return false;
         return scope === activeScope;
       }}
+      rowClassName={(row) => (hasReplyLog(row) ? 'has-reply' : '')}
       localSearch={{
         label: '統合検索',
-        placeholder: '業務フロー段階/課題/内容など',
+        placeholder: '業務フロー段階/タスク/内容など',
         keys: [
           'flow_stage',
           'list_scope',
@@ -395,12 +538,12 @@ export default function AdminKadaiListPage() {
       renderRowDetail={({ row, rowId, items, onInlineFieldChange, inlineSaving }) => {
         const draft = Object.prototype.hasOwnProperty.call(detailDrafts, rowId)
           ? detailDrafts[rowId]
-          : String(row?.detail_note || '');
+          : '';
         const saveKey = `${rowId}:detail_note`;
         const saving = !!inlineSaving?.[saveKey];
         const requester = formatSingleOrDash(row?.reported_by);
-        const target = formatTargetFull(row?.target_to);
         const logText = String(row?.detail_note || '').trim();
+        const messages = parseKadaiMessages(logText);
         const byKey = new Map((items || []).map((it) => [it.key, it]));
         const leftKeys = ['reported_at', 'flow_stage', 'reported_by', 'target_to', 'status', 'task_state'];
         const rightTopKeys = ['category', 'request'];
@@ -412,13 +555,27 @@ export default function AdminKadaiListPage() {
         const onReply = async () => {
           const body = String(draft || '').trim();
           if (!body) return;
+          const actorNow = getCurrentActorName();
           const stamp = new Date().toLocaleString('ja-JP', { hour12: false });
-          const dayLabel = new Date().toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' });
-          const line = `${stamp} ${target} → ${requester}`;
-          const tail = `${dayLabel}返答`;
-          const merged = logText ? `${logText}\n${line}\n${body}\n${tail}` : `${line}\n${body}\n${tail}`;
+          const msg = `${KADAI_MSG_MARKER}\n${JSON.stringify({
+            at: stamp,
+            actor: actorNow,
+            from: actorNow,
+            to: requester,
+            body,
+          })}`;
+          const merged = logText ? `${logText}\n${msg}` : msg;
           await onInlineFieldChange('detail_note', merged);
           setDetailDrafts((prev) => ({ ...prev, [rowId]: '' }));
+        };
+        const onCancelReply = async (msgIndex) => {
+          const i = Number(msgIndex);
+          if (!Number.isInteger(i) || i < 0 || i >= messages.length) return;
+          const ok = window.confirm('この返答を取消しますか？');
+          if (!ok) return;
+          const next = messages.filter((_, idx) => idx !== i);
+          const merged = serializeKadaiMessages(next);
+          await onInlineFieldChange('detail_note', merged);
         };
         return (
           <div className="kadai-detail-two-col">
@@ -489,7 +646,32 @@ export default function AdminKadaiListPage() {
               </div>
               <div className="kadai-detail-flow-arrow" aria-hidden="true">↓</div>
               <div className="kadai-detail-log-view">
-                {logText || '返答ログはまだありません'}
+                {messages.length ? (
+                  <div className="kadai-chat-log">
+                    {messages.map((msg, idx) => (
+                      <div
+                        key={`${rowId}-msg-${idx}`}
+                        className={`kadai-chat-msg ${String(msg.actor || '') === currentActor ? 'is-mine' : 'is-other'}`}
+                      >
+                        <div className="kadai-chat-msg-head">
+                          <span className="meta">{msg.at || '-'}</span>
+                          <span className="meta">{msg.actor || 'unknown'}</span>
+                          <button
+                            type="button"
+                            className="msg-cancel"
+                            onClick={() => onCancelReply(idx)}
+                            disabled={saving}
+                          >
+                            取消
+                          </button>
+                        </div>
+                        <div className="kadai-chat-msg-body">{msg.body}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  '返答ログはまだありません'
+                )}
               </div>
               <div className="kadai-detail-note-head">{'返答内容'}</div>
               <div className="kadai-detail-editor-tools">
@@ -501,17 +683,10 @@ export default function AdminKadaiListPage() {
               </div>
               <textarea
                 value={draft}
-                placeholder="対象者は依頼者へ返す内容を入力してください。"
+                placeholder={`返答を入力してください（次の返信 #${messages.length + 1}）`}
                 onChange={(e) => setDetailDrafts((prev) => ({ ...prev, [rowId]: e.target.value }))}
               />
               <div className="kadai-detail-note-actions">
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={() => onInlineFieldChange('detail_note', draft)}
-                >
-                  {saving ? '保存中...' : '下書き保存'}
-                </button>
                 <button
                   type="button"
                   className="reply"
@@ -594,10 +769,16 @@ export default function AdminKadaiListPage() {
           label: '⑤タイトル（何を）',
           columnLabel: '⑤タイトル',
           required: true,
-          render: (v) => {
+          render: (v, row) => {
             const raw = String(v || '').trim();
             const clipped = clipText(raw, 30);
-            return <span title={raw || ''}>{clipped || '-'}</span>;
+            const replyAt = lastReplyAt(row);
+            return (
+              <span title={raw || ''} className="kadai-title-cell">
+                <span>{clipped || '-'}</span>
+                {replyAt ? <span className="kadai-title-reply-at">↩ {replyAt}</span> : null}
+              </span>
+            );
           },
         },
         {

@@ -49,7 +49,7 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 16px 20px 20px;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 20px 20px;
 }
 
 .admin-master-header {
@@ -221,8 +221,7 @@
 }
 
 .admin-master-table td.actions {
-  display: flex;
-  gap: 6px;
+  white-space: nowrap;
 }
 
 .admin-master-table td.actions button {
@@ -232,6 +231,11 @@
   background: #1e293b;
   color: #e2e8f0;
   padding: 0 10px;
+  margin-right: 6px;
+}
+
+.admin-master-table td.actions button:last-child {
+  margin-right: 0;
 }
 
 .admin-master-inline-select {
@@ -325,40 +329,29 @@
 
 .admin-master-page[data-resource="kadai"] .admin-master-table td.actions {
   min-width: 132px;
-  justify-content: flex-start;
+  text-align: left;
 }
 
 .admin-master-page[data-resource="kadai"] .admin-master-table td.actions button {
+  height: 32px;
   min-width: 58px;
 }
 
+/* Keep status/state/action controls aligned on the same baseline row */
+.admin-master-page[data-resource="kadai"] .admin-master-table td:nth-last-child(3),
+.admin-master-page[data-resource="kadai"] .admin-master-table td:nth-last-child(2),
+.admin-master-page[data-resource="kadai"] .admin-master-table td.actions {
+  vertical-align: middle;
+}
+
 .admin-master-page[data-resource="kadai"] .admin-master-modal-grid {
-  grid-template-columns: 1.2fr 1fr;
-  grid-template-areas:
-    "reported_at category"
-    "flow_stage request"
-    "reported_by request"
-    "target_to request"
-    "status request"
-    "task_state request";
+  grid-template-columns: 1fr 1fr;
 }
 
 .admin-master-page[data-resource="kadai"] .admin-master-modal {
-  width: min(1220px, calc(100vw - 20px));
+  width: min(1120px, calc(100vw - 24px));
   max-height: calc(100vh - 28px);
   overflow: auto;
-}
-
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-reported_at { grid-area: reported_at; }
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-flow_stage { grid-area: flow_stage; }
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-reported_by { grid-area: reported_by; }
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-target_to { grid-area: target_to; }
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-status { grid-area: status; }
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-task_state { grid-area: task_state; }
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-category { grid-area: category; }
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-request { grid-area: request; }
-.admin-master-page[data-resource="kadai"] .admin-master-modal-grid .field-request textarea {
-  min-height: 280px;
 }
 
 .admin-master-page[data-resource="kadai"] .admin-master-table .row-detail-grid {
@@ -370,12 +363,14 @@
   grid-template-columns: 380px 1fr;
   gap: 12px;
   align-items: start;
+  min-width: 0;
 }
 
 .admin-master-page[data-resource="kadai"] .kadai-detail-left {
   display: grid;
   gap: 8px;
   align-self: start;
+  min-width: 0;
 }
 
 .admin-master-page[data-resource="kadai"] .kadai-detail-row {
@@ -383,6 +378,7 @@
   border-radius: 10px;
   background: rgba(2, 6, 23, 0.45);
   padding: 8px 10px;
+  min-width: 0;
 }
 
 .admin-master-page[data-resource="kadai"] .kadai-detail-row .k {
@@ -395,7 +391,11 @@
   color: #e2e8f0;
   font-size: 14px;
   line-height: 1.55;
+  white-space: normal;
   word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .admin-master-page[data-resource="kadai"] .kadai-detail-row-actor-flow .actor-flow-line {
@@ -434,6 +434,7 @@
   padding: 10px;
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 .admin-master-page[data-resource="kadai"] .kadai-detail-right-top {
@@ -477,8 +478,9 @@
 }
 
 .admin-master-page[data-resource="kadai"] .kadai-detail-log-view {
-  max-height: 140px;
-  overflow: auto;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid #273049;
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.75);
@@ -489,8 +491,71 @@
   font-size: 13px;
 }
 
+.admin-master-page[data-resource="kadai"] .kadai-chat-log {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-chat-msg {
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.5);
+  padding: 8px 10px;
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-chat-msg.is-mine {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(20, 83, 45, 0.35);
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-chat-msg.is-other {
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-chat-msg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-chat-msg-head .meta {
+  font-size: 11px;
+  color: #93c5fd;
+  font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-chat-msg-head .msg-cancel {
+  margin-left: auto;
+  min-height: 24px;
+  padding: 4px 10px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+  background: rgba(127, 29, 29, 0.35);
+  color: #fecaca;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-chat-msg-head .msg-cancel:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-chat-msg-body {
+  white-space: pre-wrap;
+  line-height: 1.45;
+  color: #e2e8f0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .admin-master-page[data-resource="kadai"] .kadai-detail-right textarea {
   width: 100%;
+  max-width: 100%;
   min-height: 160px;
   resize: vertical;
   border-radius: 8px;
@@ -635,6 +700,23 @@
   border-color: rgba(239, 68, 68, 0.72);
   background: rgba(239, 68, 68, 0.18);
   color: #fecaca;
+}
+
+.admin-master-page[data-resource="kadai"] .admin-master-table tr.has-reply td {
+  background: rgba(14, 116, 144, 0.10);
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-title-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-master-page[data-resource="kadai"] .kadai-title-reply-at {
+  font-size: 11px;
+  line-height: 1.2;
+  color: #93c5fd;
+  font-weight: 700;
 }
 
 @media (max-width: 1280px) {
@@ -782,6 +864,29 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    max-width: calc(100% - 24px); /* room for chevron */
+    min-width: 0;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="category"] .kadai-title-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="category"] .kadai-title-cell > span:first-child {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_by"] {
@@ -815,6 +920,9 @@
     display: block;
     padding: 10px 12px;
     border: none;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   /* Don't show per-cell "data-col" labels on mobile summary rows. */
@@ -834,11 +942,65 @@
 }
 
 .admin-master-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 12001;
   width: min(760px, calc(100vw - 20px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
   background: #0f172a;
   border: 1px solid #273049;
   border-radius: 12px;
   padding: 16px;
+}
+
+@media (max-width: 720px) {
+  .admin-master-modal-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .admin-master-modal {
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    transform: none;
+    width: 100vw;
+    max-width: 100vw;
+    max-height: min(90vh, calc(100vh - 12px));
+    border-radius: 14px 14px 0 0;
+    padding: 14px 12px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .admin-master-modal h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .admin-master-modal-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .admin-master-modal-grid label {
+    font-size: 12px;
+  }
+
+  .admin-master-modal-actions {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0.9));
+    padding-top: 8px;
+    margin-top: 10px;
+  }
+
+  .admin-master-modal-actions button {
+    min-height: 42px;
+    font-size: 14px;
+  }
 }
 
 .admin-master-page.admin-admin-log-page .admin-master-modal {
@@ -1130,6 +1292,10 @@
 }
 
 @media (max-width: 980px) {
+  .admin-master-content {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
   .admin-master-modal-grid {
     grid-template-columns: 1fr;
   }
@@ -1379,4 +1545,137 @@
   border-color: #ef4444;
   background: #fee2e2;
   color: #991b1b;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-chat-msg-head .msg-cancel {
+  border-color: #fca5a5;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-row {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-row .k {
+  color: #475569;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-row .v {
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-inline-select {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-sublog {
+  color: #64748b;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-right {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-note-head {
+  color: #334155;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-editor-tools button {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-log-view {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-chat-msg {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-chat-msg.is-mine {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-chat-msg.is-other {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-chat-msg-head .meta {
+  color: #1d4ed8;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-chat-msg-body {
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-right textarea {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-right textarea::placeholder {
+  color: #64748b;
+}
+
+[data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-note-actions button {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+@media (max-width: 720px) {
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable:hover {
+    background: #eef2ff;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable::after {
+    color: #64748b;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable.is-expanded::after {
+    color: #2563eb;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_at"] {
+    color: #64748b;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="category"] {
+    color: #0f172a;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="reported_by"] {
+    color: #1e3a8a;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-clickable td[data-key="target_to"] {
+    color: #166534;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-detail {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+  }
+
+  [data-theme="light"] .admin-master-page[data-resource="kadai"] .admin-master-table tr.row-detail td {
+    background: transparent;
+  }
 }

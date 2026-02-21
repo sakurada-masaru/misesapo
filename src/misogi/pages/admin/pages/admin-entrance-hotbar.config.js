@@ -7,7 +7,6 @@ export const ADMIN_HOTBAR = [
     label: '報告',
     subItems: [
       { id: 'houkoku-list', label: '報告一覧', path: '/admin/houkoku', group: '報告' },
-      // 管理側の「提出/ログ」は専用ページに分離（line-system: structured log）
       { id: 'admin-log', label: '管理ログ(提出)', path: '/admin/admin-log', group: '提出' },
     ]
   },
@@ -36,6 +35,8 @@ export const ADMIN_HOTBAR = [
       { id: 'master-jinzai-busho', label: '人材部署', path: '/admin/master/jinzai-busho', group: 'マスタ(人材)' },
       { id: 'master-jinzai-shokushu', label: '人材職種', path: '/admin/master/jinzai-shokushu', group: 'マスタ(人材)' },
       { id: 'master-service', label: 'サービスマスタ', path: '/admin/master/service', group: 'マスタ(運用)' },
+      { id: 'master-zaiko', label: '在庫管理DB', path: '/admin/master/zaiko', group: 'マスタ(運用)' },
+      { id: 'zaiko-order', label: '在庫発注フォーム', path: '/admin/master/zaiko-order', group: 'マスタ(運用)' },
     ]
   },
   {

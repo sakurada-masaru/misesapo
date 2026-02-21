@@ -496,7 +496,7 @@
 .karte-detail-layout {
   display: grid;
   /* Right column is the "対応履歴" area: make it wider and stable. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.7fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, 1.7fr);
   gap: 14px;
   align-items: start;
 }
@@ -508,6 +508,23 @@
   min-width: 0;
 }
 
+.karte-detail-layout .card-sub {
+  padding: 16px;
+}
+
+.karte-detail-layout .card-title-row {
+  margin-bottom: 12px;
+}
+
+.karte-detail-layout .form-grid {
+  gap: 12px;
+}
+
+.karte-detail-layout .subhead {
+  margin-top: 14px;
+  margin-bottom: 8px;
+}
+
 .karte-detail-col-right {
   align-self: start;
   position: sticky;
@@ -516,6 +533,141 @@
 
 .support-history-card .service-plan-row {
   background: rgba(255, 255, 255, 0.035);
+}
+
+/* SUMMARY: 基本情報も高さいっぱい（展開はカード内スクロール） */
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card {
+  align-self: stretch;
+  min-height: calc(100vh - 190px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card > summary {
+  flex: 0 0 auto;
+}
+
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+/* SUMMARY: 対応履歴を中央で高さいっぱいに使う */
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .support-history-card {
+  align-self: stretch;
+  min-height: calc(100vh - 190px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .support-history-card .service-plan-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.support-chat {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.support-chat-list {
+  max-height: 260px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.support-chat-item {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  padding: 8px 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.support-chat-item .meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: rgba(233, 238, 248, 0.7);
+}
+
+.support-chat-item .msg {
+  font-size: 13px;
+  color: rgba(233, 238, 248, 0.95);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.support-chat-compose {
+  display: grid;
+  gap: 8px;
+}
+
+.support-chat-compose textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  max-height: 160px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: rgba(255,255,255,0.92);
+}
+
+.support-chat-compose button {
+  justify-self: end;
+}
+
+.support-thread-row {
+  display: grid;
+  gap: 10px;
+}
+
+.support-thread-log .lbl {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.72);
+  margin-bottom: 6px;
+}
+
+.support-thread-log .support-chat-list {
+  max-height: 180px;
+}
+
+/* SUMMARY: ストレージも高さいっぱい */
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .souko-card {
+  align-self: stretch;
+  min-height: calc(100vh - 190px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .souko-card .filelist {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .souko-card .filelist-rows {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  align-content: start;
 }
 
 .card-sub {
@@ -645,6 +797,14 @@
   }
   .service-plan-title .s {
     max-width: 74vw;
+  }
+  .souko-file-card {
+    min-height: 0;
+  }
+  .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card,
+  .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .support-history-card,
+  .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .souko-card {
+    min-height: 0;
   }
 }
 .card {
@@ -868,6 +1028,73 @@
   margin-bottom: 8px;
 }
 
+.souko-file-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.18);
+  min-height: 210px;
+}
+
+.souko-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.souko-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.souko-thumb .kind {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: rgba(233, 238, 248, 0.86);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.08);
+}
+
+.souko-file-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.souko-file-main .file-name {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+
+.souko-file-main .file-meta {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: rgba(233, 238, 248, 0.72);
+}
+
+.souko-file-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .file-name {
   font-size: 14px;
   margin-bottom: 6px;
@@ -892,7 +1119,8 @@
 
 @media (min-width: 980px) {
   .tenpo-karte-grid {
-    grid-template-columns: 1fr 1.2fr;
+    /* SUMMARY view: 左=基本情報 / 中央=対応履歴 / 右=ストレージ */
+    grid-template-columns: minmax(0, 3fr) minmax(0, 4fr) minmax(0, 3fr);
     align-items: start;
   }
 
@@ -909,6 +1137,10 @@
 
 @media (min-width: 1280px) {
   .haccp-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .karte-detail-layout .check-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -950,6 +1182,8 @@
 [data-theme="light"] .muted,
 [data-theme="light"] .muted-inline,
 [data-theme="light"] .file-meta,
+[data-theme="light"] .souko-file-main .file-meta,
+[data-theme="light"] .support-chat-item .meta,
 [data-theme="light"] .filelist-head .label,
 [data-theme="light"] .filelist-head .count {
   color: #475569;
@@ -978,6 +1212,9 @@
 [data-theme="light"] .service-search-item,
 [data-theme="light"] .service-search-selected,
 [data-theme="light"] .tag-chip,
+[data-theme="light"] .support-chat-item,
+[data-theme="light"] .souko-file-card,
+[data-theme="light"] .souko-thumb,
 [data-theme="light"] .card,
 [data-theme="light"] .card-sub,
 [data-theme="light"] .upload,
@@ -1017,10 +1254,18 @@
 [data-theme="light"] .tenpo-karte-page input,
 [data-theme="light"] .tenpo-karte-page select,
 [data-theme="light"] .tenpo-karte-page textarea,
-[data-theme="light"] .file-actions button {
+[data-theme="light"] .support-chat-compose textarea,
+[data-theme="light"] .file-actions button,
+[data-theme="light"] .souko-file-actions button {
   border-color: #cbd5e1;
   background: #ffffff;
   color: #111827;
+}
+
+[data-theme="light"] .souko-thumb .kind {
+  color: #1f2937;
+  border-color: #cbd5e1;
+  background: #f8fafc;
 }
 
 [data-theme="light"] .form-grid .f .lbl,

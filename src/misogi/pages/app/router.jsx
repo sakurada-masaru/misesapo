@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { Routes, Route, useParams, Navigate, Link } from 'react-router-dom';
+import { useAuth } from '../shared/auth/useAuth';
 
 /** /report/* は廃止。社内は /office/work-reports/:reportId を使用 */
 function ReportLegacyRedirect() {
@@ -32,6 +33,8 @@ import AdminMasterJinzaiPage from '../admin/pages/AdminMasterJinzaiPage';
 import AdminMasterJinzaiBushoPage from '../admin/pages/AdminMasterJinzaiBushoPage';
 import AdminMasterJinzaiShokushuPage from '../admin/pages/AdminMasterJinzaiShokushuPage';
 import AdminMasterServicePage from '../admin/pages/AdminMasterServicePage';
+import AdminMasterZaikoPage from '../admin/pages/AdminMasterZaikoPage';
+import AdminZaikoOrderPage from '../admin/pages/AdminZaikoOrderPage';
 import AdminTorihikisakiMeiboPage from '../admin/pages/AdminTorihikisakiMeiboPage';
 import AdminJinzaiMeiboPage from '../admin/pages/AdminJinzaiMeiboPage';
 import AdminTenpoKartePage from '../admin/pages/AdminTenpoKartePage';
@@ -58,9 +61,7 @@ import MyYoteiListPage from '../shared/ui/Yotei/MyYoteiListPage';
 import CustomerOnboardingPage from '../registration/CustomerOnboardingPage';
 import FlowGuideScreen from '../FlowGuideScreen';
 
-const MASTER_OWNER_EMAIL = 'sakurada@misesapo.co.jp';
-
-function readCurrentEmailFromToken() {
+function readCurrentTokenClaims() {
   try {
     const token =
       localStorage.getItem('idToken') ||
@@ -71,25 +72,38 @@ function readCurrentEmailFromToken() {
       localStorage.getItem('token') ||
       '';
     const parts = String(token || '').split('.');
-    if (parts.length < 2) return '';
+    if (parts.length < 2) return null;
     const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
-    const payload = JSON.parse(atob(padded));
-    return String(payload?.email || '').trim().toLowerCase();
+    return JSON.parse(atob(padded));
   } catch {
-    return '';
+    return null;
   }
 }
 
-function MasterOwnerOnly({ children }) {
-  const email = readCurrentEmailFromToken();
-  const ok = email === MASTER_OWNER_EMAIL;
+function hasAdminClaim(claims) {
+  if (!claims || typeof claims !== 'object') return false;
+  const normalize = (v) => String(v || '').trim().toLowerCase();
+  const listify = (v) => (Array.isArray(v) ? v : (v == null ? [] : [v]));
+  const groups = listify(claims['cognito:groups']).map(normalize);
+  const role = normalize(claims.role || claims['custom:role']);
+  const roles = listify(claims.roles).map(normalize);
+  return groups.includes('admin') || role === 'admin' || roles.includes('admin');
+}
+
+function AdminMasterOnly({ children }) {
+  const { authz, user } = useAuth();
+  const claims = readCurrentTokenClaims();
+  const roleList = (
+    Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : [])
+  ).map((r) => String(r || '').trim().toLowerCase());
+  const ok = !!authz?.isAdmin || hasAdminClaim(claims) || roleList.includes('admin');
   if (ok) return children;
   return (
     <div style={{ padding: 24, maxWidth: 640, margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.2rem', marginBottom: 12 }}>アクセス制限</h1>
       <p style={{ color: 'var(--muted)', marginBottom: 16 }}>
-        このページは管理マスタ権限（{MASTER_OWNER_EMAIL}）のみ表示可能です。
+        このページは管理者のみ表示可能です。
       </p>
       <p><Link to="/admin">管理トップへ戻る</Link></p>
     </div>
@@ -146,17 +160,19 @@ export default function Router() {
       <Route path="/admin/yakusoku" element={<AdminYakusokuPage />} />
       <Route path="/admin/ugoki" element={<AdminUgokiDashboardPage />} />
       <Route path="/admin/torihikisaki-touroku" element={<AdminTorihikisakiTourokuPage />} />
-      <Route path="/admin/torihikisaki-meibo" element={<MasterOwnerOnly><AdminTorihikisakiMeiboPage /></MasterOwnerOnly>} />
-      <Route path="/admin/jinzai-meibo" element={<MasterOwnerOnly><AdminJinzaiMeiboPage /></MasterOwnerOnly>} />
-      <Route path="/admin/tenpo/:tenpoId" element={<MasterOwnerOnly><AdminTenpoKartePage /></MasterOwnerOnly>} />
-      <Route path="/admin/master/torihikisaki" element={<MasterOwnerOnly><AdminMasterTorihikisakiPage /></MasterOwnerOnly>} />
-      <Route path="/admin/master/yagou" element={<MasterOwnerOnly><AdminMasterYagouPage /></MasterOwnerOnly>} />
-      <Route path="/admin/master/tenpo" element={<MasterOwnerOnly><AdminMasterTenpoPage /></MasterOwnerOnly>} />
-      <Route path="/admin/master/souko" element={<MasterOwnerOnly><AdminMasterSoukoPage /></MasterOwnerOnly>} />
-      <Route path="/admin/master/jinzai" element={<MasterOwnerOnly><AdminMasterJinzaiPage /></MasterOwnerOnly>} />
-      <Route path="/admin/master/jinzai-busho" element={<MasterOwnerOnly><AdminMasterJinzaiBushoPage /></MasterOwnerOnly>} />
-      <Route path="/admin/master/jinzai-shokushu" element={<MasterOwnerOnly><AdminMasterJinzaiShokushuPage /></MasterOwnerOnly>} />
-      <Route path="/admin/master/service" element={<MasterOwnerOnly><AdminMasterServicePage /></MasterOwnerOnly>} />
+      <Route path="/admin/torihikisaki-meibo" element={<AdminMasterOnly><AdminTorihikisakiMeiboPage /></AdminMasterOnly>} />
+      <Route path="/admin/jinzai-meibo" element={<AdminMasterOnly><AdminJinzaiMeiboPage /></AdminMasterOnly>} />
+      <Route path="/admin/tenpo/:tenpoId" element={<AdminMasterOnly><AdminTenpoKartePage /></AdminMasterOnly>} />
+      <Route path="/admin/master/torihikisaki" element={<AdminMasterOnly><AdminMasterTorihikisakiPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/yagou" element={<AdminMasterOnly><AdminMasterYagouPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/tenpo" element={<AdminMasterOnly><AdminMasterTenpoPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/souko" element={<AdminMasterOnly><AdminMasterSoukoPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/jinzai" element={<AdminMasterOnly><AdminMasterJinzaiPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/jinzai-busho" element={<AdminMasterOnly><AdminMasterJinzaiBushoPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/jinzai-shokushu" element={<AdminMasterOnly><AdminMasterJinzaiShokushuPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/service" element={<AdminMasterOnly><AdminMasterServicePage /></AdminMasterOnly>} />
+      <Route path="/admin/master/zaiko" element={<AdminMasterOnly><AdminMasterZaikoPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/zaiko-order" element={<AdminMasterOnly><AdminZaikoOrderPage /></AdminMasterOnly>} />
       <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />
       <Route path="/admin/houkoku/:reportId" element={<AdminHoukokuDetailPage />} />
       <Route path="/admin/kadai" element={<AdminKadaiListPage />} />

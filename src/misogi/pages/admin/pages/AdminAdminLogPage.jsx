@@ -198,7 +198,7 @@ function filterTaskOptions(taskOptions, query) {
 
 function normalizeTaskOptions(parents) {
   const items = Array.isArray(parents?.kadai) ? parents.kadai : [];
-  const filtered = items.filter((x) => String(x?.category || '') !== 'admin_log');
+  const filtered = items.filter((x) => !isAdminLogRow(x));
   const mapped = filtered.map((x) => ({
     value: String(x?.kadai_id || ''),
     label: `${String(x?.kadai_id || '')} ${String(x?.name || '').trim() || '課題'}`.trim(),
@@ -220,22 +220,52 @@ function formatJpDateTime(value) {
   return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
 }
 
+function normalizeToken(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_\-]/g, '');
+}
+
+function isAdminLogRow(row) {
+  const listScopeToken = normalizeToken(row?.list_scope);
+  const categoryToken = normalizeToken(row?.category);
+  const sourceToken = normalizeToken(row?.source);
+  const tagToken = normalizeToken(row?.log_type || row?.type || row?.kind);
+
+  const allow = new Set([
+    'kanrilog',
+    'adminlog',
+    'admindiary',
+    'diary',
+    '管理ログ',
+    '管理日誌',
+  ].map((v) => normalizeToken(v)));
+
+  return allow.has(listScopeToken) || allow.has(categoryToken) || allow.has(sourceToken) || allow.has(tagToken);
+}
+
 export default function AdminAdminLogPage() {
-  const [selectedDate, setSelectedDate] = useState(todayYmd());
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const t = todayYmd();
+    return `${t.slice(0, 7)}-01`;
+  });
   const [detailDrafts, setDetailDrafts] = useState({});
   const [tomorrowDrafts, setTomorrowDrafts] = useState({});
   // related_kadai_ids は自由入力（検索/タグ運用は廃止）
-  const selectedYmd = useMemo(() => normalizeYmd(selectedDate) || todayYmd(), [selectedDate]);
-  const dayList = useMemo(() => monthDays(selectedDate), [selectedDate]);
+  const selectedYm = useMemo(() => {
+    const ymd = normalizeYmd(selectedMonth) || todayYmd();
+    return ymd.slice(0, 7);
+  }, [selectedMonth]);
   const monthLabel = useMemo(() => {
-    const [y, m] = String(selectedDate || '').split('-');
+    const [y, m] = String(selectedYm || '').split('-');
     return `${y || ''}年${Number(m || 0)}月`;
-  }, [selectedDate]);
+  }, [selectedYm]);
 
   const appendTaskToPlan = (baseText, task) => {
     const current = String(baseText || '').trim();
     const taskId = String(task?.kadai_id || '').trim();
-    const taskTitle = String(task?.name || '').trim() || '課題';
+    const taskTitle = String(task?.name || '').trim() || 'タスク';
     if (!taskId) return current;
     const line = `- ${taskId} ${taskTitle}`;
     if (!current) return line;
@@ -245,67 +275,37 @@ export default function AdminAdminLogPage() {
 
   return (
     <AdminMasterBase
-      title="管理ログ提出（日誌/PR）"
+      title="管理日誌提出"
       pageClassName="admin-admin-log-page"
-      resource="kadai"
-      idKey="kadai_id"
-      // NOTE: API 側の scan 順が不定なため、admin_log は reported_at で絞って取得する。
-      // (全件scan+UIフィルタだと limit 範囲外で「データがありません」になりやすい)
-      listLimit={200}
-      fixedQuery={{ category: 'admin_log', jotai: 'yuko', reported_at: selectedYmd }}
+      resource="kanri_log"
+      idKey="kanri_log_id"
+      listLimit={1000}
+      fixedQuery={{ jotai: 'yuko' }}
+      clientFilter={(row) => {
+        const reportedAt = normalizeYmd(row?.reported_at || row?.date || row?.created_at || '');
+        const ym = reportedAt ? reportedAt.slice(0, 7) : '';
+        const inMonth = ym === selectedYm;
+        return inMonth && isAdminLogRow(row);
+      }}
       renderHeaderExtra={() => (
-        <div className="admin-log-date-strip" aria-label="管理ログ 日付選択">
+        <div className="admin-log-date-strip" aria-label="管理日誌 月別一覧">
           <div className="admin-log-date-inline">
-            <div className="admin-log-month-switch" aria-label="管理ログ 月切替">
-              <button
-                type="button"
-                onClick={() => setSelectedDate(shiftMonth(selectedDate, -1))}
-                title="前月"
-              >
-                ← 前月
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDate(todayYmd())}
-                title="今月"
-              >
-                今月
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDate(shiftMonth(selectedDate, 1))}
-                title="翌月"
-              >
-                翌月 →
-              </button>
+            <div className="admin-log-month-switch" aria-label="管理日誌 月切替">
+              <button type="button" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, -1))}>← 前月</button>
+              <button type="button" onClick={() => setSelectedMonth(`${todayYmd().slice(0, 7)}-01`)}>今月</button>
+              <button type="button" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, 1))}>翌月 →</button>
             </div>
-            <div className="admin-log-date-strip-head">{monthLabel} 日付選択</div>
-            <div className="admin-log-date-scroll">
-              {dayList.map((d) => {
-                const day = String(d).slice(-2).replace(/^0/, '');
-                const isActive = normalizeYmd(d) === selectedYmd;
-                const isToday = normalizeYmd(d) === normalizeYmd(todayYmd());
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    className={`admin-log-date-chip ${isActive ? 'active' : ''} ${isToday ? 'is-today' : ''}`}
-                    onClick={() => setSelectedDate(d)}
-                    title={d}
-                  >
-                    {day}
-                  </button>
-                );
-              })}
-            </div>
+            <div className="admin-log-date-strip-head">{monthLabel} 提出分一覧</div>
           </div>
         </div>
       )}
       fixedNewValues={{
-        category: 'admin_log',
+        list_scope: 'kanri_log',
+        category: 'kanri_log',
+        log_type: 'kanri_log',
         status: 'open',
         task_state: 'mikanryo',
-        source: 'internal',
+        source: 'kanri_log',
         reported_at: todayYmd(),
         reported_by: '管理',
         jotai: 'yuko',
@@ -324,12 +324,16 @@ export default function AdminAdminLogPage() {
       }}
       normalizeEditingModel={(model) => {
         const m = { ...(model || {}) };
+        m.list_scope = 'kanri_log';
+        m.category = 'kanri_log';
+        m.log_type = 'kanri_log';
+        m.source = 'kanri_log';
         const body = String(m.request || '').trim();
         if (!String(m.name || '').trim()) {
           const first = body
             ? body.split('\n').map((v) => String(v).trim()).filter(Boolean)[0] || ''
             : '';
-          m.name = first ? first.slice(0, 60) : `管理ログ ${String(m.reported_at || todayYmd())}`;
+          m.name = first ? first.slice(0, 60) : `管理日誌 ${String(m.reported_at || todayYmd())}`;
         }
         m.related_kadai_ids = parseRelatedIds(m.related_kadai_ids).join(', ');
         return m;
@@ -338,7 +342,7 @@ export default function AdminAdminLogPage() {
         return (
           <div className="admin-log-related-box">
             <div className="admin-log-related-head">
-              <div>関連課題（自由入力）</div>
+              <div>関連タスク（自由入力）</div>
             </div>
             <div style={{ marginTop: 8 }}>
               <textarea
@@ -353,9 +357,9 @@ export default function AdminAdminLogPage() {
       }}
       localSearch={{
         label: '検索',
-        placeholder: '日付/提出者/PR本文/明日の予定/関連課題で検索',
+        placeholder: '日付/提出者/日誌本文/明日の予定/関連タスクで検索',
         keys: [
-          'kadai_id',
+          'kanri_log_id',
           'reported_at',
           'reported_by',
           'work_time',
@@ -406,7 +410,7 @@ export default function AdminAdminLogPage() {
                 <div className="v">{formatJpDateTime(row?.updated_at)}</div>
               </div>
               <div className="kadai-detail-row">
-                <div className="k">関連課題</div>
+                <div className="k">関連タスク</div>
                 <div className="v">
                   {relatedIds.length ? relatedIds.join(', ') : '-'}
                 </div>
@@ -430,7 +434,7 @@ export default function AdminAdminLogPage() {
 
               <div className="admin-log-note-grid">
                 <div>
-                  <div className="kadai-detail-note-head">PR本文（日誌）</div>
+                  <div className="kadai-detail-note-head">日誌本文</div>
                   <textarea
                     value={draft}
                     onChange={(e) => setDetailDrafts((prev) => ({ ...prev, [rowId]: e.target.value }))}
@@ -479,7 +483,7 @@ export default function AdminAdminLogPage() {
 
               <div className="admin-log-related-box">
                 <div className="admin-log-related-head">
-                  <div>関連課題（自由入力）</div>
+                  <div>関連タスク（自由入力）</div>
                 </div>
                 <div style={{ marginTop: 8 }}>
                   <textarea
@@ -544,7 +548,7 @@ export default function AdminAdminLogPage() {
         },
         {
           key: 'request',
-          label: 'PR本文（日誌）',
+          label: '日誌本文',
           type: 'textarea',
           rows: 22,
           modalColSpan: 2,
@@ -571,7 +575,7 @@ export default function AdminAdminLogPage() {
         },
         {
           key: 'related_kadai_ids',
-          label: '関連課題',
+          label: '関連タスク',
           modalColSpan: 4,
           render: (v) => {
             const raw = parseRelatedIds(v).join(', ');

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 // Hamburger / admin-top are provided by GlobalNav.
 import './admin-tenpo-karte.css';
 
@@ -138,6 +138,13 @@ function normalizeMonths(months) {
     .map((m) => Number(m))
     .filter((m) => Number.isFinite(m) && m >= 1 && m <= 12);
   return Array.from(new Set(arr)).sort((a, b) => a - b);
+}
+
+function findOptionLabel(options, value) {
+  const vv = String(value || '').trim();
+  if (!vv) return '';
+  const hit = (Array.isArray(options) ? options : []).find((o) => String(o?.value || '') === vv);
+  return String(hit?.label || vv);
 }
 
 function ServiceSearchSelect({ services, selectedId, onSelect }) {
@@ -329,6 +336,54 @@ const SUPPORT_HISTORY_CATEGORIES = [
   { value: 'other', label: 'その他' },
 ];
 
+const SUPPORT_HISTORY_STATUS_OPTIONS = [
+  { value: 'open', label: '対応中' },
+  { value: 'waiting', label: '回答待ち' },
+  { value: 'resolved', label: '完了' },
+  { value: 'hold', label: '保留' },
+];
+
+const REPORT_FIELD_REQUIRED_OPTIONS = [
+  { key: 'clock_in_out', label: '到着/開始/終了 打刻' },
+  { key: 'work_items', label: '作業項目チェック' },
+  { key: 'before_photo', label: '施工前写真' },
+  { key: 'after_photo', label: '施工後写真' },
+  { key: 'chemical_usage', label: '薬剤/資材 使用記録' },
+  { key: 'anomaly_flag', label: '異常フラグ（破損/害虫/漏水）' },
+  { key: 'exception_note', label: '例外メモ（短文）' },
+];
+
+const CUSTOMER_REPORT_REQUIRED_OPTIONS = [
+  { key: 'scope_summary', label: '実施範囲サマリ' },
+  { key: 'before_after_set', label: 'Before/After 写真' },
+  { key: 'issue_summary', label: '異常/注意点' },
+  { key: 'next_plan', label: '次回予定/引継ぎ' },
+  { key: 'signoff', label: '確認者/署名' },
+];
+
+const REPORT_DUE_OPTIONS = [
+  { value: 'same_day', label: '当日中' },
+  { value: 'next_morning', label: '翌朝まで' },
+  { value: 'next_day', label: '翌営業日' },
+];
+
+const CHEMICAL_UNIT_OPTIONS = [
+  { value: 'ml', label: 'ml' },
+  { value: 'l', label: 'L' },
+  { value: 'g', label: 'g' },
+  { value: 'kg', label: 'kg' },
+  { value: 'sheet', label: '枚' },
+  { value: 'other', label: 'その他' },
+];
+
+function makeHistoryId() {
+  return `HST#${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function makeSupportLogId() {
+  return `LOG#${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function authHeaders() {
   const legacyAuth = (() => {
     try {
@@ -457,6 +512,15 @@ function clampStr(v, max) {
   return s.length > max ? s.slice(0, max) : s;
 }
 
+function toBool(v, fallback = false) {
+  if (v === true || v === false) return v;
+  const s = String(v || '').trim().toLowerCase();
+  if (!s) return fallback;
+  if (['1', 'true', 'yes', 'y', 'on'].includes(s)) return true;
+  if (['0', 'false', 'no', 'n', 'off'].includes(s)) return false;
+  return fallback;
+}
+
 function normArr(v) {
   if (Array.isArray(v)) return v.filter(Boolean).map((x) => String(x).trim()).filter(Boolean);
   const s = String(v || '').trim();
@@ -499,6 +563,28 @@ function uniqTags(arr, max = 8) {
     out.push(v);
   });
   return out.slice(0, max);
+}
+
+function fileExt(fileName, key = '') {
+  const base = String(fileName || key || '').trim();
+  const i = base.lastIndexOf('.');
+  if (i < 0) return '';
+  return base.slice(i + 1).toLowerCase();
+}
+
+function isImageContentType(ct = '') {
+  return String(ct || '').toLowerCase().startsWith('image/');
+}
+
+function fileKindLabel(fileName, contentType, key) {
+  if (isImageContentType(contentType)) return 'IMG';
+  const ext = fileExt(fileName, key);
+  if (ext === 'pdf') return 'PDF';
+  if (['doc', 'docx'].includes(ext)) return 'DOC';
+  if (['xls', 'xlsx', 'csv'].includes(ext)) return 'SHEET';
+  if (['zip', 'rar', '7z'].includes(ext)) return 'ZIP';
+  if (['mp4', 'mov', 'avi'].includes(ext)) return 'VIDEO';
+  return ext ? ext.toUpperCase() : 'FILE';
 }
 
 function sortSupportHistoryNewestFirst(list) {
@@ -594,7 +680,6 @@ async function fetchTenpoDetail({ tenpoId, parentKeys }) {
 
 export default function AdminTenpoKartePage() {
   const { tenpoId: tenpoIdParam } = useParams();
-  const navigate = useNavigate();
   const location = useLocation();
 
   const tenpoId = decodeURIComponent(String(tenpoIdParam || '')).trim();
@@ -625,6 +710,7 @@ export default function AdminTenpoKartePage() {
   const [lastUpload, setLastUpload] = useState(null);
   const [soukoView, setSoukoView] = useState('teishutsu'); // teishutsu|naibu|all
   const [uploadKubun, setUploadKubun] = useState('teishutsu'); // default for new upload
+  const [supportReplyInputs, setSupportReplyInputs] = useState({});
 
   const headerTitle = useMemo(() => {
     const tName = String(tenpo?.name || '').trim();
@@ -633,6 +719,50 @@ export default function AdminTenpoKartePage() {
     if (tName) return tName;
     return tenpoId;
   }, [tenpo?.name, yagou?.name, tenpoId]);
+
+  const salesOwnerSummary = useMemo(() => {
+    const rows = uniqTags([
+      String(karteDetail?.spec?.sales_owner || '').trim(),
+      String(tenpo?.tantou_name || '').trim(),
+    ], 4);
+    return rows.join(' / ') || '—';
+  }, [karteDetail?.spec?.sales_owner, tenpo?.tantou_name]);
+
+  const servicePlanSummary = useMemo(() => {
+    const planFrequency = String(karteDetail?.plan?.plan_frequency || '').trim();
+    const planFrequencyLabel = findOptionLabel(PLAN_FREQUENCY_OPTIONS, planFrequency);
+    const rows = (Array.isArray(karteDetail?.service_plan) ? karteDetail.service_plan : [])
+      .map((sp) => {
+        const nm = String(sp?.service_name || sp?.service_id || '').trim();
+        const cycle = findOptionLabel(SERVICE_CYCLE_OPTIONS, sp?.cycle);
+        return [nm, cycle].filter(Boolean).join(' ');
+      })
+      .filter(Boolean);
+    const menus = rows.slice(0, 3).join(' / ');
+    const rest = rows.length > 3 ? ` ほか${rows.length - 3}件` : '';
+    const chunks = [];
+    if (planFrequencyLabel) chunks.push(`頻度: ${planFrequencyLabel}`);
+    if (menus) chunks.push(`メニュー: ${menus}${rest}`);
+    return chunks.join(' | ') || '—';
+  }, [karteDetail?.plan?.plan_frequency, karteDetail?.service_plan]);
+
+  const reportProfileSummary = useMemo(() => {
+    const rp = karteDetail?.report_profile || {};
+    const fieldCount = REPORT_FIELD_REQUIRED_OPTIONS.filter((o) => toBool(rp?.field_required?.[o.key], false)).length;
+    const customerCount = CUSTOMER_REPORT_REQUIRED_OPTIONS.filter((o) => toBool(rp?.customer_required?.[o.key], false)).length;
+    const chkCount = (Array.isArray(rp?.checkpoints) ? rp.checkpoints : [])
+      .filter((cp) => String(cp?.jotai || 'yuko') !== 'torikeshi').length;
+    return `現場必須 ${fieldCount} / 顧客必須 ${customerCount} / 基準 ${chkCount}`;
+  }, [karteDetail?.report_profile]);
+
+  const chemicalUsageSummary = useMemo(() => {
+    const rows = (Array.isArray(karteDetail?.report_profile?.chemicals) ? karteDetail.report_profile.chemicals : [])
+      .filter((r) => String(r?.jotai || 'yuko') !== 'torikeshi' && String(r?.name || '').trim());
+    if (rows.length === 0) return '未設定';
+    const labels = rows.slice(0, 3).map((r) => String(r?.name || '').trim()).filter(Boolean);
+    const rest = rows.length > 3 ? ` ほか${rows.length - 3}件` : '';
+    return `${labels.join(' / ')}${rest}`;
+  }, [karteDetail?.report_profile?.chemicals]);
 
   const files = useMemo(() => {
     const arr = safeArr(souko?.files);
@@ -644,6 +774,7 @@ export default function AdminTenpoKartePage() {
         size: Number(it?.size || 0) || 0,
         uploaded_at: String(it?.uploaded_at || '').trim(),
         kubun: String(it?.kubun || '').trim(), // teishutsu|naibu|'' (legacy)
+        preview_url: String(it?.preview_url || it?.get_url || it?.url || '').trim(),
       }))
       .filter((it) => it.key);
   }, [souko]);
@@ -803,6 +934,7 @@ export default function AdminTenpoKartePage() {
     if (!Array.isArray(next.staff_history)) next.staff_history = [];
     if (!Array.isArray(next.service_plan)) next.service_plan = [];
     if (!Array.isArray(next.support_history)) next.support_history = [];
+    if (!next.spec.sales_owner) next.spec.sales_owner = clampStr(tenpo?.tantou_name || '', 80);
 
     // Free text is allowed only as short exception memo (admin ops).
     next.memo = clampStr(next.memo || '', 200);
@@ -831,20 +963,81 @@ export default function AdminTenpoKartePage() {
 
     // Support history: short, structured notes only.
     next.support_history = sortSupportHistoryNewestFirst((Array.isArray(next.support_history) ? next.support_history : [])
-      .map((it) => {
+      .map((it, idx) => {
         const legacyNote = clampStr(it?.note || '', 200);
         const topic = clampStr(it?.topic || '', 60) || (legacyNote ? clampStr(legacyNote, 60) : '');
+        const logs = (Array.isArray(it?.logs) ? it.logs : [])
+          .map((lg, lgIdx) => ({
+            log_id: clampStr(lg?.log_id || '', 64) || `${makeSupportLogId()}_${lgIdx}`,
+            at: clampStr(lg?.at || '', 40) || nowIso(),
+            by: clampStr(lg?.by || '', 80) || 'unknown',
+            message: clampStr(lg?.message || '', 200),
+            jotai: clampStr(lg?.jotai || 'yuko', 20) || 'yuko',
+          }))
+          .filter((lg) => lg.message && lg.jotai !== 'torikeshi')
+          .sort((a, b) => String(a?.at || '').localeCompare(String(b?.at || '')));
         return {
+          history_id: clampStr(it?.history_id || '', 64) || `${makeHistoryId()}_${idx}`,
           date: clampStr(it?.date || '', 20),
           category: clampStr(it?.category || 'ops', 20),
+          status: clampStr(it?.status || 'open', 20) || 'open',
+          owner: clampStr(it?.owner || it?.handled_by || '', 80),
+          due_date: clampStr(it?.due_date || '', 20),
           requested_by: clampStr(it?.requested_by || it?.from || '', 40),
           handled_by: clampStr(it?.handled_by || it?.by || '', 80),
           topic,
           action: clampStr(it?.action || '', 120),
           outcome: clampStr(it?.outcome || '', 120),
+          logs,
         };
       })
-      .filter((it) => it.date || it.topic || it.action || it.outcome || it.requested_by || it.handled_by));
+      .filter((it) => (
+        it.date || it.topic || it.action || it.outcome || it.requested_by || it.handled_by || (Array.isArray(it.logs) && it.logs.length > 0)
+      )));
+
+    // Report profile: 現場報告/顧客報告がこのカルテだけで成立するための設計値
+    if (!next.report_profile || typeof next.report_profile !== 'object') next.report_profile = {};
+    const rp = { ...(next.report_profile || {}) };
+    if (!rp.field_required || typeof rp.field_required !== 'object') rp.field_required = {};
+    if (!rp.customer_required || typeof rp.customer_required !== 'object') rp.customer_required = {};
+    REPORT_FIELD_REQUIRED_OPTIONS.forEach((o) => {
+      rp.field_required[o.key] = toBool(rp.field_required[o.key], ['clock_in_out', 'work_items', 'before_photo', 'after_photo'].includes(o.key));
+    });
+    CUSTOMER_REPORT_REQUIRED_OPTIONS.forEach((o) => {
+      rp.customer_required[o.key] = toBool(rp.customer_required[o.key], ['scope_summary', 'before_after_set', 'issue_summary'].includes(o.key));
+    });
+    rp.standard_team_size = clampStr(rp.standard_team_size || '', 8);
+    rp.standard_duration_min = clampStr(rp.standard_duration_min || '', 8);
+    rp.report_language = clampStr(rp.report_language || 'ja', 8);
+    rp.customer_contact_channel = clampStr(rp.customer_contact_channel || '', 80);
+    const due = clampStr(rp.customer_due || 'same_day', 20);
+    rp.customer_due = REPORT_DUE_OPTIONS.some((o) => o.value === due) ? due : 'same_day';
+    rp.report_scope = clampStr(rp.report_scope || '', 200);
+    rp.customer_note = clampStr(rp.customer_note || '', 200);
+    rp.chemicals = (Array.isArray(rp.chemicals) ? rp.chemicals : [])
+      .map((ch, chIdx) => ({
+        chemical_id: clampStr(ch?.chemical_id || '', 64) || `CHM#${chIdx + 1}`,
+        name: clampStr(ch?.name || '', 80),
+        dilution: clampStr(ch?.dilution || '', 40),
+        amount: clampStr(ch?.amount || '', 16),
+        unit: clampStr(ch?.unit || 'ml', 12) || 'ml',
+        target: clampStr(ch?.target || '', 80),
+        note: clampStr(ch?.note || '', 120),
+        jotai: clampStr(ch?.jotai || 'yuko', 20) || 'yuko',
+      }))
+      .filter((ch) => ch.jotai !== 'torikeshi' && (ch.name || ch.target || ch.amount));
+    rp.checkpoints = (Array.isArray(rp.checkpoints) ? rp.checkpoints : [])
+      .map((cp, cpIdx) => ({
+        checkpoint_id: clampStr(cp?.checkpoint_id || '', 64) || `CHK#${cpIdx + 1}`,
+        zone: clampStr(cp?.zone || '', 60),
+        item: clampStr(cp?.item || '', 80),
+        standard: clampStr(cp?.standard || '', 120),
+        photo_required: toBool(cp?.photo_required, true),
+        customer_visible: toBool(cp?.customer_visible, true),
+        jotai: clampStr(cp?.jotai || 'yuko', 20) || 'yuko',
+      }))
+      .filter((cp) => cp.jotai !== 'torikeshi' && (cp.zone || cp.item || cp.standard));
+    next.report_profile = rp;
 
     // HACCP defaults
     if (!next.haccp || typeof next.haccp !== 'object') next.haccp = {};
@@ -858,7 +1051,7 @@ export default function AdminTenpoKartePage() {
     });
     next.haccp.version = 1;
     return next;
-  }, [karteDetail]);
+  }, [karteDetail, tenpo?.tantou_name]);
 
   const ensureHaccpDefaults = useCallback(() => {
     const base = karteDetail && typeof karteDetail === 'object' ? karteDetail : {};
@@ -1033,13 +1226,18 @@ export default function AdminTenpoKartePage() {
       const cur = Array.isArray(next.support_history) ? next.support_history.slice() : [];
       // Newest-first
       cur.unshift({
+        history_id: makeHistoryId(),
         date: todayDate(),
         category: 'ops',
+        status: 'open',
+        owner: clampStr(handledBy, 80),
+        due_date: '',
         requested_by: '',
         handled_by: clampStr(handledBy, 80),
         topic: '',
         action: '',
         outcome: '',
+        logs: [],
       });
       next.support_history = cur;
       return next;
@@ -1057,6 +1255,9 @@ export default function AdminTenpoKartePage() {
       const touchedDate = p.date !== undefined;
       if (touchedDate) it.date = clampStr(p.date, 20);
       if (p.category !== undefined) it.category = clampStr(p.category, 20);
+      if (p.status !== undefined) it.status = clampStr(p.status, 20);
+      if (p.owner !== undefined) it.owner = clampStr(p.owner, 80);
+      if (p.due_date !== undefined) it.due_date = clampStr(p.due_date, 20);
       if (p.requested_by !== undefined) it.requested_by = clampStr(p.requested_by, 40);
       if (p.handled_by !== undefined) it.handled_by = clampStr(p.handled_by, 120);
       if (p.topic !== undefined) it.topic = clampStr(p.topic, 60);
@@ -1074,6 +1275,175 @@ export default function AdminTenpoKartePage() {
       const next = { ...base };
       const cur = Array.isArray(next.support_history) ? next.support_history.slice() : [];
       next.support_history = cur.filter((_, i) => i !== index);
+      return next;
+    });
+  }, []);
+
+  const setSupportReplyInput = useCallback((historyId, value) => {
+    const key = String(historyId || '').trim();
+    if (!key) return;
+    setSupportReplyInputs((prev) => ({ ...(prev || {}), [key]: value }));
+  }, []);
+
+  const addSupportHistoryLog = useCallback((index) => {
+    const row = Array.isArray(karteDetail?.support_history) ? karteDetail.support_history[index] : null;
+    const historyId = String(row?.history_id || '').trim();
+    if (!historyId) return;
+    const message = clampStr(String(supportReplyInputs?.[historyId] || '').trim(), 200);
+    if (!message) return;
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const cur = Array.isArray(next.support_history) ? next.support_history.slice() : [];
+      if (!cur[index]) return next;
+      const it = { ...(cur[index] || {}) };
+      const logs = Array.isArray(it.logs) ? it.logs.slice() : [];
+      logs.push({
+        log_id: makeSupportLogId(),
+        at: nowIso(),
+        by: clampStr(getCurrentUserName() || 'unknown', 80),
+        message,
+        jotai: 'yuko',
+      });
+      it.logs = logs;
+      if (!String(it.status || '').trim()) it.status = 'open';
+      cur[index] = it;
+      next.support_history = cur;
+      return next;
+    });
+    setSupportReplyInputs((prev) => ({ ...(prev || {}), [historyId]: '' }));
+  }, [karteDetail?.support_history, supportReplyInputs]);
+
+  const setReportProfileField = useCallback((key, value) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const rp = { ...(next.report_profile || {}) };
+      rp[key] = value;
+      next.report_profile = rp;
+      return next;
+    });
+  }, []);
+
+  const setReportProfileFlag = useCallback((group, key, value) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const rp = { ...(next.report_profile || {}) };
+      const g = { ...(rp[group] || {}) };
+      g[key] = Boolean(value);
+      rp[group] = g;
+      next.report_profile = rp;
+      return next;
+    });
+  }, []);
+
+  const addReportCheckpoint = useCallback(() => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const rp = { ...(next.report_profile || {}) };
+      const rows = Array.isArray(rp.checkpoints) ? rp.checkpoints.slice() : [];
+      rows.push({
+        checkpoint_id: `CHK#${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+        zone: '',
+        item: '',
+        standard: '',
+        photo_required: true,
+        customer_visible: true,
+        jotai: 'yuko',
+      });
+      rp.checkpoints = rows;
+      next.report_profile = rp;
+      return next;
+    });
+  }, []);
+
+  const updateReportCheckpoint = useCallback((index, patch) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const rp = { ...(next.report_profile || {}) };
+      const rows = Array.isArray(rp.checkpoints) ? rp.checkpoints.slice() : [];
+      if (!rows[index]) return next;
+      const row = { ...(rows[index] || {}) };
+      const p = patch || {};
+      if (p.zone !== undefined) row.zone = clampStr(p.zone, 60);
+      if (p.item !== undefined) row.item = clampStr(p.item, 80);
+      if (p.standard !== undefined) row.standard = clampStr(p.standard, 120);
+      if (p.photo_required !== undefined) row.photo_required = Boolean(p.photo_required);
+      if (p.customer_visible !== undefined) row.customer_visible = Boolean(p.customer_visible);
+      rows[index] = row;
+      rp.checkpoints = rows;
+      next.report_profile = rp;
+      return next;
+    });
+  }, []);
+
+  const removeReportCheckpoint = useCallback((index) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const rp = { ...(next.report_profile || {}) };
+      const rows = Array.isArray(rp.checkpoints) ? rp.checkpoints.slice() : [];
+      rp.checkpoints = rows.filter((_, i) => i !== index);
+      next.report_profile = rp;
+      return next;
+    });
+  }, []);
+
+  const addReportChemical = useCallback(() => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const rp = { ...(next.report_profile || {}) };
+      const rows = Array.isArray(rp.chemicals) ? rp.chemicals.slice() : [];
+      rows.push({
+        chemical_id: `CHM#${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+        name: '',
+        dilution: '',
+        amount: '',
+        unit: 'ml',
+        target: '',
+        note: '',
+        jotai: 'yuko',
+      });
+      rp.chemicals = rows;
+      next.report_profile = rp;
+      return next;
+    });
+  }, []);
+
+  const updateReportChemical = useCallback((index, patch) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const rp = { ...(next.report_profile || {}) };
+      const rows = Array.isArray(rp.chemicals) ? rp.chemicals.slice() : [];
+      if (!rows[index]) return next;
+      const row = { ...(rows[index] || {}) };
+      const p = patch || {};
+      if (p.name !== undefined) row.name = clampStr(p.name, 80);
+      if (p.dilution !== undefined) row.dilution = clampStr(p.dilution, 40);
+      if (p.amount !== undefined) row.amount = clampStr(p.amount, 16);
+      if (p.unit !== undefined) row.unit = clampStr(p.unit, 12);
+      if (p.target !== undefined) row.target = clampStr(p.target, 80);
+      if (p.note !== undefined) row.note = clampStr(p.note, 120);
+      rows[index] = row;
+      rp.chemicals = rows;
+      next.report_profile = rp;
+      return next;
+    });
+  }, []);
+
+  const removeReportChemical = useCallback((index) => {
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const rp = { ...(next.report_profile || {}) };
+      const rows = Array.isArray(rp.chemicals) ? rp.chemicals.slice() : [];
+      rp.chemicals = rows.filter((_, i) => i !== index);
+      next.report_profile = rp;
       return next;
     });
   }, []);
@@ -1205,6 +1575,7 @@ export default function AdminTenpoKartePage() {
           size: file.size || 0,
           uploaded_at: nowIso(),
           kubun: uploadKubun,
+          preview_url: String(presign?.get_url || ''),
         },
       ];
       const updated = await apiPutJson(`/master/souko/${encodeURIComponent(pickId(sk, 'souko_id'))}`, {
@@ -1249,10 +1620,9 @@ export default function AdminTenpoKartePage() {
         <div className="left">
           <div className="admin-top-left">
             {/* GlobalNav handles navigation */}
-            <button className="back" onClick={() => navigate(-1)}>← 戻る</button>
           </div>
           <div className="titles">
-            <div className="kicker">お客様詳細（患者カルテ風）</div>
+            <div className="kicker">お客様詳細</div>
             <h1>{headerTitle}</h1>
             <div className="pathline">
               <span className="seg">
@@ -1284,7 +1654,7 @@ export default function AdminTenpoKartePage() {
 
       {karteView === KARTE_VIEW.SUMMARY ? (
         <div className="tenpo-karte-grid">
-          <details className="card card-accordion">
+          <details className="card card-accordion basic-info-card" open>
             <summary>
               <div className="sum-left">
                 <div className="sum-title">基本情報</div>
@@ -1345,6 +1715,30 @@ export default function AdminTenpoKartePage() {
                   <div className="v-main">
                     {String(karteDetail?.spec?.contact_method || tenpo?.contact_method || '').trim() || '—'}
                   </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">営業担当</div>
+                <div className="v">
+                  <div className="v-main">{salesOwnerSummary}</div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">サービスプラン</div>
+                <div className="v">
+                  <div className="v-main">{servicePlanSummary}</div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">報告設計</div>
+                <div className="v">
+                  <div className="v-main">{reportProfileSummary}</div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">使用薬剤</div>
+                <div className="v">
+                  <div className="v-main">{chemicalUsageSummary}</div>
                 </div>
               </div>
 
@@ -1424,7 +1818,170 @@ export default function AdminTenpoKartePage() {
             </div>
           </details>
 
-          <section className="card">
+          <section className="card support-history-card">
+            <div className="card-title-row">
+              <div className="card-title">対応履歴（短文・200字）</div>
+              <div className="seg-tabs">
+                <button type="button" onClick={addSupportHistory}>追加</button>
+                <button type="button" onClick={saveKarteDetailNow} disabled={savingKarteDetail}>
+                  {savingKarteDetail ? '保存中...' : '保存'}
+                </button>
+              </div>
+            </div>
+            <div className="muted small">
+              目的: 事実ベースで「いつ/誰から/何の件/誰が対応/何をした/結果」を短く残す。長文の経緯・評価・提案は書かない（例外メモへ）。
+            </div>
+            {Array.isArray(karteDetail?.support_history) && karteDetail.support_history.length > 0 ? (
+              <div className="service-plan-list" style={{ marginTop: 10 }}>
+                {karteDetail.support_history.map((h, i) => {
+                  const historyId = String(h?.history_id || '').trim() || `legacy-${i}`;
+                  const logs = (Array.isArray(h?.logs) ? h.logs : [])
+                    .filter((lg) => String(lg?.jotai || 'yuko') !== 'torikeshi' && String(lg?.message || '').trim())
+                    .sort((a, b) => String(a?.at || '').localeCompare(String(b?.at || '')));
+                  return (
+                    <div key={historyId} className="service-plan-row support-thread-row">
+                      <div className="service-plan-head">
+                        <div className="service-plan-title">
+                          履歴 {karteDetail.support_history.length - i}
+                          <span className="muted-inline">返信 {logs.length}件</span>
+                        </div>
+                        <button type="button" onClick={() => removeSupportHistory(i)}>×</button>
+                      </div>
+                      <div className="form-grid">
+                        <label className="f">
+                          <div className="lbl">日付</div>
+                          <input
+                            type="date"
+                            value={String(h?.date || '')}
+                            onChange={(e) => updateSupportHistory(i, { date: e.target.value })}
+                          />
+                        </label>
+                        <label className="f">
+                          <div className="lbl">区分</div>
+                          <select
+                            value={String(h?.category || 'ops')}
+                            onChange={(e) => updateSupportHistory(i, { category: e.target.value })}
+                          >
+                            {SUPPORT_HISTORY_CATEGORIES.map((o) => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="f">
+                          <div className="lbl">状態</div>
+                          <select
+                            value={String(h?.status || 'open')}
+                            onChange={(e) => updateSupportHistory(i, { status: e.target.value })}
+                          >
+                            {SUPPORT_HISTORY_STATUS_OPTIONS.map((o) => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="f">
+                          <div className="lbl">期限</div>
+                          <input
+                            type="date"
+                            value={String(h?.due_date || '')}
+                            onChange={(e) => updateSupportHistory(i, { due_date: e.target.value })}
+                          />
+                        </label>
+                        <label className="f" style={{ gridColumn: '1 / -1' }}>
+                          <div className="lbl">起点（誰から/誰が言った）</div>
+                          <input
+                            value={String(h?.requested_by || '')}
+                            onChange={(e) => updateSupportHistory(i, { requested_by: e.target.value })}
+                            placeholder="例: 先方店長 / 本部 / 櫻田"
+                          />
+                        </label>
+                        <label className="f">
+                          <div className="lbl">主担当</div>
+                          <input
+                            value={String(h?.owner || h?.handled_by || '')}
+                            onChange={(e) => updateSupportHistory(i, { owner: e.target.value, handled_by: e.target.value })}
+                            placeholder="例: 櫻田 / 太田 / 清掃班長"
+                          />
+                        </label>
+                        <label className="f">
+                          <div className="lbl">対応（誰が対応した）</div>
+                          <input
+                            value={String(h?.handled_by || '')}
+                            onChange={(e) => updateSupportHistory(i, { handled_by: e.target.value })}
+                            placeholder="複数可"
+                          />
+                        </label>
+                      </div>
+                      <div className="form-grid" style={{ marginTop: 10 }}>
+                        <label className="f" style={{ gridColumn: '1 / -1' }}>
+                          <div className="lbl">何の件か（要件）</div>
+                          <input
+                            value={String(h?.topic || '')}
+                            onChange={(e) => updateSupportHistory(i, { topic: e.target.value })}
+                            placeholder="例: 窓の仕上がり / 臭い / 鍵運用 / 請求"
+                          />
+                        </label>
+                        <label className="f" style={{ gridColumn: '1 / -1' }}>
+                          <div className="lbl">何をした（対応）</div>
+                          <input
+                            value={String(h?.action || '')}
+                            onChange={(e) => updateSupportHistory(i, { action: e.target.value })}
+                            placeholder="例: 乾拭き徹底を指示 / 再清掃を手配"
+                          />
+                        </label>
+                        <label className="f" style={{ gridColumn: '1 / -1' }}>
+                          <div className="lbl">どうなった（結果）</div>
+                          <input
+                            value={String(h?.outcome || '')}
+                            onChange={(e) => updateSupportHistory(i, { outcome: e.target.value })}
+                            placeholder="例: 次回確認 / 了承 / 保留"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="support-thread-log">
+                        <div className="lbl">やり取り（この履歴内）</div>
+                        <div className="support-chat-list">
+                          {logs.length === 0 ? (
+                            <div className="muted">返信なし</div>
+                          ) : (
+                            logs.map((lg) => (
+                              <div key={lg.log_id || `${lg.at}-${lg.by}`} className="support-chat-item">
+                                <div className="meta">
+                                  <span>{fmtDateTimeJst(lg.at) || lg.at || '—'}</span>
+                                  <span>{lg.by || 'unknown'}</span>
+                                </div>
+                                <div className="msg">{lg.message}</div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <div className="support-chat-compose">
+                          <textarea
+                            rows={2}
+                            maxLength={200}
+                            value={String(supportReplyInputs?.[historyId] || '')}
+                            onChange={(e) => setSupportReplyInput(historyId, e.target.value)}
+                            placeholder="この履歴への返信を入力（200字）"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => addSupportHistoryLog(i)}
+                            disabled={!String(supportReplyInputs?.[historyId] || '').trim()}
+                          >
+                            返信を追加
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="muted" style={{ marginTop: 10 }}>未登録</div>
+            )}
+          </section>
+
+          <section className="card souko-card">
             <div className="card-title-row">
               <div className="card-title">ストレージ（souko）</div>
               <div className="seg-tabs" role="tablist" aria-label="souko view">
@@ -1510,16 +2067,26 @@ export default function AdminTenpoKartePage() {
               ) : (
                 <div className="filelist-rows">
                   {visibleFiles.slice().reverse().map((f) => (
-                    <div className="file-row" key={f.key}>
-                      <div className="file-main">
-                        <div className="file-name">{f.file_name || '(no name)'}</div>
+                    <div className="souko-file-card" key={f.key}>
+                      <div className="souko-thumb">
+                        {isImageContentType(f.content_type) && f.preview_url ? (
+                          <img src={f.preview_url} alt={f.file_name || f.key} loading="lazy" />
+                        ) : (
+                          <span className="kind">{fileKindLabel(f.file_name, f.content_type, f.key)}</span>
+                        )}
+                      </div>
+                      <div className="souko-file-main">
+                        <div className="file-name" title={f.file_name || f.key}>{f.file_name || '(no name)'}</div>
                         <div className="file-meta">
-                          <code className="file-key">{f.key}</code>
-                          <span className="file-sub">{f.content_type || ''}{f.size ? ` / ${f.size} bytes` : ''}</span>
+                          <span className="file-sub">{f.content_type || 'content-type: -'}</span>
+                          <span className="file-sub">{f.size ? `${f.size} bytes` : '-'}</span>
                           <span className="file-sub">{f.uploaded_at || ''}</span>
                         </div>
                       </div>
-                      <div className="file-actions">
+                      <div className="souko-file-actions">
+                        {f.preview_url ? (
+                          <a className="link" href={f.preview_url} target="_blank" rel="noreferrer">開く</a>
+                        ) : null}
                         <button onClick={() => copy(f.key)}>キーコピー</button>
                       </div>
                     </div>
@@ -1603,6 +2170,14 @@ export default function AdminTenpoKartePage() {
                         value={String(karteDetail?.spec?.contact_method || '')}
                         onChange={(e) => setKarteField('spec.contact_method', clampStr(e.target.value, 80))}
                         placeholder="例: 電話 / LINE / SMS / メール"
+                      />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">営業担当</div>
+                      <input
+                        value={String(karteDetail?.spec?.sales_owner || '')}
+                        onChange={(e) => setKarteField('spec.sales_owner', clampStr(e.target.value, 80))}
+                        placeholder="例: 櫻田 / 田中"
                       />
                     </label>
                   </div>
@@ -1717,6 +2292,186 @@ export default function AdminTenpoKartePage() {
 
                 <section className="card card-sub">
                   <div className="card-title-row">
+                    <div className="card-title">報告設計（現場 → 管理/顧客）</div>
+                  </div>
+                  <div className="muted small">
+                    清掃員の報告要件と、お客様提出物の必須要件をここで固定します。自由記述ではなく、構造化項目中心で運用。
+                  </div>
+                  <div className="form-grid" style={{ marginTop: 10 }}>
+                    <label className="f">
+                      <div className="lbl">標準作業人数</div>
+                      <input
+                        value={String(karteDetail?.report_profile?.standard_team_size || '')}
+                        onChange={(e) => setReportProfileField('standard_team_size', clampStr(e.target.value, 8))}
+                        placeholder="例: 2"
+                      />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">標準作業時間（分）</div>
+                      <input
+                        value={String(karteDetail?.report_profile?.standard_duration_min || '')}
+                        onChange={(e) => setReportProfileField('standard_duration_min', clampStr(e.target.value, 8))}
+                        placeholder="例: 180"
+                      />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">現場報告言語</div>
+                      <select
+                        value={String(karteDetail?.report_profile?.report_language || 'ja')}
+                        onChange={(e) => setReportProfileField('report_language', e.target.value)}
+                      >
+                        <option value="ja">日本語</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="en">English</option>
+                      </select>
+                    </label>
+                    <label className="f">
+                      <div className="lbl">顧客提出期限</div>
+                      <select
+                        value={String(karteDetail?.report_profile?.customer_due || 'same_day')}
+                        onChange={(e) => setReportProfileField('customer_due', e.target.value)}
+                      >
+                        {REPORT_DUE_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="f" style={{ gridColumn: '1 / -1' }}>
+                      <div className="lbl">現場報告スコープ（短文）</div>
+                      <input
+                        value={String(karteDetail?.report_profile?.report_scope || '')}
+                        onChange={(e) => setReportProfileField('report_scope', clampStr(e.target.value, 200))}
+                        placeholder="例: 厨房/ホール/トイレ/ダクト"
+                      />
+                    </label>
+                    <label className="f" style={{ gridColumn: '1 / -1' }}>
+                      <div className="lbl">顧客連絡チャネル</div>
+                      <input
+                        value={String(karteDetail?.report_profile?.customer_contact_channel || '')}
+                        onChange={(e) => setReportProfileField('customer_contact_channel', clampStr(e.target.value, 80))}
+                        placeholder="例: メール提出 / LINEワークス"
+                      />
+                    </label>
+                  </div>
+                  <div className="subhead">現場報告の必須項目</div>
+                  <div className="check-grid">
+                    {REPORT_FIELD_REQUIRED_OPTIONS.map((o) => (
+                      <label key={o.key} className="chk">
+                        <input
+                          type="checkbox"
+                          checked={toBool(karteDetail?.report_profile?.field_required?.[o.key], false)}
+                          onChange={(e) => setReportProfileFlag('field_required', o.key, e.target.checked)}
+                        />
+                        <span>{o.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="subhead">顧客報告の必須項目</div>
+                  <div className="check-grid">
+                    {CUSTOMER_REPORT_REQUIRED_OPTIONS.map((o) => (
+                      <label key={o.key} className="chk">
+                        <input
+                          type="checkbox"
+                          checked={toBool(karteDetail?.report_profile?.customer_required?.[o.key], false)}
+                          onChange={(e) => setReportProfileFlag('customer_required', o.key, e.target.checked)}
+                        />
+                        <span>{o.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="form-grid" style={{ marginTop: 10 }}>
+                    <label className="f" style={{ gridColumn: '1 / -1' }}>
+                      <div className="lbl">顧客向け追記（短文）</div>
+                      <input
+                        value={String(karteDetail?.report_profile?.customer_note || '')}
+                        onChange={(e) => setReportProfileField('customer_note', clampStr(e.target.value, 200))}
+                        placeholder="例: 異常時は即日連絡、写真3枚以上添付"
+                      />
+                    </label>
+                  </div>
+                </section>
+
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">使用薬剤・資材（追記）</div>
+                    <div className="seg-tabs">
+                      <button type="button" onClick={addReportChemical}>追加</button>
+                    </div>
+                  </div>
+                  <div className="muted small">
+                    現場で使う薬剤と使用量の基準。報告時に選択/追記しやすいよう、名称・希釈・対象箇所を固定します。
+                  </div>
+                  {Array.isArray(karteDetail?.report_profile?.chemicals) && karteDetail.report_profile.chemicals.length > 0 ? (
+                    <div className="service-plan-list" style={{ marginTop: 10 }}>
+                      {karteDetail.report_profile.chemicals.map((ch, i) => (
+                        <div key={ch?.chemical_id || i} className="service-plan-row">
+                          <div className="service-plan-head">
+                            <div className="service-plan-title">薬剤 {i + 1}</div>
+                            <button type="button" onClick={() => removeReportChemical(i)}>×</button>
+                          </div>
+                          <div className="form-grid">
+                            <label className="f">
+                              <div className="lbl">名称</div>
+                              <input
+                                value={String(ch?.name || '')}
+                                onChange={(e) => updateReportChemical(i, { name: e.target.value })}
+                                placeholder="例: アルカリ洗剤A"
+                              />
+                            </label>
+                            <label className="f">
+                              <div className="lbl">希釈率</div>
+                              <input
+                                value={String(ch?.dilution || '')}
+                                onChange={(e) => updateReportChemical(i, { dilution: e.target.value })}
+                                placeholder="例: 10倍"
+                              />
+                            </label>
+                            <label className="f">
+                              <div className="lbl">使用量</div>
+                              <input
+                                value={String(ch?.amount || '')}
+                                onChange={(e) => updateReportChemical(i, { amount: e.target.value })}
+                                placeholder="例: 200"
+                              />
+                            </label>
+                            <label className="f">
+                              <div className="lbl">単位</div>
+                              <select
+                                value={String(ch?.unit || 'ml')}
+                                onChange={(e) => updateReportChemical(i, { unit: e.target.value })}
+                              >
+                                {CHEMICAL_UNIT_OPTIONS.map((u) => (
+                                  <option key={u.value} value={u.value}>{u.label}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="f" style={{ gridColumn: '1 / -1' }}>
+                              <div className="lbl">対象箇所</div>
+                              <input
+                                value={String(ch?.target || '')}
+                                onChange={(e) => updateReportChemical(i, { target: e.target.value })}
+                                placeholder="例: 厨房床 / グリスト / 壁面"
+                              />
+                            </label>
+                            <label className="f" style={{ gridColumn: '1 / -1' }}>
+                              <div className="lbl">備考（短文）</div>
+                              <input
+                                value={String(ch?.note || '')}
+                                onChange={(e) => updateReportChemical(i, { note: e.target.value })}
+                                placeholder="例: 塩素系と混合不可"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted" style={{ marginTop: 10 }}>未登録</div>
+                  )}
+                </section>
+
+                <section className="card card-sub">
+                  <div className="card-title-row">
                     <div className="card-title">担当履歴</div>
                     <div className="seg-tabs">
                       <button type="button" onClick={addStaffHistory}>追加</button>
@@ -1800,95 +2555,6 @@ export default function AdminTenpoKartePage() {
               </div>
 
               <div className="karte-detail-col karte-detail-col-right">
-                <section className="card card-sub support-history-card">
-                  <div className="card-title-row">
-                    <div className="card-title">対応履歴（短文・200字）</div>
-                    <div className="seg-tabs">
-                      <button type="button" onClick={addSupportHistory}>追加</button>
-                    </div>
-                  </div>
-                  <div className="muted small">
-                    目的: 事実ベースで「いつ/誰から/何の件/誰が対応/何をした/結果」を短く残す。長文の経緯・評価・提案は書かない（例外メモへ）。
-                  </div>
-                  {Array.isArray(karteDetail?.support_history) && karteDetail.support_history.length > 0 ? (
-                    <div className="service-plan-list" style={{ marginTop: 10 }}>
-                      {karteDetail.support_history.map((h, i) => (
-                        <div key={i} className="service-plan-row">
-                          <div className="service-plan-head">
-                            <div className="service-plan-title">履歴 {karteDetail.support_history.length - i}</div>
-                            <button type="button" onClick={() => removeSupportHistory(i)}>×</button>
-                          </div>
-                          <div className="form-grid">
-                            <label className="f">
-                              <div className="lbl">日付</div>
-                              <input
-                                type="date"
-                                value={String(h?.date || '')}
-                                onChange={(e) => updateSupportHistory(i, { date: e.target.value })}
-                              />
-                            </label>
-                            <label className="f">
-                              <div className="lbl">区分</div>
-                              <select
-                                value={String(h?.category || 'ops')}
-                                onChange={(e) => updateSupportHistory(i, { category: e.target.value })}
-                              >
-                                {SUPPORT_HISTORY_CATEGORIES.map((o) => (
-                                  <option key={o.value} value={o.value}>{o.label}</option>
-                                ))}
-                              </select>
-                            </label>
-                            <label className="f" style={{ gridColumn: '1 / -1' }}>
-                              <div className="lbl">起点（誰から/誰が言った）</div>
-                              <input
-                                value={String(h?.requested_by || '')}
-                                onChange={(e) => updateSupportHistory(i, { requested_by: e.target.value })}
-                                placeholder="例: 先方店長 / 本部 / 櫻田"
-                              />
-                            </label>
-                            <label className="f" style={{ gridColumn: '1 / -1' }}>
-                              <div className="lbl">対応（誰が対応した）</div>
-                              <input
-                                value={String(h?.handled_by || '')}
-                                onChange={(e) => updateSupportHistory(i, { handled_by: e.target.value })}
-                                placeholder="例: 櫻田 / 太田 / 清掃班長"
-                              />
-                            </label>
-                          </div>
-                          <div className="form-grid" style={{ marginTop: 10 }}>
-                            <label className="f" style={{ gridColumn: '1 / -1' }}>
-                              <div className="lbl">何の件か（要件）</div>
-                              <input
-                                value={String(h?.topic || '')}
-                                onChange={(e) => updateSupportHistory(i, { topic: e.target.value })}
-                                placeholder="例: 窓の仕上がり / 臭い / 鍵運用 / 請求"
-                              />
-                            </label>
-                            <label className="f" style={{ gridColumn: '1 / -1' }}>
-                              <div className="lbl">何をした（対応）</div>
-                              <input
-                                value={String(h?.action || '')}
-                                onChange={(e) => updateSupportHistory(i, { action: e.target.value })}
-                                placeholder="例: 乾拭き徹底を指示 / 再清掃を手配"
-                              />
-                            </label>
-                            <label className="f" style={{ gridColumn: '1 / -1' }}>
-                              <div className="lbl">どうなった（結果）</div>
-                              <input
-                                value={String(h?.outcome || '')}
-                                onChange={(e) => updateSupportHistory(i, { outcome: e.target.value })}
-                                placeholder="例: 次回確認 / 了承 / 保留"
-                              />
-                            </label>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="muted" style={{ marginTop: 10 }}>未登録</div>
-                  )}
-                </section>
-
                 <section className="card card-sub">
                   <div className="card-title-row">
                     <div className="card-title">例外メモ（任意・200字）</div>
@@ -1925,6 +2591,78 @@ export default function AdminTenpoKartePage() {
                   </div>
                 ) : (
                   <div className="muted">未登録</div>
+                )}
+              </section>
+
+              <section className="card card-sub card-wide">
+                <div className="card-title-row">
+                  <div className="card-title">清掃チェックポイント（報告基準）</div>
+                  <div className="seg-tabs">
+                    <button type="button" onClick={addReportCheckpoint}>追加</button>
+                  </div>
+                </div>
+                <div className="muted small">
+                  各ゾーンで「何を見て、どの状態なら完了か」を固定。現場報告・顧客報告の両方で同じ基準を使う。
+                </div>
+                {Array.isArray(karteDetail?.report_profile?.checkpoints) && karteDetail.report_profile.checkpoints.length > 0 ? (
+                  <div className="service-plan-list" style={{ marginTop: 10 }}>
+                    {karteDetail.report_profile.checkpoints.map((cp, i) => (
+                      <div key={cp?.checkpoint_id || i} className="service-plan-row">
+                        <div className="service-plan-head">
+                          <div className="service-plan-title">基準 {i + 1}</div>
+                          <button type="button" onClick={() => removeReportCheckpoint(i)}>×</button>
+                        </div>
+                        <div className="form-grid">
+                          <label className="f">
+                            <div className="lbl">ゾーン</div>
+                            <input
+                              value={String(cp?.zone || '')}
+                              onChange={(e) => updateReportCheckpoint(i, { zone: e.target.value })}
+                              placeholder="例: 厨房 / ホール / トイレ"
+                            />
+                          </label>
+                          <label className="f">
+                            <div className="lbl">項目</div>
+                            <input
+                              value={String(cp?.item || '')}
+                              onChange={(e) => updateReportCheckpoint(i, { item: e.target.value })}
+                              placeholder="例: グリスト / 床 / 壁面"
+                            />
+                          </label>
+                          <label className="f" style={{ gridColumn: '1 / -1' }}>
+                            <div className="lbl">完了基準（短文）</div>
+                            <input
+                              value={String(cp?.standard || '')}
+                              onChange={(e) => updateReportCheckpoint(i, { standard: e.target.value })}
+                              placeholder="例: 油膜なし、手触りべたつきなし"
+                            />
+                          </label>
+                          <label className="f">
+                            <div className="lbl">写真必須</div>
+                            <select
+                              value={toBool(cp?.photo_required, true) ? 'y' : 'n'}
+                              onChange={(e) => updateReportCheckpoint(i, { photo_required: e.target.value === 'y' })}
+                            >
+                              <option value="y">必須</option>
+                              <option value="n">任意</option>
+                            </select>
+                          </label>
+                          <label className="f">
+                            <div className="lbl">顧客に表示</div>
+                            <select
+                              value={toBool(cp?.customer_visible, true) ? 'y' : 'n'}
+                              onChange={(e) => updateReportCheckpoint(i, { customer_visible: e.target.value === 'y' })}
+                            >
+                              <option value="y">表示する</option>
+                              <option value="n">内部のみ</option>
+                            </select>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="muted" style={{ marginTop: 10 }}>未登録</div>
                 )}
               </section>
 
