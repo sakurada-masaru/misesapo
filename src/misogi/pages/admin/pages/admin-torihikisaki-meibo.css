@@ -713,6 +713,33 @@
 }
 
 @media (max-width: 980px) {
+  .meibo-head {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .meibo-head-left {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .meibo-head-right {
+    flex: 1 1 100%;
+    width: 100%;
+    margin-top: 2px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .meibo-head-right input {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
   .meibo-body {
     grid-template-columns: 1fr;
   }

@@ -697,7 +697,14 @@ export default function AdminTenpoKartePage() {
   const [torihikisaki, setTorihikisaki] = useState(null);
   const [yagou, setYagou] = useState(null);
   const [souko, setSouko] = useState(null); // 1 tenpo = 1 souko (運用想定)
-  const [karteView, setKarteView] = useState(KARTE_VIEW.SUMMARY);
+  const [isMobileLayout, setIsMobileLayout] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
+  ));
+  const [karteView, setKarteView] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
+      ? KARTE_VIEW.DETAIL
+      : KARTE_VIEW.SUMMARY
+  ));
 
   // tenpo.karte_detail の編集ドラフト（master API PUTはmergeなので差分PUTで安全に保存できる）
   const [karteDetail, setKarteDetail] = useState(null);
@@ -719,6 +726,19 @@ export default function AdminTenpoKartePage() {
     if (tName) return tName;
     return tenpoId;
   }, [tenpo?.name, yagou?.name, tenpoId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const mq = window.matchMedia('(max-width: 900px)');
+    const sync = () => setIsMobileLayout(!!mq.matches);
+    sync();
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', sync);
+      return () => mq.removeEventListener('change', sync);
+    }
+    mq.addListener(sync);
+    return () => mq.removeListener(sync);
+  }, []);
 
   const salesOwnerSummary = useMemo(() => {
     const rows = uniqTags([
@@ -1615,7 +1635,7 @@ export default function AdminTenpoKartePage() {
   }
 
   return (
-    <div className="tenpo-karte-page">
+    <div className={`tenpo-karte-page ${isMobileLayout ? 'is-mobile' : ''}`}>
       <header className="tenpo-karte-head">
         <div className="left">
           <div className="admin-top-left">
@@ -1653,7 +1673,19 @@ export default function AdminTenpoKartePage() {
       </datalist>
 
       {karteView === KARTE_VIEW.SUMMARY ? (
-        <div className="tenpo-karte-grid">
+        <>
+          {isMobileLayout ? (
+            <div className="tenpo-mobile-cta">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setKarteView(KARTE_VIEW.DETAIL)}
+              >
+                カルテ入力を開く
+              </button>
+            </div>
+          ) : null}
+          <div className="tenpo-karte-grid">
           <details className="card card-accordion basic-info-card" open>
             <summary>
               <div className="sum-left">
@@ -2095,7 +2127,8 @@ export default function AdminTenpoKartePage() {
               )}
             </div>
           </section>
-        </div>
+          </div>
+        </>
       ) : (
         <div className="tenpo-karte-grid tenpo-karte-grid-detail">
           <section className="card card-large card-full">
@@ -2114,12 +2147,22 @@ export default function AdminTenpoKartePage() {
                   ) : null}
                 </div>
               </div>
-              <div className="seg-tabs">
+              <div className="seg-tabs tenpo-detail-save-top">
                 <button type="button" onClick={saveKarteDetailNow} disabled={savingKarteDetail}>
                   {savingKarteDetail ? '保存中...' : '保存'}
                 </button>
               </div>
             </div>
+            {isMobileLayout ? (
+              <div className="tenpo-mobile-form-actions">
+                <button type="button" className="btn-primary" onClick={saveKarteDetailNow} disabled={savingKarteDetail}>
+                  {savingKarteDetail ? '保存中...' : '保存'}
+                </button>
+                <button type="button" onClick={() => setKarteView(KARTE_VIEW.SUMMARY)}>
+                  概要へ
+                </button>
+              </div>
+            ) : null}
 
             <div className="karte-detail-layout">
               <div className="karte-detail-col">
