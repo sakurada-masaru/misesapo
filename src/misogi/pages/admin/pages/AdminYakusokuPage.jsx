@@ -85,7 +85,7 @@ export default function AdminYakusokuPage() {
   const [servicePickerOpen, setServicePickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const normalizeServiceConcept = useCallback((svc) => {
+  const getServiceCategoryMeta = useCallback((svc) => {
     const raw = String(svc?.category_concept || svc?.category || '').trim();
     const map = {
       kitchen_haccp: '厨房衛生(HACCP)',
@@ -98,8 +98,16 @@ export default function AdminYakusokuPage() {
       pest: '害虫',
       other: 'その他',
     };
-    return map[raw] || raw || '未分類';
+    const normalized = raw || 'uncategorized';
+    return {
+      key: normalized,
+      label: map[raw] || raw || '未分類',
+    };
   }, []);
+
+  const normalizeServiceConcept = useCallback((svc) => {
+    return getServiceCategoryMeta(svc).label;
+  }, [getServiceCategoryMeta]);
 
   const normalizeTaskMatrix = useCallback((taskMatrix) => {
     const base = createEmptyTaskMatrix();
@@ -231,6 +239,7 @@ export default function AdminYakusokuPage() {
       service_name: '',
       service_ids: [],
       service_names: [],
+      service_category: 'all',
       service_query: '',
       monthly_quota: 1,
       price: 0,
@@ -254,6 +263,7 @@ export default function AdminYakusokuPage() {
       ...item,
       ...multiSvc,
       isNew: false,
+      service_category: 'all',
       service_query: item?.service_name || item?.service_id || '',
       onsite_flags: normalizeOnsiteFlags(item?.onsite_flags),
       recurrence_rule: {
@@ -322,6 +332,32 @@ export default function AdminYakusokuPage() {
         return blob.includes(q);
       });
   }, [modalData?.service_query, services]);
+
+  const serviceGroups = useMemo(() => {
+    const bucket = new Map();
+    for (const svc of serviceCandidates) {
+      const meta = getServiceCategoryMeta(svc);
+      if (!bucket.has(meta.key)) {
+        bucket.set(meta.key, { key: meta.key, label: meta.label, items: [] });
+      }
+      bucket.get(meta.key).items.push(svc);
+    }
+    const order = ['kitchen_haccp', 'aircon', 'floor', 'pest_hygiene', 'maintenance', 'window_wall', 'cleaning', 'pest', 'other', 'uncategorized'];
+    return Array.from(bucket.values()).sort((a, b) => {
+      const ai = order.indexOf(a.key);
+      const bi = order.indexOf(b.key);
+      if (ai >= 0 && bi >= 0) return ai - bi;
+      if (ai >= 0) return -1;
+      if (bi >= 0) return 1;
+      return a.label.localeCompare(b.label, 'ja');
+    });
+  }, [serviceCandidates, getServiceCategoryMeta]);
+
+  const activeServiceCategory = String(modalData?.service_category || 'all');
+  const visibleServiceGroups = useMemo(() => {
+    if (activeServiceCategory === 'all') return serviceGroups;
+    return serviceGroups.filter((g) => g.key === activeServiceCategory);
+  }, [activeServiceCategory, serviceGroups]);
 
   const setBucketDraft = useCallback((bucketKey, value) => {
     setModalData((prev) => ({
@@ -441,6 +477,7 @@ export default function AdminYakusokuPage() {
       payload.service_id = serviceIds[0] || '';
       payload.service_name = serviceNames[0] || '';
       delete payload.service_query;
+      delete payload.service_category;
       delete payload._tagDrafts;
       delete payload._tagSearch;
       payload.onsite_flags = normalizeOnsiteFlags(payload.onsite_flags);
@@ -811,30 +848,59 @@ export default function AdminYakusokuPage() {
               placeholder="サービス名 / ID / カテゴリで検索"
             />
             <div className="yakusoku-service-count">候補 {serviceCandidates.length} 件 / 選択 {(modalData.service_ids || []).length} 件</div>
+            <div className="yakusoku-service-categories">
+              <button
+                type="button"
+                className={`yakusoku-service-cat-chip ${activeServiceCategory === 'all' ? 'active' : ''}`}
+                onClick={() => setModalData({ ...modalData, service_category: 'all' })}
+              >
+                全カテゴリ ({serviceCandidates.length})
+              </button>
+              {serviceGroups.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  className={`yakusoku-service-cat-chip ${activeServiceCategory === g.key ? 'active' : ''}`}
+                  onClick={() => setModalData({ ...modalData, service_category: g.key })}
+                >
+                  {g.label} ({g.items.length})
+                </button>
+              ))}
+            </div>
             <div className="yakusoku-service-list">
-              {serviceCandidates.map((s) => {
-                const sid = String(s?.service_id || '');
-                const checked = Array.isArray(modalData?.service_ids) && modalData.service_ids.includes(sid);
-                return (
-                  <label key={sid} className="yakusoku-service-option">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => toggleServiceSelection(s, e.target.checked)}
-                    />
-                    <div>
-                      <div style={{ fontWeight: 700 }}>{String(s?.name || sid)}</div>
-                      <div style={{ fontSize: 12, opacity: 0.82 }}>
-                        {normalizeServiceConcept(s)} / {String(s?.category || '未分類')}
-                      </div>
-                      <div style={{ fontSize: 11, opacity: 0.68 }}>
-                        {sid || '-'} ・ 標準単価 ¥{Number(s?.default_price || 0).toLocaleString()}
-                      </div>
-                    </div>
-                  </label>
-                );
-              })}
-              {!serviceCandidates.length ? (
+              {visibleServiceGroups.map((group) => (
+                <section key={group.key} className="yakusoku-service-group">
+                  <div className="yakusoku-service-group-head">
+                    <strong>{group.label}</strong>
+                    <span>{group.items.length}件</span>
+                  </div>
+                  <div className="yakusoku-service-group-grid">
+                    {group.items.map((s) => {
+                      const sid = String(s?.service_id || '');
+                      const checked = Array.isArray(modalData?.service_ids) && modalData.service_ids.includes(sid);
+                      return (
+                        <label key={sid} className="yakusoku-service-option">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => toggleServiceSelection(s, e.target.checked)}
+                          />
+                          <div>
+                            <div style={{ fontWeight: 700 }}>{String(s?.name || sid)}</div>
+                            <div style={{ fontSize: 12, opacity: 0.82 }}>
+                              {normalizeServiceConcept(s)} / {String(s?.category || '未分類')}
+                            </div>
+                            <div style={{ fontSize: 11, opacity: 0.68 }}>
+                              {sid || '-'} ・ 標準単価 ¥{Number(s?.default_price || 0).toLocaleString()}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+              {!visibleServiceGroups.length ? (
                 <div style={{ fontSize: 12, color: 'var(--muted)' }}>候補がありません。サービスマスタを確認してください。</div>
               ) : null}
             </div>

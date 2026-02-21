@@ -1622,13 +1622,70 @@
     color: var(--muted);
 }
 
+.yakusoku-service-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.yakusoku-service-cat-chip {
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(15, 23, 42, 0.45);
+    color: var(--text);
+    padding: 0 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.yakusoku-service-cat-chip.active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #eff6ff;
+    font-weight: 700;
+}
+
+[data-theme="light"] .yakusoku-service-cat-chip {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
 .yakusoku-service-list {
     max-height: calc(100vh - 210px);
     overflow: auto;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     padding-right: 2px;
+}
+
+.yakusoku-service-group {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px;
+    background: rgba(15, 23, 42, 0.28);
+}
+
+[data-theme="light"] .yakusoku-service-group {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.yakusoku-service-group-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 4px 8px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.yakusoku-service-group-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
 }
 
 .yakusoku-service-option {
@@ -1641,6 +1698,12 @@
     background: rgba(15, 23, 42, 0.45);
     padding: 10px;
     cursor: pointer;
+}
+
+[data-theme="light"] .yakusoku-service-option {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
 }
 
 .yakusoku-service-option input[type="checkbox"] {
@@ -1665,13 +1728,13 @@
 }
 
 @media (max-width: 1080px) {
-    .yakusoku-service-list {
+    .yakusoku-service-group-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 700px) {
-    .yakusoku-service-list {
+    .yakusoku-service-group-grid {
         grid-template-columns: 1fr;
     }
 }

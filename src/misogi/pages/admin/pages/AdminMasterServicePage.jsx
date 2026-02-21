@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminMasterBase from './AdminMasterBase';
+import { formatMasterDateTime } from './masterDateTime';
 
 const CATEGORY_OPTIONS = [
   { category: 'kitchen_haccp', name: '厨房衛生(HACCP)' },
@@ -120,6 +121,7 @@ export default function AdminMasterServicePage() {
           defaultValue: 0,
           format: formatYen,
         },
+        { key: 'touroku_at', label: '登録日時', readOnly: true, format: formatMasterDateTime },
       ]}
     />
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminMasterBase from './AdminMasterBase';
+import { formatMasterDateTime } from './masterDateTime';
 
 const CATEGORY_OPTIONS = [
   { value: 'cleaning', label: '清掃用品' },
@@ -72,8 +73,8 @@ export default function AdminMasterZaikoPage() {
         { key: 'reorder_point', label: '発注点', type: 'number', defaultValue: 0 },
         { key: 'supplier_name', label: '仕入先' },
         { key: 'memo', label: 'メモ', type: 'textarea', rows: 5, modalColSpan: 2 },
+        { key: 'touroku_at', label: '登録日時', readOnly: true, format: formatMasterDateTime },
       ]}
     />
   );
 }
-

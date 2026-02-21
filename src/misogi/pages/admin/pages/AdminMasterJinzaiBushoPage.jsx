@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminMasterBase from './AdminMasterBase';
+import { formatMasterDateTime } from './masterDateTime';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -22,6 +23,7 @@ export default function AdminMasterJinzaiBushoPage() {
       idKey="busho_id"
       fields={[
         { key: 'name', label: '部署名' },
+        { key: 'touroku_at', label: '登録日時', readOnly: true, format: formatMasterDateTime },
       ]}
     />
   );

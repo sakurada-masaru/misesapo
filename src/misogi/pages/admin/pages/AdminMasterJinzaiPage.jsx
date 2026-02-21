@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminMasterBase from './AdminMasterBase';
+import { formatMasterDateTime } from './masterDateTime';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -402,6 +403,7 @@ export default function AdminMasterJinzaiPage() {
         { key: 'email', label: 'メール' },
         { key: 'phone', label: '電話' },
         { key: 'kigyou_id', label: 'kigyou_id(旧/互換)' },
+        { key: 'touroku_at', label: '登録日時', readOnly: true, format: formatMasterDateTime },
       ]}
     />
   );

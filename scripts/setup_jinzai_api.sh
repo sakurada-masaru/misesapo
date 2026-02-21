@@ -93,6 +93,8 @@ JINZAI_ID="$(create_res "$ROOT_ID" "jinzai")"
 JINZAI_ITEM_ID="$(create_res "$JINZAI_ID" "{jinzai_id}")"
 BUSHO_ID="$(create_res "$JINZAI_ID" "busho")"
 SHOKUSHU_ID="$(create_res "$JINZAI_ID" "shokushu")"
+BUSHO_ITEM_ID="$(create_res "$BUSHO_ID" "{busho_id}")"
+SHOKUSHU_ITEM_ID="$(create_res "$SHOKUSHU_ID" "{shokushu_code}")"
 KABAN_COLL_ID="$(create_res "$JINZAI_ITEM_ID" "kaban")"
 KABAN_ITEM_ID="$(create_res "$KABAN_COLL_ID" "{jinzai_kaban_id}")"
 
@@ -111,6 +113,8 @@ for m in GET POST OPTIONS; do put_method_safe "$JINZAI_ID" "$m"; done
 for m in GET PUT DELETE OPTIONS; do put_method_safe "$JINZAI_ITEM_ID" "$m"; done
 for m in GET POST OPTIONS; do put_method_safe "$BUSHO_ID" "$m"; done
 for m in GET POST OPTIONS; do put_method_safe "$SHOKUSHU_ID" "$m"; done
+for m in GET PUT DELETE OPTIONS; do put_method_safe "$BUSHO_ITEM_ID" "$m"; done
+for m in GET PUT DELETE OPTIONS; do put_method_safe "$SHOKUSHU_ITEM_ID" "$m"; done
 for m in GET POST OPTIONS; do put_method_safe "$KABAN_COLL_ID" "$m"; done
 for m in PUT DELETE OPTIONS; do put_method_safe "$KABAN_ITEM_ID" "$m"; done
 
@@ -133,6 +137,8 @@ for m in GET POST OPTIONS; do put_integration_safe "$JINZAI_ID" "$m"; done
 for m in GET PUT DELETE OPTIONS; do put_integration_safe "$JINZAI_ITEM_ID" "$m"; done
 for m in GET POST OPTIONS; do put_integration_safe "$BUSHO_ID" "$m"; done
 for m in GET POST OPTIONS; do put_integration_safe "$SHOKUSHU_ID" "$m"; done
+for m in GET PUT DELETE OPTIONS; do put_integration_safe "$BUSHO_ITEM_ID" "$m"; done
+for m in GET PUT DELETE OPTIONS; do put_integration_safe "$SHOKUSHU_ITEM_ID" "$m"; done
 for m in GET POST OPTIONS; do put_integration_safe "$KABAN_COLL_ID" "$m"; done
 for m in PUT DELETE OPTIONS; do put_integration_safe "$KABAN_ITEM_ID" "$m"; done
 

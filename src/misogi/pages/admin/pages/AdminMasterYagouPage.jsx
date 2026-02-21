@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminMasterBase from './AdminMasterBase';
+import { formatMasterDateTime } from './masterDateTime';
 
 export default function AdminMasterYagouPage() {
   return (
@@ -11,11 +12,12 @@ export default function AdminMasterYagouPage() {
         { key: 'torihikisaki_id', label: '取引先', sourceKey: 'torihikisaki', valueKey: 'torihikisaki_id', labelKey: 'name' },
       ]}
   parentSources={{
-        torihikisaki: { resource: 'torihikisaki', query: { limit: 200 } },
+        torihikisaki: { resource: 'torihikisaki', query: { limit: 5000 } },
   }}
       fields={[
         { key: 'torihikisaki_id', label: '取引先', type: 'select', sourceKey: 'torihikisaki', valueKey: 'torihikisaki_id', labelKey: 'name' },
         { key: 'name', label: '屋号名' },
+        { key: 'touroku_at', label: '登録日時', readOnly: true, format: formatMasterDateTime },
       ]}
     />
   );

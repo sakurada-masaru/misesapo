@@ -51,6 +51,10 @@ ID_PREFIX = {
     "zaiko_hacchu": "HACCHU",
 }
 
+# 登録情報（取引先/屋号/店舗/倉庫）は連番採番にする。
+# 例: TORI#0001, YAGOU#0001, TENPO#0001, SOUKO#0001
+SEQUENTIAL_ID_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko"}
+
 TABLE_MAP = {
     "torihikisaki": os.environ.get("TABLE_TORIHIKISAKI", "torihikisaki"),
     "yagou": os.environ.get("TABLE_YAGOU", "yagou"),
@@ -115,8 +119,119 @@ def _record_id_from_event(event):
     return unquote(rid) if rid else None
 
 
+def _is_conditional_check_failed(err: Exception) -> bool:
+    code = ((getattr(err, "response", {}) or {}).get("Error", {}) or {}).get("Code", "")
+    if code == "ConditionalCheckFailedException":
+        return True
+    msg = str(err or "")
+    return "ConditionalCheckFailedException" in msg or "conditional request failed" in msg.lower()
+
+
+def _scan_max_numeric_suffix(collection: str) -> int:
+    table = TABLES[collection]
+    pk_name = PK_MAP[collection]
+    prefix = f"{ID_PREFIX[collection]}#"
+    max_num = 0
+    last_key = None
+    while True:
+        kwargs = {
+            "ProjectionExpression": pk_name,
+            "Limit": 1000,
+        }
+        if last_key:
+            kwargs["ExclusiveStartKey"] = last_key
+        res = table.scan(**kwargs)
+        for row in (res.get("Items") or []):
+            rid = str(row.get(pk_name) or "").strip()
+            if not rid.startswith(prefix):
+                continue
+            suffix = rid[len(prefix):]
+            if suffix.isdigit():
+                n = int(suffix)
+                if n > max_num:
+                    max_num = n
+        last_key = res.get("LastEvaluatedKey")
+        if not last_key:
+            break
+    return max_num
+
+
+def _scan_max_service_number() -> int:
+    table = TABLES["service"]
+    pk_name = PK_MAP["service"]
+    max_num = 0
+    last_key = None
+    while True:
+        kwargs = {
+            "ProjectionExpression": pk_name,
+            "Limit": 1000,
+        }
+        if last_key:
+            kwargs["ExclusiveStartKey"] = last_key
+        res = table.scan(**kwargs)
+        for row in (res.get("Items") or []):
+            rid = str(row.get(pk_name) or "").strip()
+            # 正式フォーマット: service_0001
+            lower = rid.lower()
+            if lower.startswith("service_"):
+                suffix = rid[len("service_"):]
+                if suffix.isdigit():
+                    n = int(suffix)
+                    if n > max_num:
+                        max_num = n
+                continue
+            # 旧/混在フォーマットに数字がある場合も拾って連番を維持
+            if rid.startswith("SERVICE#"):
+                suffix = rid[len("SERVICE#"):]
+                if suffix.isdigit():
+                    n = int(suffix)
+                    if n > max_num:
+                        max_num = n
+        last_key = res.get("LastEvaluatedKey")
+        if not last_key:
+            break
+    return max_num
+
+
+def _make_service_id() -> str:
+    next_num = _scan_max_service_number() + 1
+    width = max(4, len(str(next_num)))
+    return f"service_{str(next_num).zfill(width)}"
+
+
+def _make_sequential_id(collection: str) -> str:
+    next_num = _scan_max_numeric_suffix(collection) + 1
+    width = max(4, len(str(next_num)))
+    return f"{ID_PREFIX[collection]}#{str(next_num).zfill(width)}"
+
+
 def _make_id(collection: str) -> str:
+    if collection == "service":
+        return _make_service_id()
+    if collection in SEQUENTIAL_ID_COLLECTIONS:
+        return _make_sequential_id(collection)
     return f"{ID_PREFIX[collection]}#{uuid.uuid4().hex[:12]}"
+
+
+def _put_item_with_generated_id(collection: str, build_item_fn, max_retries: int = 8):
+    table = TABLES[collection]
+    pk_name = PK_MAP[collection]
+    last_error = None
+    for _ in range(max_retries):
+        item_id = _make_id(collection)
+        item = build_item_fn(item_id)
+        try:
+            table.put_item(
+                Item=item,
+                ConditionExpression=f"attribute_not_exists({pk_name})",
+            )
+            return item_id, item
+        except Exception as e:
+            if _is_conditional_check_failed(e):
+                last_error = e
+                continue
+            raise
+    raise RuntimeError(f"id generation conflict: {collection} ({str(last_error or '')})")
 
 
 def _validate_create(collection: str, data: dict, pk_name: str):
@@ -211,6 +326,16 @@ def _presign_upload_souko(body: dict):
 
 def _strip(v):
     return str(v or "").strip()
+
+
+def _apply_touroku_meta(item: dict, now_iso: str):
+    if not isinstance(item, dict):
+        return item
+    touroku_at = _strip(item.get("touroku_at")) or now_iso
+    item["touroku_at"] = touroku_at
+    if not _strip(item.get("touroku_date")):
+        item["touroku_date"] = touroku_at[:10]
+    return item
 
 
 def _normalize_tenpo_billing_owner(item: dict):
@@ -335,53 +460,56 @@ def _create_onboarding(body: dict):
     address = _strip(body.get("address"))
     site_url = _strip(body.get("url"))
     info_registrar = _strip(body.get("jouhou_touroku_sha_name"))
+    touroku_date = _strip(body.get("touroku_date"))
     # カルテは常時自動作成（登録時点で tenpo_karte を必ず作る）
     create_karte = True
     now = _now_iso()
+    if not touroku_date:
+        touroku_date = now[:10]
     created = []
     try:
-        torihikisaki_id = _make_id("torihikisaki")
-        t_item = {
-            "torihikisaki_id": torihikisaki_id,
-            "name": torihikisaki_name,
-            "jotai": "yuko",
-            "created_at": now,
-            "updated_at": now,
-        }
-        if contact_phone:
-            t_item["phone"] = contact_phone
-        if contact_email:
-            t_item["email"] = contact_email
-        if tantou_name:
-            t_item["tantou_name"] = tantou_name
-        if address:
-            t_item["address"] = address
-        if site_url:
-            t_item["url"] = site_url
-        if info_registrar:
-            t_item["jouhou_touroku_sha_name"] = info_registrar
-        TABLES["torihikisaki"].put_item(
-            Item=t_item,
-            ConditionExpression="attribute_not_exists(torihikisaki_id)",
-        )
+        def _build_tori(new_id: str):
+            item = {
+                "torihikisaki_id": new_id,
+                "name": torihikisaki_name,
+                "touroku_date": touroku_date,
+                "touroku_at": now,
+                "jotai": "yuko",
+                "created_at": now,
+                "updated_at": now,
+            }
+            if contact_phone:
+                item["phone"] = contact_phone
+            if contact_email:
+                item["email"] = contact_email
+            if tantou_name:
+                item["tantou_name"] = tantou_name
+            if address:
+                item["address"] = address
+            if site_url:
+                item["url"] = site_url
+            if info_registrar:
+                item["jouhou_touroku_sha_name"] = info_registrar
+            return item
+
+        torihikisaki_id, _ = _put_item_with_generated_id("torihikisaki", _build_tori)
         created.append(("torihikisaki", torihikisaki_id))
 
-        yagou_id = _make_id("yagou")
-        y_item = {
-            "yagou_id": yagou_id,
-            "torihikisaki_id": torihikisaki_id,
-            "name": yagou_name,
-            "jotai": "yuko",
-            "created_at": now,
-            "updated_at": now,
-        }
-        TABLES["yagou"].put_item(
-            Item=y_item,
-            ConditionExpression="attribute_not_exists(yagou_id)",
-        )
+        def _build_yagou(new_id: str):
+            return {
+                "yagou_id": new_id,
+                "torihikisaki_id": torihikisaki_id,
+                "name": yagou_name,
+                "touroku_date": touroku_date,
+                "touroku_at": now,
+                "jotai": "yuko",
+                "created_at": now,
+                "updated_at": now,
+            }
+
+        yagou_id, _ = _put_item_with_generated_id("yagou", _build_yagou)
         created.append(("yagou", yagou_id))
 
-        tenpo_id = _make_id("tenpo")
         karte_detail = {
             "basic": {
                 "torihikisaki_name": torihikisaki_name,
@@ -393,56 +521,59 @@ def _create_onboarding(body: dict):
                 "address": address,
                 "url": site_url,
                 "jouhou_touroku_sha_name": info_registrar,
+                "touroku_date": touroku_date,
             },
             "created_at": now,
             "updated_at": now,
         }
-        tenpo_item = {
-            "tenpo_id": tenpo_id,
-            "torihikisaki_id": torihikisaki_id,
-            "yagou_id": yagou_id,
-            "name": tenpo_name,
-            "jotai": "yuko",
-            "created_at": now,
-            "updated_at": now,
-            "karte_detail": karte_detail,
-        }
-        # 請求主体（デフォルトは torihikisaki 主体）
-        _normalize_tenpo_billing_owner(tenpo_item)
-        if contact_phone:
-            tenpo_item["phone"] = contact_phone
-        if contact_email:
-            tenpo_item["email"] = contact_email
-        if tantou_name:
-            tenpo_item["tantou_name"] = tantou_name
-        if address:
-            tenpo_item["address"] = address
-        if site_url:
-            tenpo_item["url"] = site_url
-        if info_registrar:
-            tenpo_item["jouhou_touroku_sha_name"] = info_registrar
-        if idempotency_key:
-            tenpo_item["idempotency_key"] = idempotency_key
-        TABLES["tenpo"].put_item(
-            Item=tenpo_item,
-            ConditionExpression="attribute_not_exists(tenpo_id)",
-        )
+        def _build_tenpo(new_id: str):
+            item = {
+                "tenpo_id": new_id,
+                "torihikisaki_id": torihikisaki_id,
+                "yagou_id": yagou_id,
+                "name": tenpo_name,
+                "touroku_date": touroku_date,
+                "touroku_at": now,
+                "jotai": "yuko",
+                "created_at": now,
+                "updated_at": now,
+                "karte_detail": karte_detail,
+            }
+            # 請求主体（デフォルトは torihikisaki 主体）
+            _normalize_tenpo_billing_owner(item)
+            if contact_phone:
+                item["phone"] = contact_phone
+            if contact_email:
+                item["email"] = contact_email
+            if tantou_name:
+                item["tantou_name"] = tantou_name
+            if address:
+                item["address"] = address
+            if site_url:
+                item["url"] = site_url
+            if info_registrar:
+                item["jouhou_touroku_sha_name"] = info_registrar
+            if idempotency_key:
+                item["idempotency_key"] = idempotency_key
+            return item
+
+        tenpo_id, _ = _put_item_with_generated_id("tenpo", _build_tenpo)
         created.append(("tenpo", tenpo_id))
 
         # 既存運用互換: souko 自動作成
-        souko_id = _make_id("souko")
-        souko_item = {
-            "souko_id": souko_id,
-            "tenpo_id": tenpo_id,
-            "name": f"{tenpo_name} 顧客ストレージ",
-            "jotai": "yuko",
-            "created_at": now,
-            "updated_at": now,
-        }
-        TABLES["souko"].put_item(
-            Item=souko_item,
-            ConditionExpression="attribute_not_exists(souko_id)",
-        )
+        def _build_souko(new_id: str):
+            return {
+                "souko_id": new_id,
+                "tenpo_id": tenpo_id,
+                "name": f"{tenpo_name} 顧客ストレージ",
+                "touroku_date": touroku_date,
+                "touroku_at": now,
+                "jotai": "yuko",
+                "created_at": now,
+                "updated_at": now,
+            }
+
+        souko_id, _ = _put_item_with_generated_id("souko", _build_souko)
         created.append(("souko", souko_id))
 
         karte_id = None
@@ -454,6 +585,8 @@ def _create_onboarding(body: dict):
                 "torihikisaki_id": torihikisaki_id,
                 "yagou_id": yagou_id,
                 "name": f"{yagou_name} {tenpo_name} カルテ",
+                "touroku_date": touroku_date,
+                "touroku_at": now,
                 "jotai": "yuko",
                 "created_at": now,
                 "updated_at": now,
@@ -564,18 +697,37 @@ def lambda_handler(event, context):
             if err:
                 return _resp(400, {"error": "validation_error", "message": err})
             now = _now_iso()
-            item_id = body.get(pk_name) or _make_id(collection)
-            item = dict(body)
-            item[pk_name] = item_id
-            item["jotai"] = body.get("jotai", "yuko")
-            item["created_at"] = now
-            item["updated_at"] = now
-            if collection == "tenpo":
-                _normalize_tenpo_billing_owner(item)
-            table.put_item(
-                Item=item,
-                ConditionExpression=f"attribute_not_exists({pk_name})",
-            )
+            if collection in {"torihikisaki", "yagou", "tenpo", "souko"} and not _strip(body.get("touroku_date")):
+                body = dict(body)
+                body["touroku_date"] = now[:10]
+            fixed_id = body.get(pk_name)
+            if fixed_id:
+                item = dict(body)
+                item[pk_name] = fixed_id
+                item["jotai"] = body.get("jotai", "yuko")
+                item["created_at"] = now
+                item["updated_at"] = now
+                _apply_touroku_meta(item, now)
+                if collection == "tenpo":
+                    _normalize_tenpo_billing_owner(item)
+                table.put_item(
+                    Item=item,
+                    ConditionExpression=f"attribute_not_exists({pk_name})",
+                )
+                return _resp(201, item)
+
+            def _build_item(new_id: str):
+                item = dict(body)
+                item[pk_name] = new_id
+                item["jotai"] = body.get("jotai", "yuko")
+                item["created_at"] = now
+                item["updated_at"] = now
+                _apply_touroku_meta(item, now)
+                if collection == "tenpo":
+                    _normalize_tenpo_billing_owner(item)
+                return item
+
+            _, item = _put_item_with_generated_id(collection, _build_item)
             return _resp(201, item)
 
         if method == "PUT":
@@ -590,7 +742,9 @@ def lambda_handler(event, context):
                 if k in {pk_name, "created_at"}:
                     continue
                 item[k] = v
-            item["updated_at"] = _now_iso()
+            now = _now_iso()
+            item["updated_at"] = now
+            _apply_touroku_meta(item, now)
             if collection == "tenpo":
                 _normalize_tenpo_billing_owner(item)
             table.put_item(Item=item)

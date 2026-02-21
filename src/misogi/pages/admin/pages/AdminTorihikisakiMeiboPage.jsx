@@ -628,19 +628,21 @@ export default function AdminTorihikisakiMeiboPage() {
                   className={`meibo-row ${active ? 'active' : ''}`}
                   onClick={() => setSelectedTorihikisakiId((cur) => (cur === id ? '' : id))}
                 >
-                  <div className="meibo-row-check">
-                    <input
-                      type="checkbox"
-                      checked={bulkSelectedSet.has(id)}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => toggleBulkSelect(id, e.target.checked)}
-                      aria-label={`${it?.name || id} を取り消し選択`}
-                    />
-                  </div>
-                  <div className="name">{it?.name || '(no name)'}</div>
-                  <div className="meta">
-                    <span className="id">{id}</span>
-                    {yagouCount === null ? null : <span className="count">屋号 {yagouCount}</span>}
+                  <div className="meibo-row-main">
+                    <div className="meibo-row-check">
+                      <input
+                        type="checkbox"
+                        checked={bulkSelectedSet.has(id)}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => toggleBulkSelect(id, e.target.checked)}
+                        aria-label={`${it?.name || id} を取り消し選択`}
+                      />
+                    </div>
+                    <div className="name">{it?.name || '(no name)'}</div>
+                    <div className="meta">
+                      <span className="id">{id}</span>
+                      {yagouCount === null ? null : <span className="count">屋号 {yagouCount}</span>}
+                    </div>
                   </div>
                 </button>
               );

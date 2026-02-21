@@ -25,7 +25,7 @@ const KARTE_VIEW = {
 };
 
 // v1: 旧カルテ（OfficeClientKartePanel）の項目を、管理オペ用に再構築して tenpo.karte_detail に保持する。
-// フィールドスタッフ入力ではないため、自由記述は最小限（例外メモのみ・短文）にする。
+// フィールドスタッフ入力ではないため、自由記述は最小限（短文・限定運用）にする。
 const KARTE_DETAIL_VERSION = 2;
 
 const HACCP_STATUS = {
@@ -79,6 +79,12 @@ const EQUIPMENT_OPTIONS = [
 ];
 
 const STAFF_ROOM_OPTIONS = [
+  { value: 'ari', label: 'あり' },
+  { value: 'nashi', label: 'なし' },
+  { value: 'fumei', label: '不明' },
+];
+
+const CUSTOMER_ATTENDANCE_OPTIONS = [
   { value: 'ari', label: 'あり' },
   { value: 'nashi', label: 'なし' },
   { value: 'fumei', label: '不明' },
@@ -350,7 +356,6 @@ const REPORT_FIELD_REQUIRED_OPTIONS = [
   { key: 'after_photo', label: '施工後写真' },
   { key: 'chemical_usage', label: '薬剤/資材 使用記録' },
   { key: 'anomaly_flag', label: '異常フラグ（破損/害虫/漏水）' },
-  { key: 'exception_note', label: '例外メモ（短文）' },
 ];
 
 const CUSTOMER_REPORT_REQUIRED_OPTIONS = [
@@ -709,6 +714,18 @@ export default function AdminTenpoKartePage() {
   // tenpo.karte_detail の編集ドラフト（master API PUTはmergeなので差分PUTで安全に保存できる）
   const [karteDetail, setKarteDetail] = useState(null);
   const [savingKarteDetail, setSavingKarteDetail] = useState(false);
+  const [editingBasicInfo, setEditingBasicInfo] = useState(false);
+  const [savingBasicInfo, setSavingBasicInfo] = useState(false);
+  const [basicInfoDraft, setBasicInfoDraft] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    url: '',
+    business_hours: '',
+    customer_attendance: '',
+    contact_method: '',
+    sales_owner: '',
+  });
   const [services, setServices] = useState([]);
   const [jinzais, setJinzais] = useState([]);
 
@@ -766,23 +783,41 @@ export default function AdminTenpoKartePage() {
     return chunks.join(' | ') || '—';
   }, [karteDetail?.plan?.plan_frequency, karteDetail?.service_plan]);
 
-  const reportProfileSummary = useMemo(() => {
-    const rp = karteDetail?.report_profile || {};
-    const fieldCount = REPORT_FIELD_REQUIRED_OPTIONS.filter((o) => toBool(rp?.field_required?.[o.key], false)).length;
-    const customerCount = CUSTOMER_REPORT_REQUIRED_OPTIONS.filter((o) => toBool(rp?.customer_required?.[o.key], false)).length;
-    const chkCount = (Array.isArray(rp?.checkpoints) ? rp.checkpoints : [])
-      .filter((cp) => String(cp?.jotai || 'yuko') !== 'torikeshi').length;
-    return `現場必須 ${fieldCount} / 顧客必須 ${customerCount} / 基準 ${chkCount}`;
-  }, [karteDetail?.report_profile]);
+  const buildBasicInfoDraft = useCallback(() => {
+    const attendance = String(karteDetail?.spec?.customer_attendance || '').trim();
+    return {
+      name: clampStr(tenpo?.name || '', 120),
+      address: clampStr(tenpo?.address || '', 200),
+      phone: clampStr(tenpo?.phone || '', 40),
+      url: clampStr(tenpo?.url || '', 200),
+      business_hours: clampStr(karteDetail?.spec?.business_hours || tenpo?.business_hours || tenpo?.eigyou_jikan || '', 80),
+      customer_attendance: CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '',
+      contact_method: clampStr(karteDetail?.spec?.contact_method || tenpo?.contact_method || '', 80),
+      sales_owner: clampStr(karteDetail?.spec?.sales_owner || tenpo?.tantou_name || '', 80),
+    };
+  }, [
+    karteDetail?.spec?.business_hours,
+    karteDetail?.spec?.contact_method,
+    karteDetail?.spec?.customer_attendance,
+    karteDetail?.spec?.sales_owner,
+    tenpo?.address,
+    tenpo?.business_hours,
+    tenpo?.contact_method,
+    tenpo?.eigyou_jikan,
+    tenpo?.name,
+    tenpo?.phone,
+    tenpo?.tantou_name,
+    tenpo?.url,
+  ]);
 
-  const chemicalUsageSummary = useMemo(() => {
-    const rows = (Array.isArray(karteDetail?.report_profile?.chemicals) ? karteDetail.report_profile.chemicals : [])
-      .filter((r) => String(r?.jotai || 'yuko') !== 'torikeshi' && String(r?.name || '').trim());
-    if (rows.length === 0) return '未設定';
-    const labels = rows.slice(0, 3).map((r) => String(r?.name || '').trim()).filter(Boolean);
-    const rest = rows.length > 3 ? ` ほか${rows.length - 3}件` : '';
-    return `${labels.join(' / ')}${rest}`;
-  }, [karteDetail?.report_profile?.chemicals]);
+  useEffect(() => {
+    if (editingBasicInfo) return;
+    setBasicInfoDraft(buildBasicInfoDraft());
+  }, [editingBasicInfo, buildBasicInfoDraft]);
+
+  const onBasicInfoField = useCallback((key, value) => {
+    setBasicInfoDraft((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
   const files = useMemo(() => {
     const arr = safeArr(souko?.files);
@@ -955,6 +990,13 @@ export default function AdminTenpoKartePage() {
     if (!Array.isArray(next.service_plan)) next.service_plan = [];
     if (!Array.isArray(next.support_history)) next.support_history = [];
     if (!next.spec.sales_owner) next.spec.sales_owner = clampStr(tenpo?.tantou_name || '', 80);
+    next.spec.business_hours = clampStr(next.spec.business_hours || '', 80);
+    {
+      const attendance = clampStr(next.spec.customer_attendance || '', 20);
+      next.spec.customer_attendance = CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance)
+        ? attendance
+        : '';
+    }
 
     // Free text is allowed only as short exception memo (admin ops).
     next.memo = clampStr(next.memo || '', 200);
@@ -1557,6 +1599,50 @@ export default function AdminTenpoKartePage() {
     }
   }, [tenpoId, ensureKarteDetailDefaults]);
 
+  const saveBasicInfoNow = useCallback(async () => {
+    if (!tenpoId) return;
+    setSavingBasicInfo(true);
+    setError('');
+    try {
+      const nextKarte = ensureKarteDetailDefaults();
+      const nextSpec = { ...(nextKarte?.spec || {}) };
+      const attendance = String(basicInfoDraft?.customer_attendance || '').trim();
+      nextSpec.business_hours = clampStr(basicInfoDraft?.business_hours || '', 80);
+      nextSpec.customer_attendance = CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '';
+      nextSpec.contact_method = clampStr(basicInfoDraft?.contact_method || '', 80);
+      nextSpec.sales_owner = clampStr(basicInfoDraft?.sales_owner || '', 80);
+      nextKarte.spec = nextSpec;
+
+      const payload = {
+        name: clampStr(basicInfoDraft?.name || '', 120),
+        address: clampStr(basicInfoDraft?.address || '', 200),
+        phone: clampStr(basicInfoDraft?.phone || '', 40),
+        url: clampStr(basicInfoDraft?.url || '', 200),
+        tantou_name: clampStr(basicInfoDraft?.sales_owner || '', 80),
+        contact_method: clampStr(basicInfoDraft?.contact_method || '', 80),
+        karte_detail: nextKarte,
+      };
+      const updated = await apiPutJson(`/master/tenpo/${encodeURIComponent(tenpoId)}`, payload);
+      setTenpo(updated);
+      setKarteDetail(updated?.karte_detail || nextKarte);
+      setBasicInfoDraft({
+        name: clampStr(updated?.name || payload.name || '', 120),
+        address: clampStr(updated?.address || payload.address || '', 200),
+        phone: clampStr(updated?.phone || payload.phone || '', 40),
+        url: clampStr(updated?.url || payload.url || '', 200),
+        business_hours: clampStr(updated?.karte_detail?.spec?.business_hours || nextSpec.business_hours || '', 80),
+        customer_attendance: String(updated?.karte_detail?.spec?.customer_attendance || nextSpec.customer_attendance || ''),
+        contact_method: clampStr(updated?.karte_detail?.spec?.contact_method || payload.contact_method || '', 80),
+        sales_owner: clampStr(updated?.karte_detail?.spec?.sales_owner || payload.tantou_name || '', 80),
+      });
+      setEditingBasicInfo(false);
+    } catch (e) {
+      setError(e?.message || '基本情報の保存に失敗しました');
+    } finally {
+      setSavingBasicInfo(false);
+    }
+  }, [tenpoId, ensureKarteDetailDefaults, basicInfoDraft]);
+
   const onUpload = useCallback(async () => {
     if (!file) return;
     setUploading(true);
@@ -1702,6 +1788,29 @@ export default function AdminTenpoKartePage() {
               </div>
             </summary>
             <div className="accordion-body">
+              <div className="actions-row basic-info-actions">
+                {!editingBasicInfo ? (
+                  <button type="button" onClick={() => { setBasicInfoDraft(buildBasicInfoDraft()); setEditingBasicInfo(true); }}>
+                    基本情報を編集
+                  </button>
+                ) : (
+                  <>
+                    <button type="button" className="btn-primary" onClick={saveBasicInfoNow} disabled={savingBasicInfo}>
+                      {savingBasicInfo ? '保存中...' : '保存してマスタ反映'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBasicInfoDraft(buildBasicInfoDraft());
+                        setEditingBasicInfo(false);
+                      }}
+                      disabled={savingBasicInfo}
+                    >
+                      キャンセル
+                    </button>
+                  </>
+                )}
+              </div>
               <div className="kv">
                 <div className="k">取引先</div>
                 <div className="v">
@@ -1723,7 +1832,15 @@ export default function AdminTenpoKartePage() {
               <div className="kv">
                 <div className="k">店舗</div>
                 <div className="v">
-                  <div className="v-main">{tenpo?.name || '—'}</div>
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.name || '')}
+                        onChange={(e) => onBasicInfoField('name', clampStr(e.target.value, 120))}
+                        placeholder="店舗名"
+                      />
+                    ) : (tenpo?.name || '—')}
+                  </div>
                   <div className="v-sub">
                     <code>{tenpo?.tenpo_id || tenpoId}</code>
                   </div>
@@ -1732,45 +1849,113 @@ export default function AdminTenpoKartePage() {
               <div className="kv">
                 <div className="k">住所</div>
                 <div className="v">
-                  <div className="v-main">{tenpo?.address || '—'}</div>
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.address || '')}
+                        onChange={(e) => onBasicInfoField('address', clampStr(e.target.value, 200))}
+                        placeholder="住所"
+                      />
+                    ) : (tenpo?.address || '—')}
+                  </div>
                 </div>
               </div>
               <div className="kv">
                 <div className="k">電話番号</div>
                 <div className="v">
-                  <div className="v-main">{tenpo?.phone || '—'}</div>
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.phone || '')}
+                        onChange={(e) => onBasicInfoField('phone', clampStr(e.target.value, 40))}
+                        placeholder="電話番号"
+                      />
+                    ) : (tenpo?.phone || '—')}
+                  </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">URL</div>
+                <div className="v">
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.url || '')}
+                        onChange={(e) => onBasicInfoField('url', clampStr(e.target.value, 200))}
+                        placeholder="https://..."
+                      />
+                    ) : String(tenpo?.url || '').trim() ? (
+                      <a href={String(tenpo?.url)} target="_blank" rel="noreferrer" className="link">
+                        {String(tenpo?.url)}
+                      </a>
+                    ) : '—'}
+                  </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">営業時間</div>
+                <div className="v">
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.business_hours || '')}
+                        onChange={(e) => onBasicInfoField('business_hours', clampStr(e.target.value, 80))}
+                        placeholder="例: 11:00-23:00"
+                      />
+                    ) : (String(karteDetail?.spec?.business_hours || tenpo?.business_hours || tenpo?.eigyou_jikan || '').trim() || '—')}
+                  </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">お客様立会い</div>
+                <div className="v">
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <select
+                        value={String(basicInfoDraft?.customer_attendance || '')}
+                        onChange={(e) => onBasicInfoField('customer_attendance', e.target.value)}
+                      >
+                        <option value="">未設定</option>
+                        {CUSTOMER_ATTENDANCE_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    ) : (findOptionLabel(CUSTOMER_ATTENDANCE_OPTIONS, karteDetail?.spec?.customer_attendance) || '—')}
+                  </div>
                 </div>
               </div>
               <div className="kv">
                 <div className="k">連絡手段</div>
                 <div className="v">
                   <div className="v-main">
-                    {String(karteDetail?.spec?.contact_method || tenpo?.contact_method || '').trim() || '—'}
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.contact_method || '')}
+                        onChange={(e) => onBasicInfoField('contact_method', clampStr(e.target.value, 80))}
+                        placeholder="例: 電話 / LINE / メール"
+                      />
+                    ) : (String(karteDetail?.spec?.contact_method || tenpo?.contact_method || '').trim() || '—')}
                   </div>
                 </div>
               </div>
               <div className="kv">
                 <div className="k">営業担当</div>
                 <div className="v">
-                  <div className="v-main">{salesOwnerSummary}</div>
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.sales_owner || '')}
+                        onChange={(e) => onBasicInfoField('sales_owner', clampStr(e.target.value, 80))}
+                        placeholder="営業担当"
+                      />
+                    ) : salesOwnerSummary}
+                  </div>
                 </div>
               </div>
               <div className="kv">
                 <div className="k">サービスプラン</div>
                 <div className="v">
                   <div className="v-main">{servicePlanSummary}</div>
-                </div>
-              </div>
-              <div className="kv">
-                <div className="k">報告設計</div>
-                <div className="v">
-                  <div className="v-main">{reportProfileSummary}</div>
-                </div>
-              </div>
-              <div className="kv">
-                <div className="k">使用薬剤</div>
-                <div className="v">
-                  <div className="v-main">{chemicalUsageSummary}</div>
                 </div>
               </div>
 
@@ -1861,7 +2046,7 @@ export default function AdminTenpoKartePage() {
               </div>
             </div>
             <div className="muted small">
-              目的: 事実ベースで「いつ/誰から/何の件/誰が対応/何をした/結果」を短く残す。長文の経緯・評価・提案は書かない（例外メモへ）。
+              目的: 事実ベースで「いつ/誰から/何の件/誰が対応/何をした/結果」を短く残す。長文の経緯・評価・提案は書かない。
             </div>
             {Array.isArray(karteDetail?.support_history) && karteDetail.support_history.length > 0 ? (
               <div className="service-plan-list" style={{ marginTop: 10 }}>
@@ -2136,7 +2321,7 @@ export default function AdminTenpoKartePage() {
               <div>
                 <div className="card-title">カルテ詳細（管理オペ用）</div>
                 <div className="muted">
-                  旧カルテの項目を整理して再構築しています。自由記述は「例外メモ（200字）」のみに抑えます。
+                  旧カルテの項目を整理して再構築しています。自由記述を最小化し、構造化項目中心で運用します。
                 </div>
                 <div className="muted small" style={{ marginTop: 6 }}>
                   最終更新: <code>{fmtDateTimeJst(karteDetail?.updated_at || tenpo?.updated_at || '') || '—'}</code>
@@ -2166,6 +2351,46 @@ export default function AdminTenpoKartePage() {
 
             <div className="karte-detail-layout">
               <div className="karte-detail-col">
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">プラン・評価</div>
+                  </div>
+                  <div className="form-grid">
+                    <label className="f">
+                      <div className="lbl">プラン頻度</div>
+                      <select
+                        value={String(karteDetail?.plan?.plan_frequency || '')}
+                        onChange={(e) => setKarteField('plan.plan_frequency', e.target.value)}
+                      >
+                        <option value="">未設定</option>
+                        {PLAN_FREQUENCY_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="f">
+                      <div className="lbl">衛生状態自己評価</div>
+                      <select
+                        value={String(karteDetail?.plan?.self_rating || '')}
+                        onChange={(e) => setKarteField('plan.self_rating', e.target.value)}
+                      >
+                        <option value="">未設定</option>
+                        {SELF_RATING_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="f">
+                      <div className="lbl">最終清掃日</div>
+                      <input
+                        type="date"
+                        value={String(karteDetail?.plan?.last_clean || '')}
+                        onChange={(e) => setKarteField('plan.last_clean', e.target.value)}
+                      />
+                    </label>
+                  </div>
+                </section>
+
                 <section className="card card-sub">
                   <div className="card-title-row">
                     <div className="card-title">運用・鍵</div>
@@ -2206,6 +2431,26 @@ export default function AdminTenpoKartePage() {
                         onChange={(e) => setKarteField('spec.breaker_location', clampStr(e.target.value, 60))}
                         placeholder="例: 厨房奥"
                       />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">営業時間</div>
+                      <input
+                        value={String(karteDetail?.spec?.business_hours || '')}
+                        onChange={(e) => setKarteField('spec.business_hours', clampStr(e.target.value, 80))}
+                        placeholder="例: 11:00-23:00（L.O 22:30）"
+                      />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">お客様立会い</div>
+                      <select
+                        value={String(karteDetail?.spec?.customer_attendance || '')}
+                        onChange={(e) => setKarteField('spec.customer_attendance', e.target.value)}
+                      >
+                        <option value="">未設定</option>
+                        {CUSTOMER_ATTENDANCE_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
                     </label>
                     <label className="f">
                       <div className="lbl">連絡手段</div>
@@ -2263,26 +2508,79 @@ export default function AdminTenpoKartePage() {
 
                 <section className="card card-sub">
                   <div className="card-title-row">
-                    <div className="card-title">消耗品</div>
+                    <div className="card-title">担当履歴</div>
                     <div className="seg-tabs">
-                      <button type="button" onClick={addConsumable}>追加</button>
+                      <button type="button" onClick={addStaffHistory}>追加</button>
                     </div>
                   </div>
-                  {Array.isArray(karteDetail?.consumables) && karteDetail.consumables.length > 0 ? (
+                  {Array.isArray(karteDetail?.staff_history) && karteDetail.staff_history.length > 0 ? (
                     <div className="rows">
-                      {karteDetail.consumables.map((c, i) => (
-                        <div key={i} className="row">
+                      {karteDetail.staff_history.map((h, i) => (
+                        <div key={i} className="row row-3">
+                          <div className="tag-picker">
+                            <div className="tag-row">
+                              {(Array.isArray(h?.members) ? h.members : (h?.name ? [{ jinzai_id: h?.jinzai_id || '', name: h.name }] : [])).map((m) => {
+                                const label = String(m?.name || m?.jinzai_id || '').trim();
+                                if (!label) return null;
+                                return (
+                                  <span key={`${String(m?.jinzai_id || '')}-${label}`} className="tag-chip">
+                                    {label}
+                                    <button
+                                      type="button"
+                                      className="x"
+                                      onClick={() => removeStaffHistoryMember(i, m)}
+                                      aria-label="remove"
+                                    >
+                                      ×
+                                    </button>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                            <div className="tag-controls">
+                              <select
+                                value=""
+                                onChange={(e) => {
+                                  const id = e.target.value;
+                                  if (!id) return;
+                                  const hit = jinzais.find((j) => String(j.jinzai_id) === String(id));
+                                  addStaffHistoryMember(i, { jinzai_id: id, name: hit?.name || '' });
+                                }}
+                                aria-label="担当者追加"
+                              >
+                                <option value="">担当者（清掃/メンテのみ）を追加</option>
+                                {jinzais.map((j) => (
+                                  <option key={j.jinzai_id} value={j.jinzai_id}>
+                                    {j.name}{j.email ? ` / ${j.email}` : ''}{j.phone ? ` / ${j.phone}` : ''}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                list="tenpo-karte-jinzai-name-list"
+                                placeholder="氏名を手入力して追加（任意）"
+                                onKeyDown={(e) => {
+                                  if (e.key !== 'Enter') return;
+                                  const v = String(e.currentTarget.value || '').trim();
+                                  if (!v) return;
+                                  addStaffHistoryMember(i, { jinzai_id: '', name: v });
+                                  e.currentTarget.value = '';
+                                }}
+                                aria-label="担当者氏名（手入力）"
+                              />
+                            </div>
+                            <div className="muted small">複数選択OK（タグ）</div>
+                          </div>
                           <input
-                            placeholder="品名"
-                            value={String(c?.name || '')}
-                            onChange={(e) => updateConsumable(i, 'name', e.target.value)}
+                            type="date"
+                            value={String(h?.start_date || '')}
+                            onChange={(e) => updateStaffHistory(i, 'start_date', e.target.value)}
                           />
                           <input
-                            placeholder="数量"
-                            value={String(c?.quantity || '')}
-                            onChange={(e) => updateConsumable(i, 'quantity', e.target.value)}
+                            type="date"
+                            value={String(h?.end_date || '')}
+                            onChange={(e) => updateStaffHistory(i, 'end_date', e.target.value)}
                           />
-                          <button type="button" onClick={() => removeConsumable(i)}>×</button>
+                          <button type="button" onClick={() => removeStaffHistory(i)}>×</button>
                         </div>
                       ))}
                     </div>
@@ -2293,46 +2591,6 @@ export default function AdminTenpoKartePage() {
               </div>
 
               <div className="karte-detail-col">
-                <section className="card card-sub">
-                  <div className="card-title-row">
-                    <div className="card-title">プラン・評価</div>
-                  </div>
-                  <div className="form-grid">
-                    <label className="f">
-                      <div className="lbl">プラン頻度</div>
-                      <select
-                        value={String(karteDetail?.plan?.plan_frequency || '')}
-                        onChange={(e) => setKarteField('plan.plan_frequency', e.target.value)}
-                      >
-                        <option value="">未設定</option>
-                        {PLAN_FREQUENCY_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="f">
-                      <div className="lbl">衛生状態自己評価</div>
-                      <select
-                        value={String(karteDetail?.plan?.self_rating || '')}
-                        onChange={(e) => setKarteField('plan.self_rating', e.target.value)}
-                      >
-                        <option value="">未設定</option>
-                        {SELF_RATING_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="f">
-                      <div className="lbl">最終清掃日</div>
-                      <input
-                        type="date"
-                        value={String(karteDetail?.plan?.last_clean || '')}
-                        onChange={(e) => setKarteField('plan.last_clean', e.target.value)}
-                      />
-                    </label>
-                  </div>
-                </section>
-
                 <section className="card card-sub">
                   <div className="card-title-row">
                     <div className="card-title">報告設計（現場 → 管理/顧客）</div>
@@ -2434,6 +2692,39 @@ export default function AdminTenpoKartePage() {
                   </div>
                 </section>
 
+              </div>
+
+              <div className="karte-detail-col karte-detail-col-right">
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">消耗品</div>
+                    <div className="seg-tabs">
+                      <button type="button" onClick={addConsumable}>追加</button>
+                    </div>
+                  </div>
+                  {Array.isArray(karteDetail?.consumables) && karteDetail.consumables.length > 0 ? (
+                    <div className="rows">
+                      {karteDetail.consumables.map((c, i) => (
+                        <div key={i} className="row">
+                          <input
+                            placeholder="品名"
+                            value={String(c?.name || '')}
+                            onChange={(e) => updateConsumable(i, 'name', e.target.value)}
+                          />
+                          <input
+                            placeholder="数量"
+                            value={String(c?.quantity || '')}
+                            onChange={(e) => updateConsumable(i, 'quantity', e.target.value)}
+                          />
+                          <button type="button" onClick={() => removeConsumable(i)}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted">未登録</div>
+                  )}
+                </section>
+
                 <section className="card card-sub">
                   <div className="card-title-row">
                     <div className="card-title">使用薬剤・資材（追記）</div>
@@ -2511,103 +2802,6 @@ export default function AdminTenpoKartePage() {
                   ) : (
                     <div className="muted" style={{ marginTop: 10 }}>未登録</div>
                   )}
-                </section>
-
-                <section className="card card-sub">
-                  <div className="card-title-row">
-                    <div className="card-title">担当履歴</div>
-                    <div className="seg-tabs">
-                      <button type="button" onClick={addStaffHistory}>追加</button>
-                    </div>
-                  </div>
-                  {Array.isArray(karteDetail?.staff_history) && karteDetail.staff_history.length > 0 ? (
-                    <div className="rows">
-                      {karteDetail.staff_history.map((h, i) => (
-                        <div key={i} className="row row-3">
-                          <div className="tag-picker">
-                            <div className="tag-row">
-                              {(Array.isArray(h?.members) ? h.members : (h?.name ? [{ jinzai_id: h?.jinzai_id || '', name: h.name }] : [])).map((m) => {
-                                const label = String(m?.name || m?.jinzai_id || '').trim();
-                                if (!label) return null;
-                                return (
-                                  <span key={`${String(m?.jinzai_id || '')}-${label}`} className="tag-chip">
-                                    {label}
-                                    <button
-                                      type="button"
-                                      className="x"
-                                      onClick={() => removeStaffHistoryMember(i, m)}
-                                      aria-label="remove"
-                                    >
-                                      ×
-                                    </button>
-                                  </span>
-                                );
-                              })}
-                            </div>
-                            <div className="tag-controls">
-                              <select
-                                value=""
-                                onChange={(e) => {
-                                  const id = e.target.value;
-                                  if (!id) return;
-                                  const hit = jinzais.find((j) => String(j.jinzai_id) === String(id));
-                                  addStaffHistoryMember(i, { jinzai_id: id, name: hit?.name || '' });
-                                }}
-                                aria-label="担当者追加"
-                              >
-                                <option value="">担当者（清掃/メンテのみ）を追加</option>
-                                {jinzais.map((j) => (
-                                  <option key={j.jinzai_id} value={j.jinzai_id}>
-                                    {j.name}{j.email ? ` / ${j.email}` : ''}{j.phone ? ` / ${j.phone}` : ''}
-                                  </option>
-                                ))}
-                              </select>
-                              <input
-                                list="tenpo-karte-jinzai-name-list"
-                                placeholder="氏名を手入力して追加（任意）"
-                                onKeyDown={(e) => {
-                                  if (e.key !== 'Enter') return;
-                                  const v = String(e.currentTarget.value || '').trim();
-                                  if (!v) return;
-                                  addStaffHistoryMember(i, { jinzai_id: '', name: v });
-                                  e.currentTarget.value = '';
-                                }}
-                                aria-label="担当者氏名（手入力）"
-                              />
-                            </div>
-                            <div className="muted small">複数選択OK（タグ）</div>
-                          </div>
-                          <input
-                            type="date"
-                            value={String(h?.start_date || '')}
-                            onChange={(e) => updateStaffHistory(i, 'start_date', e.target.value)}
-                          />
-                          <input
-                            type="date"
-                            value={String(h?.end_date || '')}
-                            onChange={(e) => updateStaffHistory(i, 'end_date', e.target.value)}
-                          />
-                          <button type="button" onClick={() => removeStaffHistory(i)}>×</button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="muted">未登録</div>
-                  )}
-                </section>
-              </div>
-
-              <div className="karte-detail-col karte-detail-col-right">
-                <section className="card card-sub">
-                  <div className="card-title-row">
-                    <div className="card-title">例外メモ（任意・200字）</div>
-                  </div>
-                  <input
-                    className="memo"
-                    value={String(karteDetail?.memo || '')}
-                    onChange={(e) => setKarteField('memo', clampStr(e.target.value, 200))}
-                    placeholder="例: 薬剤の匂いNG / 入館ルール 等（短く）"
-                  />
                 </section>
               </div>
 

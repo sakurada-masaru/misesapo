@@ -341,8 +341,16 @@
   cursor: pointer;
 }
 
+.meibo-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .meibo-row-check {
-  margin-bottom: 8px;
+  flex: 0 0 auto;
+  margin-bottom: 0;
 }
 
 .meibo-row-check input[type="checkbox"] {
@@ -368,19 +376,30 @@
 .meibo-row .name {
   font-size: 13px;
   font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meibo-row .meta {
-  margin-top: 4px;
+  margin-top: 0;
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  margin-left: auto;
   color: var(--meibo-muted);
   font-size: 11px;
 }
 
 .meibo-row .meta .id {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meibo-row .meta .count {

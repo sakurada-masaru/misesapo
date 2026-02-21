@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import AdminMasterBase from './AdminMasterBase';
+import { formatMasterDateTime } from './masterDateTime';
 
 function normalizeBillingOwnerKind(v) {
   const s = String(v || '').trim();
@@ -52,8 +53,8 @@ export default function AdminMasterTenpoPage() {
         { key: 'yagou_id', label: '屋号', sourceKey: 'yagou', valueKey: 'yagou_id', labelKey: 'name' },
       ]}
   parentSources={{
-        torihikisaki: { resource: 'torihikisaki', query: { limit: 200 } },
-        yagou: { resource: 'yagou', query: { limit: 200 } },
+        torihikisaki: { resource: 'torihikisaki', query: { limit: 5000 } },
+        yagou: { resource: 'yagou', query: { limit: 5000 } },
   }}
       fields={[
         {
@@ -105,6 +106,7 @@ export default function AdminMasterTenpoPage() {
           readOnly: true,
           format: (_v, row) => deriveBillingOwnerId(row),
         },
+        { key: 'touroku_at', label: '登録日時', readOnly: true, format: formatMasterDateTime },
       ]}
     />
   );

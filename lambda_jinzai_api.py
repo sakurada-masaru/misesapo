@@ -38,6 +38,16 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def _apply_touroku_meta(item: dict, now_iso: str):
+    if not isinstance(item, dict):
+        return item
+    touroku_at = str(item.get("touroku_at") or "").strip() or now_iso
+    item["touroku_at"] = touroku_at
+    if not str(item.get("touroku_date") or "").strip():
+        item["touroku_date"] = touroku_at[:10]
+    return item
+
+
 def _safe_file_name(name: str) -> str:
     return (name or "file.bin").replace("/", "_").replace("\\", "_").strip() or "file.bin"
 
@@ -130,6 +140,7 @@ def _jinzai_collection(method: str, event):
         now = _now_iso()
         item["created_at"] = now
         item["updated_at"] = now
+        _apply_touroku_meta(item, now)
         TABLE_JINZAI.put_item(Item=item, ConditionExpression="attribute_not_exists(jinzai_id)")
         return _resp(201, item)
 
@@ -154,7 +165,9 @@ def _jinzai_item(method: str, jinzai_id: str, event):
             if k in {"jinzai_id", "created_at"}:
                 continue
             item[k] = v
-        item["updated_at"] = _now_iso()
+        now = _now_iso()
+        item["updated_at"] = now
+        _apply_touroku_meta(item, now)
         TABLE_JINZAI.put_item(Item=item)
         return _resp(200, item)
 
@@ -188,8 +201,44 @@ def _simple_master_collection(method: str, event, table, pk_name: str):
         now = _now_iso()
         item["created_at"] = now
         item["updated_at"] = now
+        _apply_touroku_meta(item, now)
         table.put_item(Item=item, ConditionExpression=f"attribute_not_exists({pk_name})")
         return _resp(201, item)
+    return _resp(405, {"error": "method_not_allowed"})
+
+
+def _simple_master_item(method: str, item_id: str, event, table, pk_name: str):
+    if method == "GET":
+        res = table.get_item(Key={pk_name: item_id})
+        item = res.get("Item")
+        if not item:
+            return _resp(404, {"error": "not_found"})
+        return _resp(200, item)
+
+    if method == "PUT":
+        body = _parse_body(event)
+        res = table.get_item(Key={pk_name: item_id})
+        item = res.get("Item")
+        if not item:
+            return _resp(404, {"error": "not_found"})
+        for k, v in body.items():
+            if k in {pk_name, "created_at"}:
+                continue
+            item[k] = v
+        now = _now_iso()
+        item["updated_at"] = now
+        _apply_touroku_meta(item, now)
+        table.put_item(Item=item)
+        return _resp(200, item)
+
+    if method == "DELETE":
+        table.update_item(
+            Key={pk_name: item_id},
+            UpdateExpression="SET jotai = :t, updated_at = :u",
+            ExpressionAttributeValues={":t": "torikeshi", ":u": _now_iso()},
+        )
+        return _resp(200, {"ok": True, pk_name: item_id, "jotai": "torikeshi"})
+
     return _resp(405, {"error": "method_not_allowed"})
 
 
@@ -214,6 +263,7 @@ def _kaban_collection(method: str, jinzai_id: str, event):
         now = _now_iso()
         item["created_at"] = now
         item["updated_at"] = now
+        _apply_touroku_meta(item, now)
         if not item.get("name"):
             item["name"] = f"{jinzai_id} kaban"
         TABLE_KABAN.put_item(Item=item, ConditionExpression="attribute_not_exists(jinzai_kaban_id)")
@@ -278,6 +328,12 @@ def lambda_handler(event, context):
 
         if len(parts) == 2 and parts[1] == "shokushu":
             return _simple_master_collection(method, event, TABLE_SHOKUSHU, "shokushu_code")
+
+        if len(parts) == 3 and parts[1] == "busho":
+            return _simple_master_item(method, parts[2], event, TABLE_BUSHO, "busho_id")
+
+        if len(parts) == 3 and parts[1] == "shokushu":
+            return _simple_master_item(method, parts[2], event, TABLE_SHOKUSHU, "shokushu_code")
 
         jinzai_id = parts[1]
         if len(parts) == 2:

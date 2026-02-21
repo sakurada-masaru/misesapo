@@ -367,3 +367,89 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `AdminTenpoKartePage` をモバイル初期表示で入力しやすい `カルテ詳細` モードに変更
 - [x] モバイル用の固定アクション（保存/概要）を追加し、長文フォームでも保存操作しやすく改善
 - [x] 店舗カルテのヘッダー/フォームをスマホ向けに再レイアウト（2列→1列、入力UIのタップサイズ最適化）
+
+## Torihikisaki Registration Metadata (2026-02-21)
+
+- [x] `AdminTorihikisakiTourokuPage` の `情報登録者名` をログイン中アカウント名で自動入力
+- [x] 取引先登録（新規一括/既存追加）時に `touroku_date`（登録日）を自動付与
+- [x] `lambda_torihikisaki_api.py` のオンボーディング作成でも `touroku_date` を `torihikisaki/yagou/tenpo/souko/karte` に保存
+
+## Tenpo Karte Detail Layout Adjust (2026-02-21)
+
+- [x] 詳細レイアウトを再配置（左: `プラン・評価` → `運用・鍵` → `担当履歴`、中央: `報告設計`、右: `消耗品` → `使用薬剤・資材`）
+- [x] `例外メモ` 入力カードを削除し、関連文言（説明/必須項目）からも除去
+
+## Yagou Master Label Rendering (2026-02-21)
+
+- [x] `AdminMasterBase` の `select` 型カラム表示をラベル解決（`sourceKey`/`options`）対応に拡張
+- [x] `yagou` マスタ一覧の `取引先` を `torihikisaki_id` ではなく取引先名で表示
+- [x] `AdminMasterYagouPage` の `torihikisaki` 親データ取得上限を `5000` に拡張（名前解決漏れ防止）
+- [x] `AdminMasterTenpoPage` の `取引先/屋号` 親データ取得上限を `5000` に拡張（店舗マスタでの名称表示漏れ防止）
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Torihikisaki Meibo Row Layout (2026-02-21)
+
+- [x] 取引先エリアのチェックボックスを名前の左に移動
+- [x] 取引先行を1行レイアウト化（左: チェック + 名前 / 右: ID + 屋号件数）
+- [x] 長いID/名称は省略表示して行の横はみ出しを防止
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Tenpo Karte Basic Info Additions (2026-02-21)
+
+- [x] `AdminTenpoKartePage` 基本情報に `営業時間` を追加（概要表示）
+- [x] `AdminTenpoKartePage` 基本情報に `お客様立会い（あり/なし/不明）` を追加（概要表示）
+- [x] `AdminTenpoKartePage` 詳細 `運用・鍵` に `営業時間` 入力欄を追加
+- [x] `AdminTenpoKartePage` 詳細 `運用・鍵` に `お客様立会い` 選択欄を追加
+- [x] `karte_detail.spec` 正規化に `business_hours` / `customer_attendance` を追加
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Master Registration Sequential IDs (2026-02-21)
+
+- [x] `lambda_torihikisaki_api.py` の採番を、登録情報（`torihikisaki/yagou/tenpo/souko`）は連番採番に変更
+- [x] 連番は既存IDの最大数値サフィックスを走査して `max+1` を採用（例: `TORI#0007 -> TORI#0008`）
+- [x] 同時作成衝突に備えて `ConditionalCheckFailed` 時の再採番リトライを追加
+- [x] オンボーディング作成（取引先→屋号→店舗→倉庫）も同じ連番ロジックへ統一
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` で構文チェック成功
+
+## Tenpo Karte Basic Info Simplify (2026-02-21)
+
+- [x] `AdminTenpoKartePage` 基本情報から `報告設計` / `使用薬剤` の要約表示を削除
+- [x] `AdminTenpoKartePage` 基本情報に `URL` 表示（リンク）を追加
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Tenpo Karte Basic Info Editable (2026-02-21)
+
+- [x] `AdminTenpoKartePage` の基本情報に `編集/保存/キャンセル` 操作を追加
+- [x] 基本情報編集で `店舗名/住所/電話/URL` を更新可能化
+- [x] 基本情報編集で `営業時間/お客様立会い/連絡手段/営業担当` を更新可能化
+- [x] 保存時に `tenpo` マスタ項目と `karte_detail.spec` を同時更新するよう実装
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Master Registration Datetime (2026-02-21)
+
+- [x] `lambda_torihikisaki_api.py` の `torihikisaki/yagou/tenpo/souko/service/zaiko` 作成時に `touroku_at` を自動付与
+- [x] `lambda_torihikisaki_api.py` の `PUT` 時に `touroku_at` 欠損データを自動補完
+- [x] `lambda_jinzai_api.py` の `jinzai/busho/shokushu` 作成時に `touroku_at` を自動付与
+- [x] `lambda_jinzai_api.py` に `busho/shokushu` の個別 `GET/PUT/DELETE` ルートを追加
+- [x] 各マスタ画面（取引先/屋号/店舗/顧客ストレージ/人材/部署/職種/サービス/在庫）に `登録日時` 列を追加
+- [x] 既存データ一括打刻用 `scripts/backfill_master_touroku_at.py` を追加
+
+## Service Master ID Format Fix (2026-02-21)
+
+- [x] `service` 新規作成時のID採番を `SERVICE#<uuid>` から `service_0001` 形式へ修正
+- [x] 既存 `service_00xx` をスキャンして次番採番（例: `service_0067` の次は `service_0068`）
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` で構文確認
+
+## Yakusoku Service Picker UX (2026-02-21)
+
+- [x] サービス選択モーダルにカテゴリチップ（全カテゴリ/カテゴリ別件数）を追加
+- [x] 候補表示をカテゴリ別セクションに再構成（デフォルトでカテゴリ単位で探せる）
+- [x] カテゴリ絞り込みと既存検索（サービス名/ID/カテゴリ）を併用可能にした
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Torihikisaki Touroku Existing Add Search (2026-02-21)
+
+- [x] 顧客登録（新）> 既存に追加 に統合検索（取引先/屋号/店舗/ID）を追加
+- [x] 検索候補クリックで `取引先` / `屋号` 選択へ反映
+- [x] 新規作成/追加後に検索インデックスを再読み込み
+- [x] `npm -C src/misogi run build` でビルド確認

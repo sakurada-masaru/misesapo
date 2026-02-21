@@ -87,6 +87,46 @@ function buildOnboardingIdempotencyKey(tName, yName, tenpoName) {
   return `onboarding-${stableHash(keySource)}`;
 }
 
+function todayYmd() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getCurrentAccountName() {
+  try {
+    const user = JSON.parse(localStorage.getItem('cognito_user') || '{}') || {};
+    const fromUser = String(
+      user?.name || user?.displayName || user?.username || user?.email || ''
+    ).trim();
+    if (fromUser) return fromUser;
+  } catch {
+    // noop
+  }
+
+  const token =
+    localStorage.getItem('idToken') ||
+    localStorage.getItem('cognito_id_token') ||
+    localStorage.getItem('id_token') ||
+    '';
+  if (!token || token.split('.').length !== 3) return '';
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return String(
+      payload?.name ||
+      payload?.preferred_username ||
+      payload?.email ||
+      payload?.['cognito:username'] ||
+      ''
+    ).trim();
+  } catch {
+    return '';
+  }
+}
+
 export default function AdminTorihikisakiTourokuPage() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -98,6 +138,9 @@ export default function AdminTorihikisakiTourokuPage() {
   const [selectedTorihikisakiId, setSelectedTorihikisakiId] = useState('');
   const [yagouList, setYagouList] = useState([]);
   const [selectedYagouId, setSelectedYagouId] = useState('');
+  const [existingQuery, setExistingQuery] = useState('');
+  const [existingIndex, setExistingIndex] = useState([]);
+  const [existingIndexLoading, setExistingIndexLoading] = useState(false);
 
   // 一括作成入力
   const [bulkTorihikisakiName, setBulkTorihikisakiName] = useState('');
@@ -108,12 +151,18 @@ export default function AdminTorihikisakiTourokuPage() {
   const [bulkTantouName, setBulkTantouName] = useState('');
   const [bulkAddress, setBulkAddress] = useState('');
   const [bulkUrl, setBulkUrl] = useState('');
-  const [bulkJouhouTourokuShaName, setBulkJouhouTourokuShaName] = useState('');
+  const [bulkJouhouTourokuShaName, setBulkJouhouTourokuShaName] = useState(() => getCurrentAccountName());
   const [bulkOpenKarteAfterCreate, setBulkOpenKarteAfterCreate] = useState(true);
 
   // 既存に追加入力
   const [addYagouName, setAddYagouName] = useState('');
   const [addTenpoName, setAddTenpoName] = useState('');
+
+  useEffect(() => {
+    if (bulkJouhouTourokuShaName) return;
+    const accountName = getCurrentAccountName();
+    if (accountName) setBulkJouhouTourokuShaName(accountName);
+  }, [bulkJouhouTourokuShaName]);
 
   const reloadTorihikisaki = useCallback(async () => {
     setErr('');
@@ -158,9 +207,128 @@ export default function AdminTorihikisakiTourokuPage() {
     }
   }, []);
 
+  const reloadExistingIndex = useCallback(async () => {
+    setExistingIndexLoading(true);
+    try {
+      const [toriData, yagouData, tenpoData] = await Promise.all([
+        apiJson('/master/torihikisaki?limit=5000&jotai=yuko'),
+        apiJson('/master/yagou?limit=8000&jotai=yuko'),
+        apiJson('/master/tenpo?limit=20000&jotai=yuko'),
+      ]);
+      const toriItems = getItems(toriData);
+      const yagouItems = getItems(yagouData);
+      const tenpoItems = getItems(tenpoData);
+
+      const toriNameById = new Map();
+      toriItems.forEach((t) => {
+        const id = norm(t?.torihikisaki_id);
+        if (id) toriNameById.set(id, norm(t?.name));
+      });
+      const yagouById = new Map();
+      yagouItems.forEach((y) => {
+        const id = norm(y?.yagou_id);
+        if (!id) return;
+        yagouById.set(id, {
+          yagou_id: id,
+          yagou_name: norm(y?.name),
+          torihikisaki_id: norm(y?.torihikisaki_id),
+          torihikisaki_name: norm(toriNameById.get(norm(y?.torihikisaki_id))),
+        });
+      });
+
+      const next = [];
+      // 取引先単位
+      toriItems.forEach((t) => {
+        const torihikisaki_id = norm(t?.torihikisaki_id);
+        const torihikisaki_name = norm(t?.name);
+        if (!torihikisaki_id) return;
+        next.push({
+          key: `tori:${torihikisaki_id}`,
+          type: 'torihikisaki',
+          torihikisaki_id,
+          torihikisaki_name,
+          yagou_id: '',
+          yagou_name: '',
+          tenpo_id: '',
+          tenpo_name: '',
+          search_blob: normalizeKeyPart([
+            torihikisaki_name,
+            torihikisaki_id,
+          ].filter(Boolean).join(' ')),
+        });
+      });
+
+      // 屋号単位
+      yagouItems.forEach((y) => {
+        const yagou_id = norm(y?.yagou_id);
+        const torihikisaki_id = norm(y?.torihikisaki_id);
+        if (!yagou_id || !torihikisaki_id) return;
+        const torihikisaki_name = norm(toriNameById.get(torihikisaki_id));
+        const yagou_name = norm(y?.name);
+        next.push({
+          key: `yagou:${yagou_id}`,
+          type: 'yagou',
+          torihikisaki_id,
+          torihikisaki_name,
+          yagou_id,
+          yagou_name,
+          tenpo_id: '',
+          tenpo_name: '',
+          search_blob: normalizeKeyPart([
+            torihikisaki_name,
+            torihikisaki_id,
+            yagou_name,
+            yagou_id,
+          ].filter(Boolean).join(' ')),
+        });
+      });
+
+      // 店舗単位
+      tenpoItems.forEach((tp) => {
+        const tenpo_id = norm(tp?.tenpo_id);
+        const torihikisaki_id = norm(tp?.torihikisaki_id);
+        const yagou_id = norm(tp?.yagou_id);
+        if (!tenpo_id || !torihikisaki_id) return;
+        const torihikisaki_name = norm(toriNameById.get(torihikisaki_id));
+        const y = yagouById.get(yagou_id) || {};
+        const yagou_name = norm(y?.yagou_name);
+        const tenpo_name = norm(tp?.name);
+        next.push({
+          key: `tenpo:${tenpo_id}`,
+          type: 'tenpo',
+          torihikisaki_id,
+          torihikisaki_name,
+          yagou_id,
+          yagou_name,
+          tenpo_id,
+          tenpo_name,
+          search_blob: normalizeKeyPart([
+            torihikisaki_name,
+            torihikisaki_id,
+            yagou_name,
+            yagou_id,
+            tenpo_name,
+            tenpo_id,
+          ].filter(Boolean).join(' ')),
+        });
+      });
+
+      setExistingIndex(next);
+    } catch (e) {
+      console.error('[torihikisaki-touroku] failed to build existing index:', e);
+      setExistingIndex([]);
+    } finally {
+      setExistingIndexLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     reloadTorihikisaki();
   }, [reloadTorihikisaki]);
+
+  useEffect(() => {
+    reloadExistingIndex();
+  }, [reloadExistingIndex]);
 
   useEffect(() => {
     reloadYagou(selectedTorihikisakiId);
@@ -179,6 +347,22 @@ export default function AdminTorihikisakiTourokuPage() {
   const selectedTorihikisaki = useMemo(() => {
     return selectedTorihikisakiId ? torihikisakiById.get(selectedTorihikisakiId) : null;
   }, [selectedTorihikisakiId, torihikisakiById]);
+
+  const existingCandidates = useMemo(() => {
+    const q = normalizeKeyPart(existingQuery);
+    if (!q) return [];
+    return existingIndex
+      .filter((it) => it?.search_blob?.includes(q))
+      .slice(0, 40);
+  }, [existingIndex, existingQuery]);
+
+  const onPickExistingCandidate = useCallback((hit) => {
+    if (!hit) return;
+    const toriId = norm(hit?.torihikisaki_id);
+    const yagouId = norm(hit?.yagou_id);
+    if (toriId) setSelectedTorihikisakiId(toriId);
+    setSelectedYagouId(yagouId || '');
+  }, []);
 
   const findExistingTenpoByNames = useCallback(async ({ torihikisakiName, yagouName, tenpoName }) => {
     const tNameNorm = normalizeKeyPart(torihikisakiName);
@@ -267,6 +451,7 @@ export default function AdminTorihikisakiTourokuPage() {
         method: 'POST',
         body: {
           mode: 'onboarding',
+          touroku_date: todayYmd(),
           torihikisaki_name: tName,
           yagou_name: yName,
           tenpo_name: tenpoName,
@@ -295,11 +480,12 @@ export default function AdminTorihikisakiTourokuPage() {
       setBulkTantouName('');
       setBulkAddress('');
       setBulkUrl('');
-      setBulkJouhouTourokuShaName('');
+      setBulkJouhouTourokuShaName(getCurrentAccountName());
       setBulkOpenKarteAfterCreate(true);
 
       // 既存一覧を更新し、選択を新規に寄せる
       await reloadTorihikisaki();
+      await reloadExistingIndex();
       if (torihikisakiId) setSelectedTorihikisakiId(torihikisakiId);
       if (yagouId) setSelectedYagouId(yagouId);
       if (tenpoId) {
@@ -328,6 +514,7 @@ export default function AdminTorihikisakiTourokuPage() {
     bulkOpenKarteAfterCreate,
     findExistingTenpoByNames,
     reloadTorihikisaki,
+    reloadExistingIndex,
     nav,
   ]);
 
@@ -348,11 +535,17 @@ export default function AdminTorihikisakiTourokuPage() {
     try {
       const y = await apiJson('/master/yagou', {
         method: 'POST',
-        body: { name, torihikisaki_id: torihikisakiId, jotai: 'yuko' },
+        body: {
+          name,
+          torihikisaki_id: torihikisakiId,
+          touroku_date: todayYmd(),
+          jotai: 'yuko',
+        },
       });
       const yagouId = y?.yagou_id || y?.id;
       setAddYagouName('');
       await reloadYagou(torihikisakiId);
+      await reloadExistingIndex();
       if (yagouId) setSelectedYagouId(yagouId);
       setOkMsg(`屋号を追加しました: ${name}`);
     } catch (e) {
@@ -360,7 +553,7 @@ export default function AdminTorihikisakiTourokuPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedTorihikisakiId, addYagouName, reloadYagou]);
+  }, [selectedTorihikisakiId, addYagouName, reloadYagou, reloadExistingIndex]);
 
   const onAddTenpo = useCallback(async () => {
     const torihikisakiId = selectedTorihikisakiId;
@@ -397,10 +590,17 @@ export default function AdminTorihikisakiTourokuPage() {
 
       const tenpo = await apiJson('/master/tenpo', {
         method: 'POST',
-        body: { name, torihikisaki_id: torihikisakiId, yagou_id: yagouId, jotai: 'yuko' },
+        body: {
+          name,
+          torihikisaki_id: torihikisakiId,
+          yagou_id: yagouId,
+          touroku_date: todayYmd(),
+          jotai: 'yuko',
+        },
       });
       const tenpoId = tenpo?.tenpo_id || tenpo?.id;
       await createSoukoIfMissing(tenpoId, name);
+      await reloadExistingIndex();
       setAddTenpoName('');
       setOkMsg(`店舗を追加しました: ${name}`);
       if (tenpoId) nav(`/admin/tenpo/${encodeURIComponent(tenpoId)}`);
@@ -409,7 +609,7 @@ export default function AdminTorihikisakiTourokuPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedTorihikisakiId, selectedYagouId, addTenpoName, createSoukoIfMissing, nav]);
+  }, [selectedTorihikisakiId, selectedYagouId, addTenpoName, createSoukoIfMissing, nav, reloadExistingIndex]);
 
   return (
     <div className="admin-touroku-page">
@@ -495,6 +695,43 @@ export default function AdminTorihikisakiTourokuPage() {
             </div>
 
             <div className="form">
+              <label>
+                <span>統合検索（既存情報）</span>
+                <input
+                  value={existingQuery}
+                  onChange={(e) => setExistingQuery(e.target.value)}
+                  placeholder="取引先 / 屋号 / 店舗 / ID で検索"
+                />
+              </label>
+              {existingIndexLoading ? (
+                <div className="hint">既存データを読み込み中...</div>
+              ) : null}
+              {existingCandidates.length > 0 ? (
+                <div className="existing-search-list">
+                  {existingCandidates.map((it) => (
+                    <button
+                      key={it.key}
+                      type="button"
+                      className="existing-search-item"
+                      onClick={() => onPickExistingCandidate(it)}
+                    >
+                      <div className="line1">
+                        {it.torihikisaki_name || '取引先未設定'}
+                        {it.yagou_name ? ` / ${it.yagou_name}` : ''}
+                        {it.tenpo_name ? ` / ${it.tenpo_name}` : ''}
+                      </div>
+                      <div className="line2">
+                        {it.torihikisaki_id || '-'}
+                        {it.yagou_id ? ` ・ ${it.yagou_id}` : ''}
+                        {it.tenpo_id ? ` ・ ${it.tenpo_id}` : ''}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : normalizeKeyPart(existingQuery) ? (
+                <div className="hint">一致する候補がありません</div>
+              ) : null}
+
               <label>
                 <span>取引先</span>
                 <select value={selectedTorihikisakiId} onChange={(e) => setSelectedTorihikisakiId(e.target.value)}>

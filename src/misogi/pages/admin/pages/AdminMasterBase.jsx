@@ -693,6 +693,41 @@ export default function AdminMasterBase({
     return m;
   }, [fieldsSig]); // keep stable even if fields array ref changes
 
+  const selectLabelByField = useMemo(() => {
+    const map = new Map();
+    (fields || []).forEach((f) => {
+      if (!f?.key || f?.type !== 'select') return;
+      const valueKey = f.valueKey || f.key;
+      const labelKey = f.labelKey || 'name';
+      const labelMap = new Map();
+      const options = [
+        ...(Array.isArray(f.options) ? f.options : []),
+        ...(Array.isArray(parents?.[f.sourceKey]) ? parents[f.sourceKey] : []),
+      ];
+      options.forEach((opt) => {
+        const v = opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '';
+        if (!v) return;
+        const l = opt?.[labelKey] ?? opt?.label ?? opt?.name ?? v;
+        labelMap.set(String(v), String(l));
+      });
+      if (labelMap.size) map.set(f.key, labelMap);
+    });
+    return map;
+  }, [fieldsSig, parents, fields]);
+
+  const formatFieldValue = useCallback((field, raw, row) => {
+    if (!field) return raw;
+    if (typeof field?.format === 'function') return field.format(raw, row);
+    if (field?.type === 'select') {
+      const labelMap = selectLabelByField.get(field.key);
+      if (labelMap) {
+        const k = String(raw ?? '');
+        if (labelMap.has(k)) return labelMap.get(k);
+      }
+    }
+    return raw;
+  }, [selectLabelByField]);
+
   const rowDetailItems = useCallback((row) => {
     const keys = Array.isArray(rowDetailKeys) && rowDetailKeys.length
       ? rowDetailKeys
@@ -703,11 +738,11 @@ export default function AdminMasterBase({
         const f = fieldByKey.get(k);
         const label = f?.label || (k === idKey ? 'ID' : (k === 'jotai' ? '状態' : k));
         const raw = row?.[k];
-        const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
+        const v = formatFieldValue(f, raw, row);
         return { key: k, label, value: formatCellValue(v) };
       });
     return items;
-  }, [rowDetailKeys, fieldByKey, idKey]);
+  }, [rowDetailKeys, fieldByKey, idKey, formatFieldValue]);
 
   const onInlineFieldChange = useCallback(async (row, field, value) => {
     const rowId = pickId(row, operationalIdKey);
@@ -907,7 +942,7 @@ export default function AdminMasterBase({
                     if (rendered !== null && rendered !== undefined) {
                       return <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>{rendered}</td>;
                     }
-                    const v = typeof f?.format === 'function' ? f.format(raw, row) : raw;
+                    const v = formatFieldValue(f, raw, row);
                     return <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>{formatCellValue(v)}</td>;
                   })}
                   <td className="actions" data-col="操作" data-key="actions">
@@ -967,7 +1002,7 @@ export default function AdminMasterBase({
         </tbody>
       </table>
     </section>
-  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, idKey, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName]);
+  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, idKey, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName, formatFieldValue]);
 
   return (
     <div className={`admin-master-page ${pageClassName || ''}`.trim()} data-resource={resource}>
