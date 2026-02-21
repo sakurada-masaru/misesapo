@@ -552,3 +552,9 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 各バケット内の検索追加UI（検索/セレクト/追加ボタン）を撤廃
 - [x] 未割当プールの配分のみでタグ追加する運用へ統一
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Onsite Flags Label/Field Update (2026-02-21)
+
+- [x] 現場チェックに `キーボックスあり` (`has_keybox`) を追加
+- [x] `合鍵あり` ラベルを `鍵預かり` に変更（キーは `has_spare_key` 維持）
+- [x] `npm -C src/misogi run build` でビルド確認
