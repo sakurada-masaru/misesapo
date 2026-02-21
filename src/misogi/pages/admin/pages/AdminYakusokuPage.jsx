@@ -25,10 +25,9 @@ const MASTER_API_BASE = IS_LOCAL
 
 const MONTHLY_BUCKET = { key: 'monthly', label: '毎月 (1〜12月)' };
 const QUARTERLY_BUCKETS = [
-  { key: 'quarterly_a', label: 'A (1/5/9月)' },
-  { key: 'quarterly_b', label: 'B (2/6/10月)' },
-  { key: 'quarterly_c', label: 'C (3/7/11月)' },
-  { key: 'quarterly_d', label: 'D (4/8/12月)' },
+  { key: 'quarterly_a', label: 'A (1/4/7/10月)' },
+  { key: 'quarterly_b', label: 'B (2/5/8/11月)' },
+  { key: 'quarterly_c', label: 'C (3/6/9/12月)' },
 ];
 const HALF_YEAR_BUCKETS = [
   { key: 'half_year_a', label: 'A (1/7月)' },
@@ -67,11 +66,34 @@ const PLAN_BUCKETS = [
 const DEFAULT_ONSITE_FLAGS = {
   has_spare_key: false,
   has_keybox: false,
+  has_post_management: false,
+  has_customer_attendance: false,
   key_loss_replacement_risk: false,
   require_gas_valve_check: false,
   trash_pickup_required: false,
   trash_photo_required: false,
 };
+
+const ONSITE_FLAG_GROUPS = [
+  {
+    title: '鍵カテゴリ',
+    items: [
+      { key: 'has_spare_key', label: '鍵預かり' },
+      { key: 'has_keybox', label: 'キーボックスあり' },
+      { key: 'has_post_management', label: 'ポスト管理' },
+      { key: 'key_loss_replacement_risk', label: '鍵紛失＝鍵交換（注意）' },
+    ],
+  },
+  {
+    title: '運用カテゴリ',
+    items: [
+      { key: 'has_customer_attendance', label: '立会いあり' },
+      { key: 'require_gas_valve_check', label: 'ガス栓確認 必須' },
+      { key: 'trash_pickup_required', label: 'ゴミ回収あり' },
+      { key: 'trash_photo_required', label: 'ゴミ回収時に写真 必須' },
+    ],
+  },
+];
 
 function createEmptyTaskMatrix() {
   return Object.fromEntries(PLAN_BUCKETS.map((b) => [b.key, []]));
@@ -145,6 +167,7 @@ export default function AdminYakusokuPage() {
       odd_month: 'monthly',
       even_month: 'monthly',
       yearly: 'monthly',
+      quarterly_d: 'quarterly_a',
     };
     for (const [legacyKey, nextKey] of Object.entries(legacyBucketMap)) {
       const legacy = Array.isArray(taskMatrix[legacyKey])
@@ -1199,28 +1222,30 @@ export default function AdminYakusokuPage() {
               <div className="yotei-form-group">
                 <label>現場チェック（構造化）</label>
                 <div style={{ display: 'grid', gap: 8 }}>
-                  {[
-                    { key: 'has_spare_key', label: '鍵預かり' },
-                    { key: 'has_keybox', label: 'キーボックスあり' },
-                    { key: 'key_loss_replacement_risk', label: '鍵紛失＝鍵交換（注意）' },
-                    { key: 'require_gas_valve_check', label: 'ガス栓確認 必須' },
-                    { key: 'trash_pickup_required', label: 'ゴミ回収あり' },
-                    { key: 'trash_photo_required', label: 'ゴミ回収時に写真 必須' },
-                  ].map((it) => (
-                    <label key={it.key} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: 'var(--text)' }}>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(modalData?.onsite_flags?.[it.key])}
-                        onChange={(e) => setModalData({
-                          ...modalData,
-                          onsite_flags: {
-                            ...normalizeOnsiteFlags(modalData?.onsite_flags),
-                            [it.key]: e.target.checked,
-                          },
-                        })}
-                      />
-                      <span>{it.label}</span>
-                    </label>
+                  {ONSITE_FLAG_GROUPS.map((group) => (
+                    <div key={group.title} style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 8 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginBottom: 6 }}>
+                        {group.title}
+                      </div>
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        {group.items.map((it) => (
+                          <label key={it.key} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: 'var(--text)' }}>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(modalData?.onsite_flags?.[it.key])}
+                              onChange={(e) => setModalData({
+                                ...modalData,
+                                onsite_flags: {
+                                  ...normalizeOnsiteFlags(modalData?.onsite_flags),
+                                  [it.key]: e.target.checked,
+                                },
+                              })}
+                            />
+                            <span>{it.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>

@@ -558,3 +558,22 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 現場チェックに `キーボックスあり` (`has_keybox`) を追加
 - [x] `合鍵あり` ラベルを `鍵預かり` に変更（キーは `has_spare_key` 維持）
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Quarterly Pattern Update (2026-02-21)
+
+- [x] 四半期パターンを A(1/4/7/10) B(2/5/8/11) C(3/6/9/12) の3区分へ変更
+- [x] 旧 `quarterly_d` は互換として `quarterly_a` に吸収
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Onsite Flags Key Category (2026-02-21)
+
+- [x] 現場チェックをカテゴリ表示化し「鍵カテゴリ」を追加
+- [x] 鍵カテゴリに `鍵預かり / キーボックスあり / ポスト管理 / 鍵紛失＝鍵交換（注意）` を配置
+- [x] `has_post_management` フラグを保存対象へ追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Onsite Flags Attendance (2026-02-21)
+
+- [x] 現場チェック（運用カテゴリ）に `立会いあり` を追加
+- [x] 保存フラグ `has_customer_attendance` を追加
+- [x] `npm -C src/misogi run build` でビルド確認

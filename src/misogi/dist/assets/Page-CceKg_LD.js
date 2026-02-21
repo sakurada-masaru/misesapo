@@ -1,0 +1,1 @@
+import{j as e,J as o}from"./index-CrlTra9Y.js";const t=[{id:"issue",role:"target",label:"Issue"},{id:"state",role:"status",label:"進捗"},{id:"sprint",role:"plan",label:"予定",to:"/jobs/dev/yotei"},{id:"log",role:"log",label:"報告",to:"/houkoku"}];function s(){return e.jsx(o,{job:"dev",hotbarConfig:t})}export{s as default};
