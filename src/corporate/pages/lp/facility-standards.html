@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <base href="{{ base_path }}" />
-    <title>排気ファンベルト点検・交換サービス｜ミセサポ</title>
-    <meta name="description" content="厨房・ビルの排気ファンベルト点検・交換サービス。異音・悪臭の原因を早期解決し、故障リスクと電気代を抑えます。最短即日対応、報告書作成まで一貫サポート。">
-    <meta name="keywords" content="ミセサポ,排気ファン,ベルト交換,点検,厨房,ビル,異音,悪臭">
+    <base href="/" />
+    <title>施設基準（食品衛生法施行規則）に対応する飲食店清掃｜ミセサポ</title>
+    <meta name="description" content="改正食品衛生法・施行規則に完全準拠。施設基準の適合維持とHACCP対応の記録管理を、プロの清掃で同時に解決します。">
+    <meta name="keywords" content="ミセサポ,施設基準,食品衛生法施行規則,HACCP,飲食店清掃,法定記録">
 
     <!--GoogleFonts(Noto Sans JP)-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,11 +18,10 @@
     <link rel="stylesheet" href="/css/swiper-bundle.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/header.css">
-    <link rel="stylesheet" href="/css/normal-header-hamburger.css">
     <style>
         .breadcrumb {
             max-width: 1000px;
-            margin: 60px auto 0;
+            margin: 0 auto;
             padding: 20px 20px 0;
             font-size: 14px;
             color: #666;
@@ -57,7 +56,7 @@
         .lp-hero {
             background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
             color: #fff;
-            padding: 70px 20px;
+            padding: 60px 20px;
             text-align: center;
         }
 
@@ -71,26 +70,8 @@
         .lp-hero p {
             font-size: clamp(16px, 2.5vw, 20px);
             line-height: 1.8;
-            max-width: 860px;
+            max-width: 820px;
             margin: 0 auto 30px;
-        }
-
-        .lp-hero-tags {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            list-style: none;
-            margin: 0 auto 30px;
-            padding: 0;
-        }
-
-        .lp-hero-tags li {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 700;
         }
 
         .lp-hero-cta {
@@ -246,77 +227,6 @@
             line-height: 1.8;
         }
 
-        .lp-flow-list {
-            display: grid;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .lp-flow-item {
-            background: #f9f9f9;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .lp-flow-item span {
-            display: inline-block;
-            background: #FF679C;
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .lp-flow-item p {
-            font-size: 16px;
-            color: #666;
-            line-height: 1.8;
-        }
-
-        .lp-price-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .lp-price-card {
-            background: #f9f9f9;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .lp-price-card h3 {
-            font-size: 18px;
-            color: #FF679C;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .lp-faq-item {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .lp-faq-item h3 {
-            font-size: 18px;
-            color: #FF679C;
-            margin-bottom: 8px;
-        }
-
-        .lp-faq-item p {
-            font-size: 16px;
-            color: #666;
-            line-height: 1.8;
-        }
-
         .lp-cta {
             background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
             color: #fff;
@@ -374,9 +284,52 @@
             background: #ffeb3b;
         }
 
+        .lp-main-text-box {
+            margin: 60px auto 0;
+            color: #000;
+            max-width: 900px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .lp-main-text-box h3 {
+            font-size: 24px;
+            border-bottom: #000 2px solid;
+            width: fit-content;
+            padding-bottom: 5px;
+            margin: auto auto 20px;
+        }
+
+        .lp-main-text-box h2 {
+            font-size: 32px;
+            color: #FF679C;
+            margin-bottom: 20px;
+        }
+
+        .lp-main-text-box ul {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            list-style: none;
+            padding: 0;
+            margin: 0 0 30px 0;
+        }
+
+        .lp-main-text-box ul li {
+            color: #FF679C;
+            background: #ffd1ed;
+            width: fit-content;
+            margin: 0 10px 30px;
+            font-size: 16px;
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .lp-hero {
-                padding: 60px 15px;
+                padding: 50px 15px;
             }
 
             .lp-section {
@@ -394,11 +347,34 @@
                 text-align: center;
             }
         }
+        @media screen and (min-width: 933px) {
+    main {
+        margin-top: 8rem;
+    }
+}
     </style>
 </head>
 
 <body style="color: #FDEDED;">
-    <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
+    <!-- 通常ヘッダー -->
+    <header class="normal-header visible">
+        <div class="normal-header-inner">
+            <div class="normal-header-logo">
+                <a href="/">
+                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
+                        onerror="this.style.display='none'">
+                </a>
+            </div>
+            <nav class="normal-header-nav">
+                <a href="/">TOP</a>
+                <a href="/service/service.html">対応可能サービス</a>
+                <a href="/lp#voice">お客様の声</a>
+                <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
+                <a href="/#event">イベント</a>
+                <a href="/privacy-policy">規約＆ポリシー</a>
+            </nav>
+        </div>
+    </header>
 
     <main style="background: #FDEDED;">
         <!-- パンくずリスト -->
@@ -406,100 +382,115 @@
             <div class="breadcrumb-inner">
                 <a href="/">TOP</a>
                 <span>></span>
-                <a href="about-more.html">トピック一覧</a>
+                <a href="about-more.html">一覧</a>
                 <span>></span>
-                <span class="current">排気ファンベルト点検・交換</span>
+                <span class="current">施設基準（食品衛生法施行規則）</span>
             </div>
         </div>
 
+        <!-- ヒーローセクション -->
         <section class="lp-hero-new" style="position: relative; background-size: cover; background-position: center;">
             <picture>
-                <source media="(max-width: 768px)" srcset="/images/lp/fan-belt_kv_sp.png">
-                <img src="/images/lp/fan-belt_kv.png" style="width: 100%; height: auto; display: block;">
+                <source media="(max-width: 768px)" srcset="/images/facility-standards_kv_sp.png">
+                <img src="/images/facility-standards_kv_sp.png" style="width: 100%; height: auto; display: block;">
             </picture>
         </section>
 
         <section class="lp-main-text-box">
             <ul>
-                <li>#故障リスク回避</li>
-                <li>#電気代削減</li>
-                <li>#衛生環境の維持</li>
+                <li>#施設基準</li>
+                <li>#食品衛生法</li>
+                <li>#HACCP対応</li>
+                <li>#飲食店清掃</li>
             </ul>
             <div>
-                <h3>異音や悪臭、放置していませんか？</h3>
-                <h2>厨房・ビルの“肺”を守る、排気ファンベルト点検</h2>
+                <h3>飲食店の許可更新に備える</h3>
+                <h2>施設基準の適合維持サポート</h2>
             </div>
         </section>
 
-        <!-- 1. 導入 -->
+        <!-- 1. キャッチコピー案 -->
         <section class="lp-section lp-reasons">
             <div class="lp-reasons-box">
-                <h2 class="lp-section-title">1. こんなお悩みありませんか？</h2>
-                <ul>
-                    <li>厨房が最近暑い、煙の吸いが悪い気がする。</li>
-                    <li>屋上のファンから「キュルキュル」と異音が聞こえる。</li>
-                    <li>最後にベルトを交換したのがいつか覚えていない。</li>
-                </ul>
-                <p style="margin-top: 10px; font-weight: 700; color: #FF679C;">もしベルトが切れたら… 営業停止や熱中症、火災リスクに繋がります。</p>
+                <h2 class="lp-section-title">1. 設基準（食品衛生法施行規則）</h2>
+                <p class="lp-section-text">「その清掃、次回の営業許可更新をクリアできますか？」</p>
+                <p class="lp-section-text" style="margin-top: 10px;">改正食品衛生法・施行規則に完全準拠。プロの清掃で「施設基準」の適合維持と、HACCP対応の記録管理を同時に解決します。</p>
             </div>
         </section>
 
-        <!-- 2. 解決策 -->
+        <!-- 2. 施設基準の正体 -->
         <section class="lp-section">
             <div class="lp-reasons-box">
-
-            <h2 class="lp-section-title">2. プロによるベルト交換・調整サービス</h2>
-            <p class="lp-section-text">排気ファンは24時間稼働し続ける過酷な設備です。Vベルトは消耗品であり、定期的な「張り（テンション）」の調整と交換が不可欠です。</p>
-            <div class="lp-points-list">
-                <div class="lp-point-item">
-                    <h3>最適なテンション調整</h3>
-                    <p>張りすぎはベアリング故障を招き、緩すぎは摩耗を早めます。熟練の技術で「一番長持ちする状態」に仕上げます。</p>
-                </div>
-                <div class="lp-point-item">
-                    <h3>プーリー清掃・点検</h3>
-                    <p>ベルトだけ変えても意味がありません。溝の摩耗やサビも併せてチェックします。</p>
-                </div>
-                <div class="lp-point-item">
-                    <h3>スピード対応</h3>
-                    <p>主要サイズの在庫を常備し、緊急のトラブルにも迅速に駆けつけます。</p>
+                <h2 class="lp-section-title">2. 法律が求める「施設基準」の正体</h2>
+                <p class="lp-section-text">2021年の法改正により、飲食店が守るべき「施設基準（食品衛生法施行規則 別表第10）」は全国一律で厳格化されました。清掃業者が介入すべきポイントは以下の4点です。</p>
+                <div class="lp-points-list" style="margin-top: 20px;">
+                    <div class="lp-point-item">
+                        <h3>① 構造の基準（壁・床・天井）</h3>
+                        <p><strong>法的要求:</strong> 清掃・洗浄・消毒が容易な構造であり、不浸透性材料（タイルやステンレス等）を使用すること。</p>
+                        <p style="margin-top: 10px;"><strong>業者の価値:</strong> 蓄積した油汚れ（炭化汚れ）やカビは素材を腐食させ「不浸透性」を損なわせます。プロの洗浄で素材の平滑性を保ち、菌の温床を根絶します。</p>
+                    </div>
+                    <div class="lp-point-item">
+                        <h3>② 排水・廃棄物処理の基準</h3>
+                        <p><strong>法的要求:</strong> 排水が滞留せず、ネズミ・昆虫の侵入を防止する構造であること。</p>
+                        <p style="margin-top: 10px;"><strong>業者の価値:</strong> 排水溝のヌメリやグリストラップの放置は、法的な「清掃・消毒の実施」義務違反に直結します。</p>
+                    </div>
+                    <div class="lp-point-item">
+                        <h3>③ 手洗い・消毒設備の基準</h3>
+                        <p><strong>法的要求:</strong> 従業員専用の手洗い設備を適切な位置に設置し、常に清潔に保つこと。</p>
+                        <p style="margin-top: 10px;"><strong>業者の価値:</strong> 水垢やバイオフィルムが付着した手洗い場は逆に汚染源となります。水栓周りの徹底洗浄と消毒設備の点検を代行します。</p>
+                    </div>
+                    <div class="lp-point-item">
+                        <h3>④ 器具・機械の洗浄・保守</h3>
+                        <p><strong>法的要求:</strong> 冷蔵庫、調理器具、洗浄機などは常に清潔な状態で保守点検すること。</p>
+                        <p style="margin-top: 10px;"><strong>業者の価値:</strong> 冷蔵庫のフィルター、製氷機の内部、レンジフードの奥など、日常清掃では届かない場所の「定期的清掃」こそが、法規上の「保守点検」にあたります。</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-        <!-- 3. 比較表 -->
+        <!-- 3. 法的根拠 -->
+        <section class="lp-section lp-reasons">
+            <div class="lp-reasons-box">
+                <h2 class="lp-section-title">3. 「信頼性」を高める法的根拠</h2>
+                <p class="lp-section-text">「なぜ清掃業者が必要なのか？」食品衛生法施行規則 第66条の2（一般衛生管理）には「施設の内外は、清潔な状態を維持しなければならない」と明記されており、これには「清掃・消毒の計画」と「実施記録」がセットで求められます。</p>
+                <p class="lp-section-text" style="margin-top: 10px;">営業許可の更新検査時、床の剥がれやグリストラップの腐食、換気設備の不備があると、<strong>改善命令（最悪の場合は営業停止）</strong>のリスクがあります。</p>
+            </div>
+        </section>
+
+        <!-- 4. メリット -->
         <section class="lp-section">
             <div class="lp-reasons-box">
-                <h2 class="lp-section-title">3. 放置するリスク vs メンテナンスのメリット</h2>
-                <div class="lp-table-wrapper">
+                <h2 class="lp-section-title">4. プロに頼むメリット</h2>
+                <p class="lp-section-text">日常清掃と専門業者の定期清掃では、法令対応とリスク管理に大きな差が出ます。</p>
+                <div class="lp-table-wrapper" style="margin-top: 20px;">
                     <table class="lp-table">
                         <thead>
                             <tr>
                                 <th>項目</th>
-                                <th>放置した場合</th>
-                                <th>定期メンテナンス実施</th>
+                                <th>日常清掃（アルバイト等）</th>
+                                <th>専門業者の定期清掃</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>故障リスク</td>
-                                <td>突然の断裂による営業停止</td>
-                                <td>計画的な交換でトラブルゼロ</td>
+                                <td>HACCP対応記録</td>
+                                <td>漏れがち、根拠が曖昧</td>
+                                <td>清掃完了報告書がそのまま<strong>「法定記録」</strong>として使える</td>
                             </tr>
                             <tr>
-                                <td>修理費用</td>
-                                <td>モーター故障等で数十万円〜</td>
-                                <td>数千円〜数万円の維持費のみ</td>
+                                <td>害虫・ネズミ対策</td>
+                                <td>発生してから駆除（後手）</td>
+                                <td>餌となる汚れを根こそぎ除去（先手の防除）</td>
                             </tr>
                             <tr>
-                                <td>電気代</td>
-                                <td>滑りによるロスで悪化</td>
-                                <td>効率的な回転で省エネ</td>
+                                <td>設備寿命</td>
+                                <td>汚れによる故障・劣化が早い</td>
+                                <td>適切な洗浄により厨房機器が長持ちし、修繕費抑制</td>
                             </tr>
                             <tr>
-                                <td>寿命</td>
-                                <td>設備全体の寿命が縮まる</td>
-                                <td>ファンを10年以上長持ちさせる</td>
+                                <td>法的リスク</td>
+                                <td>保健所の指摘に怯える</td>
+                                <td>自信を持って検査を受けられる「適合状態」を維持</td>
                             </tr>
                         </tbody>
                     </table>
@@ -507,82 +498,34 @@
             </div>
         </section>
 
-        <!-- 4. 作業の流れ -->
-        <section class="lp-section">
-            <div class="lp-reasons-box">
-                <h2 class="lp-section-title">4. 作業の流れ</h2>
-                <div class="lp-flow-list">
-                    <div class="lp-flow-item">
-                        <span>STEP 1</span>
-                        <p>現地調査・見積もり：型番と状態を確認。</p>
-                    </div>
-                    <div class="lp-flow-item">
-                        <span>STEP 2</span>
-                        <p>安全確保：養生および電源遮断の徹底。</p>
-                    </div>
-                    <div class="lp-flow-item">
-                        <span>STEP 3</span>
-                        <p>旧ベルト撤去・清掃：プーリー（滑車）の状態を確認。</p>
-                    </div>
-                    <div class="lp-flow-item">
-                        <span>STEP 4</span>
-                        <p>新ベルト装着・芯出し：レーザーや目視による正確な調整。</p>
-                    </div>
-                    <div class="lp-flow-item">
-                        <span>STEP 5</span>
-                        <p>試運転・電流値測定：負荷が正常か数値で確認。</p>
-                    </div>
-                    <div class="lp-flow-item">
-                        <span>STEP 6</span>
-                        <p>報告書提出：ビフォーアフター写真付きの書類を作成（管理組合・本部提出用）。</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 5. 料金・対応エリア -->
+        <!-- 5. ターゲット別メッセージ -->
         <section class="lp-section lp-reasons">
             <div class="lp-reasons-box">
-                <h2 class="lp-section-title">5. 料金目安・対応エリア</h2>
-                <div class="lp-price-grid">
-                    <div class="lp-price-card">
-                        <h3>基本料金</h3>
-                        <p>￥17,500〜（ベルト代別）</p>
+                <h2 class="lp-section-title">5. プロに任せる理由</h2>
+                <div class="lp-points-list" style="margin-top: 20px;">
+                    <div class="lp-point-item">
+                        <h3>個人オーナー</h3>
+                        <p>仕込みと接客で手一杯のあなたに代わり、保健所対策（清掃記録の作成）まで丸投げでサポート</p>
                     </div>
-                    <div class="lp-price-card">
-                        <h3>一括割引</h3>
-                        <p>複数台（屋上ファン一括など）の場合は、1台あたりの単価を割引。</p>
+                    <div class="lp-point-item">
+                        <h3>ビルオーナー・管理会社</h3>
+                        <p>下水道法・水質汚濁防止法に抵触しないよう、テナントの排水管理をプロの基準で統一</p>
                     </div>
-                    <div class="lp-price-card">
-                        <h3>対応エリア</h3>
-                        <p>関東全域エリア</p>
+                    <div class="lp-point-item">
+                        <h3>多店舗展開の企業</h3>
+                        <p>全店舗の『施設基準適合率』を可視化。衛生管理のDX化を清掃から支援</p>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 6. FAQ -->
-        <section class="lp-section">
-            <div class="lp-reasons-box">
-                <h2 class="lp-section-title">6. よくある質問（FAQ）</h2>
-                <div class="lp-faq-item">
-                    <h3>Q. 交換時期の目安は？</h3>
-                    <p>A. 一般的に1年に1回の交換、半年に1回の点検を推奨しています。</p>
-                </div>
-                <div class="lp-faq-item">
-                    <h3>Q. 夜間や早朝の作業は可能ですか？</h3>
-                    <p>A. 飲食店様の営業時間外など、柔軟に対応可能です。ご相談ください。</p>
                 </div>
             </div>
         </section>
 
         <!-- CTAセクション -->
         <section id="contact" class="lp-cta">
-            <h2>手遅れになる前に、まずは無料の異音チェックを</h2>
-            <p>異音や悪臭が気になる方は、今すぐご相談ください。<br>点検から報告書作成まで一貫対応します。</p>
+            <h2>無料の衛生診断実施中！</h2>
+            <p>保健所の検査官と同じ視点で、貴店の厨房をチェックします。<br>施設基準に適合していない箇所をレポートとして提出します。</p>
             <p class="lp-cta-sub-text">＼お気軽にご相談ください／</p>
             <div class="lp-cta-buttons">
-                <a href="mailto:info@misesapo.co.jp">お問い合わせはこちら</a>
+                <a href="mailto:info@misesapo.co.jp">お問い合わせをする</a>
             </div>
         </section>
     </main>
@@ -648,7 +591,6 @@
         });
     </script>
     <script src="/js/header.js"></script>
-    <script src="/js/normal-header-hamburger.js"></script>
 </body>
 
 </html>

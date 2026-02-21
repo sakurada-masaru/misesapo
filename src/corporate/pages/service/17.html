@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" href="/images/logo_144x144.png" />
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/normal-header-hamburger.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- 
@@ -234,6 +235,40 @@
         width: 100%;
       }
     }
+
+    .breadcrumb {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px 20px 0;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .breadcrumb-inner {
+      display: inline-block;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .breadcrumb a {
+      color: #666;
+      text-decoration: none !important;
+      transition: color 0.3s ease;
+    }
+
+    .breadcrumb a:hover {
+      color: #FF679C;
+    }
+
+    .breadcrumb span {
+      margin: 0 8px;
+      color: #999;
+    }
+
+    .breadcrumb .current {
+      color: #333;
+      font-weight: 500;
+    }
   </style>
 </head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZJ1XD60S84"></script>
@@ -245,27 +280,18 @@
   gtag('config', 'G-ZJ1XD60S84');
 </script>
 <body class="theme-pink ">
-  <header class="normal-header visible">
-    <div class="normal-header-inner">
-      <div class="normal-header-logo">
-        <a href="/">
-          <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
-            onerror="this.style.display='none'">
-        </a>
-      </div>
-      <nav class="normal-header-nav">
-        <a href="/">TOP</a>
-        <a href="/service/service.html">対応可能サービス</a>
-        <a href="/voice/">お客様の声</a>
-        <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
-        <a href="/#event">イベント</a>
-        <a href="/privacy-policy/">規約＆ポリシー</a>
-      </nav>
-    </div>
-  </header>
+  <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
+
   <main id="main" class="container service-detail-page">
-    <div class="page-header">
-      <h1 class="page-title">テーブル拭き</h1>
+    <!-- パンくずリスト -->
+    <div class="breadcrumb">
+      <div class="breadcrumb-inner">
+        <a href="/">TOP</a>
+        <span>></span>
+        <a href="/service/service.html">サービス一覧</a>
+        <span>></span>
+        <span class="current">テーブル拭き</span>
+      </div>
     </div>
 
     <div class="service-detail-card">
@@ -837,29 +863,65 @@
   <script src="/modal_manager.js"></script>
   <script src="/app.js"></script>
   <script>
-    // ログイン画面では通常ヘッダーを表示
-    (function () {
-      const path = window.location.pathname || '';
-      const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
-
-      // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
-      if (isSigninPage) {
-        const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
-        const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
-        if (defaultHeaderWrapper) {
-          defaultHeaderWrapper.style.display = 'none';
-        }
-        if (normalHeaderWrapper) {
-          normalHeaderWrapper.style.display = 'block';
-          // ログイン画面では通常ヘッダーを常に表示
-          const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
-          if (normalHeader) {
-            normalHeader.classList.add('visible');
-          }
-        }
+    // パスを解決（GitHub Pages対応）
+    function resolvePath(path) {
+      if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+        return path;
       }
-    })();
+
+      const hostname = window.location.hostname;
+      const isLocalDev = hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '';
+
+      const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+
+      if (isLocalDev || isCustomDomain) {
+        return path.startsWith('/') ? path : '/' + path;
+      }
+
+      // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+      let resolvedPath;
+      if (path.startsWith('/misesapo/')) {
+        resolvedPath = path;
+      } else if (path.startsWith('/')) {
+        resolvedPath = '/misesapo' + path;
+      } else {
+        resolvedPath = '/misesapo/' + path;
+      }
+
+      return window.location.origin + resolvedPath;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const normalHeader = document.querySelector('.normal-header');
+      if (normalHeader) {
+        normalHeader.classList.add('visible');
+        const originalRemove = normalHeader.classList.remove;
+        normalHeader.classList.remove = function (...args) {
+          if (args[0] !== 'visible') {
+            originalRemove.apply(this, args);
+          }
+        };
+      }
+
+      document.querySelectorAll('a[href^="/"]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+          link.href = resolvePath(href);
+        }
+      });
+
+      document.querySelectorAll('img[src^="/"]').forEach(img => {
+        const src = img.getAttribute('src');
+        if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+          img.src = resolvePath(src);
+        }
+      });
+    });
   </script>
+  <script src="/js/header.js"></script>
+  <script src="/js/normal-header-hamburger.js"></script>
 </body>
 
 </html>
