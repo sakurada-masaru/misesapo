@@ -453,3 +453,10 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 検索候補クリックで `取引先` / `屋号` 選択へ反映
 - [x] 新規作成/追加後に検索インデックスを再読み込み
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Torihikisaki Touroku Existing Add Basic Info (2026-02-21)
+
+- [x] 顧客登録（新）> 既存に追加 で店舗追加時の基本情報入力（電話/メール/担当者/住所/URL/情報登録者）を追加
+- [x] 店舗追加 API (`POST /master/tenpo`) に基本情報を保存するよう連携
+- [x] 追加成功後に入力欄をクリアし、情報登録者名はログイン名で再初期化
+- [x] `npm -C src/misogi run build` でビルド確認

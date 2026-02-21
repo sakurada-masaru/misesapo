@@ -157,12 +157,24 @@ export default function AdminTorihikisakiTourokuPage() {
   // 既存に追加入力
   const [addYagouName, setAddYagouName] = useState('');
   const [addTenpoName, setAddTenpoName] = useState('');
+  const [addPhone, setAddPhone] = useState('');
+  const [addEmail, setAddEmail] = useState('');
+  const [addTantouName, setAddTantouName] = useState('');
+  const [addAddress, setAddAddress] = useState('');
+  const [addUrl, setAddUrl] = useState('');
+  const [addJouhouTourokuShaName, setAddJouhouTourokuShaName] = useState(() => getCurrentAccountName());
 
   useEffect(() => {
     if (bulkJouhouTourokuShaName) return;
     const accountName = getCurrentAccountName();
     if (accountName) setBulkJouhouTourokuShaName(accountName);
   }, [bulkJouhouTourokuShaName]);
+
+  useEffect(() => {
+    if (addJouhouTourokuShaName) return;
+    const accountName = getCurrentAccountName();
+    if (accountName) setAddJouhouTourokuShaName(accountName);
+  }, [addJouhouTourokuShaName]);
 
   const reloadTorihikisaki = useCallback(async () => {
     setErr('');
@@ -559,6 +571,12 @@ export default function AdminTorihikisakiTourokuPage() {
     const torihikisakiId = selectedTorihikisakiId;
     const yagouId = selectedYagouId;
     const name = norm(addTenpoName);
+    const phone = norm(addPhone);
+    const email = norm(addEmail);
+    const tantouName = norm(addTantouName);
+    const address = norm(addAddress);
+    const url = norm(addUrl);
+    const jouhouTourokuShaName = norm(addJouhouTourokuShaName);
     if (!torihikisakiId || !yagouId) {
       window.alert('取引先・屋号を選択してください');
       return;
@@ -595,6 +613,12 @@ export default function AdminTorihikisakiTourokuPage() {
           torihikisaki_id: torihikisakiId,
           yagou_id: yagouId,
           touroku_date: todayYmd(),
+          ...(phone ? { phone } : {}),
+          ...(email ? { email } : {}),
+          ...(tantouName ? { tantou_name: tantouName } : {}),
+          ...(address ? { address } : {}),
+          ...(url ? { url } : {}),
+          ...(jouhouTourokuShaName ? { jouhou_touroku_sha_name: jouhouTourokuShaName } : {}),
           jotai: 'yuko',
         },
       });
@@ -602,6 +626,12 @@ export default function AdminTorihikisakiTourokuPage() {
       await createSoukoIfMissing(tenpoId, name);
       await reloadExistingIndex();
       setAddTenpoName('');
+      setAddPhone('');
+      setAddEmail('');
+      setAddTantouName('');
+      setAddAddress('');
+      setAddUrl('');
+      setAddJouhouTourokuShaName(getCurrentAccountName());
       setOkMsg(`店舗を追加しました: ${name}`);
       if (tenpoId) nav(`/admin/tenpo/${encodeURIComponent(tenpoId)}`);
     } catch (e) {
@@ -609,7 +639,20 @@ export default function AdminTorihikisakiTourokuPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedTorihikisakiId, selectedYagouId, addTenpoName, createSoukoIfMissing, nav, reloadExistingIndex]);
+  }, [
+    selectedTorihikisakiId,
+    selectedYagouId,
+    addTenpoName,
+    addPhone,
+    addEmail,
+    addTantouName,
+    addAddress,
+    addUrl,
+    addJouhouTourokuShaName,
+    createSoukoIfMissing,
+    nav,
+    reloadExistingIndex,
+  ]);
 
   return (
     <div className="admin-touroku-page">
@@ -779,6 +822,31 @@ export default function AdminTorihikisakiTourokuPage() {
                   <button className="primary" onClick={onAddTenpo} disabled={loading || !selectedTorihikisakiId || !selectedYagouId}>店舗を追加</button>
                 </div>
               </div>
+
+              <label>
+                <span>電話番号（基本情報）</span>
+                <input value={addPhone} onChange={(e) => setAddPhone(e.target.value)} placeholder="例: 03-xxxx-xxxx" />
+              </label>
+              <label>
+                <span>メールアドレス（基本情報）</span>
+                <input value={addEmail} onChange={(e) => setAddEmail(e.target.value)} placeholder="例: info@example.com" />
+              </label>
+              <label>
+                <span>担当者（基本情報）</span>
+                <input value={addTantouName} onChange={(e) => setAddTantouName(e.target.value)} placeholder="例: 山田太郎" />
+              </label>
+              <label>
+                <span>住所（基本情報）</span>
+                <input value={addAddress} onChange={(e) => setAddAddress(e.target.value)} placeholder="例: 東京都..." />
+              </label>
+              <label>
+                <span>URL（基本情報）</span>
+                <input value={addUrl} onChange={(e) => setAddUrl(e.target.value)} placeholder="https://..." />
+              </label>
+              <label>
+                <span>情報登録者名</span>
+                <input value={addJouhouTourokuShaName} onChange={(e) => setAddJouhouTourokuShaName(e.target.value)} placeholder="例: 管理オペ担当" />
+              </label>
 
               <div className="hint">
                 店舗作成後は <code>souko</code>（顧客ストレージ）を自動作成し、店舗カルテへ遷移します。
