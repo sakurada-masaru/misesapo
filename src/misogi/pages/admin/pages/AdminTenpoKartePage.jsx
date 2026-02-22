@@ -124,6 +124,79 @@ const MONTH_OPTIONS = [
   { value: 12, label: '12月' },
 ];
 
+const BASIC_INFO_PROFILE_KEYS = [
+  'name',
+  'address',
+  'phone',
+  'url',
+  'business_hours',
+  'customer_attendance',
+  'contact_method',
+  'security_info',
+  'customer_contact_name',
+  'customer_contact_phone',
+  'sales_owner',
+];
+
+function normalizeBasicInfoProfile(raw) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  const attendance = String(src.customer_attendance || '').trim();
+  return {
+    name: clampStr(src.name || '', 120),
+    address: clampStr(src.address || '', 200),
+    phone: clampStr(src.phone || '', 40),
+    url: clampStr(src.url || '', 200),
+    business_hours: clampStr(src.business_hours || '', 80),
+    customer_attendance: CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '',
+    contact_method: clampStr(src.contact_method || '', 80),
+    security_info: clampStr(src.security_info || '', 120),
+    customer_contact_name: clampStr(src.customer_contact_name || '', 80),
+    customer_contact_phone: clampStr(src.customer_contact_phone || '', 40),
+    sales_owner: clampStr(src.sales_owner || '', 80),
+  };
+}
+
+function extractBasicInfoProfileFromTenpoRecord(tp) {
+  const spec = tp?.karte_detail?.spec || {};
+  return normalizeBasicInfoProfile({
+    name: tp?.name || '',
+    address: tp?.address || '',
+    phone: tp?.phone || '',
+    url: tp?.url || '',
+    business_hours: spec?.business_hours || tp?.business_hours || tp?.eigyou_jikan || '',
+    customer_attendance: spec?.customer_attendance || '',
+    contact_method: spec?.contact_method || tp?.contact_method || '',
+    security_info: spec?.security_info || tp?.security_info || '',
+    customer_contact_name: spec?.customer_contact_name || tp?.contact_name || tp?.contact_person || tp?.tantou_name || '',
+    customer_contact_phone: spec?.customer_contact_phone || tp?.tantou_phone || tp?.contact_person_phone || tp?.contact_phone || '',
+    sales_owner: spec?.sales_owner || '',
+  });
+}
+
+function isBlankValue(v) {
+  return String(v || '').trim() === '';
+}
+
+function mergeBasicInfoProfile(baseProfile, overlayProfile) {
+  const base = normalizeBasicInfoProfile(baseProfile);
+  const overlay = normalizeBasicInfoProfile(overlayProfile);
+  const next = { ...base };
+  BASIC_INFO_PROFILE_KEYS.forEach((k) => {
+    if (!isBlankValue(overlay[k])) next[k] = overlay[k];
+  });
+  return normalizeBasicInfoProfile(next);
+}
+
+function resolveBasicInfoByHierarchy(storeProfile, yagouSharedProfile, toriSharedProfile) {
+  const byTori = mergeBasicInfoProfile(storeProfile, toriSharedProfile);
+  return mergeBasicInfoProfile(byTori, yagouSharedProfile);
+}
+
+function isBasicInfoProfileEmpty(profile) {
+  const p = normalizeBasicInfoProfile(profile);
+  return BASIC_INFO_PROFILE_KEYS.every((k) => isBlankValue(p[k]));
+}
+
 function monthLabel(month) {
   const m = Number(month);
   if (!m || m < 1 || m > 12) return '';
@@ -729,6 +802,10 @@ export default function AdminTenpoKartePage() {
     customer_contact_phone: '',
     sales_owner: '',
   });
+  const [peerTenpos, setPeerTenpos] = useState([]);
+  const [selectedPeerTenpoId, setSelectedPeerTenpoId] = useState('');
+  const [shareBusyScope, setShareBusyScope] = useState('');
+  const [shareStatusMessage, setShareStatusMessage] = useState('');
   const [services, setServices] = useState([]);
   const [jinzais, setJinzais] = useState([]);
 
@@ -747,6 +824,31 @@ export default function AdminTenpoKartePage() {
     return tenpoId;
   }, [tenpo?.name, yagou?.name, tenpoId]);
 
+  const tenpoBasicInfoProfile = useMemo(() => (
+    extractBasicInfoProfileFromTenpoRecord({
+      ...(tenpo || {}),
+      karte_detail: karteDetail && typeof karteDetail === 'object'
+        ? karteDetail
+        : (tenpo?.karte_detail || {}),
+    })
+  ), [tenpo, karteDetail]);
+
+  const yagouSharedBasicInfoProfile = useMemo(() => (
+    normalizeBasicInfoProfile(yagou?.shared_basic_profile || {})
+  ), [yagou?.shared_basic_profile]);
+
+  const toriSharedBasicInfoProfile = useMemo(() => (
+    normalizeBasicInfoProfile(torihikisaki?.shared_basic_profile || {})
+  ), [torihikisaki?.shared_basic_profile]);
+
+  const resolvedBasicInfo = useMemo(() => (
+    resolveBasicInfoByHierarchy(
+      tenpoBasicInfoProfile,
+      yagouSharedBasicInfoProfile,
+      toriSharedBasicInfoProfile
+    )
+  ), [tenpoBasicInfoProfile, yagouSharedBasicInfoProfile, toriSharedBasicInfoProfile]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     const mq = window.matchMedia('(max-width: 900px)');
@@ -762,30 +864,24 @@ export default function AdminTenpoKartePage() {
 
   const salesOwnerSummary = useMemo(() => {
     const rows = uniqTags([
-      String(karteDetail?.spec?.sales_owner || '').trim(),
+      String(resolvedBasicInfo?.sales_owner || '').trim(),
     ], 4);
     return rows.join(' / ') || '—';
-  }, [karteDetail?.spec?.sales_owner]);
+  }, [resolvedBasicInfo?.sales_owner]);
 
   const customerContactSummary = useMemo(() => {
     const rows = uniqTags([
-      String(karteDetail?.spec?.customer_contact_name || '').trim(),
-      String(tenpo?.contact_name || '').trim(),
-      String(tenpo?.contact_person || '').trim(),
-      String(tenpo?.tantou_name || '').trim(),
+      String(resolvedBasicInfo?.customer_contact_name || '').trim(),
     ], 4);
     return rows.join(' / ') || '—';
-  }, [karteDetail?.spec?.customer_contact_name, tenpo?.contact_name, tenpo?.contact_person, tenpo?.tantou_name]);
+  }, [resolvedBasicInfo?.customer_contact_name]);
 
   const customerContactPhoneSummary = useMemo(() => {
     const rows = uniqTags([
-      String(karteDetail?.spec?.customer_contact_phone || '').trim(),
-      String(tenpo?.tantou_phone || '').trim(),
-      String(tenpo?.contact_person_phone || '').trim(),
-      String(tenpo?.contact_phone || '').trim(),
+      String(resolvedBasicInfo?.customer_contact_phone || '').trim(),
     ], 4);
     return rows.join(' / ') || '—';
-  }, [karteDetail?.spec?.customer_contact_phone, tenpo?.tantou_phone, tenpo?.contact_person_phone, tenpo?.contact_phone]);
+  }, [resolvedBasicInfo?.customer_contact_phone]);
 
   const servicePlanSummary = useMemo(() => {
     const planFrequency = String(karteDetail?.plan?.plan_frequency || '').trim();
@@ -806,57 +902,8 @@ export default function AdminTenpoKartePage() {
   }, [karteDetail?.plan?.plan_frequency, karteDetail?.service_plan]);
 
   const buildBasicInfoDraft = useCallback(() => {
-    const attendance = String(karteDetail?.spec?.customer_attendance || '').trim();
-    return {
-      name: clampStr(tenpo?.name || '', 120),
-      address: clampStr(tenpo?.address || '', 200),
-      phone: clampStr(tenpo?.phone || '', 40),
-      url: clampStr(tenpo?.url || '', 200),
-      business_hours: clampStr(karteDetail?.spec?.business_hours || tenpo?.business_hours || tenpo?.eigyou_jikan || '', 80),
-      customer_attendance: CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '',
-      contact_method: clampStr(karteDetail?.spec?.contact_method || tenpo?.contact_method || '', 80),
-      security_info: clampStr(karteDetail?.spec?.security_info || tenpo?.security_info || '', 120),
-      customer_contact_name: clampStr(
-        karteDetail?.spec?.customer_contact_name
-        || tenpo?.contact_name
-        || tenpo?.contact_person
-        || tenpo?.tantou_name
-        || '',
-        80
-      ),
-      customer_contact_phone: clampStr(
-        karteDetail?.spec?.customer_contact_phone
-        || tenpo?.tantou_phone
-        || tenpo?.contact_person_phone
-        || tenpo?.contact_phone
-        || '',
-        40
-      ),
-      sales_owner: clampStr(karteDetail?.spec?.sales_owner || '', 80),
-    };
-  }, [
-    karteDetail?.spec?.business_hours,
-    karteDetail?.spec?.contact_method,
-    karteDetail?.spec?.security_info,
-    karteDetail?.spec?.customer_contact_name,
-    karteDetail?.spec?.customer_contact_phone,
-    karteDetail?.spec?.customer_attendance,
-    karteDetail?.spec?.sales_owner,
-    tenpo?.address,
-    tenpo?.business_hours,
-    tenpo?.contact_method,
-    tenpo?.security_info,
-    tenpo?.contact_name,
-    tenpo?.contact_person_phone,
-    tenpo?.contact_person,
-    tenpo?.contact_phone,
-    tenpo?.eigyou_jikan,
-    tenpo?.name,
-    tenpo?.phone,
-    tenpo?.tantou_phone,
-    tenpo?.tantou_name,
-    tenpo?.url,
-  ]);
+    return resolvedBasicInfo;
+  }, [resolvedBasicInfo]);
 
   useEffect(() => {
     if (editingBasicInfo) return;
@@ -918,6 +965,41 @@ export default function AdminTenpoKartePage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const toriId = String(tenpo?.torihikisaki_id || '').trim();
+      const yagouId = String(tenpo?.yagou_id || '').trim();
+      if (!toriId || !yagouId) {
+        setPeerTenpos([]);
+        setSelectedPeerTenpoId('');
+        return;
+      }
+      try {
+        const res = await apiGetJson(
+          `/master/tenpo?limit=5000&jotai=yuko&torihikisaki_id=${encodeURIComponent(toriId)}&yagou_id=${encodeURIComponent(yagouId)}`
+        );
+        const peers = asItems(res)
+          .filter((it) => String(it?.tenpo_id || it?.id || '') && String(it?.tenpo_id || it?.id || '') !== tenpoId)
+          .sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || ''), 'ja'));
+        if (cancelled) return;
+        setPeerTenpos(peers);
+        setSelectedPeerTenpoId((prev) => {
+          if (prev && peers.some((it) => String(it?.tenpo_id || it?.id || '') === prev)) return prev;
+          return String(peers?.[0]?.tenpo_id || peers?.[0]?.id || '');
+        });
+      } catch {
+        if (!cancelled) {
+          setPeerTenpos([]);
+          setSelectedPeerTenpoId('');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenpo?.torihikisaki_id, tenpo?.yagou_id, tenpoId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1007,6 +1089,105 @@ export default function AdminTenpoKartePage() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  const applyBasicInfoToDraft = useCallback((profile, withEdit = true) => {
+    const normalized = normalizeBasicInfoProfile(profile);
+    setBasicInfoDraft((prev) => mergeBasicInfoProfile(prev, normalized));
+    if (withEdit) setEditingBasicInfo(true);
+  }, []);
+
+  const copyBasicInfoFromPeer = useCallback(async () => {
+    const sourceId = String(selectedPeerTenpoId || '').trim();
+    if (!sourceId) {
+      window.alert('コピー元店舗を選択してください');
+      return;
+    }
+    setShareBusyScope('copy');
+    setShareStatusMessage('');
+    try {
+      const found = await fetchTenpoDetail({
+        tenpoId: sourceId,
+        parentKeys: {
+          torihikisaki_id: String(tenpo?.torihikisaki_id || '').trim(),
+          yagou_id: String(tenpo?.yagou_id || '').trim(),
+        },
+      });
+      if (!found) throw new Error('コピー元店舗の取得に失敗しました');
+      applyBasicInfoToDraft(extractBasicInfoProfileFromTenpoRecord(found), true);
+      const nm = String(found?.name || sourceId);
+      setShareStatusMessage(`コピー元: ${nm}`);
+    } catch (e) {
+      setError(e?.message || '他店舗からのコピーに失敗しました');
+    } finally {
+      setShareBusyScope('');
+    }
+  }, [selectedPeerTenpoId, tenpo?.torihikisaki_id, tenpo?.yagou_id, applyBasicInfoToDraft]);
+
+  const applySharedProfile = useCallback((scope) => {
+    const isYagou = scope === 'yagou';
+    const src = isYagou ? yagouSharedBasicInfoProfile : toriSharedBasicInfoProfile;
+    if (isBasicInfoProfileEmpty(src)) {
+      window.alert(isYagou ? '屋号共有プロファイルが未設定です' : '取引先共有プロファイルが未設定です');
+      return;
+    }
+    applyBasicInfoToDraft(src, true);
+    setShareStatusMessage(isYagou ? '屋号共有をドラフトへ適用' : '取引先共有をドラフトへ適用');
+  }, [applyBasicInfoToDraft, yagouSharedBasicInfoProfile, toriSharedBasicInfoProfile]);
+
+  const saveSharedProfile = useCallback(async (scope) => {
+    const isYagou = scope === 'yagou';
+    const collection = isYagou ? 'yagou' : 'torihikisaki';
+    const id = isYagou ? String(tenpo?.yagou_id || '').trim() : String(tenpo?.torihikisaki_id || '').trim();
+    if (!id) {
+      window.alert(isYagou ? '屋号IDがありません' : '取引先IDがありません');
+      return;
+    }
+    const profile = normalizeBasicInfoProfile(editingBasicInfo ? basicInfoDraft : buildBasicInfoDraft());
+    if (isBasicInfoProfileEmpty(profile)) {
+      window.alert('共有する基本情報が空です');
+      return;
+    }
+    const sharedProfile = {
+      ...profile,
+      _meta: {
+        updated_at: nowIso(),
+        updated_by: clampStr(getCurrentUserName(), 80),
+        source_tenpo_id: tenpoId,
+        scope: isYagou ? 'yagou' : 'torihikisaki',
+      },
+    };
+
+    setShareBusyScope(scope);
+    setShareStatusMessage('');
+    try {
+      let updated;
+      try {
+        updated = await apiPutJson(`/master/${collection}/${encodeURIComponent(id)}`, {
+          shared_basic_profile: sharedProfile,
+        });
+      } catch {
+        const baseRecord = isYagou ? (yagou || {}) : (torihikisaki || {});
+        const fallbackPayload = { ...baseRecord, shared_basic_profile: sharedProfile };
+        updated = await apiPutJson(`/master/${collection}/${encodeURIComponent(id)}`, fallbackPayload);
+      }
+      if (isYagou) setYagou((prev) => ({ ...(prev || {}), ...(updated || {}), shared_basic_profile: updated?.shared_basic_profile || sharedProfile }));
+      else setTorihikisaki((prev) => ({ ...(prev || {}), ...(updated || {}), shared_basic_profile: updated?.shared_basic_profile || sharedProfile }));
+      setShareStatusMessage(isYagou ? '屋号共有を保存しました' : '取引先共有を保存しました');
+    } catch (e) {
+      setError(e?.message || '共有プロファイルの保存に失敗しました');
+    } finally {
+      setShareBusyScope('');
+    }
+  }, [
+    tenpo?.yagou_id,
+    tenpo?.torihikisaki_id,
+    tenpoId,
+    editingBasicInfo,
+    basicInfoDraft,
+    buildBasicInfoDraft,
+    yagou,
+    torihikisaki,
+  ]);
 
   const ensureSouko = useCallback(async () => {
     if (souko?.souko_id) return souko;
@@ -1898,6 +2079,86 @@ export default function AdminTenpoKartePage() {
                   </>
                 )}
               </div>
+
+              <details className="karte-accordion" open={false}>
+                <summary>
+                  <span className="label">基本情報の共有・転用</span>
+                  <span className="hint">他店舗コピー / 屋号共有 / 取引先共有</span>
+                </summary>
+                <div className="accordion-body">
+                  <div className="kv">
+                    <div className="k">他店舗コピー</div>
+                    <div className="v">
+                      <div className="actions-row" style={{ margin: 0 }}>
+                        <select
+                          value={selectedPeerTenpoId}
+                          onChange={(e) => setSelectedPeerTenpoId(e.target.value)}
+                          style={{ minWidth: 240 }}
+                        >
+                          {peerTenpos.length === 0 ? (
+                            <option value="">同屋号の他店舗なし</option>
+                          ) : (
+                            peerTenpos.map((tp) => {
+                              const id = String(tp?.tenpo_id || tp?.id || '');
+                              const nm = String(tp?.name || id || '—');
+                              return <option key={id} value={id}>{nm}</option>;
+                            })
+                          )}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={copyBasicInfoFromPeer}
+                          disabled={!peerTenpos.length || shareBusyScope === 'copy'}
+                        >
+                          {shareBusyScope === 'copy' ? 'コピー中...' : 'ドラフトへコピー'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="kv">
+                    <div className="k">共有適用</div>
+                    <div className="v">
+                      <div className="actions-row" style={{ margin: 0 }}>
+                        <button type="button" onClick={() => applySharedProfile('yagou')}>
+                          屋号共有を適用
+                        </button>
+                        <button type="button" onClick={() => applySharedProfile('torihikisaki')}>
+                          取引先共有を適用
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="kv">
+                    <div className="k">共有保存</div>
+                    <div className="v">
+                      <div className="actions-row" style={{ margin: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => saveSharedProfile('yagou')}
+                          disabled={shareBusyScope === 'yagou'}
+                        >
+                          {shareBusyScope === 'yagou' ? '保存中...' : '現在値を屋号共有へ保存'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => saveSharedProfile('torihikisaki')}
+                          disabled={shareBusyScope === 'torihikisaki'}
+                        >
+                          {shareBusyScope === 'torihikisaki' ? '保存中...' : '現在値を取引先共有へ保存'}
+                        </button>
+                      </div>
+                      {shareStatusMessage ? (
+                        <div className="v-sub" style={{ marginTop: 8 }}>
+                          {shareStatusMessage}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </details>
+
               <div className="kv">
                 <div className="k">取引先</div>
                 <div className="v">
@@ -1926,7 +2187,7 @@ export default function AdminTenpoKartePage() {
                         onChange={(e) => onBasicInfoField('name', clampStr(e.target.value, 120))}
                         placeholder="店舗名"
                       />
-                    ) : (tenpo?.name || '—')}
+                    ) : (resolvedBasicInfo?.name || '—')}
                   </div>
                   <div className="v-sub">
                     <code>{tenpo?.tenpo_id || tenpoId}</code>
@@ -1943,7 +2204,7 @@ export default function AdminTenpoKartePage() {
                         onChange={(e) => onBasicInfoField('address', clampStr(e.target.value, 200))}
                         placeholder="住所"
                       />
-                    ) : (tenpo?.address || '—')}
+                    ) : (resolvedBasicInfo?.address || '—')}
                   </div>
                 </div>
               </div>
@@ -1957,7 +2218,7 @@ export default function AdminTenpoKartePage() {
                         onChange={(e) => onBasicInfoField('phone', clampStr(e.target.value, 40))}
                         placeholder="電話番号"
                       />
-                    ) : (tenpo?.phone || '—')}
+                    ) : (resolvedBasicInfo?.phone || '—')}
                   </div>
                 </div>
               </div>
@@ -1971,9 +2232,9 @@ export default function AdminTenpoKartePage() {
                         onChange={(e) => onBasicInfoField('url', clampStr(e.target.value, 200))}
                         placeholder="https://..."
                       />
-                    ) : String(tenpo?.url || '').trim() ? (
-                      <a href={String(tenpo?.url)} target="_blank" rel="noreferrer" className="link">
-                        {String(tenpo?.url)}
+                    ) : String(resolvedBasicInfo?.url || '').trim() ? (
+                      <a href={String(resolvedBasicInfo?.url)} target="_blank" rel="noreferrer" className="link">
+                        {String(resolvedBasicInfo?.url)}
                       </a>
                     ) : '—'}
                   </div>
@@ -1989,7 +2250,7 @@ export default function AdminTenpoKartePage() {
                         onChange={(e) => onBasicInfoField('business_hours', clampStr(e.target.value, 80))}
                         placeholder="例: 11:00-23:00"
                       />
-                    ) : (String(karteDetail?.spec?.business_hours || tenpo?.business_hours || tenpo?.eigyou_jikan || '').trim() || '—')}
+                    ) : (String(resolvedBasicInfo?.business_hours || '').trim() || '—')}
                   </div>
                 </div>
               </div>
@@ -2007,7 +2268,7 @@ export default function AdminTenpoKartePage() {
                           <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                       </select>
-                    ) : (findOptionLabel(CUSTOMER_ATTENDANCE_OPTIONS, karteDetail?.spec?.customer_attendance) || '—')}
+                    ) : (findOptionLabel(CUSTOMER_ATTENDANCE_OPTIONS, resolvedBasicInfo?.customer_attendance) || '—')}
                   </div>
                 </div>
               </div>
@@ -2021,7 +2282,7 @@ export default function AdminTenpoKartePage() {
                         onChange={(e) => onBasicInfoField('contact_method', clampStr(e.target.value, 80))}
                         placeholder="例: 電話 / LINE / メール"
                       />
-                    ) : (String(karteDetail?.spec?.contact_method || tenpo?.contact_method || '').trim() || '—')}
+                    ) : (String(resolvedBasicInfo?.contact_method || '').trim() || '—')}
                   </div>
                 </div>
               </div>
@@ -2035,7 +2296,7 @@ export default function AdminTenpoKartePage() {
                         onChange={(e) => onBasicInfoField('security_info', clampStr(e.target.value, 120))}
                         placeholder="例: 警備会社 / 施錠ルール / 警報手順"
                       />
-                    ) : (String(karteDetail?.spec?.security_info || tenpo?.security_info || '').trim() || '—')}
+                    ) : (String(resolvedBasicInfo?.security_info || '').trim() || '—')}
                   </div>
                 </div>
               </div>
