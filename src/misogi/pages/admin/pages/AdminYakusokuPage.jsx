@@ -24,23 +24,19 @@ const MASTER_API_BASE = IS_LOCAL
   : normalizeGatewayBase(import.meta.env?.VITE_MASTER_API_BASE, 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
 
 const MONTHLY_BUCKET = { key: 'monthly', label: '毎月 (1〜12月)' };
-const QUARTERLY_BUCKETS = [
-  { key: 'quarterly_a', label: 'A (1/4/7/10月)' },
-  { key: 'quarterly_b', label: 'B (2/5/8/11月)' },
-  { key: 'quarterly_c', label: 'C (3/6/9/12月)' },
-];
-const HALF_YEAR_BUCKETS = [
-  { key: 'half_year_a', label: 'A (1/7月)' },
-  { key: 'half_year_b', label: 'B (2/8月)' },
-  { key: 'half_year_c', label: 'C (3/9月)' },
-  { key: 'half_year_d', label: 'D (4/10月)' },
-  { key: 'half_year_e', label: 'E (5/11月)' },
-  { key: 'half_year_f', label: 'F (6/12月)' },
-];
-const BIMONTHLY_BUCKETS = [
-  { key: 'bimonthly_a', label: 'A (1/3/5/7/9/11月)' },
-  { key: 'bimonthly_b', label: 'B (2/4/6/8/10/12月)' },
-];
+const BIMONTHLY_LABEL = '隔月（1〜12月指定）';
+const QUARTERLY_LABEL = '四半期（1〜12月指定）';
+const HALF_YEAR_LABEL = '半年（1〜12月指定）';
+const YEARLY_BUCKET = { key: 'yearly', label: '年 (年1回)' };
+const DAILY_BUCKET = { key: 'daily', label: '毎日' };
+const MONTH_NUMBERS = Array.from({ length: 12 }, (_, i) => i + 1);
+const makeMonthBuckets = (prefix) => MONTH_NUMBERS.map((m) => ({
+  key: `${prefix}_m${String(m).padStart(2, '0')}`,
+  label: `${m}`,
+}));
+const QUARTERLY_BUCKETS = makeMonthBuckets('quarterly');
+const HALF_YEAR_BUCKETS = makeMonthBuckets('half_year');
+const BIMONTHLY_BUCKETS = makeMonthBuckets('bimonthly');
 const WEEKDAY_OPTIONS = [
   { key: 'mon', label: '月' },
   { key: 'tue', label: '火' },
@@ -50,17 +46,17 @@ const WEEKDAY_OPTIONS = [
   { key: 'sat', label: '土' },
   { key: 'sun', label: '日' },
 ];
-const WEEKLY_A_BUCKETS = WEEKDAY_OPTIONS.map((d) => ({ key: `weekly_a_${d.key}`, label: `${d.label}` }));
-const BIWEEKLY_A_BUCKETS = WEEKDAY_OPTIONS.map((d) => ({ key: `biweekly_a_${d.key}`, label: `${d.label}` }));
-const BIWEEKLY_B_BUCKETS = WEEKDAY_OPTIONS.map((d) => ({ key: `biweekly_b_${d.key}`, label: `${d.label}` }));
+const WEEKLY_BUCKETS = WEEKDAY_OPTIONS.map((d) => ({ key: `weekly_${d.key}`, label: `${d.label}` }));
+const BIWEEKLY_BUCKETS = WEEKDAY_OPTIONS.map((d) => ({ key: `biweekly_${d.key}`, label: `${d.label}` }));
 const PLAN_BUCKETS = [
   MONTHLY_BUCKET,
+  ...BIMONTHLY_BUCKETS,
   ...QUARTERLY_BUCKETS,
   ...HALF_YEAR_BUCKETS,
-  ...BIMONTHLY_BUCKETS,
-  ...WEEKLY_A_BUCKETS,
-  ...BIWEEKLY_A_BUCKETS,
-  ...BIWEEKLY_B_BUCKETS,
+  YEARLY_BUCKET,
+  DAILY_BUCKET,
+  ...WEEKLY_BUCKETS,
+  ...BIWEEKLY_BUCKETS,
 ];
 
 const DEFAULT_ONSITE_FLAGS = {
@@ -123,6 +119,18 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function getBucketFamilyKeys(bucketKey) {
+  const key = String(bucketKey || '');
+  if (key === YEARLY_BUCKET.key) return [YEARLY_BUCKET.key];
+  if (key === DAILY_BUCKET.key) return [DAILY_BUCKET.key];
+  if (key.startsWith('quarterly_')) return QUARTERLY_BUCKETS.map((b) => b.key);
+  if (key.startsWith('half_year_')) return HALF_YEAR_BUCKETS.map((b) => b.key);
+  if (key.startsWith('bimonthly_')) return BIMONTHLY_BUCKETS.map((b) => b.key);
+  if (key.startsWith('weekly_')) return WEEKLY_BUCKETS.map((b) => b.key);
+  if (key.startsWith('biweekly_')) return BIWEEKLY_BUCKETS.map((b) => b.key);
+  return [MONTHLY_BUCKET.key];
+}
+
 async function fetchYakusokuWithFallback(path, options = {}) {
   const primaryBase = API_BASE.replace(/\/$/, '');
   const primaryRes = await fetch(`${primaryBase}${path}`, options);
@@ -162,21 +170,59 @@ export default function AdminYakusokuPage() {
       const arr = taskMatrix[b.key];
       base[b.key] = Array.isArray(arr) ? arr.map((x) => String(x)).filter(Boolean) : [];
     }
-    // Backward compatibility: legacy buckets are folded into the new monthly/quarterly/half-year model.
-    const legacyBucketMap = {
-      odd_month: 'monthly',
-      even_month: 'monthly',
-      yearly: 'monthly',
-      quarterly_d: 'quarterly_a',
+    const mergeInto = (targetKey, values) => {
+      const merged = new Set([...(base[targetKey] || []), ...values]);
+      base[targetKey] = [...merged];
     };
-    for (const [legacyKey, nextKey] of Object.entries(legacyBucketMap)) {
-      const legacy = Array.isArray(taskMatrix[legacyKey])
+    const legacyValues = (legacyKey) => (
+      Array.isArray(taskMatrix[legacyKey])
         ? taskMatrix[legacyKey].map((x) => String(x)).filter(Boolean)
-        : [];
-      if (!legacy.length) continue;
-      const merged = new Set([...(base[nextKey] || []), ...legacy]);
-      base[nextKey] = [...merged];
-    }
+        : []
+    );
+    const applyLegacy = (legacyKey, targetKeys) => {
+      const vals = legacyValues(legacyKey);
+      if (!vals.length) return;
+      targetKeys.forEach((k) => mergeInto(k, vals));
+    };
+
+    // Backward compatibility: legacy buckets are expanded into direct month/weekday buckets.
+    applyLegacy('odd_month', ['monthly']);
+    applyLegacy('even_month', ['monthly']);
+    applyLegacy('yearly', [YEARLY_BUCKET.key]);
+    applyLegacy('daily', [DAILY_BUCKET.key]);
+    applyLegacy('month_01', ['quarterly_m01']);
+    applyLegacy('month_02', ['quarterly_m02']);
+    applyLegacy('month_03', ['quarterly_m03']);
+    applyLegacy('month_04', ['quarterly_m04']);
+    applyLegacy('month_05', ['quarterly_m05']);
+    applyLegacy('month_06', ['quarterly_m06']);
+    applyLegacy('month_07', ['quarterly_m07']);
+    applyLegacy('month_08', ['quarterly_m08']);
+    applyLegacy('month_09', ['quarterly_m09']);
+    applyLegacy('month_10', ['quarterly_m10']);
+    applyLegacy('month_11', ['quarterly_m11']);
+    applyLegacy('month_12', ['quarterly_m12']);
+
+    applyLegacy('quarterly_a', ['quarterly_m01', 'quarterly_m04', 'quarterly_m07', 'quarterly_m10']);
+    applyLegacy('quarterly_b', ['quarterly_m02', 'quarterly_m05', 'quarterly_m08', 'quarterly_m11']);
+    applyLegacy('quarterly_c', ['quarterly_m03', 'quarterly_m06', 'quarterly_m09', 'quarterly_m12']);
+    applyLegacy('quarterly_d', ['quarterly_m04', 'quarterly_m08', 'quarterly_m12']);
+
+    applyLegacy('half_year_a', ['half_year_m01', 'half_year_m07']);
+    applyLegacy('half_year_b', ['half_year_m02', 'half_year_m08']);
+    applyLegacy('half_year_c', ['half_year_m03', 'half_year_m09']);
+    applyLegacy('half_year_d', ['half_year_m04', 'half_year_m10']);
+    applyLegacy('half_year_e', ['half_year_m05', 'half_year_m11']);
+    applyLegacy('half_year_f', ['half_year_m06', 'half_year_m12']);
+
+    applyLegacy('bimonthly_a', ['bimonthly_m01', 'bimonthly_m03', 'bimonthly_m05', 'bimonthly_m07', 'bimonthly_m09', 'bimonthly_m11']);
+    applyLegacy('bimonthly_b', ['bimonthly_m02', 'bimonthly_m04', 'bimonthly_m06', 'bimonthly_m08', 'bimonthly_m10', 'bimonthly_m12']);
+
+    WEEKDAY_OPTIONS.forEach((d) => {
+      applyLegacy(`weekly_a_${d.key}`, [`weekly_${d.key}`]);
+      applyLegacy(`biweekly_a_${d.key}`, [`biweekly_${d.key}`]);
+      applyLegacy(`biweekly_b_${d.key}`, [`biweekly_${d.key}`]);
+    });
     return base;
   }, []);
 
@@ -330,6 +376,7 @@ export default function AdminYakusokuPage() {
       _tagSearch: {},
       _tagAdvanced: {},
       _bucketEnabled: createEmptyBucketEnabled(),
+      _monthLock: false,
     });
   };
 
@@ -358,6 +405,7 @@ export default function AdminYakusokuPage() {
         ...createEmptyBucketEnabled(),
         ...Object.fromEntries(PLAN_BUCKETS.map((b) => [b.key, (normalizedTaskMatrix[b.key] || []).length > 0])),
       },
+      _monthLock: false,
     });
   };
 
@@ -420,6 +468,25 @@ export default function AdminYakusokuPage() {
     });
     return m;
   }, [tenpos]);
+
+  const tenpoMetaByName = useMemo(() => {
+    const m = new Map();
+    (tenpos || []).forEach((tp) => {
+      const name = String(tp?.name || '').trim();
+      if (!name || m.has(name)) return;
+      m.set(name, tp);
+    });
+    return m;
+  }, [tenpos]);
+
+  const formatTenpoDisplay = useCallback((tenpoId, tenpoName, yagouName) => {
+    const name = String(tenpoName || '').trim();
+    if (!name) return '---';
+    const metaById = tenpoMetaById.get(String(tenpoId || '').trim());
+    const metaByName = tenpoMetaByName.get(name);
+    const yagou = String(yagouName || metaById?.yagou_name || metaByName?.yagou_name || '').trim();
+    return yagou ? `${yagou} / ${name}` : name;
+  }, [tenpoMetaById, tenpoMetaByName]);
 
   const serviceCandidates = useMemo(() => {
     const q = String(modalData?.service_query || '').trim().toLowerCase();
@@ -660,12 +727,14 @@ export default function AdminYakusokuPage() {
       // Backward compatibility: keep single-value fields for existing readers.
       payload.service_id = serviceIds[0] || '';
       payload.service_name = serviceNames[0] || '';
+      if (!String(payload.yagou_id || '').trim()) payload.yagou_name = '';
       delete payload.service_query;
       delete payload.service_category;
       delete payload._tagDrafts;
       delete payload._tagSearch;
       delete payload._tagAdvanced;
       delete payload._bucketEnabled;
+      delete payload._monthLock;
       payload.onsite_flags = normalizeOnsiteFlags(payload.onsite_flags);
       const res = await fetchYakusokuWithFallback(path, {
         method,
@@ -739,12 +808,65 @@ export default function AdminYakusokuPage() {
     });
   }, [normalizeTaskMatrix]);
 
+  const copyBucketTagsToEnabled = useCallback((sourceBucketKey) => {
+    const sourceTags = Array.isArray(activeTaskMatrix?.[sourceBucketKey]) ? activeTaskMatrix[sourceBucketKey] : [];
+    if (!sourceTags.length) {
+      window.alert('先にこの月（曜日）へサービスを割り当ててください');
+      return;
+    }
+    const familyKeys = getBucketFamilyKeys(sourceBucketKey);
+    setModalData((prev) => {
+      if (!prev) return prev;
+      const tm = normalizeTaskMatrix(prev?.recurrence_rule?.task_matrix);
+      const isEnabled = (k) => Boolean(prev?._bucketEnabled?.[k]) || (tm[k] || []).length > 0;
+      familyKeys.forEach((k) => {
+        if (k === sourceBucketKey) return;
+        if (!isEnabled(k)) return;
+        tm[k] = [...sourceTags];
+      });
+      return {
+        ...prev,
+        recurrence_rule: {
+          ...(prev?.recurrence_rule || { type: 'flexible' }),
+          task_matrix: tm,
+        },
+      };
+    });
+  }, [activeTaskMatrix, normalizeTaskMatrix]);
+
   const renderBucketEditor = useCallback((bucket) => {
     const tags = activeTaskMatrix[bucket.key] || [];
     const quickAddServices = pooledServicesForModal;
+    const familyKeys = getBucketFamilyKeys(bucket.key);
+    const enabledSiblingCount = familyKeys
+      .filter((k) => k !== bucket.key)
+      .filter((k) => isBucketEnabled(k))
+      .length;
+    const canCopy = familyKeys.length > 1 && enabledSiblingCount > 0;
     return (
       <div key={bucket.key} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
-        <div style={{ fontWeight: 700, marginBottom: 8 }}>{bucket.label}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <div style={{ fontWeight: 700 }}>{bucket.label}</div>
+          {canCopy ? (
+            <button
+              type="button"
+              onClick={() => copyBucketTagsToEnabled(bucket.key)}
+              style={{
+                border: '1px solid var(--line)',
+                background: 'rgba(16,185,129,0.16)',
+                color: 'var(--text)',
+                borderRadius: 999,
+                padding: '4px 10px',
+                fontSize: 12,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+              title="この割り当てを、同区分でチェック済みの他の月（曜日）へ一括反映"
+            >
+              同様の割り当て
+            </button>
+          ) : null}
+        </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
           {tags.length ? tags.map((tag) => (
             <button
@@ -798,11 +920,13 @@ export default function AdminYakusokuPage() {
     );
   }, [
     activeTaskMatrix,
+    isBucketEnabled,
     removeBucketTag,
     toServiceTagLabel,
     selectedServicesForModal,
     pooledServicesForModal,
     addBucketTagValue,
+    copyBucketTagsToEnabled,
   ]);
 
   return (
@@ -844,13 +968,7 @@ export default function AdminYakusokuPage() {
                   <tr key={it.yakusoku_id} style={{ borderBottom: '1px solid var(--line)' }}>
                     <td style={{ padding: '10px', fontSize: '12px', color: 'var(--muted)' }}>{it.yakusoku_id}</td>
                     <td style={{ padding: '10px' }}>
-                      {(() => {
-                        const tenpoName = String(it.tenpo_name || '').trim();
-                        const meta = tenpoMetaById.get(String(it.tenpo_id || '').trim());
-                        const yagouName = String(it.yagou_name || meta?.yagou_name || '').trim();
-                        if (!tenpoName) return '---';
-                        return yagouName ? `${yagouName} / ${tenpoName}` : tenpoName;
-                      })()}
+                      {formatTenpoDisplay(it.tenpo_id, it.tenpo_name, it.yagou_name)}
                     </td>
                     <td style={{ padding: '10px' }}>
                       {(() => {
@@ -905,14 +1023,23 @@ export default function AdminYakusokuPage() {
                   onChange={e => {
                     const nextName = e.target.value;
                     const exact = tenpos.find((t) => t.name === nextName);
+                    const resolved = exact ? {
+                      tenpo_id: exact.tenpo_id || '',
+                      torihikisaki_id: exact.torihikisaki_id || '',
+                      yagou_id: exact.yagou_id || '',
+                      torihikisaki_name: exact.torihikisaki_name || '',
+                      yagou_name: exact.yagou_name || '',
+                    } : {
+                      tenpo_id: '',
+                      torihikisaki_id: '',
+                      yagou_id: '',
+                      torihikisaki_name: '',
+                      yagou_name: '',
+                    };
                     setModalData({
                       ...modalData,
                       tenpo_name: nextName,
-                      tenpo_id: exact?.tenpo_id || modalData.tenpo_id || '',
-                      torihikisaki_id: exact?.torihikisaki_id || modalData.torihikisaki_id || '',
-                      yagou_id: exact?.yagou_id || modalData.yagou_id || '',
-                      torihikisaki_name: exact?.torihikisaki_name || modalData.torihikisaki_name || '',
-                      yagou_name: exact?.yagou_name || modalData.yagou_name || '',
+                      ...resolved,
                     });
                   }}
                   placeholder="取引先 / 屋号 / 店舗 / ID で検索"
@@ -941,7 +1068,7 @@ export default function AdminYakusokuPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      <div style={{ fontWeight: 600 }}>{tp.name}</div>
+                      <div style={{ fontWeight: 600 }}>{formatTenpoDisplay(tp.tenpo_id, tp.name, tp.yagou_name)}</div>
                       <div style={{ fontSize: 12, opacity: 0.8 }}>
                         {(tp.torihikisaki_name || '取引先未設定')} / {(tp.yagou_name || '屋号未設定')}
                       </div>
@@ -1014,7 +1141,7 @@ export default function AdminYakusokuPage() {
               </div>
               {modalData.type === 'teiki' && (
                 <div className="yotei-form-group">
-                  <label>定期メニュー（月別タグ）</label>
+                  <label>定期メニュー（周期タグ）</label>
                   <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10, marginBottom: 10 }}>
                     <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>
                       選択済みサービス {selectedServicesForModal.length}件
@@ -1056,55 +1183,7 @@ export default function AdminYakusokuPage() {
                     {renderBucketEditor(MONTHLY_BUCKET)}
 
                     <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
-                      <div style={{ fontWeight: 700, marginBottom: 8 }}>四半期（月次）</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                        {QUARTERLY_BUCKETS.map((b) => {
-                          const checked = isBucketEnabled(b.key);
-                          return (
-                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
-                              />
-                              <span>{b.label}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                      <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
-                        {QUARTERLY_BUCKETS
-                          .filter((b) => isBucketEnabled(b.key))
-                          .map((b) => renderBucketEditor(b, true))}
-                      </div>
-                    </div>
-
-                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
-                      <div style={{ fontWeight: 700, marginBottom: 8 }}>半年（月次）</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                        {HALF_YEAR_BUCKETS.map((b) => {
-                          const checked = isBucketEnabled(b.key);
-                          return (
-                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
-                              />
-                              <span>{b.label}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                      <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
-                        {HALF_YEAR_BUCKETS
-                          .filter((b) => isBucketEnabled(b.key))
-                          .map((b) => renderBucketEditor(b, true))}
-                      </div>
-                    </div>
-
-                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
-                      <div style={{ fontWeight: 700, marginBottom: 8 }}>隔月（月次）</div>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>{BIMONTHLY_LABEL}</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                         {BIMONTHLY_BUCKETS.map((b) => {
                           const checked = isBucketEnabled(b.key);
@@ -1128,11 +1207,62 @@ export default function AdminYakusokuPage() {
                     </div>
 
                     <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
-                      <div style={{ fontWeight: 700, marginBottom: 8 }}>週次・隔週</div>
-
-                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>週次A</div>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>{QUARTERLY_LABEL}</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                        {WEEKLY_A_BUCKETS.map((b) => {
+                        {QUARTERLY_BUCKETS.map((b) => {
+                          const checked = isBucketEnabled(b.key);
+                          return (
+                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
+                              />
+                              <span>{b.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                        {QUARTERLY_BUCKETS
+                          .filter((b) => isBucketEnabled(b.key))
+                          .map((b) => renderBucketEditor(b, true))}
+                      </div>
+                    </div>
+
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>{HALF_YEAR_LABEL}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {HALF_YEAR_BUCKETS.map((b) => {
+                          const checked = isBucketEnabled(b.key);
+                          return (
+                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
+                              />
+                              <span>{b.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                        {HALF_YEAR_BUCKETS
+                          .filter((b) => isBucketEnabled(b.key))
+                          .map((b) => renderBucketEditor(b, true))}
+                      </div>
+                    </div>
+
+                    {renderBucketEditor(YEARLY_BUCKET)}
+                    {renderBucketEditor(DAILY_BUCKET)}
+
+                    <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 8 }}>週次・隔週（曜日指定）</div>
+
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>週次</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        {WEEKLY_BUCKETS.map((b) => {
                           const checked = isBucketEnabled(b.key);
                           return (
                             <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
@@ -1147,26 +1277,9 @@ export default function AdminYakusokuPage() {
                         })}
                       </div>
 
-                      <div style={{ fontSize: 12, color: 'var(--muted)', margin: '10px 0 6px' }}>隔週A (1/3/5週)</div>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', margin: '10px 0 6px' }}>隔週</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                        {BIWEEKLY_A_BUCKETS.map((b) => {
-                          const checked = isBucketEnabled(b.key);
-                          return (
-                            <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={(e) => toggleBucketGroupOption(b.key, e.target.checked)}
-                              />
-                              <span>{b.label}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      <div style={{ fontSize: 12, color: 'var(--muted)', margin: '10px 0 6px' }}>隔週B (2/4週)</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                        {BIWEEKLY_B_BUCKETS.map((b) => {
+                        {BIWEEKLY_BUCKETS.map((b) => {
                           const checked = isBucketEnabled(b.key);
                           return (
                             <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
@@ -1182,7 +1295,7 @@ export default function AdminYakusokuPage() {
                       </div>
 
                       <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
-                        {[...WEEKLY_A_BUCKETS, ...BIWEEKLY_A_BUCKETS, ...BIWEEKLY_B_BUCKETS]
+                        {[...WEEKLY_BUCKETS, ...BIWEEKLY_BUCKETS]
                           .filter((b) => isBucketEnabled(b.key))
                           .map((b) => renderBucketEditor(b, true))}
                       </div>

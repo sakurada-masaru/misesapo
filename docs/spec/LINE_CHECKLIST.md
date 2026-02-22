@@ -577,3 +577,45 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 現場チェック（運用カテゴリ）に `立会いあり` を追加
 - [x] 保存フラグ `has_customer_attendance` を追加
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Yagou Misassignment Guard (2026-02-21)
+
+- [x] 現場名入力の完全一致でない場合、`tenpo_id/yagou_id/yagou_name` を保持せずクリアするよう修正
+- [x] 保存時に `yagou_id` が空なら `yagou_name` を空へ正規化
+- [x] 一覧表示の屋号名解決を `tenpo` マスタ優先へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Direct Month/Week Checks (2026-02-21)
+
+- [x] A/B パターン依存を廃止し、四半期/半年/隔月を 1〜12 月の直接チェック方式へ変更
+- [x] 週次・隔週を曜日直接チェック（週次/隔週の2カテゴリ）へ簡素化
+- [x] 旧 A/B 系キーは `normalizeTaskMatrix` で新キーへ互換吸収
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Tenpo Karte Basic Info: Store Contact Field (2026-02-22)
+
+- [x] 店舗カルテの基本情報に「ご担当者様（店舗担当者）」を追加
+- [x] 編集時は `karte_detail.spec.customer_contact_name` を保存し、表示時は `contact_name/contact_person/tantou_name` 互換で補完
+- [x] 保存時に店舗マスタ `tantou_name` へ反映（営業担当 `sales_owner` とは分離）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Tenpo Karte Basic Info: Customer Contact Phone (2026-02-22)
+
+- [x] 店舗カルテの基本情報に「担当者連絡先」を追加
+- [x] 編集時は `karte_detail.spec.customer_contact_phone` を保存し、表示時は `tantou_phone/contact_person_phone/contact_phone` 互換で補完
+- [x] 保存時に店舗マスタ `tantou_phone` へ反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Tenpo Karte Basic Info: Security Field (2026-02-22)
+
+- [x] 店舗カルテの基本情報に「セキュリティ」項目を追加
+- [x] 編集時は `karte_detail.spec.security_info` に保存し、表示時は `tenpo.security_info` を互換参照
+- [x] 保存時に店舗マスタ `security_info` へ反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Same-Assignment Shortcut (2026-02-22)
+
+- [x] 月次/週次バケット編集に「同様の割り当て」ボタンを追加
+- [x] 同区分でチェック済みの他バケットへ、現在バケットのサービス割当を一括コピー
+- [x] 割当元が空の時はガード（先に割当が必要）
+- [x] `npm -C src/misogi run build` でビルド確認

@@ -724,6 +724,9 @@ export default function AdminTenpoKartePage() {
     business_hours: '',
     customer_attendance: '',
     contact_method: '',
+    security_info: '',
+    customer_contact_name: '',
+    customer_contact_phone: '',
     sales_owner: '',
   });
   const [services, setServices] = useState([]);
@@ -760,10 +763,29 @@ export default function AdminTenpoKartePage() {
   const salesOwnerSummary = useMemo(() => {
     const rows = uniqTags([
       String(karteDetail?.spec?.sales_owner || '').trim(),
+    ], 4);
+    return rows.join(' / ') || '—';
+  }, [karteDetail?.spec?.sales_owner]);
+
+  const customerContactSummary = useMemo(() => {
+    const rows = uniqTags([
+      String(karteDetail?.spec?.customer_contact_name || '').trim(),
+      String(tenpo?.contact_name || '').trim(),
+      String(tenpo?.contact_person || '').trim(),
       String(tenpo?.tantou_name || '').trim(),
     ], 4);
     return rows.join(' / ') || '—';
-  }, [karteDetail?.spec?.sales_owner, tenpo?.tantou_name]);
+  }, [karteDetail?.spec?.customer_contact_name, tenpo?.contact_name, tenpo?.contact_person, tenpo?.tantou_name]);
+
+  const customerContactPhoneSummary = useMemo(() => {
+    const rows = uniqTags([
+      String(karteDetail?.spec?.customer_contact_phone || '').trim(),
+      String(tenpo?.tantou_phone || '').trim(),
+      String(tenpo?.contact_person_phone || '').trim(),
+      String(tenpo?.contact_phone || '').trim(),
+    ], 4);
+    return rows.join(' / ') || '—';
+  }, [karteDetail?.spec?.customer_contact_phone, tenpo?.tantou_phone, tenpo?.contact_person_phone, tenpo?.contact_phone]);
 
   const servicePlanSummary = useMemo(() => {
     const planFrequency = String(karteDetail?.plan?.plan_frequency || '').trim();
@@ -793,19 +815,45 @@ export default function AdminTenpoKartePage() {
       business_hours: clampStr(karteDetail?.spec?.business_hours || tenpo?.business_hours || tenpo?.eigyou_jikan || '', 80),
       customer_attendance: CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '',
       contact_method: clampStr(karteDetail?.spec?.contact_method || tenpo?.contact_method || '', 80),
-      sales_owner: clampStr(karteDetail?.spec?.sales_owner || tenpo?.tantou_name || '', 80),
+      security_info: clampStr(karteDetail?.spec?.security_info || tenpo?.security_info || '', 120),
+      customer_contact_name: clampStr(
+        karteDetail?.spec?.customer_contact_name
+        || tenpo?.contact_name
+        || tenpo?.contact_person
+        || tenpo?.tantou_name
+        || '',
+        80
+      ),
+      customer_contact_phone: clampStr(
+        karteDetail?.spec?.customer_contact_phone
+        || tenpo?.tantou_phone
+        || tenpo?.contact_person_phone
+        || tenpo?.contact_phone
+        || '',
+        40
+      ),
+      sales_owner: clampStr(karteDetail?.spec?.sales_owner || '', 80),
     };
   }, [
     karteDetail?.spec?.business_hours,
     karteDetail?.spec?.contact_method,
+    karteDetail?.spec?.security_info,
+    karteDetail?.spec?.customer_contact_name,
+    karteDetail?.spec?.customer_contact_phone,
     karteDetail?.spec?.customer_attendance,
     karteDetail?.spec?.sales_owner,
     tenpo?.address,
     tenpo?.business_hours,
     tenpo?.contact_method,
+    tenpo?.security_info,
+    tenpo?.contact_name,
+    tenpo?.contact_person_phone,
+    tenpo?.contact_person,
+    tenpo?.contact_phone,
     tenpo?.eigyou_jikan,
     tenpo?.name,
     tenpo?.phone,
+    tenpo?.tantou_phone,
     tenpo?.tantou_name,
     tenpo?.url,
   ]);
@@ -989,7 +1037,20 @@ export default function AdminTenpoKartePage() {
     if (!Array.isArray(next.staff_history)) next.staff_history = [];
     if (!Array.isArray(next.service_plan)) next.service_plan = [];
     if (!Array.isArray(next.support_history)) next.support_history = [];
-    if (!next.spec.sales_owner) next.spec.sales_owner = clampStr(tenpo?.tantou_name || '', 80);
+    if (!next.spec.sales_owner) next.spec.sales_owner = '';
+    if (!next.spec.customer_contact_name) {
+      next.spec.customer_contact_name = clampStr(
+        tenpo?.contact_name || tenpo?.contact_person || tenpo?.tantou_name || '',
+        80
+      );
+    }
+    if (!next.spec.customer_contact_phone) {
+      next.spec.customer_contact_phone = clampStr(
+        tenpo?.tantou_phone || tenpo?.contact_person_phone || tenpo?.contact_phone || '',
+        40
+      );
+    }
+    next.spec.security_info = clampStr(next.spec.security_info || '', 120);
     next.spec.business_hours = clampStr(next.spec.business_hours || '', 80);
     {
       const attendance = clampStr(next.spec.customer_attendance || '', 20);
@@ -1113,7 +1174,7 @@ export default function AdminTenpoKartePage() {
     });
     next.haccp.version = 1;
     return next;
-  }, [karteDetail, tenpo?.tantou_name]);
+  }, [karteDetail, tenpo?.contact_name, tenpo?.contact_person, tenpo?.contact_phone, tenpo?.contact_person_phone, tenpo?.tantou_name, tenpo?.tantou_phone]);
 
   const ensureHaccpDefaults = useCallback(() => {
     const base = karteDetail && typeof karteDetail === 'object' ? karteDetail : {};
@@ -1610,16 +1671,23 @@ export default function AdminTenpoKartePage() {
       nextSpec.business_hours = clampStr(basicInfoDraft?.business_hours || '', 80);
       nextSpec.customer_attendance = CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '';
       nextSpec.contact_method = clampStr(basicInfoDraft?.contact_method || '', 80);
+      nextSpec.security_info = clampStr(basicInfoDraft?.security_info || '', 120);
+      nextSpec.customer_contact_name = clampStr(basicInfoDraft?.customer_contact_name || '', 80);
+      nextSpec.customer_contact_phone = clampStr(basicInfoDraft?.customer_contact_phone || '', 40);
       nextSpec.sales_owner = clampStr(basicInfoDraft?.sales_owner || '', 80);
       nextKarte.spec = nextSpec;
 
+      const customerContactName = clampStr(basicInfoDraft?.customer_contact_name || '', 80);
+      const customerContactPhone = clampStr(basicInfoDraft?.customer_contact_phone || '', 40);
       const payload = {
         name: clampStr(basicInfoDraft?.name || '', 120),
         address: clampStr(basicInfoDraft?.address || '', 200),
         phone: clampStr(basicInfoDraft?.phone || '', 40),
         url: clampStr(basicInfoDraft?.url || '', 200),
-        tantou_name: clampStr(basicInfoDraft?.sales_owner || '', 80),
+        tantou_name: customerContactName,
+        tantou_phone: customerContactPhone,
         contact_method: clampStr(basicInfoDraft?.contact_method || '', 80),
+        security_info: clampStr(basicInfoDraft?.security_info || '', 120),
         karte_detail: nextKarte,
       };
       const updated = await apiPutJson(`/master/tenpo/${encodeURIComponent(tenpoId)}`, payload);
@@ -1633,7 +1701,26 @@ export default function AdminTenpoKartePage() {
         business_hours: clampStr(updated?.karte_detail?.spec?.business_hours || nextSpec.business_hours || '', 80),
         customer_attendance: String(updated?.karte_detail?.spec?.customer_attendance || nextSpec.customer_attendance || ''),
         contact_method: clampStr(updated?.karte_detail?.spec?.contact_method || payload.contact_method || '', 80),
-        sales_owner: clampStr(updated?.karte_detail?.spec?.sales_owner || payload.tantou_name || '', 80),
+        security_info: clampStr(updated?.karte_detail?.spec?.security_info || payload.security_info || '', 120),
+        customer_contact_name: clampStr(
+          updated?.karte_detail?.spec?.customer_contact_name
+          || updated?.contact_name
+          || updated?.contact_person
+          || updated?.tantou_name
+          || customerContactName
+          || '',
+          80
+        ),
+        customer_contact_phone: clampStr(
+          updated?.karte_detail?.spec?.customer_contact_phone
+          || updated?.tantou_phone
+          || updated?.contact_person_phone
+          || updated?.contact_phone
+          || customerContactPhone
+          || '',
+          40
+        ),
+        sales_owner: clampStr(updated?.karte_detail?.spec?.sales_owner || nextSpec.sales_owner || '', 80),
       });
       setEditingBasicInfo(false);
     } catch (e) {
@@ -1935,6 +2022,48 @@ export default function AdminTenpoKartePage() {
                         placeholder="例: 電話 / LINE / メール"
                       />
                     ) : (String(karteDetail?.spec?.contact_method || tenpo?.contact_method || '').trim() || '—')}
+                  </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">セキュリティ</div>
+                <div className="v">
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.security_info || '')}
+                        onChange={(e) => onBasicInfoField('security_info', clampStr(e.target.value, 120))}
+                        placeholder="例: 警備会社 / 施錠ルール / 警報手順"
+                      />
+                    ) : (String(karteDetail?.spec?.security_info || tenpo?.security_info || '').trim() || '—')}
+                  </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">ご担当者様</div>
+                <div className="v">
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.customer_contact_name || '')}
+                        onChange={(e) => onBasicInfoField('customer_contact_name', clampStr(e.target.value, 80))}
+                        placeholder="店舗ご担当者様"
+                      />
+                    ) : customerContactSummary}
+                  </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">担当者連絡先</div>
+                <div className="v">
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.customer_contact_phone || '')}
+                        onChange={(e) => onBasicInfoField('customer_contact_phone', clampStr(e.target.value, 40))}
+                        placeholder="例: 090-1234-5678"
+                      />
+                    ) : customerContactPhoneSummary}
                   </div>
                 </div>
               </div>
