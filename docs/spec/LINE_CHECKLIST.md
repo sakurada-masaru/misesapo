@@ -627,3 +627,17 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 屋号/取引先に `shared_basic_profile` を保存し、カルテへ再適用できる操作を追加
 - [x] 基本情報表示は `店舗固有 → 屋号共有 → 取引先共有` の順で補完表示
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Tenpo Search: Selection Visibility (2026-02-22)
+
+- [x] 現場検索候補で選択中行をハイライト表示
+- [x] 「現在の選択」サマリー（屋号/店舗、取引先、ID群）を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Tenpo Field: Show Yagou + Tenpo in Input (2026-02-22)
+
+- [x] 新規/編集モーダルの現場検索入力で「屋号 / 店舗名」を表示
+- [x] 内部保存値 `tenpo_name`（店舗名）と表示用 `tenpo_query` を分離して互換維持
+- [x] 候補選択時は `tenpo_query` にも屋号付き表示名を反映
+- [x] 保存時に `tenpo_query` を payload から除外
+- [x] `npm -C src/misogi run build` でビルド確認

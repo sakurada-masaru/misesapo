@@ -359,6 +359,7 @@ export default function AdminYakusokuPage() {
       isNew: true,
       type: 'teiki',
       tenpo_name: '',
+      tenpo_query: '',
       service_id: '',
       service_name: '',
       service_ids: [],
@@ -387,10 +388,14 @@ export default function AdminYakusokuPage() {
     const multiSvc = normalizeServiceSelection(item);
     const normalizedTaskMatrix = normalizeTaskMatrix(rr.task_matrix);
     setServicePickerOpen(false);
+    const tenpoDisplay = [String(item?.yagou_name || '').trim(), String(item?.tenpo_name || '').trim()]
+      .filter(Boolean)
+      .join(' / ');
     setModalData({
       ...item,
       ...multiSvc,
       isNew: false,
+      tenpo_query: tenpoDisplay || String(item?.tenpo_name || ''),
       service_category: 'all',
       service_query: item?.service_name || item?.service_id || '',
       onsite_flags: normalizeOnsiteFlags(item?.onsite_flags),
@@ -452,12 +457,12 @@ export default function AdminYakusokuPage() {
   }, []);
 
   const tenpoCandidates = useMemo(() => {
-    const q = String(modalData?.tenpo_name || '').trim().toLowerCase();
+    const q = String(modalData?.tenpo_query || '').trim().toLowerCase();
     if (!q) return tenpos.slice(0, 12);
     return tenpos
       .filter((it) => (it.search_blob || '').includes(q))
       .slice(0, 20);
-  }, [modalData?.tenpo_name, tenpos]);
+  }, [modalData?.tenpo_query, tenpos]);
 
   const tenpoMetaById = useMemo(() => {
     const m = new Map();
@@ -487,6 +492,44 @@ export default function AdminYakusokuPage() {
     const yagou = String(yagouName || metaById?.yagou_name || metaByName?.yagou_name || '').trim();
     return yagou ? `${yagou} / ${name}` : name;
   }, [tenpoMetaById, tenpoMetaByName]);
+
+  const selectedTenpoSummary = useMemo(() => {
+    const id = String(modalData?.tenpo_id || '').trim();
+    const inputName = String(modalData?.tenpo_name || '').trim();
+    const direct = id ? tenpoMetaById.get(id) : null;
+    const byName = inputName ? tenpoMetaByName.get(inputName) : null;
+    const tenpoName = String(direct?.name || byName?.name || inputName || '').trim();
+    if (!tenpoName) {
+      return {
+        label: '未選択',
+        tori: '',
+        ids: '',
+      };
+    }
+    const yagouName = String(direct?.yagou_name || byName?.yagou_name || modalData?.yagou_name || '').trim();
+    const toriName = String(direct?.torihikisaki_name || byName?.torihikisaki_name || modalData?.torihikisaki_name || '').trim();
+    return {
+      label: formatTenpoDisplay(id, tenpoName, yagouName),
+      tori: toriName,
+      ids: [id || String(direct?.tenpo_id || byName?.tenpo_id || '').trim(), String(direct?.yagou_id || byName?.yagou_id || modalData?.yagou_id || '').trim(), String(direct?.torihikisaki_id || byName?.torihikisaki_id || modalData?.torihikisaki_id || '').trim()].filter(Boolean).join(' ・ '),
+    };
+  }, [
+    modalData?.tenpo_id,
+    modalData?.tenpo_name,
+    modalData?.yagou_name,
+    modalData?.yagou_id,
+    modalData?.torihikisaki_name,
+    modalData?.torihikisaki_id,
+    tenpoMetaById,
+    tenpoMetaByName,
+    formatTenpoDisplay,
+  ]);
+
+  const tenpoSearchValue = useMemo(() => {
+    const q = String(modalData?.tenpo_query || '').trim();
+    if (q) return q;
+    return selectedTenpoSummary.label === '未選択' ? '' : selectedTenpoSummary.label;
+  }, [modalData?.tenpo_query, selectedTenpoSummary.label]);
 
   const serviceCandidates = useMemo(() => {
     const q = String(modalData?.service_query || '').trim().toLowerCase();
@@ -728,6 +771,7 @@ export default function AdminYakusokuPage() {
       payload.service_id = serviceIds[0] || '';
       payload.service_name = serviceNames[0] || '';
       if (!String(payload.yagou_id || '').trim()) payload.yagou_name = '';
+      delete payload.tenpo_query;
       delete payload.service_query;
       delete payload.service_category;
       delete payload._tagDrafts;
@@ -1019,18 +1063,28 @@ export default function AdminYakusokuPage() {
                 <label>現場名（統合検索）</label>
                 <input
                   type="text"
-                  value={modalData.tenpo_name || ''}
+                  value={tenpoSearchValue}
                   onChange={e => {
-                    const nextName = e.target.value;
-                    const exact = tenpos.find((t) => t.name === nextName);
+                    const nextQuery = e.target.value;
+                    const normalized = String(nextQuery || '').trim();
+                    const exact = tenpos.find((t) => {
+                      const display = formatTenpoDisplay(t.tenpo_id, t.name, t.yagou_name);
+                      return (
+                        String(t.name || '').trim() === normalized ||
+                        display === normalized ||
+                        String(t.tenpo_id || '').trim() === normalized
+                      );
+                    });
                     const resolved = exact ? {
                       tenpo_id: exact.tenpo_id || '',
+                      tenpo_name: exact.name || '',
                       torihikisaki_id: exact.torihikisaki_id || '',
                       yagou_id: exact.yagou_id || '',
                       torihikisaki_name: exact.torihikisaki_name || '',
                       yagou_name: exact.yagou_name || '',
                     } : {
                       tenpo_id: '',
+                      tenpo_name: '',
                       torihikisaki_id: '',
                       yagou_id: '',
                       torihikisaki_name: '',
@@ -1038,7 +1092,7 @@ export default function AdminYakusokuPage() {
                     };
                     setModalData({
                       ...modalData,
-                      tenpo_name: nextName,
+                      tenpo_query: nextQuery,
                       ...resolved,
                     });
                   }}
@@ -1049,9 +1103,11 @@ export default function AdminYakusokuPage() {
                     <button
                       key={tp.tenpo_id}
                       type="button"
+                      aria-pressed={String(modalData?.tenpo_id || '').trim() === String(tp.tenpo_id || '').trim()}
                       onClick={() => setModalData({
                         ...modalData,
                         tenpo_name: tp.name,
+                        tenpo_query: formatTenpoDisplay(tp.tenpo_id, tp.name, tp.yagou_name),
                         tenpo_id: tp.tenpo_id,
                         torihikisaki_id: tp.torihikisaki_id || '',
                         yagou_id: tp.yagou_id || '',
@@ -1062,8 +1118,12 @@ export default function AdminYakusokuPage() {
                         textAlign: 'left',
                         padding: '8px 10px',
                         borderRadius: 8,
-                        border: '1px solid var(--line)',
-                        background: 'var(--panel)',
+                        border: String(modalData?.tenpo_id || '').trim() === String(tp.tenpo_id || '').trim()
+                          ? '1px solid #60a5fa'
+                          : '1px solid var(--line)',
+                        background: String(modalData?.tenpo_id || '').trim() === String(tp.tenpo_id || '').trim()
+                          ? 'rgba(96,165,250,0.15)'
+                          : 'var(--panel)',
                         color: 'var(--text)',
                         cursor: 'pointer',
                       }}
@@ -1086,6 +1146,28 @@ export default function AdminYakusokuPage() {
                   <Link to="/admin/torihikisaki-touroku" style={{ color: '#8bd8ff', textDecoration: 'none' }}>
                     新規顧客登録へ →
                   </Link>
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    border: '1px solid var(--line)',
+                    borderRadius: 8,
+                    padding: '8px 10px',
+                    background: 'rgba(15,23,42,0.35)',
+                  }}
+                >
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>現在の選択</div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{selectedTenpoSummary.label}</div>
+                  {selectedTenpoSummary.tori ? (
+                    <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+                      取引先: {selectedTenpoSummary.tori}
+                    </div>
+                  ) : null}
+                  {selectedTenpoSummary.ids ? (
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                      {selectedTenpoSummary.ids}
+                    </div>
+                  ) : null}
                 </div>
               </div>
               <div className="yotei-form-group">
