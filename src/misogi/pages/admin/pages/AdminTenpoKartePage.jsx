@@ -2635,88 +2635,6 @@ export default function AdminTenpoKartePage() {
                   </div>
                 </section>
 
-                <section className="card card-sub">
-                  <div className="card-title-row">
-                    <div className="card-title">担当履歴</div>
-                    <div className="seg-tabs">
-                      <button type="button" onClick={addStaffHistory}>追加</button>
-                    </div>
-                  </div>
-                  {Array.isArray(karteDetail?.staff_history) && karteDetail.staff_history.length > 0 ? (
-                    <div className="rows">
-                      {karteDetail.staff_history.map((h, i) => (
-                        <div key={i} className="row row-3">
-                          <div className="tag-picker">
-                            <div className="tag-row">
-                              {(Array.isArray(h?.members) ? h.members : (h?.name ? [{ jinzai_id: h?.jinzai_id || '', name: h.name }] : [])).map((m) => {
-                                const label = String(m?.name || m?.jinzai_id || '').trim();
-                                if (!label) return null;
-                                return (
-                                  <span key={`${String(m?.jinzai_id || '')}-${label}`} className="tag-chip">
-                                    {label}
-                                    <button
-                                      type="button"
-                                      className="x"
-                                      onClick={() => removeStaffHistoryMember(i, m)}
-                                      aria-label="remove"
-                                    >
-                                      ×
-                                    </button>
-                                  </span>
-                                );
-                              })}
-                            </div>
-                            <div className="tag-controls">
-                              <select
-                                value=""
-                                onChange={(e) => {
-                                  const id = e.target.value;
-                                  if (!id) return;
-                                  const hit = jinzais.find((j) => String(j.jinzai_id) === String(id));
-                                  addStaffHistoryMember(i, { jinzai_id: id, name: hit?.name || '' });
-                                }}
-                                aria-label="担当者追加"
-                              >
-                                <option value="">担当者（清掃/メンテのみ）を追加</option>
-                                {jinzais.map((j) => (
-                                  <option key={j.jinzai_id} value={j.jinzai_id}>
-                                    {j.name}{j.email ? ` / ${j.email}` : ''}{j.phone ? ` / ${j.phone}` : ''}
-                                  </option>
-                                ))}
-                              </select>
-                              <input
-                                list="tenpo-karte-jinzai-name-list"
-                                placeholder="氏名を手入力して追加（任意）"
-                                onKeyDown={(e) => {
-                                  if (e.key !== 'Enter') return;
-                                  const v = String(e.currentTarget.value || '').trim();
-                                  if (!v) return;
-                                  addStaffHistoryMember(i, { jinzai_id: '', name: v });
-                                  e.currentTarget.value = '';
-                                }}
-                                aria-label="担当者氏名（手入力）"
-                              />
-                            </div>
-                            <div className="muted small">複数選択OK（タグ）</div>
-                          </div>
-                          <input
-                            type="date"
-                            value={String(h?.start_date || '')}
-                            onChange={(e) => updateStaffHistory(i, 'start_date', e.target.value)}
-                          />
-                          <input
-                            type="date"
-                            value={String(h?.end_date || '')}
-                            onChange={(e) => updateStaffHistory(i, 'end_date', e.target.value)}
-                          />
-                          <button type="button" onClick={() => removeStaffHistory(i)}>×</button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="muted">未登録</div>
-                  )}
-                </section>
               </div>
 
               <div className="karte-detail-col">
@@ -2824,6 +2742,89 @@ export default function AdminTenpoKartePage() {
               </div>
 
               <div className="karte-detail-col karte-detail-col-right">
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">担当履歴</div>
+                    <div className="seg-tabs">
+                      <button type="button" onClick={addStaffHistory}>追加</button>
+                    </div>
+                  </div>
+                  {Array.isArray(karteDetail?.staff_history) && karteDetail.staff_history.length > 0 ? (
+                    <div className="rows">
+                      {karteDetail.staff_history.map((h, i) => (
+                        <div key={i} className="row row-3">
+                          <div className="tag-picker">
+                            <div className="tag-row">
+                              {(Array.isArray(h?.members) ? h.members : (h?.name ? [{ jinzai_id: h?.jinzai_id || '', name: h.name }] : [])).map((m) => {
+                                const label = String(m?.name || m?.jinzai_id || '').trim();
+                                if (!label) return null;
+                                return (
+                                  <span key={`${String(m?.jinzai_id || '')}-${label}`} className="tag-chip">
+                                    {label}
+                                    <button
+                                      type="button"
+                                      className="x"
+                                      onClick={() => removeStaffHistoryMember(i, m)}
+                                      aria-label="remove"
+                                    >
+                                      ×
+                                    </button>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                            <div className="tag-controls">
+                              <select
+                                value=""
+                                onChange={(e) => {
+                                  const id = e.target.value;
+                                  if (!id) return;
+                                  const hit = jinzais.find((j) => String(j.jinzai_id) === String(id));
+                                  addStaffHistoryMember(i, { jinzai_id: id, name: hit?.name || '' });
+                                }}
+                                aria-label="担当者追加"
+                              >
+                                <option value="">担当者（清掃/メンテのみ）を追加</option>
+                                {jinzais.map((j) => (
+                                  <option key={j.jinzai_id} value={j.jinzai_id}>
+                                    {j.name}{j.email ? ` / ${j.email}` : ''}{j.phone ? ` / ${j.phone}` : ''}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                list="tenpo-karte-jinzai-name-list"
+                                placeholder="氏名を手入力して追加（任意）"
+                                onKeyDown={(e) => {
+                                  if (e.key !== 'Enter') return;
+                                  const v = String(e.currentTarget.value || '').trim();
+                                  if (!v) return;
+                                  addStaffHistoryMember(i, { jinzai_id: '', name: v });
+                                  e.currentTarget.value = '';
+                                }}
+                                aria-label="担当者氏名（手入力）"
+                              />
+                            </div>
+                            <div className="muted small">複数選択OK（タグ）</div>
+                          </div>
+                          <input
+                            type="date"
+                            value={String(h?.start_date || '')}
+                            onChange={(e) => updateStaffHistory(i, 'start_date', e.target.value)}
+                          />
+                          <input
+                            type="date"
+                            value={String(h?.end_date || '')}
+                            onChange={(e) => updateStaffHistory(i, 'end_date', e.target.value)}
+                          />
+                          <button type="button" onClick={() => removeStaffHistory(i)}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted">未登録</div>
+                  )}
+                </section>
+
                 <section className="card card-sub">
                   <div className="card-title-row">
                     <div className="card-title">消耗品</div>
