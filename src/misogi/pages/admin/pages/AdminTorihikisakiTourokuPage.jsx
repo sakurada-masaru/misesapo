@@ -143,7 +143,7 @@ export default function AdminTorihikisakiTourokuPage() {
   const [existingIndex, setExistingIndex] = useState([]);
   const [existingIndexLoading, setExistingIndexLoading] = useState(false);
 
-  // 一括作成入力
+  // 問診票作成入力（旧: 一括作成）
   const [bulkTorihikisakiName, setBulkTorihikisakiName] = useState('');
   const [bulkYagouName, setBulkYagouName] = useState('');
   const [bulkTenpoName, setBulkTenpoName] = useState('');
@@ -453,9 +453,9 @@ export default function AdminTorihikisakiTourokuPage() {
         const go = window.confirm(
           `同名の既存店舗が見つかりました。\n` +
           `${existing.torihikisaki?.name} / ${existing.yagou?.name} / ${existing.tenpo?.name}\n\n` +
-          '既存カルテを開きますか？'
+          '既存問診票を開きますか？'
         );
-        if (go) nav(`/admin/tenpo/${encodeURIComponent(existing.tenpo.tenpo_id)}`);
+        if (go) nav(`/admin/tenpo/${encodeURIComponent(existing.tenpo.tenpo_id)}?mode=monshin`);
         return;
       }
 
@@ -474,7 +474,7 @@ export default function AdminTorihikisakiTourokuPage() {
           address: norm(bulkAddress),
           url: norm(bulkUrl),
           jouhou_touroku_sha_name: norm(bulkJouhouTourokuShaName),
-          // カルテは常時自動作成。ここは「作成後に入力へ進むか」のUI選択のみ。
+          // 互換維持: backendは create_karte を使用。UI上は「問診票」を正本名称として扱う。
           create_karte: true,
           idempotency_key: idempotencyKey,
         },
@@ -503,10 +503,10 @@ export default function AdminTorihikisakiTourokuPage() {
       if (yagouId) setSelectedYagouId(yagouId);
       if (tenpoId) {
         if (karteId) {
-          setOkMsg(`作成しました: ${tName} / ${yName} / ${tenpoName}（カルテ: ${karteId}）`);
+          setOkMsg(`作成しました: ${tName} / ${yName} / ${tenpoName}（問診票ID: ${karteId}）`);
         }
         if (bulkOpenKarteAfterCreate) {
-          nav(`/admin/tenpo/${encodeURIComponent(tenpoId)}`);
+          nav(`/admin/tenpo/${encodeURIComponent(tenpoId)}?mode=monshin`);
         }
       }
     } catch (e) {
@@ -601,9 +601,9 @@ export default function AdminTorihikisakiTourokuPage() {
       const hit = dupItems.find((it) => normalizeKeyPart(it?.name) === normalizeKeyPart(name));
       if (hit?.tenpo_id) {
         const go = window.confirm(
-          `同名の既存店舗が見つかりました: ${hit.name}\n既存カルテを開きますか？`
+          `同名の既存店舗が見つかりました: ${hit.name}\n既存問診票を開きますか？`
         );
-        if (go) nav(`/admin/tenpo/${encodeURIComponent(hit.tenpo_id)}`);
+        if (go) nav(`/admin/tenpo/${encodeURIComponent(hit.tenpo_id)}?mode=monshin`);
         return;
       }
 
@@ -634,7 +634,7 @@ export default function AdminTorihikisakiTourokuPage() {
       setAddUrl('');
       setAddJouhouTourokuShaName(getCurrentAccountName());
       setOkMsg(`店舗を追加しました: ${name}`);
-      if (tenpoId) nav(`/admin/tenpo/${encodeURIComponent(tenpoId)}`);
+      if (tenpoId) nav(`/admin/tenpo/${encodeURIComponent(tenpoId)}?mode=monshin`);
     } catch (e) {
       setErr(e?.message || '店舗の追加に失敗しました');
     } finally {
@@ -699,7 +699,7 @@ export default function AdminTorihikisakiTourokuPage() {
         <div className="admin-touroku-grid">
           <section className={`card mobile-tab-panel ${mobileTab === 'new' ? 'is-active' : ''}`}>
             <div className="card-h">
-              <div className="t">新規一括作成</div>
+              <div className="t">問診票を作成</div>
               <div className="d">取引先・屋号・店舗を一発で作ります</div>
             </div>
             <div className="form">
@@ -745,10 +745,10 @@ export default function AdminTorihikisakiTourokuPage() {
                   checked={bulkOpenKarteAfterCreate}
                   onChange={(e) => setBulkOpenKarteAfterCreate(e.target.checked)}
                 />
-                <span>登録後にカルテ情報を入力する</span>
+                <span>登録後に問診票を入力する</span>
               </label>
               <div className="row">
-                <button className="primary" onClick={onBulkCreate} disabled={loading}>一括作成</button>
+                <button className="primary" onClick={onBulkCreate} disabled={loading}>問診票を作成</button>
               </div>
             </div>
           </section>
@@ -871,7 +871,7 @@ export default function AdminTorihikisakiTourokuPage() {
               </label>
 
               <div className="hint">
-                店舗作成後は <code>souko</code>（顧客ストレージ）を自動作成し、店舗カルテへ遷移します。
+                店舗作成後は <code>souko</code>（顧客ストレージ）を自動作成し、問診票（店舗詳細）へ遷移します。
               </div>
             </div>
           </section>

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 // Hamburger / admin-top are provided by GlobalNav.
 import './admin-tenpo-karte.css';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -18,6 +19,16 @@ const JINZAI_API_BASE =
   (import.meta.env?.DEV || isLocalUiHost())
     ? '/api-jinzai'
     : (import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
+
+const YAKUSOKU_API_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api'
+    : normalizeGatewayBase(import.meta.env?.VITE_YAKUSOKU_API_BASE, YOTEI_GATEWAY);
+
+const YAKUSOKU_FALLBACK_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api2'
+    : normalizeGatewayBase(import.meta.env?.VITE_YAKUSOKU_API_FALLBACK_BASE, YAKUSOKU_API_BASE);
 
 const KARTE_VIEW = {
   SUMMARY: 'summary',
@@ -131,6 +142,7 @@ const BASIC_INFO_PROFILE_KEYS = [
   'url',
   'business_hours',
   'customer_attendance',
+  'key_handling',
   'contact_method',
   'security_info',
   'customer_contact_name',
@@ -148,6 +160,7 @@ function normalizeBasicInfoProfile(raw) {
     url: clampStr(src.url || '', 200),
     business_hours: clampStr(src.business_hours || '', 80),
     customer_attendance: CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '',
+    key_handling: clampStr(src.key_handling || '', 120),
     contact_method: clampStr(src.contact_method || '', 80),
     security_info: clampStr(src.security_info || '', 120),
     customer_contact_name: clampStr(src.customer_contact_name || '', 80),
@@ -165,6 +178,7 @@ function extractBasicInfoProfileFromTenpoRecord(tp) {
     url: tp?.url || '',
     business_hours: spec?.business_hours || tp?.business_hours || tp?.eigyou_jikan || '',
     customer_attendance: spec?.customer_attendance || '',
+    key_handling: spec?.key_handling || tp?.key_handling || '',
     contact_method: spec?.contact_method || tp?.contact_method || '',
     security_info: spec?.security_info || tp?.security_info || '',
     customer_contact_name: spec?.customer_contact_name || tp?.contact_name || tp?.contact_person || tp?.tantou_name || '',
@@ -454,6 +468,15 @@ const CHEMICAL_UNIT_OPTIONS = [
   { value: 'other', label: 'その他' },
 ];
 
+const SOUKO_DOC_CATEGORY_OPTIONS = [
+  { value: 'estimate', label: '見積' },
+  { value: 'contract', label: '契約書' },
+  { value: 'invoice', label: '請求' },
+  { value: 'report', label: '報告提出' },
+  { value: 'photo', label: '写真' },
+  { value: 'other', label: 'その他' },
+];
+
 function makeHistoryId() {
   return `HST#${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -485,6 +508,25 @@ function authHeaders() {
 async function apiFetch(path, init) {
   const base = MASTER_API_BASE.replace(/\/$/, '');
   return fetch(`${base}${path}`, { headers: authHeaders(), cache: 'no-store', ...(init || {}) });
+}
+
+async function yakusokuFetch(path, init) {
+  const headers = { ...authHeaders(), ...(init?.headers || {}) };
+  const primaryBase = YAKUSOKU_API_BASE.replace(/\/$/, '');
+  const primaryRes = await fetch(`${primaryBase}${path}`, {
+    cache: 'no-store',
+    ...(init || {}),
+    headers,
+  });
+  if (primaryRes.ok) return primaryRes;
+  if (![401, 403, 404].includes(primaryRes.status)) return primaryRes;
+  const fallbackBase = YAKUSOKU_FALLBACK_BASE.replace(/\/$/, '');
+  if (fallbackBase === primaryBase) return primaryRes;
+  return fetch(`${fallbackBase}${path}`, {
+    cache: 'no-store',
+    ...(init || {}),
+    headers,
+  });
 }
 
 async function jinzaiFetch(path, init) {
@@ -761,6 +803,11 @@ export default function AdminTenpoKartePage() {
   const location = useLocation();
 
   const tenpoId = decodeURIComponent(String(tenpoIdParam || '')).trim();
+  const pageMode = useMemo(() => {
+    const sp = new URLSearchParams(location.search || '');
+    return String(sp.get('mode') || '').trim().toLowerCase();
+  }, [location.search]);
+  const isMonshinMode = pageMode === 'monshin';
   const parentKeys = useMemo(() => {
     const sp = new URLSearchParams(location.search || '');
     return {
@@ -775,6 +822,9 @@ export default function AdminTenpoKartePage() {
   const [torihikisaki, setTorihikisaki] = useState(null);
   const [yagou, setYagou] = useState(null);
   const [souko, setSouko] = useState(null); // 1 tenpo = 1 souko (運用想定)
+  const [yakusokuItems, setYakusokuItems] = useState([]);
+  const [yakusokuLoading, setYakusokuLoading] = useState(false);
+  const [yakusokuError, setYakusokuError] = useState('');
   const [isMobileLayout, setIsMobileLayout] = useState(() => (
     typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
   ));
@@ -796,6 +846,7 @@ export default function AdminTenpoKartePage() {
     url: '',
     business_hours: '',
     customer_attendance: '',
+    key_handling: '',
     contact_method: '',
     security_info: '',
     customer_contact_name: '',
@@ -814,6 +865,7 @@ export default function AdminTenpoKartePage() {
   const [lastUpload, setLastUpload] = useState(null);
   const [soukoView, setSoukoView] = useState('teishutsu'); // teishutsu|naibu|all
   const [uploadKubun, setUploadKubun] = useState('teishutsu'); // default for new upload
+  const [uploadDocCategory, setUploadDocCategory] = useState('estimate');
   const [supportReplyInputs, setSupportReplyInputs] = useState({});
 
   const headerTitle = useMemo(() => {
@@ -862,6 +914,11 @@ export default function AdminTenpoKartePage() {
     return () => mq.removeListener(sync);
   }, []);
 
+  useEffect(() => {
+    if (!isMonshinMode) return;
+    if (isMobileLayout) setKarteView(KARTE_VIEW.SUMMARY);
+  }, [isMonshinMode, isMobileLayout]);
+
   const salesOwnerSummary = useMemo(() => {
     const rows = uniqTags([
       String(resolvedBasicInfo?.sales_owner || '').trim(),
@@ -901,6 +958,90 @@ export default function AdminTenpoKartePage() {
     return chunks.join(' | ') || '—';
   }, [karteDetail?.plan?.plan_frequency, karteDetail?.service_plan]);
 
+  const getYakusokuServiceSummary = useCallback((y) => {
+    const names = Array.isArray(y?.service_names)
+      ? y.service_names.map((v) => String(v || '').trim()).filter(Boolean)
+      : [];
+    const ids = Array.isArray(y?.service_ids)
+      ? y.service_ids.map((v) => String(v || '').trim()).filter(Boolean)
+      : [];
+    const primary = names[0] || String(y?.service_name || '').trim() || ids[0] || String(y?.service_id || '').trim();
+    const total = Math.max(names.length, ids.length, primary ? 1 : 0);
+    if (!primary) return '未設定';
+    if (total <= 1) return primary;
+    return `${primary} +${total - 1}件`;
+  }, []);
+
+  const primaryYakusokuId = useMemo(() => (
+    String(karteDetail?.plan?.primary_yakusoku_id || '').trim()
+  ), [karteDetail?.plan?.primary_yakusoku_id]);
+
+  const yakusokuActiveItems = useMemo(() => (
+    (Array.isArray(yakusokuItems) ? yakusokuItems : []).filter((y) => String(y?.status || '').trim() !== 'inactive')
+  ), [yakusokuItems]);
+
+  const primaryYakusoku = useMemo(() => {
+    if (primaryYakusokuId) {
+      const hit = (Array.isArray(yakusokuItems) ? yakusokuItems : []).find(
+        (y) => String(y?.yakusoku_id || y?.id || '').trim() === primaryYakusokuId
+      );
+      if (hit) return hit;
+    }
+    return yakusokuActiveItems[0] || (Array.isArray(yakusokuItems) ? yakusokuItems[0] : null) || null;
+  }, [primaryYakusokuId, yakusokuItems, yakusokuActiveItems]);
+
+  const yakusokuSummary = useMemo(() => {
+    if (!primaryYakusoku) return '—';
+    const start = String(primaryYakusoku?.start_date || '').trim() || '未設定';
+    const status = String(primaryYakusoku?.status || '').trim() || 'active';
+    const cycle = String(primaryYakusoku?.type || '').trim() === 'teiki'
+      ? `定期/${Number(primaryYakusoku?.monthly_quota || 0) || '-'}回`
+      : '単発';
+    return `${start} / ${cycle} / ${status}`;
+  }, [primaryYakusoku]);
+
+  const monshinChecklist = useMemo(() => {
+    const contactPhone = String(resolvedBasicInfo?.customer_contact_phone || '').trim();
+    const keyHandling = String(resolvedBasicInfo?.key_handling || '').trim();
+    const businessHours = String(resolvedBasicInfo?.business_hours || '').trim();
+    const attendance = String(resolvedBasicInfo?.customer_attendance || '').trim();
+    const salesOwner = String(resolvedBasicInfo?.sales_owner || '').trim();
+    const hasYakusoku = Boolean(primaryYakusoku?.yakusoku_id) || yakusokuActiveItems.length > 0;
+    const serviceSummary = getYakusokuServiceSummary(primaryYakusoku);
+    const hasService = !!(hasYakusoku && serviceSummary && serviceSummary !== '未設定');
+    const reportProfile = (karteDetail && typeof karteDetail === 'object' ? karteDetail.report_profile : {}) || {};
+    const fieldRequiredCount = Object.values(reportProfile?.field_required || {}).filter(Boolean).length;
+    const customerRequiredCount = Object.values(reportProfile?.customer_required || {}).filter(Boolean).length;
+
+    const rows = [
+      { key: 'customer_contact_phone', label: '担当者連絡先', ok: !!contactPhone },
+      { key: 'key_handling', label: '鍵の扱い', ok: !!keyHandling },
+      { key: 'business_hours', label: '営業時間', ok: !!businessHours },
+      { key: 'customer_attendance', label: 'お客様立会い', ok: !!attendance },
+      { key: 'sales_owner', label: '営業担当', ok: !!salesOwner },
+      { key: 'yakusoku', label: '契約（yakusoku）', ok: hasYakusoku },
+      { key: 'service', label: '契約サービス', ok: hasService },
+      { key: 'report_field_required', label: '現場必須報告設計', ok: fieldRequiredCount > 0 },
+      { key: 'report_customer_required', label: '顧客提出設計', ok: customerRequiredCount > 0 },
+    ];
+
+    const total = rows.length;
+    const completed = rows.filter((r) => r.ok).length;
+    const missing = rows.filter((r) => !r.ok);
+    const ratio = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { rows, total, completed, missing, ratio };
+  }, [
+    resolvedBasicInfo?.customer_contact_phone,
+    resolvedBasicInfo?.key_handling,
+    resolvedBasicInfo?.business_hours,
+    resolvedBasicInfo?.customer_attendance,
+    resolvedBasicInfo?.sales_owner,
+    primaryYakusoku,
+    yakusokuActiveItems.length,
+    getYakusokuServiceSummary,
+    karteDetail,
+  ]);
+
   const buildBasicInfoDraft = useCallback(() => {
     return resolvedBasicInfo;
   }, [resolvedBasicInfo]);
@@ -924,6 +1065,7 @@ export default function AdminTenpoKartePage() {
         size: Number(it?.size || 0) || 0,
         uploaded_at: String(it?.uploaded_at || '').trim(),
         kubun: String(it?.kubun || '').trim(), // teishutsu|naibu|'' (legacy)
+        doc_category: String(it?.doc_category || '').trim(), // estimate|contract|invoice|report|photo|other
         preview_url: String(it?.preview_url || it?.get_url || it?.url || '').trim(),
       }))
       .filter((it) => it.key);
@@ -1038,6 +1180,8 @@ export default function AdminTenpoKartePage() {
     if (!tenpoId) return;
     setLoading(true);
     setError('');
+    setYakusokuLoading(true);
+    setYakusokuError('');
     try {
       const tp = await fetchTenpoDetail({ tenpoId, parentKeys });
       if (!tp) {
@@ -1072,6 +1216,52 @@ export default function AdminTenpoKartePage() {
       );
       const found = asItems(soukoRes)?.[0] || null;
       setSouko(found);
+
+      try {
+        const yRes = await yakusokuFetch('/yakusoku?limit=5000');
+        if (!yRes.ok) {
+          const txt = await yRes.text().catch(() => '');
+          throw new Error(`yakusoku HTTP ${yRes.status} ${txt}`.trim());
+        }
+        const yData = await yRes.json();
+        const normalized = asItems(yData)
+          .map((it) => {
+            const ids = Array.isArray(it?.service_ids)
+              ? it.service_ids.map((v) => String(v || '').trim()).filter(Boolean)
+              : [];
+            const names = Array.isArray(it?.service_names)
+              ? it.service_names.map((v) => String(v || '').trim()).filter(Boolean)
+              : [];
+            if (!ids.length && String(it?.service_id || '').trim()) ids.push(String(it.service_id).trim());
+            if (!names.length && String(it?.service_name || '').trim()) names.push(String(it.service_name).trim());
+            return {
+              ...it,
+              yakusoku_id: String(it?.yakusoku_id || it?.id || '').trim(),
+              tenpo_id: String(it?.tenpo_id || '').trim(),
+              start_date: String(it?.start_date || '').trim(),
+              status: String(it?.status || 'active').trim() || 'active',
+              type: String(it?.type || 'teiki').trim() || 'teiki',
+              monthly_quota: Number(it?.monthly_quota || 0) || 0,
+              price: Number(it?.price || 0) || 0,
+              service_ids: ids,
+              service_names: names,
+            };
+          })
+          .filter((it) => it.yakusoku_id && it.tenpo_id === tenpoId)
+          .sort((a, b) => {
+            const aState = a.status === 'active' ? 0 : 1;
+            const bState = b.status === 'active' ? 0 : 1;
+            if (aState !== bState) return aState - bState;
+            const ad = parseYmdToInt(a.start_date) || -1;
+            const bd = parseYmdToInt(b.start_date) || -1;
+            return bd - ad;
+          });
+        setYakusokuItems(normalized);
+        setYakusokuError('');
+      } catch (ye) {
+        setYakusokuItems([]);
+        setYakusokuError(ye?.message || 'yakusokuの取得に失敗しました');
+      }
     } catch (e) {
       const isNotFound = Number(e?.status) === 404 || String(e?.message || '').includes('HTTP 404');
       if (isNotFound) {
@@ -1082,6 +1272,7 @@ export default function AdminTenpoKartePage() {
         setError(e?.message || '読み込みに失敗しました');
       }
     } finally {
+      setYakusokuLoading(false);
       setLoading(false);
     }
   }, [tenpoId, parentKeys.torihikisaki_id, parentKeys.yagou_id]);
@@ -1145,6 +1336,14 @@ export default function AdminTenpoKartePage() {
     const profile = normalizeBasicInfoProfile(editingBasicInfo ? basicInfoDraft : buildBasicInfoDraft());
     if (isBasicInfoProfileEmpty(profile)) {
       window.alert('共有する基本情報が空です');
+      return;
+    }
+    if (!String(profile?.customer_contact_phone || '').trim()) {
+      window.alert('担当者連絡先は必須です');
+      return;
+    }
+    if (!String(profile?.key_handling || '').trim()) {
+      window.alert('鍵の扱いは必須です');
       return;
     }
     const sharedProfile = {
@@ -1231,6 +1430,8 @@ export default function AdminTenpoKartePage() {
         40
       );
     }
+    next.spec.key_handling = clampStr(next.spec.key_handling || '', 120);
+    next.plan.primary_yakusoku_id = clampStr(next.plan.primary_yakusoku_id || '', 64);
     next.spec.security_info = clampStr(next.spec.security_info || '', 120);
     next.spec.business_hours = clampStr(next.spec.business_hours || '', 80);
     {
@@ -1831,6 +2032,10 @@ export default function AdminTenpoKartePage() {
     setError('');
     try {
       const next = ensureKarteDetailDefaults();
+      const requiredContactPhone = clampStr(next?.spec?.customer_contact_phone || '', 40);
+      const requiredKeyHandling = clampStr(next?.spec?.key_handling || '', 120);
+      if (!requiredContactPhone) throw new Error('担当者連絡先は必須です');
+      if (!requiredKeyHandling) throw new Error('鍵の扱いは必須です');
       const updated = await apiPutJson(`/master/tenpo/${encodeURIComponent(tenpoId)}`, { karte_detail: next });
       setTenpo(updated);
       setKarteDetail(updated?.karte_detail || next);
@@ -1846,25 +2051,31 @@ export default function AdminTenpoKartePage() {
     setSavingBasicInfo(true);
     setError('');
     try {
+      const customerContactPhone = clampStr(basicInfoDraft?.customer_contact_phone || '', 40);
+      const keyHandling = clampStr(basicInfoDraft?.key_handling || '', 120);
+      if (!customerContactPhone) throw new Error('担当者連絡先は必須です');
+      if (!keyHandling) throw new Error('鍵の扱いは必須です');
+
       const nextKarte = ensureKarteDetailDefaults();
       const nextSpec = { ...(nextKarte?.spec || {}) };
       const attendance = String(basicInfoDraft?.customer_attendance || '').trim();
       nextSpec.business_hours = clampStr(basicInfoDraft?.business_hours || '', 80);
       nextSpec.customer_attendance = CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '';
+      nextSpec.key_handling = keyHandling;
       nextSpec.contact_method = clampStr(basicInfoDraft?.contact_method || '', 80);
       nextSpec.security_info = clampStr(basicInfoDraft?.security_info || '', 120);
       nextSpec.customer_contact_name = clampStr(basicInfoDraft?.customer_contact_name || '', 80);
-      nextSpec.customer_contact_phone = clampStr(basicInfoDraft?.customer_contact_phone || '', 40);
+      nextSpec.customer_contact_phone = customerContactPhone;
       nextSpec.sales_owner = clampStr(basicInfoDraft?.sales_owner || '', 80);
       nextKarte.spec = nextSpec;
 
       const customerContactName = clampStr(basicInfoDraft?.customer_contact_name || '', 80);
-      const customerContactPhone = clampStr(basicInfoDraft?.customer_contact_phone || '', 40);
       const payload = {
         name: clampStr(basicInfoDraft?.name || '', 120),
         address: clampStr(basicInfoDraft?.address || '', 200),
         phone: clampStr(basicInfoDraft?.phone || '', 40),
         url: clampStr(basicInfoDraft?.url || '', 200),
+        key_handling: keyHandling,
         tantou_name: customerContactName,
         tantou_phone: customerContactPhone,
         contact_method: clampStr(basicInfoDraft?.contact_method || '', 80),
@@ -1881,6 +2092,7 @@ export default function AdminTenpoKartePage() {
         url: clampStr(updated?.url || payload.url || '', 200),
         business_hours: clampStr(updated?.karte_detail?.spec?.business_hours || nextSpec.business_hours || '', 80),
         customer_attendance: String(updated?.karte_detail?.spec?.customer_attendance || nextSpec.customer_attendance || ''),
+        key_handling: clampStr(updated?.karte_detail?.spec?.key_handling || payload.key_handling || '', 120),
         contact_method: clampStr(updated?.karte_detail?.spec?.contact_method || payload.contact_method || '', 80),
         security_info: clampStr(updated?.karte_detail?.spec?.security_info || payload.security_info || '', 120),
         customer_contact_name: clampStr(
@@ -1949,6 +2161,7 @@ export default function AdminTenpoKartePage() {
           size: file.size || 0,
           uploaded_at: nowIso(),
           kubun: uploadKubun,
+          doc_category: uploadDocCategory,
           preview_url: String(presign?.get_url || ''),
         },
       ];
@@ -1964,7 +2177,7 @@ export default function AdminTenpoKartePage() {
     } finally {
       setUploading(false);
     }
-  }, [file, ensureSouko, tenpoId, files, uploadKubun]);
+  }, [file, ensureSouko, tenpoId, files, uploadKubun, uploadDocCategory]);
 
   const copy = useCallback(async (text) => {
     try {
@@ -2019,6 +2232,33 @@ export default function AdminTenpoKartePage() {
       </header>
 
       {error ? <div className="tenpo-karte-err">{error}</div> : null}
+
+      <section className={`monshin-overview ${isMonshinMode ? 'is-mode' : ''}`}>
+        <div className="monshin-overview-head">
+          <div className="left">
+            <div className="title">{isMonshinMode ? '問診票モード' : '問診票チェック'}</div>
+            <div className="desc">契約（yakusoku）・カルテ・報告設計の土台となる必須項目の充足率</div>
+          </div>
+          <div className={`pill ${monshinChecklist.missing.length === 0 ? 'pill-on' : 'pill-off'}`}>
+            {monshinChecklist.completed}/{monshinChecklist.total} 完了
+          </div>
+        </div>
+        <div className="monshin-progress">
+          <div className="bar" style={{ width: `${monshinChecklist.ratio}%` }} />
+        </div>
+        {monshinChecklist.missing.length > 0 ? (
+          <div className="monshin-missing">
+            未入力: {monshinChecklist.missing.map((m) => m.label).join(' / ')}
+          </div>
+        ) : (
+          <div className="monshin-ok">必須項目は揃っています。次は yakusoku と yotei 連携へ進めます。</div>
+        )}
+        <div className="monshin-actions">
+          <button type="button" onClick={() => setKarteView(KARTE_VIEW.SUMMARY)}>基本情報</button>
+          <button type="button" onClick={() => setKarteView(KARTE_VIEW.DETAIL)}>詳細入力</button>
+          <Link to="/admin/yakusoku" className="link">yakusoku管理へ</Link>
+        </div>
+      </section>
 
       <datalist id="tenpo-karte-jinzai-name-list">
         {jinzais.map((j) => (
@@ -2287,6 +2527,21 @@ export default function AdminTenpoKartePage() {
                 </div>
               </div>
               <div className="kv">
+                <div className="k">鍵の扱い *</div>
+                <div className="v">
+                  <div className="v-main">
+                    {editingBasicInfo ? (
+                      <input
+                        value={String(basicInfoDraft?.key_handling || '')}
+                        onChange={(e) => onBasicInfoField('key_handling', clampStr(e.target.value, 120))}
+                        placeholder="例: キーボックスNo1 / 退出時に施錠確認"
+                        required
+                      />
+                    ) : (String(resolvedBasicInfo?.key_handling || '').trim() || '—')}
+                  </div>
+                </div>
+              </div>
+              <div className="kv">
                 <div className="k">セキュリティ</div>
                 <div className="v">
                   <div className="v-main">
@@ -2315,7 +2570,7 @@ export default function AdminTenpoKartePage() {
                 </div>
               </div>
               <div className="kv">
-                <div className="k">担当者連絡先</div>
+                <div className="k">担当者連絡先 *</div>
                 <div className="v">
                   <div className="v-main">
                     {editingBasicInfo ? (
@@ -2323,6 +2578,7 @@ export default function AdminTenpoKartePage() {
                         value={String(basicInfoDraft?.customer_contact_phone || '')}
                         onChange={(e) => onBasicInfoField('customer_contact_phone', clampStr(e.target.value, 40))}
                         placeholder="例: 090-1234-5678"
+                        required
                       />
                     ) : customerContactPhoneSummary}
                   </div>
@@ -2348,6 +2604,85 @@ export default function AdminTenpoKartePage() {
                   <div className="v-main">{servicePlanSummary}</div>
                 </div>
               </div>
+              <div className="kv">
+                <div className="k">主契約</div>
+                <div className="v">
+                  <div className="v-main">
+                    {primaryYakusoku ? (
+                      <>
+                        <code>{primaryYakusoku.yakusoku_id}</code>
+                        {' '}
+                        {yakusokuSummary}
+                      </>
+                    ) : '—'}
+                  </div>
+                </div>
+              </div>
+              <div className="kv">
+                <div className="k">契約件数</div>
+                <div className="v">
+                  <div className="v-main">
+                    有効 {yakusokuActiveItems.length} / 全体 {yakusokuItems.length}
+                  </div>
+                </div>
+              </div>
+
+              <details className="karte-accordion" open>
+                <summary>
+                  <span className="label">yakusoku 契約情報</span>
+                  <span className="hint">
+                    {yakusokuLoading ? '読み込み中...' : `${yakusokuItems.length}件`}
+                  </span>
+                </summary>
+                <div className="accordion-body">
+                  {yakusokuError ? (
+                    <div className="muted" style={{ color: '#fbbf24' }}>{yakusokuError}</div>
+                  ) : null}
+                  {!yakusokuLoading && !yakusokuItems.length ? (
+                    <div className="muted">この店舗に紐づく契約はありません</div>
+                  ) : null}
+                  {yakusokuItems.length > 0 ? (
+                    <div className="yakusoku-mini-list">
+                      {yakusokuItems.map((y) => {
+                        const id = String(y?.yakusoku_id || '').trim();
+                        const isPrimary = id && id === primaryYakusokuId;
+                        const start = String(y?.start_date || '').trim() || '未設定';
+                        const status = String(y?.status || '').trim() || 'active';
+                        const cycle = String(y?.type || '').trim() === 'teiki'
+                          ? `定期 / ${Number(y?.monthly_quota || 0) || '-'}回`
+                          : '単発';
+                        const service = getYakusokuServiceSummary(y);
+                        return (
+                          <div key={id} className={`yakusoku-mini-row ${isPrimary ? 'is-primary' : ''}`}>
+                            <div className="id-line">
+                              <code>{id}</code>
+                              <span className={`pill ${status === 'active' ? 'pill-on' : 'pill-off'}`}>{status}</span>
+                            </div>
+                            <div className="meta-line">
+                              <span>開始: {start}</span>
+                              <span>周期: {cycle}</span>
+                              <span>単価: ¥{Number(y?.price || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="meta-line">サービス: {service}</div>
+                            <div className="actions-row" style={{ marginTop: 6, marginBottom: 0 }}>
+                              <button
+                                type="button"
+                                disabled={!id || isPrimary}
+                                onClick={() => setKarteField('plan.primary_yakusoku_id', id)}
+                              >
+                                {isPrimary ? '主契約（設定済み）' : '主契約に設定'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  <div className="actions-row" style={{ marginTop: 10, marginBottom: 0 }}>
+                    <Link to="/admin/yakusoku" className="link">yakusoku管理へ</Link>
+                  </div>
+                </div>
+              </details>
 
               <details className="karte-accordion">
                 <summary>
@@ -2640,6 +2975,17 @@ export default function AdminTenpoKartePage() {
                   <option value="teishutsu">提出物</option>
                   <option value="naibu">内部</option>
                 </select>
+                <select
+                  value={uploadDocCategory}
+                  onChange={(e) => setUploadDocCategory(e.target.value)}
+                  disabled={uploading}
+                  className="upload-kubun"
+                  aria-label="書類カテゴリ"
+                >
+                  {SOUKO_DOC_CATEGORY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
                 <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={uploading} />
                 <button onClick={onUpload} disabled={!file || uploading}>
                   {uploading ? 'アップロード中...' : 'アップロード'}
@@ -2686,6 +3032,7 @@ export default function AdminTenpoKartePage() {
                         <div className="file-name" title={f.file_name || f.key}>{f.file_name || '(no name)'}</div>
                         <div className="file-meta">
                           <span className="file-sub">{f.content_type || 'content-type: -'}</span>
+                          <span className="file-sub">{findOptionLabel(SOUKO_DOC_CATEGORY_OPTIONS, f.doc_category) || '未分類'}</span>
                           <span className="file-sub">{f.size ? `${f.size} bytes` : '-'}</span>
                           <span className="file-sub">{f.uploaded_at || ''}</span>
                         </div>
@@ -2843,11 +3190,27 @@ export default function AdminTenpoKartePage() {
                       </select>
                     </label>
                     <label className="f">
+                      <div className="lbl">鍵の扱い *</div>
+                      <input
+                        value={String(karteDetail?.spec?.key_handling || '')}
+                        onChange={(e) => setKarteField('spec.key_handling', clampStr(e.target.value, 120))}
+                        placeholder="例: キーボックスNo1 / 退出時に施錠確認"
+                      />
+                    </label>
+                    <label className="f">
                       <div className="lbl">連絡手段</div>
                       <input
                         value={String(karteDetail?.spec?.contact_method || '')}
                         onChange={(e) => setKarteField('spec.contact_method', clampStr(e.target.value, 80))}
                         placeholder="例: 電話 / LINE / SMS / メール"
+                      />
+                    </label>
+                    <label className="f">
+                      <div className="lbl">担当者連絡先 *</div>
+                      <input
+                        value={String(karteDetail?.spec?.customer_contact_phone || '')}
+                        onChange={(e) => setKarteField('spec.customer_contact_phone', clampStr(e.target.value, 40))}
+                        placeholder="例: 090-1234-5678"
                       />
                     </label>
                     <label className="f">
@@ -2899,6 +3262,58 @@ export default function AdminTenpoKartePage() {
               </div>
 
               <div className="karte-detail-col">
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">契約連携（yakusoku）</div>
+                    <Link to="/admin/yakusoku" className="link">契約管理へ</Link>
+                  </div>
+                  <div className="muted small">
+                    契約条件は yakusoku を正本として参照。ここでは主契約の指定と内容確認を行います。
+                  </div>
+                  {yakusokuError ? (
+                    <div className="muted" style={{ color: '#fbbf24' }}>{yakusokuError}</div>
+                  ) : null}
+                  {!yakusokuLoading && !yakusokuItems.length ? (
+                    <div className="muted">この店舗に紐づく契約はありません</div>
+                  ) : null}
+                  {yakusokuItems.length > 0 ? (
+                    <div className="yakusoku-mini-list" style={{ marginTop: 10 }}>
+                      {yakusokuItems.map((y) => {
+                        const id = String(y?.yakusoku_id || '').trim();
+                        const isPrimary = id && id === primaryYakusokuId;
+                        const start = String(y?.start_date || '').trim() || '未設定';
+                        const status = String(y?.status || '').trim() || 'active';
+                        const cycle = String(y?.type || '').trim() === 'teiki'
+                          ? `定期 / ${Number(y?.monthly_quota || 0) || '-'}回`
+                          : '単発';
+                        return (
+                          <div key={id} className={`yakusoku-mini-row ${isPrimary ? 'is-primary' : ''}`}>
+                            <div className="id-line">
+                              <code>{id}</code>
+                              <span className={`pill ${status === 'active' ? 'pill-on' : 'pill-off'}`}>{status}</span>
+                            </div>
+                            <div className="meta-line">
+                              <span>開始: {start}</span>
+                              <span>{cycle}</span>
+                              <span>¥{Number(y?.price || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="meta-line">サービス: {getYakusokuServiceSummary(y)}</div>
+                            <div className="actions-row" style={{ marginTop: 6, marginBottom: 0 }}>
+                              <button
+                                type="button"
+                                disabled={!id || isPrimary}
+                                onClick={() => setKarteField('plan.primary_yakusoku_id', id)}
+                              >
+                                {isPrimary ? '主契約（設定済み）' : '主契約に設定'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </section>
+
                 <section className="card card-sub">
                   <div className="card-title-row">
                     <div className="card-title">報告設計（現場 → 管理/顧客）</div>

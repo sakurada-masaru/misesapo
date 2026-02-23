@@ -84,6 +84,27 @@ async function mapLimit(list, limit, fn) {
     return results;
 }
 
+function mergeReports(primary, secondary) {
+    const merged = [];
+    const seen = new Set();
+    const src = [...(Array.isArray(primary) ? primary : []), ...(Array.isArray(secondary) ? secondary : [])];
+    for (const r of src) {
+        if (!r || typeof r !== 'object') continue;
+        const key = [
+            String(r.id || ''),
+            String(r.created_at || ''),
+            String(r.user_id || ''),
+            String(r.user_name || ''),
+            String(r.template_id || ''),
+            String(r.work_date || ''),
+        ].join('|');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        merged.push(r);
+    }
+    return merged;
+}
+
 const AdminHoukokuListPage = () => {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [reports, setReports] = useState([]);
@@ -185,7 +206,8 @@ const AdminHoukokuListPage = () => {
 
     const fetchByAdminRange = useCallback(async (from, to, headers) => {
         // Prefer range API (reduces calls, avoids UI hangs). Fallback to per-day later if unavailable.
-        const url = `/admin/work-reports?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&limit=2000`;
+        const states = encodeURIComponent('draft,submitted,triaged,rejected,approved,archived');
+        const url = `/admin/work-reports?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&states=${states}&limit=2000`;
         const res = await apiFetchWorkReport(url, { method: 'GET', headers });
         const items = Array.isArray(res) ? res : (res?.items || res?.rows || []);
         const normalized = items.map((it) => {
@@ -232,7 +254,19 @@ const AdminHoukokuListPage = () => {
             const token = getToken() || localStorage.getItem('cognito_id_token');
             const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
             if (viewMode === 'day') {
-                const items = await fetchByHoukoku(date, headers);
+                let items = [];
+                try {
+                    items = await fetchByAdminRange(date, date, headers);
+                } catch (_) {
+                    items = [];
+                }
+                // Legacy compatibility: include /houkoku source as fallback/merge.
+                try {
+                    const legacy = await fetchByHoukoku(date, headers);
+                    items = mergeReports(items, legacy);
+                } catch (_) {
+                    // ignore legacy fetch errors in day mode
+                }
                 setReports(items);
                 setReportsByDate({ [date]: items });
                 return;
@@ -288,7 +322,7 @@ const AdminHoukokuListPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [date, getToken, fetchByHoukoku, fetchExpectedUsers, viewMode]);
+    }, [date, getToken, fetchByAdminRange, fetchByHoukoku, fetchExpectedUsers, viewMode]);
 
     useEffect(() => {
         fetchReports();

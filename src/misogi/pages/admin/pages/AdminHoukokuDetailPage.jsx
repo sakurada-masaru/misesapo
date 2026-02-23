@@ -19,7 +19,12 @@ const AdminHoukokuDetailPage = () => {
             try {
                 const token = getToken() || localStorage.getItem('cognito_id_token');
                 const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
-                const data = await apiFetchWorkReport(`/houkoku/${reportId}`, { headers });
+                let data = null;
+                try {
+                    data = await apiFetchWorkReport(`/admin/work-reports/${encodeURIComponent(reportId)}`, { headers });
+                } catch (_) {
+                    data = await apiFetchWorkReport(`/houkoku/${encodeURIComponent(reportId)}`, { headers });
+                }
                 setReport(data);
             } catch (e) {
                 setError('データの取得に失敗しました。');

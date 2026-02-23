@@ -104,6 +104,87 @@
   background: rgba(162, 211, 255, 0.12);
 }
 
+.monshin-overview {
+  margin: 12px 20px 0;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.monshin-overview.is-mode {
+  border-color: rgba(162, 211, 255, 0.34);
+  background: rgba(118, 175, 255, 0.12);
+}
+
+.monshin-overview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.monshin-overview-head .title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #e9eef8;
+}
+
+.monshin-overview-head .desc {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.78);
+}
+
+.monshin-progress {
+  margin-top: 10px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.monshin-progress .bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6cc4ff 0%, #79e0c0 100%);
+}
+
+.monshin-missing,
+.monshin-ok {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.monshin-missing {
+  color: #ffd59d;
+}
+
+.monshin-ok {
+  color: #9be7bc;
+}
+
+.monshin-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.monshin-actions button,
+.monshin-actions .link {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e9eef8;
+  padding: 7px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 12px;
+}
+
 .card-accordion {
   padding: 0;
 }
@@ -648,6 +729,41 @@
   max-height: 180px;
 }
 
+.yakusoku-mini-list {
+  display: grid;
+  gap: 8px;
+}
+
+.yakusoku-mini-row {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 8px 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.yakusoku-mini-row.is-primary {
+  border-color: rgba(120, 220, 160, 0.35);
+  background: rgba(120, 220, 160, 0.08);
+}
+
+.yakusoku-mini-row .id-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.yakusoku-mini-row .meta-line {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.78);
+}
+
 /* SUMMARY: ストレージも高さいっぱい */
 .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .souko-card {
   align-self: stretch;
@@ -782,6 +898,13 @@
 .tenpo-mobile-cta button {
   width: 100%;
   min-height: 44px;
+}
+
+@media (max-width: 900px) {
+  .monshin-overview {
+    margin: 10px 12px 0;
+    padding: 10px;
+  }
 }
 
 .tenpo-mobile-form-actions {
@@ -1275,6 +1398,31 @@
   color: #1e3a8a;
 }
 
+[data-theme="light"] .monshin-overview {
+  border-color: rgba(15, 23, 42, 0.14);
+  background: #f8fafc;
+}
+
+[data-theme="light"] .monshin-overview.is-mode {
+  border-color: rgba(30, 64, 175, 0.28);
+  background: #eaf2ff;
+}
+
+[data-theme="light"] .monshin-overview-head .title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .monshin-overview-head .desc {
+  color: #475569;
+}
+
+[data-theme="light"] .monshin-actions button,
+[data-theme="light"] .monshin-actions .link {
+  color: #0f172a;
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
 [data-theme="light"] .tenpo-karte-head .titles .kicker,
 [data-theme="light"] .tenpo-karte-head .pathline,
 [data-theme="light"] .tenpo-karte-head .pathline .seg,
@@ -1410,4 +1558,18 @@
 [data-theme="light"] .tenpo-karte-page .filelist-head .label,
 [data-theme="light"] .tenpo-karte-page .filelist-head .count {
   color: #64748b;
+}
+
+[data-theme="light"] .yakusoku-mini-row {
+  border-color: #d1d5db;
+  background: #ffffff;
+}
+
+[data-theme="light"] .yakusoku-mini-row.is-primary {
+  border-color: #86efac;
+  background: #ecfdf5;
+}
+
+[data-theme="light"] .yakusoku-mini-row .meta-line {
+  color: #475569;
 }

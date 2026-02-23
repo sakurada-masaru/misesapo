@@ -4,6 +4,13 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 ---
 
+## Admin Houkoku Visibility Fix (2026-02-23)
+
+- [x] 管理報告一覧の日表示を `/admin/work-reports` 優先取得に変更（`states` に `approved/archived` も含める）
+- [x] 互換のため `/houkoku` 取得結果を日表示でマージ（重複除外）する
+- [x] 報告詳細を `/admin/work-reports/{id}` 優先＋`/houkoku/{id}` フォールバックに変更
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
 ## P6 Phase 1 完了判定
 
 - [ ] `https://misesapo.co.jp/office/work-reports` が本番で表示される（404 でない）
@@ -257,6 +264,13 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 週サマリー直下にタグ集計表示（件数・対象日・現場名）を追加
 
 ## ICS Tenpo Geo Sync (2026-02-13)
+
+## Monshin Flow Hardening (2026-02-22)
+
+- [x] 顧客登録（新）の「一括作成」導線文言を「問診票を作成」に統一
+- [x] 顧客登録（新）→店舗詳細遷移を `?mode=monshin` 付きに統一
+- [x] 店舗詳細に「問診票チェック（必須項目進捗）」を追加（担当者連絡先/鍵の扱い/営業時間/立会い/営業担当/契約/報告設計）
+- [x] 店舗詳細の保存前チェックで「担当者連絡先」「鍵の扱い」を必須化
 
 - [x] `scripts/sync_tenpo_geo_from_ics.py` を追加（dry-run既定 / `--apply` で反映）
 - [x] `tenpo` への `address` / `map_url` / `google_map_url` 反映ロジックを追加
@@ -640,4 +654,43 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 内部保存値 `tenpo_name`（店舗名）と表示用 `tenpo_query` を分離して互換維持
 - [x] 候補選択時は `tenpo_query` にも屋号付き表示名を反映
 - [x] 保存時に `tenpo_query` を payload から除外
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Tenpo Selector: Final Selection Clarity (2026-02-22)
+
+- [x] 検索入力中に既存選択を自動解除しない挙動へ変更（最終選択を保持）
+- [x] 「候補なし」文言を選択状態が分かる案内へ変更
+- [x] 候補行に「選択中」表示を追加
+- [x] 「最終選択（保存対象）」を明示し、未選択警告を追加
+- [x] 明示的な「選択解除」ボタンを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Modal: Price Position Adjustment (2026-02-22)
+
+- [x] 新規/編集モーダルで「金額（単価）」を「サービス」の直上へ移動
+- [x] 既存の下段金額欄を削除して重複を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku List: Unified Search (2026-02-22)
+
+- [x] `yakusoku` 一覧に統合検索入力を追加
+- [x] `ID / 取引先 / 屋号 / 店舗 / サービス / 状態 / メモ` を横断検索対象に設定
+- [x] 検索結果件数（`filtered / total`）表示を追加
+- [x] 該当なし時の空状態メッセージを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Modal: Start Date Emphasis (2026-02-22)
+
+- [x] 新規/編集モーダルに `yakusoku開始日` を追加
+- [x] `yakusoku開始日` を「金額（単価）」の直上へ配置
+- [x] 下段の旧「開始日」欄を削除し重複を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Tenpo Karte: Yakusoku Linkage + Souko Categories (2026-02-22)
+
+- [x] 店舗カルテで `yakusoku` を `tenpo_id` 連携取得して表示（概要/詳細）
+- [x] 主契約（`plan.primary_yakusoku_id`）をカルテ上で設定可能にした
+- [x] 契約サマリー（開始日/周期/単価/サービス）を可視化
+- [x] `souko` アップロードに「書類カテゴリ（見積/契約書/請求/報告提出/写真/その他）」を追加
+- [x] ファイル一覧に書類カテゴリ表示を追加
 - [x] `npm -C src/misogi run build` でビルド確認
