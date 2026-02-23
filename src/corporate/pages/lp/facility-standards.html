@@ -18,10 +18,11 @@
     <link rel="stylesheet" href="/css/swiper-bundle.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/normal-header-hamburger.css">
     <style>
         .breadcrumb {
             max-width: 1000px;
-            margin: 0 auto;
+            margin: 60px auto 0;
             padding: 20px 20px 0;
             font-size: 14px;
             color: #666;
@@ -356,25 +357,7 @@
 </head>
 
 <body style="color: #FDEDED;">
-    <!-- 通常ヘッダー -->
-    <header class="normal-header visible">
-        <div class="normal-header-inner">
-            <div class="normal-header-logo">
-                <a href="/">
-                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
-                        onerror="this.style.display='none'">
-                </a>
-            </div>
-            <nav class="normal-header-nav">
-                <a href="/">TOP</a>
-                <a href="/service/service.html">対応可能サービス</a>
-                <a href="/lp#voice">お客様の声</a>
-                <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
-                <a href="/#event">イベント</a>
-                <a href="/privacy-policy">規約＆ポリシー</a>
-            </nav>
-        </div>
-    </header>
+    <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
 
     <main style="background: #FDEDED;">
         <!-- パンくずリスト -->
@@ -382,7 +365,7 @@
             <div class="breadcrumb-inner">
                 <a href="/">TOP</a>
                 <span>></span>
-                <a href="about-more.html">一覧</a>
+                <a href="about-more.html">トピック一覧</a>
                 <span>></span>
                 <span class="current">施設基準（食品衛生法施行規則）</span>
             </div>
@@ -591,6 +574,7 @@
         });
     </script>
     <script src="/js/header.js"></script>
+    <script src="/js/normal-header-hamburger.js"></script>
 </body>
 
 </html>
