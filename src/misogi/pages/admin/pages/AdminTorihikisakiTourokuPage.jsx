@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 // Hamburger / back / admin-top are provided by GlobalNav.
 import './admin-torihikisaki-touroku.css';
 
@@ -63,6 +65,14 @@ function norm(v) {
   return String(v || '').trim();
 }
 
+function safeFilePart(v) {
+  const s = norm(v)
+    .replace(/[\\/:*?"<>|]+/g, '_')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return s || 'misesapo_keiyaku';
+}
+
 function normalizeKeyPart(v) {
   return norm(v).toLowerCase().replace(/\s+/g, ' ');
 }
@@ -93,6 +103,10 @@ function todayYmd() {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+function nowIso() {
+  return new Date().toISOString();
 }
 
 function getCurrentAccountName() {
@@ -129,10 +143,13 @@ function getCurrentAccountName() {
 
 export default function AdminTorihikisakiTourokuPage() {
   const nav = useNavigate();
+  const contractPrintRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [okMsg, setOkMsg] = useState('');
   const [mobileTab, setMobileTab] = useState('new');
+  const [contractPdfBusy, setContractPdfBusy] = useState(false);
+  const [contractSoukoBusy, setContractSoukoBusy] = useState(false);
 
   // 既存選択用
   const [torihikisakiList, setTorihikisakiList] = useState([]);
@@ -164,6 +181,29 @@ export default function AdminTorihikisakiTourokuPage() {
   const [addAddress, setAddAddress] = useState('');
   const [addUrl, setAddUrl] = useState('');
   const [addJouhouTourokuShaName, setAddJouhouTourokuShaName] = useState(() => getCurrentAccountName());
+  const [contractTenpoCandidates, setContractTenpoCandidates] = useState([]);
+  const [contractTenpoId, setContractTenpoId] = useState('');
+  const [contract, setContract] = useState(() => ({
+    application_date: todayYmd(),
+    service_start_date: todayYmd(),
+    company_name: '',
+    company_stamp: '㊞',
+    company_address: '',
+    contact_person: '',
+    phone: '',
+    email: '',
+    store_name: '',
+    store_address: '',
+    pricing: '料金表または見積書に定めるとおりとします。',
+    cancel_rule: '別途定めるとおりとします。',
+    payment_method: '請求書を送付いたします。指定の口座に当月締め翌月末までに支払いください。',
+    valid_term: '原則利用開始日から1年間（但し、有効期間満了の30日前までにいずれの当事者からも本契約を終了させる旨の通知がなされなかった場合、本契約は同一の条件でさらに1年間延長されるものとし、以降も同様とします。）',
+    withdrawal_notice: '30日前',
+    special_notes: '店舗での設備に関するアラートやより良い店舗運営のために設備情報をミセサポプラットフォーム上に登録させていただきます。外部に公開するものではございませんので、ご安心ください。',
+    provider_name: 'hairVR株式会社 ミセサポ事業部 代表取締役 正田和輝',
+    provider_address: '東京都中央区日本橋茅場町1-8-1',
+    provider_phone: '070-3332-3939',
+  }));
 
   useEffect(() => {
     if (bulkJouhouTourokuShaName) return;
@@ -361,6 +401,16 @@ export default function AdminTorihikisakiTourokuPage() {
     return selectedTorihikisakiId ? torihikisakiById.get(selectedTorihikisakiId) : null;
   }, [selectedTorihikisakiId, torihikisakiById]);
 
+  const yagouById = useMemo(() => {
+    const m = new Map();
+    yagouList.forEach((it) => {
+      const id = it?.yagou_id;
+      if (!id) return;
+      m.set(id, it);
+    });
+    return m;
+  }, [yagouList]);
+
   const existingCandidates = useMemo(() => {
     const q = normalizeKeyPart(existingQuery);
     if (!q) return [];
@@ -368,6 +418,389 @@ export default function AdminTorihikisakiTourokuPage() {
       .filter((it) => it?.search_blob?.includes(q))
       .slice(0, 40);
   }, [existingIndex, existingQuery]);
+
+  const contractTenpoById = useMemo(() => {
+    const m = new Map();
+    contractTenpoCandidates.forEach((tp) => {
+      if (!tp?.tenpo_id) return;
+      m.set(tp.tenpo_id, tp);
+    });
+    return m;
+  }, [contractTenpoCandidates]);
+
+  const contractText = useMemo(() => {
+    const c = contract;
+    return [
+      '利用者登録 申込書（契約書）',
+      'ミセサポ 利用規約に同意し、以下の通り、本サービスの利用を申し込みます。',
+      '',
+      `申込日: ${norm(c.application_date)} / 利用開始日: ${norm(c.service_start_date)}`,
+      '',
+      `個人／法人名: ${norm(c.company_name)} ${norm(c.company_stamp)}`,
+      `住所／本店住所: ${norm(c.company_address)}`,
+      `担当者: ${norm(c.contact_person)}`,
+      `電話番号: ${norm(c.phone)}`,
+      `メールアドレス: ${norm(c.email)}`,
+      '',
+      'サービスを利用したい店舗の名称及び住所',
+      `店舗名: ${norm(c.store_name)}`,
+      `店舗住所: ${norm(c.store_address)}`,
+      '',
+      `料金: ${norm(c.pricing)}`,
+      `個別業務のキャンセル: ${norm(c.cancel_rule)}`,
+      `支払方法: ${norm(c.payment_method)}`,
+      `有効期間: ${norm(c.valid_term)}`,
+      `退会予告期間: ${norm(c.withdrawal_notice)}`,
+      `特約事項: ${norm(c.special_notes)}`,
+      '',
+      `サービス提供者: ${norm(c.provider_name)}`,
+      `サービス提供者住所: ${norm(c.provider_address)}`,
+      `サービス提供者電話: ${norm(c.provider_phone)}`,
+      '',
+    ].join('\n');
+  }, [contract]);
+
+  const updateContractField = useCallback((key, value) => {
+    setContract((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const loadContractFromNew = useCallback(() => {
+    setContract((prev) => ({
+      ...prev,
+      company_name: norm(bulkTorihikisakiName) || prev.company_name,
+      company_address: norm(bulkAddress) || prev.company_address,
+      contact_person: norm(bulkTantouName) || prev.contact_person,
+      phone: norm(bulkPhone) || prev.phone,
+      email: norm(bulkEmail) || prev.email,
+      store_name: [norm(bulkYagouName), norm(bulkTenpoName)].filter(Boolean).join(' ') || prev.store_name,
+      store_address: norm(bulkAddress) || prev.store_address,
+    }));
+    setOkMsg('契約書に「新規追加」入力値を反映しました');
+    setErr('');
+  }, [
+    bulkTorihikisakiName,
+    bulkAddress,
+    bulkTantouName,
+    bulkPhone,
+    bulkEmail,
+    bulkYagouName,
+    bulkTenpoName,
+  ]);
+
+  const loadContractFromExisting = useCallback(async () => {
+    const torihikisakiId = selectedTorihikisakiId;
+    if (!torihikisakiId) {
+      window.alert('取引先を選択してください');
+      return;
+    }
+    setLoading(true);
+    setErr('');
+    setOkMsg('');
+    try {
+      const tori = torihikisakiById.get(torihikisakiId) || {};
+      const selectedYagou = selectedYagouId ? (yagouById.get(selectedYagouId) || {}) : {};
+      let firstTenpo = null;
+      if (selectedYagouId) {
+        const qs = new URLSearchParams({
+          limit: '1',
+          jotai: 'yuko',
+          torihikisaki_id: torihikisakiId,
+          yagou_id: selectedYagouId,
+        });
+        const tenpoData = await apiJson(`/master/tenpo?${qs.toString()}`);
+        firstTenpo = getItems(tenpoData)?.[0] || null;
+      }
+      setContract((prev) => ({
+        ...prev,
+        company_name: norm(tori?.name) || prev.company_name,
+        company_address: norm(tori?.address) || prev.company_address,
+        contact_person: norm(tori?.tantou_name) || prev.contact_person,
+        phone: norm(tori?.phone) || prev.phone,
+        email: norm(tori?.email) || prev.email,
+        store_name: [norm(selectedYagou?.name), norm(firstTenpo?.name)].filter(Boolean).join(' ') || prev.store_name,
+        store_address: norm(firstTenpo?.address) || prev.store_address,
+      }));
+      setOkMsg('契約書に「既存に追加」選択値を反映しました');
+    } catch (e) {
+      setErr(e?.message || '既存情報の契約書反映に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedTorihikisakiId, selectedYagouId, torihikisakiById, yagouById]);
+
+  const buildContractPdfBlob = useCallback(async () => {
+    const node = contractPrintRef.current;
+    if (!node) throw new Error('契約書プレビューが見つかりません');
+
+    const canvas = await html2canvas(node, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgProps = pdf.getImageProperties(imgData);
+    const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pdfHeight;
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+    }
+
+    const blob = pdf.output('blob');
+    const filenameBase = safeFilePart(norm(contract.company_name) || norm(contract.store_name));
+    const datePart = safeFilePart(norm(contract.application_date) || todayYmd());
+    const filename = `${filenameBase}_${datePart}_利用者登録申込書.pdf`;
+    return { blob, filename };
+  }, [contract.application_date, contract.company_name, contract.store_name]);
+
+  const outputContractPdf = useCallback(async () => {
+    setErr('');
+    setOkMsg('');
+    setContractPdfBusy(true);
+    try {
+      const { blob, filename } = await buildContractPdfBlob();
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!win) {
+        // popup block fallback
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      setOkMsg('契約書PDFを出力しました');
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (e) {
+      setErr(e?.message || '契約書PDFの出力に失敗しました');
+    } finally {
+      setContractPdfBusy(false);
+    }
+  }, [buildContractPdfBlob]);
+
+  const reloadContractTenpoCandidates = useCallback(async () => {
+    if (!selectedTorihikisakiId) {
+      setContractTenpoCandidates([]);
+      setContractTenpoId('');
+      return;
+    }
+    try {
+      const qs = new URLSearchParams({
+        limit: '20000',
+        jotai: 'yuko',
+        torihikisaki_id: selectedTorihikisakiId,
+      });
+      if (selectedYagouId) qs.set('yagou_id', selectedYagouId);
+      const data = await apiJson(`/master/tenpo?${qs.toString()}`);
+      const items = getItems(data).sort((a, b) => norm(a?.name).localeCompare(norm(b?.name), 'ja'));
+      setContractTenpoCandidates(items);
+      setContractTenpoId((cur) => {
+        if (cur && items.some((it) => String(it?.tenpo_id) === String(cur))) return cur;
+        return items?.[0]?.tenpo_id || '';
+      });
+    } catch (e) {
+      console.error('[contract] tenpo candidates load failed', e);
+      setContractTenpoCandidates([]);
+      setContractTenpoId('');
+    }
+  }, [selectedTorihikisakiId, selectedYagouId]);
+
+  useEffect(() => {
+    reloadContractTenpoCandidates();
+  }, [reloadContractTenpoCandidates]);
+
+  const ensureSoukoForTenpo = useCallback(async (tenpoId) => {
+    if (!tenpoId) throw new Error('保存先店舗が未選択です');
+    const checkQs = new URLSearchParams({ limit: '20', jotai: 'yuko', tenpo_id: tenpoId });
+    const check = await apiJson(`/master/souko?${checkQs.toString()}`);
+    const existing = getItems(check)?.[0] || null;
+    if (existing?.souko_id) return existing;
+
+    const tenpo = contractTenpoById.get(tenpoId);
+    const created = await apiJson('/master/souko', {
+      method: 'POST',
+      body: {
+        tenpo_id: tenpoId,
+        name: `${norm(tenpo?.name) || tenpoId} 顧客ストレージ`,
+        jotai: 'yuko',
+      },
+    });
+    if (!created?.souko_id) throw new Error('soukoの作成に失敗しました');
+    return created;
+  }, [contractTenpoById]);
+
+  const upsertKeiyakuForTenpo = useCallback(async ({ tenpoId, contractDocKey, contractFileName }) => {
+    if (!tenpoId) throw new Error('契約保存先店舗が未選択です');
+    const tenpo = contractTenpoById.get(tenpoId) || {};
+    const torihikisakiId = norm(tenpo?.torihikisaki_id) || norm(selectedTorihikisakiId);
+    const yagouId = norm(tenpo?.yagou_id) || norm(selectedYagouId);
+    const contractNameBase = norm(contract.store_name) || norm(contract.company_name) || norm(tenpo?.name) || tenpoId;
+    const payloadBase = {
+      name: `${contractNameBase} 利用契約`,
+      torihikisaki_id: torihikisakiId,
+      torihikisaki_name: norm(tenpo?.torihikisaki_name) || '',
+      yagou_id: yagouId,
+      yagou_name: norm(tenpo?.yagou_name) || '',
+      tenpo_id: tenpoId,
+      tenpo_name: norm(tenpo?.name) || '',
+      application_date: norm(contract.application_date),
+      start_date: norm(contract.service_start_date),
+      status: 'active',
+      source: 'contract_builder',
+      company_name: norm(contract.company_name),
+      contact_person: norm(contract.contact_person),
+      phone: norm(contract.phone),
+      email: norm(contract.email),
+      pricing: norm(contract.pricing),
+      payment_method: norm(contract.payment_method),
+      valid_term: norm(contract.valid_term),
+      cancel_rule: norm(contract.cancel_rule),
+      withdrawal_notice: norm(contract.withdrawal_notice),
+      special_notes: norm(contract.special_notes),
+      contract_doc_key: norm(contractDocKey),
+      contract_doc_file_name: norm(contractFileName),
+      jotai: 'yuko',
+    };
+
+    const qs = new URLSearchParams({
+      limit: '200',
+      jotai: 'yuko',
+      tenpo_id: tenpoId,
+    });
+    const existing = await apiJson(`/master/keiyaku?${qs.toString()}`);
+    const rows = getItems(existing);
+    const target = rows
+      .sort((a, b) => norm(b?.updated_at).localeCompare(norm(a?.updated_at)))
+      .find((it) => norm(it?.source) === 'contract_builder')
+      || rows[0]
+      || null;
+
+    if (target?.keiyaku_id) {
+      const updated = await apiJson(`/master/keiyaku/${encodeURIComponent(target.keiyaku_id)}`, {
+        method: 'PUT',
+        body: {
+          ...target,
+          ...payloadBase,
+          keiyaku_id: target.keiyaku_id,
+        },
+      });
+      return updated?.keiyaku_id || target.keiyaku_id;
+    }
+
+    const created = await apiJson('/master/keiyaku', {
+      method: 'POST',
+      body: payloadBase,
+    });
+    return created?.keiyaku_id || '';
+  }, [
+    contractTenpoById,
+    selectedTorihikisakiId,
+    selectedYagouId,
+    contract,
+  ]);
+
+  const saveContractPdfLocal = useCallback(async () => {
+    setErr('');
+    setOkMsg('');
+    setContractPdfBusy(true);
+    try {
+      const { blob, filename } = await buildContractPdfBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setOkMsg(`契約書PDFを保存しました: ${filename}`);
+    } catch (e) {
+      setErr(e?.message || '契約書PDFの保存に失敗しました');
+    } finally {
+      setContractPdfBusy(false);
+    }
+  }, [buildContractPdfBlob]);
+
+  const saveContractPdfToSouko = useCallback(async () => {
+    if (!contractTenpoId) {
+      window.alert('保存先店舗を選択してください');
+      return;
+    }
+    setErr('');
+    setOkMsg('');
+    setContractSoukoBusy(true);
+    try {
+      const { blob, filename } = await buildContractPdfBlob();
+      const souko = await ensureSoukoForTenpo(contractTenpoId);
+
+      const presign = await apiJson('/master/souko', {
+        method: 'POST',
+        body: {
+          mode: 'presign_upload',
+          tenpo_id: contractTenpoId,
+          file_name: filename,
+          content_type: 'application/pdf',
+        },
+      });
+      if (!presign?.put_url || !presign?.key) throw new Error('soukoアップロードURL取得に失敗しました');
+
+      const putRes = await fetch(presign.put_url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/pdf' },
+        body: blob,
+        redirect: 'follow',
+      });
+      if (!putRes.ok) {
+        const text = await putRes.text().catch(() => '');
+        throw new Error(`S3 upload failed (${putRes.status}) ${text}`.trim());
+      }
+
+      const nextFiles = [
+        ...(Array.isArray(souko?.files) ? souko.files : []),
+        {
+          key: presign.key,
+          file_name: filename,
+          content_type: 'application/pdf',
+          size: blob.size || 0,
+          uploaded_at: nowIso(),
+          kubun: 'teishutsu',
+          doc_category: 'contract',
+          preview_url: String(presign?.get_url || ''),
+        },
+      ];
+      await apiJson(`/master/souko/${encodeURIComponent(souko.souko_id)}`, {
+        method: 'PUT',
+        body: {
+          ...souko,
+          files: nextFiles,
+        },
+      });
+
+      const keiyakuId = await upsertKeiyakuForTenpo({
+        tenpoId: contractTenpoId,
+        contractDocKey: presign.key,
+        contractFileName: filename,
+      });
+
+      const tenpoName = norm(contractTenpoById.get(contractTenpoId)?.name) || contractTenpoId;
+      setOkMsg(`契約書PDFをsoukoに保存しました: ${tenpoName}${keiyakuId ? ` / 契約 ${keiyakuId}` : ''}`);
+    } catch (e) {
+      setErr(e?.message || '契約書PDFのsouko保存に失敗しました');
+    } finally {
+      setContractSoukoBusy(false);
+    }
+  }, [contractTenpoId, buildContractPdfBlob, ensureSoukoForTenpo, contractTenpoById, upsertKeiyakuForTenpo]);
 
   const onPickExistingCandidate = useCallback((hit) => {
     if (!hit) return;
@@ -499,8 +932,10 @@ export default function AdminTorihikisakiTourokuPage() {
       // 既存一覧を更新し、選択を新規に寄せる
       await reloadTorihikisaki();
       await reloadExistingIndex();
+      await reloadContractTenpoCandidates();
       if (torihikisakiId) setSelectedTorihikisakiId(torihikisakiId);
       if (yagouId) setSelectedYagouId(yagouId);
+      if (tenpoId) setContractTenpoId(tenpoId);
       if (tenpoId) {
         if (karteId) {
           setOkMsg(`作成しました: ${tName} / ${yName} / ${tenpoName}（問診票ID: ${karteId}）`);
@@ -528,6 +963,7 @@ export default function AdminTorihikisakiTourokuPage() {
     findExistingTenpoByNames,
     reloadTorihikisaki,
     reloadExistingIndex,
+    reloadContractTenpoCandidates,
     nav,
   ]);
 
@@ -693,6 +1129,15 @@ export default function AdminTorihikisakiTourokuPage() {
             onClick={() => setMobileTab('existing')}
           >
             既存に追加
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'contract'}
+            className={mobileTab === 'contract' ? 'active' : ''}
+            onClick={() => setMobileTab('contract')}
+          >
+            契約書作成
           </button>
         </div>
 
@@ -872,6 +1317,179 @@ export default function AdminTorihikisakiTourokuPage() {
 
               <div className="hint">
                 店舗作成後は <code>souko</code>（顧客ストレージ）を自動作成し、問診票（店舗詳細）へ遷移します。
+              </div>
+            </div>
+          </section>
+
+          <section className={`card card-contract mobile-tab-panel ${mobileTab === 'contract' ? 'is-active' : ''}`}>
+            <div className="card-h">
+              <div className="t">契約書作成（利用者登録 申込書）</div>
+              <div className="d">登録入力から差し込みして、そのまま契約書PDFを出力できます</div>
+            </div>
+            <div className="form">
+              <div className="row contract-actions contract-actions-top">
+                <button type="button" onClick={loadContractFromNew} disabled={loading}>新規</button>
+                <button type="button" onClick={loadContractFromExisting} disabled={loading}>既存</button>
+              </div>
+
+              <div className="contract-grid">
+                <label>
+                  <span>申込日</span>
+                  <input
+                    value={contract.application_date}
+                    onChange={(e) => updateContractField('application_date', e.target.value)}
+                    type="date"
+                  />
+                </label>
+                <label>
+                  <span>利用開始日</span>
+                  <input
+                    value={contract.service_start_date}
+                    onChange={(e) => updateContractField('service_start_date', e.target.value)}
+                    type="date"
+                  />
+                </label>
+                <label>
+                  <span>個人／法人名</span>
+                  <input value={contract.company_name} onChange={(e) => updateContractField('company_name', e.target.value)} />
+                </label>
+                <label>
+                  <span>担当者</span>
+                  <input value={contract.contact_person} onChange={(e) => updateContractField('contact_person', e.target.value)} />
+                </label>
+                <label className="contract-span-2">
+                  <span>住所／本店住所</span>
+                  <input value={contract.company_address} onChange={(e) => updateContractField('company_address', e.target.value)} />
+                </label>
+                <label>
+                  <span>電話番号</span>
+                  <input value={contract.phone} onChange={(e) => updateContractField('phone', e.target.value)} />
+                </label>
+                <label>
+                  <span>メールアドレス</span>
+                  <input value={contract.email} onChange={(e) => updateContractField('email', e.target.value)} />
+                </label>
+                <label>
+                  <span>店舗名</span>
+                  <input value={contract.store_name} onChange={(e) => updateContractField('store_name', e.target.value)} />
+                </label>
+                <label>
+                  <span>店舗住所</span>
+                  <input value={contract.store_address} onChange={(e) => updateContractField('store_address', e.target.value)} />
+                </label>
+              </div>
+
+              <label>
+                <span>料金</span>
+                <textarea value={contract.pricing} onChange={(e) => updateContractField('pricing', e.target.value)} rows={2} />
+              </label>
+              <label>
+                <span>個別業務のキャンセル</span>
+                <textarea value={contract.cancel_rule} onChange={(e) => updateContractField('cancel_rule', e.target.value)} rows={2} />
+              </label>
+              <label>
+                <span>支払方法</span>
+                <textarea value={contract.payment_method} onChange={(e) => updateContractField('payment_method', e.target.value)} rows={3} />
+              </label>
+              <label>
+                <span>有効期間</span>
+                <textarea value={contract.valid_term} onChange={(e) => updateContractField('valid_term', e.target.value)} rows={3} />
+              </label>
+              <label>
+                <span>退会予告期間</span>
+                <input value={contract.withdrawal_notice} onChange={(e) => updateContractField('withdrawal_notice', e.target.value)} />
+              </label>
+              <label>
+                <span>特約事項</span>
+                <textarea value={contract.special_notes} onChange={(e) => updateContractField('special_notes', e.target.value)} rows={4} />
+              </label>
+              <label>
+                <span>サービス提供者</span>
+                <input value={contract.provider_name} onChange={(e) => updateContractField('provider_name', e.target.value)} />
+              </label>
+              <label>
+                <span>サービス提供者住所</span>
+                <input value={contract.provider_address} onChange={(e) => updateContractField('provider_address', e.target.value)} />
+              </label>
+              <label>
+                <span>サービス提供者電話</span>
+                <input value={contract.provider_phone} onChange={(e) => updateContractField('provider_phone', e.target.value)} />
+              </label>
+
+              <label>
+                <span>契約書プレビュー</span>
+                <textarea value={contractText} readOnly rows={18} className="contract-preview" />
+              </label>
+
+              <div className="row contract-actions contract-actions-bottom">
+                <button type="button" onClick={outputContractPdf} disabled={contractPdfBusy}>
+                  {contractPdfBusy ? 'PDF出力中...' : '出力'}
+                </button>
+                <button type="button" onClick={saveContractPdfLocal} disabled={contractPdfBusy}>
+                  {contractPdfBusy ? '保存中...' : '保存'}
+                </button>
+                <button type="button" className="primary" onClick={saveContractPdfToSouko} disabled={contractSoukoBusy || !contractTenpoId}>
+                  {contractSoukoBusy ? '管理保存中...' : '管理'}
+                </button>
+              </div>
+
+              <label>
+                <span>管理（souko保存先店舗）</span>
+                <select value={contractTenpoId} onChange={(e) => setContractTenpoId(e.target.value)}>
+                  <option value="">未選択</option>
+                  {contractTenpoCandidates.map((tp) => (
+                    <option key={tp.tenpo_id} value={tp.tenpo_id}>
+                      {[norm(tp?.yagou_name), norm(tp?.name)].filter(Boolean).join(' / ') || tp.tenpo_id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="hint">
+                「管理」でPDFをsouko保存すると、提出物（doc_category: contract）として店舗ストレージに保存されます。
+              </div>
+
+              <div className="contract-print-host" aria-hidden>
+                <div className="contract-print-sheet" ref={contractPrintRef}>
+                  <h1>利用者登録 申込書（契約書）</h1>
+                  <p>ミセサポ 利用規約に同意し、以下の通り、本サービスの利用を申し込みます。</p>
+
+                  <section>
+                    <h2>申込日及び利用開始日</h2>
+                    <p>申込日: {norm(contract.application_date)} ／ 利用開始日: {norm(contract.service_start_date)}</p>
+                  </section>
+
+                  <section>
+                    <h2>申込者情報</h2>
+                    <p>個人／法人名: {norm(contract.company_name)} {norm(contract.company_stamp)}</p>
+                    <p>住所／本店住所: {norm(contract.company_address)}</p>
+                    <p>担当者: {norm(contract.contact_person)}</p>
+                    <p>電話番号: {norm(contract.phone)}</p>
+                    <p>メールアドレス: {norm(contract.email)}</p>
+                  </section>
+
+                  <section>
+                    <h2>サービスを利用したい店舗の名称及び住所</h2>
+                    <p>店舗名: {norm(contract.store_name)}</p>
+                    <p>店舗住所: {norm(contract.store_address)}</p>
+                  </section>
+
+                  <section>
+                    <h2>契約条件</h2>
+                    <p>料金: {norm(contract.pricing)}</p>
+                    <p>個別業務のキャンセル: {norm(contract.cancel_rule)}</p>
+                    <p>支払方法: {norm(contract.payment_method)}</p>
+                    <p>有効期間: {norm(contract.valid_term)}</p>
+                    <p>退会予告期間: {norm(contract.withdrawal_notice)}</p>
+                    <p>特約事項: {norm(contract.special_notes)}</p>
+                  </section>
+
+                  <section>
+                    <h2>サービス提供者</h2>
+                    <p>{norm(contract.provider_name)}</p>
+                    <p>住所: {norm(contract.provider_address)}</p>
+                    <p>電話: {norm(contract.provider_phone)}</p>
+                  </section>
+                </div>
               </div>
             </div>
           </section>

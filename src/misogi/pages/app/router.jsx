@@ -33,6 +33,7 @@ import AdminMasterJinzaiPage from '../admin/pages/AdminMasterJinzaiPage';
 import AdminMasterJinzaiBushoPage from '../admin/pages/AdminMasterJinzaiBushoPage';
 import AdminMasterJinzaiShokushuPage from '../admin/pages/AdminMasterJinzaiShokushuPage';
 import AdminMasterServicePage from '../admin/pages/AdminMasterServicePage';
+import AdminMasterKeiyakuPage from '../admin/pages/AdminMasterKeiyakuPage';
 import AdminMasterZaikoPage from '../admin/pages/AdminMasterZaikoPage';
 import AdminZaikoOrderPage from '../admin/pages/AdminZaikoOrderPage';
 import AdminTorihikisakiMeiboPage from '../admin/pages/AdminTorihikisakiMeiboPage';
@@ -171,6 +172,7 @@ export default function Router() {
       <Route path="/admin/master/jinzai-busho" element={<AdminMasterOnly><AdminMasterJinzaiBushoPage /></AdminMasterOnly>} />
       <Route path="/admin/master/jinzai-shokushu" element={<AdminMasterOnly><AdminMasterJinzaiShokushuPage /></AdminMasterOnly>} />
       <Route path="/admin/master/service" element={<AdminMasterOnly><AdminMasterServicePage /></AdminMasterOnly>} />
+      <Route path="/admin/master/keiyaku" element={<AdminMasterOnly><AdminMasterKeiyakuPage /></AdminMasterOnly>} />
       <Route path="/admin/master/zaiko" element={<AdminMasterOnly><AdminMasterZaikoPage /></AdminMasterOnly>} />
       <Route path="/admin/master/zaiko-order" element={<AdminMasterOnly><AdminZaikoOrderPage /></AdminMasterOnly>} />
       <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />

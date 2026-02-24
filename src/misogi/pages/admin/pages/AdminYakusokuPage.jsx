@@ -145,6 +145,7 @@ export default function AdminYakusokuPage() {
   const [items, setItems] = useState([]);
   const [services, setServices] = useState([]);
   const [tenpos, setTenpos] = useState([]);
+  const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [listQuery, setListQuery] = useState('');
   const [modalData, setModalData] = useState(null);
@@ -283,6 +284,39 @@ export default function AdminYakusokuPage() {
   }, []);
 
   useEffect(() => {
+    const run = async () => {
+      try {
+        const base = MASTER_API_BASE.replace(/\/$/, '');
+        const res = await fetch(`${base}/master/keiyaku?limit=5000&jotai=yuko`, {
+          headers: authHeaders(),
+          cache: 'no-store',
+        });
+        if (!res.ok) throw new Error(`Keiyaku HTTP ${res.status}`);
+        const data = await res.json();
+        const rows = Array.isArray(data) ? data : (data?.items || []);
+        const normalized = rows
+          .map((it) => ({
+            ...it,
+            keiyaku_id: String(it?.keiyaku_id || it?.id || '').trim(),
+            name: String(it?.name || '').trim(),
+            tenpo_id: String(it?.tenpo_id || '').trim(),
+            start_date: String(it?.start_date || '').trim(),
+            application_date: String(it?.application_date || '').trim(),
+            status: String(it?.status || '').trim(),
+            updated_at: String(it?.updated_at || '').trim(),
+            jotai: String(it?.jotai || 'yuko').trim(),
+          }))
+          .filter((it) => it.keiyaku_id);
+        setContracts(normalized);
+      } catch (e) {
+        console.warn('Failed to fetch keiyaku:', e);
+        setContracts([]);
+      }
+    };
+    run();
+  }, []);
+
+  useEffect(() => {
     if (typeof document === 'undefined') return undefined;
     const prevHtmlOverflow = document.documentElement.style.overflow;
     const prevBodyOverflow = document.body.style.overflow;
@@ -370,6 +404,9 @@ export default function AdminYakusokuPage() {
       monthly_quota: 1,
       price: 0,
       start_date: dayjs().format('YYYY-MM-DD'),
+      keiyaku_id: '',
+      keiyaku_name: '',
+      keiyaku_start_date: '',
       status: 'active',
       memo: '',
       onsite_flags: { ...DEFAULT_ONSITE_FLAGS },
@@ -399,6 +436,9 @@ export default function AdminYakusokuPage() {
       tenpo_query: tenpoDisplay || String(item?.tenpo_name || ''),
       service_category: 'all',
       service_query: item?.service_name || item?.service_id || '',
+      keiyaku_id: String(item?.keiyaku_id || '').trim(),
+      keiyaku_name: String(item?.keiyaku_name || '').trim(),
+      keiyaku_start_date: String(item?.keiyaku_start_date || item?.contract_start_date || '').trim(),
       onsite_flags: normalizeOnsiteFlags(item?.onsite_flags),
       recurrence_rule: {
         ...rr,
@@ -485,6 +525,68 @@ export default function AdminYakusokuPage() {
     return m;
   }, [tenpos]);
 
+  const contractById = useMemo(() => {
+    const m = new Map();
+    (contracts || []).forEach((c) => {
+      const id = String(c?.keiyaku_id || '').trim();
+      if (!id) return;
+      m.set(id, c);
+    });
+    return m;
+  }, [contracts]);
+
+  const pickPrimaryContractIdForTenpo = useCallback((tenpoId, currentId = '') => {
+    const tid = String(tenpoId || '').trim();
+    if (!tid) return '';
+    const rows = (contracts || [])
+      .filter((c) => String(c?.tenpo_id || '').trim() === tid)
+      .filter((c) => String(c?.jotai || 'yuko').trim() !== 'torikeshi')
+      .sort((a, b) => {
+        const ad = String(a?.start_date || a?.application_date || '').trim();
+        const bd = String(b?.start_date || b?.application_date || '').trim();
+        if (ad !== bd) return bd.localeCompare(ad);
+        return String(b?.updated_at || '').localeCompare(String(a?.updated_at || ''));
+      });
+    const curr = String(currentId || '').trim();
+    if (curr && rows.some((r) => String(r?.keiyaku_id || '').trim() === curr)) return curr;
+    return String(rows?.[0]?.keiyaku_id || '').trim();
+  }, [contracts]);
+
+  const contractCandidates = useMemo(() => {
+    const tid = String(modalData?.tenpo_id || '').trim();
+    const rows = (contracts || [])
+      .filter((c) => String(c?.jotai || 'yuko').trim() !== 'torikeshi')
+      .filter((c) => !tid || String(c?.tenpo_id || '').trim() === tid)
+      .sort((a, b) => {
+        const ad = String(a?.start_date || a?.application_date || '').trim();
+        const bd = String(b?.start_date || b?.application_date || '').trim();
+        if (ad !== bd) return bd.localeCompare(ad);
+        return String(b?.updated_at || '').localeCompare(String(a?.updated_at || ''));
+      });
+    return rows.slice(0, 500);
+  }, [contracts, modalData?.tenpo_id]);
+
+  const selectedContract = useMemo(() => {
+    const id = String(modalData?.keiyaku_id || '').trim();
+    if (!id) return null;
+    return contractById.get(id) || null;
+  }, [modalData?.keiyaku_id, contractById]);
+
+  const contractSelectOptions = useMemo(() => {
+    const rows = [...contractCandidates];
+    const currId = String(modalData?.keiyaku_id || '').trim();
+    if (currId && !rows.some((r) => String(r?.keiyaku_id || '').trim() === currId)) {
+      rows.unshift({
+        keiyaku_id: currId,
+        name: String(modalData?.keiyaku_name || currId).trim(),
+        tenpo_id: String(modalData?.tenpo_id || '').trim(),
+        start_date: String(modalData?.keiyaku_start_date || '').trim(),
+        _stale: true,
+      });
+    }
+    return rows;
+  }, [contractCandidates, modalData?.keiyaku_id, modalData?.keiyaku_name, modalData?.tenpo_id, modalData?.keiyaku_start_date]);
+
   const formatTenpoDisplay = useCallback((tenpoId, tenpoName, yagouName) => {
     const name = String(tenpoName || '').trim();
     if (!name) return '---';
@@ -548,6 +650,9 @@ export default function AdminYakusokuPage() {
       const serviceNames = Array.isArray(it?.service_names) ? it.service_names : [];
       const searchBlob = [
         it?.yakusoku_id,
+        it?.keiyaku_id,
+        it?.keiyaku_name,
+        it?.keiyaku_start_date,
         it?.tenpo_id,
         it?.tenpo_name,
         siteLabel,
@@ -781,6 +886,7 @@ export default function AdminYakusokuPage() {
       : [];
     const monthlyQuota = Number(modalData?.monthly_quota || 0);
     const price = Number(modalData?.price || 0);
+    const keiyakuId = String(modalData?.keiyaku_id || '').trim();
     const tm = normalizeTaskMatrix(modalData?.recurrence_rule?.task_matrix);
     const tmTagCount = Object.values(tm).reduce((acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
 
@@ -790,6 +896,7 @@ export default function AdminYakusokuPage() {
     if (type === 'teiki') {
       if (!Number.isFinite(monthlyQuota) || monthlyQuota < 1) { window.alert('monthly_quota（月間規定回数）は1以上で入力してください'); return; }
       if (!Number.isFinite(price) || price < 0) { window.alert('price（単価）は0以上で入力してください'); return; }
+      if (modalData?.isNew && !keiyakuId) { window.alert('新規定期案件は契約（keiyaku）を選択してください'); return; }
       if (tmTagCount <= 0) { window.alert('定期メニュー（task_matrix）を1件以上設定してください'); return; }
     }
 
@@ -809,6 +916,16 @@ export default function AdminYakusokuPage() {
       // Backward compatibility: keep single-value fields for existing readers.
       payload.service_id = serviceIds[0] || '';
       payload.service_name = serviceNames[0] || '';
+      payload.keiyaku_id = String(payload.keiyaku_id || '').trim();
+      const linkedContract = payload.keiyaku_id ? contractById.get(payload.keiyaku_id) : null;
+      if (linkedContract) {
+        payload.keiyaku_name = String(linkedContract?.name || payload.keiyaku_name || '').trim();
+        payload.keiyaku_start_date = String(linkedContract?.start_date || payload.keiyaku_start_date || '').trim();
+        if (!String(payload.tenpo_id || '').trim()) payload.tenpo_id = String(linkedContract?.tenpo_id || '').trim();
+      } else if (!payload.keiyaku_id) {
+        payload.keiyaku_name = '';
+        payload.keiyaku_start_date = '';
+      }
       if (!String(payload.yagou_id || '').trim()) payload.yagou_name = '';
       delete payload.tenpo_query;
       delete payload.service_query;
@@ -1057,6 +1174,7 @@ export default function AdminYakusokuPage() {
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--line)' }}>
                 <th style={{ padding: '10px' }}>ID</th>
                 <th style={{ padding: '10px' }}>現場名</th>
+                <th style={{ padding: '10px' }}>契約</th>
                 <th style={{ padding: '10px' }}>サービス</th>
                 <th style={{ padding: '10px' }}>種別</th>
                 <th style={{ padding: '10px' }}>月枠</th>
@@ -1075,6 +1193,18 @@ export default function AdminYakusokuPage() {
                     <td style={{ padding: '10px', fontSize: '12px', color: 'var(--muted)' }}>{it.yakusoku_id}</td>
                     <td style={{ padding: '10px' }}>
                       {formatTenpoDisplay(it.tenpo_id, it.tenpo_name, it.yagou_name)}
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      {it.keiyaku_name || it.keiyaku_id ? (
+                        <div>
+                          <div>{it.keiyaku_name || it.keiyaku_id}</div>
+                          {it.keiyaku_start_date ? (
+                            <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+                              開始: {it.keiyaku_start_date}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : '-'}
                     </td>
                     <td style={{ padding: '10px' }}>
                       {(() => {
@@ -1103,7 +1233,7 @@ export default function AdminYakusokuPage() {
               })}
               {!filteredItems.length ? (
                 <tr>
-                  <td colSpan={9} style={{ padding: '16px 10px', color: 'var(--muted)' }}>
+                  <td colSpan={10} style={{ padding: '16px 10px', color: 'var(--muted)' }}>
                     条件に一致する案件がありません
                   </td>
                 </tr>
@@ -1155,6 +1285,7 @@ export default function AdminYakusokuPage() {
                     setModalData({
                       ...modalData,
                       tenpo_query: nextQuery,
+                      keiyaku_id: resolved ? pickPrimaryContractIdForTenpo(resolved.tenpo_id, modalData?.keiyaku_id) : modalData?.keiyaku_id,
                       ...(resolved || {}),
                     });
                   }}
@@ -1174,6 +1305,7 @@ export default function AdminYakusokuPage() {
                         tenpo_name: tp.name,
                         tenpo_query: formatTenpoDisplay(tp.tenpo_id, tp.name, tp.yagou_name),
                         tenpo_id: tp.tenpo_id,
+                        keiyaku_id: pickPrimaryContractIdForTenpo(tp.tenpo_id, modalData?.keiyaku_id),
                         torihikisaki_id: tp.torihikisaki_id || '',
                         yagou_id: tp.yagou_id || '',
                         torihikisaki_name: tp.torihikisaki_name || '',
@@ -1225,6 +1357,9 @@ export default function AdminYakusokuPage() {
                         tenpo_query: '',
                         tenpo_id: '',
                         tenpo_name: '',
+                        keiyaku_id: '',
+                        keiyaku_name: '',
+                        keiyaku_start_date: '',
                         torihikisaki_id: '',
                         yagou_id: '',
                         torihikisaki_name: '',
@@ -1275,6 +1410,48 @@ export default function AdminYakusokuPage() {
                       {selectedTenpoSummary.ids}
                     </div>
                   ) : null}
+                </div>
+              </div>
+              <div className="yotei-form-group">
+                <label>契約（keiyaku）</label>
+                <select
+                  value={modalData.keiyaku_id || ''}
+                  onChange={(e) => {
+                    const nextId = String(e.target.value || '').trim();
+                    const linked = nextId ? contractById.get(nextId) : null;
+                    const linkedTenpoId = String(linked?.tenpo_id || '').trim();
+                    const linkedTenpo = linkedTenpoId ? tenpoMetaById.get(linkedTenpoId) : null;
+                    setModalData({
+                      ...modalData,
+                      keiyaku_id: nextId,
+                      keiyaku_name: String(linked?.name || '').trim(),
+                      keiyaku_start_date: String(linked?.start_date || '').trim(),
+                      ...(linkedTenpo ? {
+                        tenpo_id: linkedTenpo.tenpo_id || '',
+                        tenpo_name: linkedTenpo.name || '',
+                        tenpo_query: formatTenpoDisplay(linkedTenpo.tenpo_id, linkedTenpo.name, linkedTenpo.yagou_name),
+                        torihikisaki_id: linkedTenpo.torihikisaki_id || '',
+                        yagou_id: linkedTenpo.yagou_id || '',
+                        torihikisaki_name: linkedTenpo.torihikisaki_name || '',
+                        yagou_name: linkedTenpo.yagou_name || '',
+                      } : {}),
+                    });
+                  }}
+                >
+                  <option value="">未選択</option>
+                  {contractSelectOptions.map((c) => (
+                    <option key={c.keiyaku_id} value={c.keiyaku_id}>
+                      {[c.name || c.keiyaku_id, c.start_date || c.application_date || '', c._stale ? '履歴' : '']
+                        .filter(Boolean)
+                        .join(' / ')}
+                    </option>
+                  ))}
+                </select>
+                <div style={{ marginTop: 6, fontSize: 12, color: 'var(--muted)' }}>
+                  {selectedContract
+                    ? `選択中: ${selectedContract.name || selectedContract.keiyaku_id}（開始: ${selectedContract.start_date || '-' }）`
+                    : '新規定期案件では契約を必ず選択してください'}
+                  {' '}<Link to="/admin/master/keiyaku" style={{ color: '#8bd8ff', textDecoration: 'none' }}>契約マスタを開く →</Link>
                 </div>
               </div>
               <div className="yotei-form-group">

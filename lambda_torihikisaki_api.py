@@ -16,7 +16,7 @@ HEADERS = {
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
 }
 
-ALLOWED_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko", "jinzai", "service", "kadai", "kanri_log", "zaiko", "zaiko_hacchu"}
+ALLOWED_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko", "jinzai", "service", "kadai", "kanri_log", "keiyaku", "zaiko", "zaiko_hacchu"}
 
 PK_MAP = {
     "torihikisaki": "torihikisaki_id",
@@ -27,6 +27,7 @@ PK_MAP = {
     "service": "service_id",
     "kadai": "kadai_id",
     "kanri_log": "kanri_log_id",
+    "keiyaku": "keiyaku_id",
     "zaiko": "zaiko_id",
     "zaiko_hacchu": "hacchu_id",
 }
@@ -36,6 +37,7 @@ REQUIRED_PARENT_KEYS = {
     "yagou": ["torihikisaki_id"],
     "tenpo": ["torihikisaki_id", "yagou_id"],
     "souko": ["tenpo_id"],
+    "keiyaku": ["tenpo_id"],
 }
 
 ID_PREFIX = {
@@ -47,6 +49,7 @@ ID_PREFIX = {
     "service": "SERVICE",
     "kadai": "KADAI",
     "kanri_log": "KANRI",
+    "keiyaku": "KEIYAKU",
     "zaiko": "ZAIKO",
     "zaiko_hacchu": "HACCHU",
 }
@@ -64,6 +67,7 @@ TABLE_MAP = {
     "service": os.environ.get("TABLE_SERVICE", "service"),
     "kadai": os.environ.get("TABLE_KADAI", "kadai"),
     "kanri_log": os.environ.get("TABLE_KANRI_LOG", "kanri_log"),
+    "keiyaku": os.environ.get("TABLE_KEIYAKU", "keiyaku"),
     "zaiko": os.environ.get("TABLE_ZAIKO", "zaiko"),
     "zaiko_hacchu": os.environ.get("TABLE_ZAIKO_HACCHU", "zaiko_hacchu"),
 }
@@ -259,6 +263,13 @@ def _build_filter(collection: str, q: dict):
 
     if collection in {"kadai", "kanri_log"}:
         for k in ["category", "status", "source", "priority", "list_scope", "log_type", "reported_by", "torihikisaki_id", "yagou_id", "tenpo_id", "jinzai_id"]:
+            v = q.get(k)
+            if v:
+                k_expr = Attr(k).eq(v)
+                expr = k_expr if expr is None else expr & k_expr
+
+    if collection == "keiyaku":
+        for k in ["status", "contract_type", "source", "torihikisaki_id", "yagou_id", "tenpo_id", "yakusoku_id", "keiyaku_kind"]:
             v = q.get(k)
             if v:
                 k_expr = Attr(k).eq(v)
@@ -697,7 +708,7 @@ def lambda_handler(event, context):
             if err:
                 return _resp(400, {"error": "validation_error", "message": err})
             now = _now_iso()
-            if collection in {"torihikisaki", "yagou", "tenpo", "souko"} and not _strip(body.get("touroku_date")):
+            if collection in {"torihikisaki", "yagou", "tenpo", "souko", "keiyaku"} and not _strip(body.get("touroku_date")):
                 body = dict(body)
                 body["touroku_date"] = now[:10]
             fixed_id = body.get(pk_name)

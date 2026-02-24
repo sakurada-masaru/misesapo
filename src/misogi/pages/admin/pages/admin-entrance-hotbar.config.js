@@ -35,6 +35,7 @@ export const ADMIN_HOTBAR = [
       { id: 'master-jinzai-busho', label: '人材部署', path: '/admin/master/jinzai-busho', group: 'マスタ(人材)' },
       { id: 'master-jinzai-shokushu', label: '人材職種', path: '/admin/master/jinzai-shokushu', group: 'マスタ(人材)' },
       { id: 'master-service', label: 'サービスマスタ', path: '/admin/master/service', group: 'マスタ(運用)' },
+      { id: 'master-keiyaku', label: '契約マスタ', path: '/admin/master/keiyaku', group: 'マスタ(運用)' },
       { id: 'master-zaiko', label: '在庫管理DB', path: '/admin/master/zaiko', group: 'マスタ(運用)' },
       { id: 'zaiko-order', label: '在庫発注フォーム', path: '/admin/master/zaiko-order', group: 'マスタ(運用)' },
     ]

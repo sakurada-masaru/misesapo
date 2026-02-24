@@ -4,11 +4,49 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 ---
 
+## Keiyaku/Yakusoku Separation Integration (2026-02-24)
+
+- [x] `master` API に `keiyaku` コレクションを追加し、CRUD・親キー（`tenpo_id`）・フィルタを有効化
+- [x] 管理マスタに `契約マスタ (keiyaku)` 画面と導線（router / hotbar / breadcrumb）を追加
+- [x] `/admin/yakusoku` で `keiyaku` 選択を必須化（新規定期）し、一覧にも契約列を表示
+- [x] 顧客登録の契約書 `管理` 保存で `souko` 保存と同時に `keiyaku` を作成/更新するよう連携
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Keiyaku Preview Word-like Layout (2026-02-24)
+
+- [x] `契約マスタ (keiyaku)` の行クリックでプレビューを開く導線を維持
+- [x] 契約プレビューを「白地＋罫線テーブル」の申込書レイアウトへ変更
+- [x] プレビューモーダル幅を拡張し、PCで横スクロールしにくい表示に調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Keiyaku Contract ZIP Import Prep (2026-02-25)
+
+- [x] `keiyaku` プレビューを実契約書の縦型フォーム（ラベル+記入欄）に寄せる調整
+- [x] ZIP内 `docx` を直接解析して契約情報を抽出する `scripts/import_keiyaku_from_contract_zip.py` を追加
+- [x] サンプルZIPで `docx=132` 件の解析を確認（出力: `/tmp/keiyaku_zip_parsed.json`）
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
 ## Admin Houkoku Visibility Fix (2026-02-23)
 
 - [x] 管理報告一覧の日表示を `/admin/work-reports` 優先取得に変更（`states` に `approved/archived` も含める）
 - [x] 互換のため `/houkoku` 取得結果を日表示でマージ（重複除外）する
 - [x] 報告詳細を `/admin/work-reports/{id}` 優先＋`/houkoku/{id}` フォールバックに変更
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Customer Registration Contract Tab (2026-02-24)
+
+- [x] `管理 > 登録` に「契約書作成」タブを追加（モバイルタブ切替対応）
+- [x] 契約書雛形（利用者登録 申込書）の主要項目をフォーム化（申込日/利用開始日/法人/担当/連絡先/店舗/条項）
+- [x] 新規追加入力・既存選択から契約書項目へ差し込み反映を追加
+- [x] 契約書プレビューと `.txt` 出力を追加
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Customer Registration Contract PDF/Souko (2026-02-24)
+
+- [x] 契約書タブで `PDF保存（端末）` を実装（スマホ/PCダウンロード対応）
+- [x] 契約書タブで `PDFをsouko保存` を実装（`presign_upload` -> S3 PUT -> souko.files 更新）
+- [x] souko保存の `doc_category` を `contract` に統一（店舗ストレージ表示互換）
+- [x] 契約書印刷用テンプレートを非表示オフスクリーン領域で描画（画面表示を崩さずPDF生成）
 - [x] `npm -C src/misogi run build` でビルド成功を確認
 
 ## P6 Phase 1 完了判定

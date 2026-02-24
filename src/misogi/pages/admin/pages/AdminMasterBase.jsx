@@ -239,6 +239,12 @@ export default function AdminMasterBase({
   showJotaiEditor = true,
   normalizeEditingModel = null,
   hideIdColumn = false,
+  listColumnKeys = null,
+  onRowClick = null,
+  onPreviewRow = null,
+  previewButtonLabel = 'プレビュー',
+  showEditAction = true,
+  showDeleteAction = true,
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -317,6 +323,7 @@ export default function AdminMasterBase({
     const hasFormat = typeof f?.format === 'function' ? 'fmt' : '';
     return `${k}:${t}:${l}:${hasFormat}`;
   }).join('|');
+  const listColumnKeysSig = Array.isArray(listColumnKeys) ? listColumnKeys.map(String).join('|') : '';
   const localSearchKeysSig = Array.isArray(localSearch?.keys) ? localSearch.keys.map(String).join('|') : '';
 
   const buildResourcePath = useCallback(
@@ -793,14 +800,28 @@ export default function AdminMasterBase({
     }
   }, [apiBase, buildResourcePath, idKey, items, resource]);
 
+  const listFields = useMemo(() => {
+    const src = Array.isArray(fields) ? fields : [];
+    const keySet = Array.isArray(listColumnKeys) && listColumnKeys.length
+      ? new Set(listColumnKeys.map((k) => String(k)))
+      : null;
+    return src.filter((f) => {
+      const k = String(f?.key || '');
+      if (!k) return false;
+      if (f?.listHidden === true) return false;
+      if (keySet && !keySet.has(k)) return false;
+      return true;
+    });
+  }, [fieldsSig, listColumnKeysSig, fields, listColumnKeys]);
+
   const columns = useMemo(() => {
     const base = [
       ...(!hideIdColumn ? [{ key: idKey, label: 'ID' }] : []),
-      ...fields.map((f) => ({ key: f.key, label: f.columnLabel || f.label })),
+      ...listFields.map((f) => ({ key: f.key, label: f.columnLabel || f.label })),
     ];
     if (showJotaiColumn) base.push({ key: 'jotai', label: '状態' });
     return base;
-  }, [fieldsSig, idKey, showJotaiColumn, hideIdColumn]);
+  }, [fieldsSig, listColumnKeysSig, idKey, showJotaiColumn, hideIdColumn, listFields]);
 
   const visibleItems = useMemo(() => {
     const q = String(searchText || '').trim().toLowerCase();
@@ -888,8 +909,14 @@ export default function AdminMasterBase({
             return (
               <React.Fragment key={rid || Math.random()}>
                 <tr
-                  className={`${enableRowDetail ? 'row-clickable' : ''} ${isExpanded ? 'is-expanded' : ''} ${customRowClass}`.trim()}
-                  onClick={() => toggleRowDetail(row)}
+                  className={`${(enableRowDetail || typeof onRowClick === 'function') ? 'row-clickable' : ''} ${isExpanded ? 'is-expanded' : ''} ${customRowClass}`.trim()}
+                  onClick={() => {
+                    if (typeof onRowClick === 'function') {
+                      onRowClick(row, { rowId: rid, parents });
+                      return;
+                    }
+                    toggleRowDetail(row);
+                  }}
                 >
                   {enableBulkDelete ? (
                     <td className="bulk-check-col" data-col="選択" data-key="bulk">
@@ -946,16 +973,29 @@ export default function AdminMasterBase({
                     return <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>{formatCellValue(v)}</td>;
                   })}
                   <td className="actions" data-col="操作" data-key="actions">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEdit(row);
-                      }}
-                    >
-                      編集
-                    </button>
-                    {rowDeletable ? (
+                    {typeof onPreviewRow === 'function' ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPreviewRow(row, { rowId: rid, parents });
+                        }}
+                      >
+                        {previewButtonLabel || 'プレビュー'}
+                      </button>
+                    ) : null}
+                    {showEditAction ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(row);
+                        }}
+                      >
+                        編集
+                      </button>
+                    ) : null}
+                    {showDeleteAction && rowDeletable ? (
                       <button
                         type="button"
                         className="danger"
@@ -1002,7 +1042,7 @@ export default function AdminMasterBase({
         </tbody>
       </table>
     </section>
-  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, idKey, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName, formatFieldValue]);
+  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, idKey, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName, formatFieldValue, onRowClick, onPreviewRow, previewButtonLabel, showEditAction, showDeleteAction, parents]);
 
   return (
     <div className={`admin-master-page ${pageClassName || ''}`.trim()} data-resource={resource}>
