@@ -1599,6 +1599,46 @@
             height: auto;
         }
 
+        /* 取引企業ロゴ：CSSマーキー（永続ループ・JS不要） */
+        .client-logos-section {
+            background: #FDEDED;
+            overflow: hidden;
+            position: relative;
+            top: 145px;
+            padding-bottom: 20px;
+        }
+        .client-logos-marquee {
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .client-logos-track {
+            display: flex;
+            width: 400%;
+            animation: client-logos-scroll 60s linear infinite;
+        }
+        @keyframes client-logos-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .client-logos-slide {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+        .client-logos-slide img {
+            width: auto;
+            height: auto;
+            max-height: 60px;
+            object-fit: contain;
+        }
+        @media (min-width: 769px) {
+            .client-logos-slide img {
+                max-height: 45px;
+            }
+        }
+
         .service-image-card {
             display: block;
             background: #fff;
@@ -1607,9 +1647,9 @@
             box-shadow: 0 8px 20px rgba(255, 103, 156, 0.15);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    background-color: #FDEDED;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #FDEDED;
         }
         .service-image-card p{
             padding: 5px;
@@ -2023,6 +2063,12 @@
 
             .service-sections .use-grid {
                 grid-template-columns: 1fr;
+            }
+            .client-logos-section {
+                padding-bottom: 0px;
+            }
+            .client-logos-track {
+                animation: client-logos-scroll 30s linear infinite;
             }
         }
 
@@ -2885,9 +2931,6 @@
         }
 
         /* FAQセクション */
-        .faq-section {
-        }
-
         .faq-head {
             text-align: center;
             margin-bottom: 3rem;
@@ -2949,10 +2992,6 @@
         }
 
         /* 追加セクション（導入事例・対応エリア） */
-        .case-study-section,
-        .area-coverage-section {
-        }
-
         .case-study-section .wrapper,
         .area-coverage-section .wrapper {
             max-width: 100%;
@@ -3398,6 +3437,52 @@
             padding: 0px 10px;
         }
 
+        /* ヘッダー・企業情報のマウスオーバードロップダウン */
+
+        .normal-header-nav .nav-dropdown {
+            position: relative;
+            padding: 0 10px;
+        }
+        .normal-header-nav .nav-dropdown p {
+            margin: 0;
+            cursor: pointer;
+            padding: 0;
+            color: inherit;
+            font-size: inherit;
+        }
+        .normal-header-nav .nav-dropdown .nav-dropdown-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin: 0;
+            padding: 8px 0;
+            min-width: 160px;
+            list-style: none;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            z-index: 100;
+            border: 1px solid #FF679C;
+        }
+        .normal-header-nav .nav-dropdown:hover .nav-dropdown-list {
+            display: block;
+        }
+        .normal-header-nav .nav-dropdown .nav-dropdown-list li {
+            margin: 0;
+        }
+        .normal-header-nav .nav-dropdown .nav-dropdown-list a {
+            display: block;
+            padding: 8px 16px;
+            color: #333;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .normal-header-nav .nav-dropdown .nav-dropdown-list a:hover {
+            background: #FDEDED;
+            color: #FF679C;
+        }
+
         .swiper-wrapper {
             background: #FDEDED;
         }
@@ -3472,9 +3557,6 @@
 
             .service-image-swiper .swiper-slide {
                 width: 200px;
-            }
-
-            .service-image-swiper {
             }
 
             .event-container img {
@@ -3702,6 +3784,24 @@ width: 320px;
         <!-- ヒーローセクション下部装飾画像 -->
 
     </section>
+
+<!-- 企業ロゴセクション（CSSマーキー・永続ループ） -->
+    <section class="client-logos-section" aria-label="取引企業ロゴ">
+        <div class="client-logos-marquee">
+            <div class="client-logos-track">
+                <div class="client-logos-slide">
+                    <img src="/images/top/top_customer.png" alt="とくやまホールディングス・アクティブソース・光フードサービス・GOGOカレー・ニーハオ・串カツ田中・寿司板前ジャパン" loading="lazy">
+                </div>
+                <div class="client-logos-slide">
+                    <img src="/images/top/top_customer.png" alt="とくやまホールディングス・アクティブソース・光フードサービス・GOGOカレー・ニーハオ・串カツ田中・寿司板前ジャパン" loading="lazy">
+                </div>
+                <div class="client-logos-slide">
+                    <img src="/images/top/top_customer.png" alt="とくやまホールディングス・アクティブソース・光フードサービス・GOGOカレー・ニーハオ・串カツ田中・寿司板前ジャパン" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </section>
+
 
     <section class="about-highlight" aria-labelledby="about-highlight-title">
         <div class="about-highlight__inner">
@@ -4299,11 +4399,28 @@ width: 320px;
             <nav class="normal-header-nav">
                 <a href="about-more.html">トピック一覧</a>
                 <a href="/service/service.html">サービス一覧</a>
-                <a href="/about/">企業情報</a>
+                <div class="nav-dropdown">
+                    <a>企業情報</a>
+                    <ul class="nav-dropdown-list">
+                        <li><a href="/about/">・ 会社概要</a></li>
+                        <li><a href="/about/message.html">・ 代表者挨拶</a></li>
+                        <li><a href="/customer/customer.html">・ 導入店舗一覧</a></li>
+                    </ul>
+                </div>
                 <a href="/recruit/recruit.html">求人情報</a>
                 <!--<a href="/announcements">お知らせ</a>-->
-                <a href="/privacy-policy">規約＆ポリシー</a>
-                <!--<a href="#event">イベント</a>-->
+                <div class="nav-dropdown">
+                    <a>規約＆ポリシー</a>
+                    <ul class="nav-dropdown-list">
+                        <li><a href="/privacy-policy/"><span>・ 個人情報保護方針</span></a></li>
+                    <li><a href="/tokushoho/"><span>・ 特定商取引法に基づく表記</span></a></li>
+                    <li><a href="/workplace-policy/"><span>・ 職場環境改善に向けた方針</span></a></li>
+                    <li><a href="/security-policy/"><span>・ 情報セキュリティ基本方針</span></a></li>
+                    <li><a href="/antisocial-declaration/"><span>・ 反社会的勢力排除宣言</span></a></li>
+                    <li><a href="/service-terms/"><span>・ サービス利用規約</span></a></li>
+                </ul>
+            </div>
+                        <!--<a href="#event">イベント</a>-->
                 <a href="mailto:info@misesapo.co.jp">お問い合わせ</a>
             </nav>
             <!--
@@ -5370,6 +5487,9 @@ width: 320px;
                 }
             });
         })();
+
+        // 取引企業ロゴはCSSマーキーで表示（上記 .client-logos-marquee）
+
     </script>
 
 </body>

@@ -18,7 +18,8 @@
     <link rel="stylesheet" href="/css/swiper-bundle.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/header.css">
-    <style>
+    <link rel="stylesheet" href="/css/normal-header-hamburger.css">
+<style>
         .breadcrumb {
             max-width: 1000px;
             margin: 0 auto;
@@ -538,27 +539,9 @@
 
   gtag('config', 'G-ZJ1XD60S84');
 </script>
+<body>
+    <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
 
-<body style="color: #FDEDED;">
-    <!-- 通常ヘッダー -->
-    <header class="normal-header visible">
-        <div class="normal-header-inner">
-            <div class="normal-header-logo">
-                <a href="/">
-                    <img id="normal-header-logoc-img" src="/images-material/logo_144x144.png" alt="ロゴ"
-                        onerror="this.style.display='none'">
-                </a>
-            </div>
-            <nav class="normal-header-nav">
-                <a href="/">TOP</a>
-                <a href="/service/service.html">対応可能サービス</a>
-                <a href="/lp#voice">お客様の声</a>
-                <a href="mailto:info@misesapo.co.jp">カスタマーズサポート</a>
-                    <a href="/#event">イベント</a>
-                <a href="/privacy-policy">規約＆ポリシー</a>
-            </nav>
-        </div>
-    </header>
 
     <main style="background: #FDEDED;">
         <!-- パンくずリスト -->
@@ -566,7 +549,7 @@
             <div class="breadcrumb-inner">
                 <a href="/">TOP</a>
                 <span>></span>
-                <span class="current">イベント・キャンペーン</span>
+                <span class="current">焼肉ビジネスフェア2026</span>
             </div>
         </div>
 
@@ -765,12 +748,10 @@
             return window.location.origin + resolvedPath;
         }
 
-        // LPページでは通常ヘッダーを常時表示
         document.addEventListener('DOMContentLoaded', function () {
             const normalHeader = document.querySelector('.normal-header');
             if (normalHeader) {
                 normalHeader.classList.add('visible');
-                // スクロールイベントでクラスを削除しないようにする
                 const originalRemove = normalHeader.classList.remove;
                 normalHeader.classList.remove = function (...args) {
                     if (args[0] !== 'visible') {
@@ -779,7 +760,6 @@
                 };
             }
 
-            // リンクを解決
             document.querySelectorAll('a[href^="/"]').forEach(link => {
                 const href = link.getAttribute('href');
                 if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
@@ -787,7 +767,6 @@
                 }
             });
 
-            // 画像を解決
             document.querySelectorAll('img[src^="/"]').forEach(img => {
                 const src = img.getAttribute('src');
                 if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
@@ -797,6 +776,7 @@
         });
     </script>
     <script src="/js/header.js"></script>
+    <script src="/js/normal-header-hamburger.js"></script>
 </body>
 
 </html>
