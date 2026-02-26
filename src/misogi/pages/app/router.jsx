@@ -46,8 +46,6 @@ import SalesStoreKartePage from '../shared/ui/Sales/SalesStoreKartePage';
 import SalesDayReportPage from '../shared/ui/Sales/SalesDayReportPage';
 import OfficeWorkReportDetailPage from '../office/OfficeWorkReportDetailPage';
 import OfficePayrollMonthPage from '../office/OfficePayrollMonthPage';
-import SalesCustomersPage from '../shared/ui/Sales/SalesCustomersPage';
-import SalesRegisterPage from '../shared/ui/Sales/SalesRegisterPage';
 import SalesKarteListPage from '../shared/ui/Sales/SalesKarteListPage';
 import SalesClientNewPage from '../jobs/sales/clients/SalesClientNewPage';
 import SalesClientListPage from '../jobs/sales/clients/SalesClientListPage';
@@ -55,6 +53,7 @@ import SalesLeadsPage from '../shared/ui/Sales/SalesLeadsPage';
 import SalesLeadNewPage from '../shared/ui/Sales/SalesLeadNewPage';
 import SalesLeadDetailPage from '../shared/ui/Sales/SalesLeadDetailPage';
 import SalesSchedulePage from '../shared/ui/Sales/SalesSchedulePage';
+import SalesFirstResponsePage from '../shared/ui/Sales/SalesFirstResponsePage';
 import CleanerSchedulePage from '../jobs/cleaning/pages/CleanerSchedulePage';
 import CleanerClientListPage from '../jobs/cleaning/pages/CleanerClientListPage';
 import CleanerClientKartePage from '../jobs/cleaning/pages/CleanerClientKartePage';
@@ -187,11 +186,12 @@ export default function Router() {
       <Route path="/admin/hr/attendance" element={<HrAttendance />} />
       <Route path="/sales/store/:storeKey" element={<SalesStoreKartePage />} />
       <Route path="/sales/report-day" element={<SalesDayReportPage />} />
-      <Route path="/sales/customers" element={<SalesCustomersPage />} />
+      <Route path="/sales/customers" element={<Navigate to="/sales/clients/list" replace />} />
       <Route path="/sales/clients/list" element={<SalesClientListPage />} />
-      <Route path="/sales/register" element={<SalesRegisterPage />} />
+      <Route path="/sales/register" element={<Navigate to="/sales/clients/new" replace />} />
       <Route path="/sales/clients/new" element={<SalesClientNewPage />} />
       <Route path="/sales/kartes" element={<SalesKarteListPage />} />
+      <Route path="/sales/inbox" element={<SalesFirstResponsePage />} />
       <Route path="/sales/leads" element={<SalesLeadsPage />} />
       <Route path="/sales/leads/new" element={<SalesLeadNewPage />} />
       <Route path="/sales/leads/:leadId" element={<SalesLeadDetailPage />} />

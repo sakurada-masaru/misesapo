@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTransition';
 import Visualizer from '../../../shared/ui/Visualizer/Visualizer';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../../shared/api/gatewayBase';
 import { useAuth } from '../../../shared/auth/useAuth';
 import '../../../shared/styles/components.css';
 
@@ -21,7 +22,13 @@ export default function SalesClientListPage() {
     const { startTransition } = useFlashTransition();
     const { user, getToken } = useAuth();
 
-    const API_BASE = '/api';
+    const API_BASE = (() => {
+        if (typeof window !== 'undefined') {
+            const host = String(window.location?.hostname || '').toLowerCase();
+            if (host === 'localhost' || host === '127.0.0.1') return '/api';
+        }
+        return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
+    })();
 
     const prefectures = useMemo(() => {
         const prefs = stores.map(s => s.pref).filter(Boolean);

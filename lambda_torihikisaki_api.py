@@ -239,14 +239,117 @@ def _put_item_with_generated_id(collection: str, build_item_fn, max_retries: int
 
 
 def _validate_create(collection: str, data: dict, pk_name: str):
-    if not data.get("name"):
+    name = str(data.get("name") or "").strip()
+    if not name:
         return "name は必須です"
     for parent_key in REQUIRED_PARENT_KEYS.get(collection, []):
-        if not data.get(parent_key):
+        if not str(data.get(parent_key) or "").strip():
             return f"{parent_key} は必須です"
-    if pk_name in data and not data.get(pk_name):
+    if pk_name in data and not str(data.get(pk_name) or "").strip():
         return f"{pk_name} が不正です"
+    if pk_name in data and str(data.get(pk_name) or "").strip() and collection in SEQUENTIAL_ID_COLLECTIONS:
+        return f"{pk_name} の直接指定はできません"
     return None
+
+
+def _sanitize_create_payload(collection: str, data: dict, pk_name: str):
+    if not isinstance(data, dict):
+        return {}
+    out = dict(data)
+    trim_keys = {"name", pk_name, "touroku_date", *REQUIRED_PARENT_KEYS.get(collection, [])}
+    if collection in SEQUENTIAL_ID_COLLECTIONS:
+        trim_keys.update({"phone", "email", "address", "url", "tantou_name", "jouhou_touroku_sha_name"})
+    for k in trim_keys:
+        if k in out and isinstance(out.get(k), str):
+            out[k] = out[k].strip()
+    return out
+
+
+def _get_item_by_id(collection: str, record_id: str):
+    rid = _strip(record_id)
+    if not rid:
+        return None
+    pk_name = PK_MAP[collection]
+    res = TABLES[collection].get_item(Key={pk_name: rid})
+    return res.get("Item")
+
+
+def _is_active_item(item: dict) -> bool:
+    if not isinstance(item, dict):
+        return False
+    return _strip(item.get("jotai")) != "torikeshi"
+
+
+def _validate_parent_relations(collection: str, data: dict):
+    if not isinstance(data, dict):
+        return None
+
+    if collection == "yagou":
+        tori_id = _strip(data.get("torihikisaki_id"))
+        if tori_id:
+            tori = _get_item_by_id("torihikisaki", tori_id)
+            if not _is_active_item(tori):
+                return "torihikisaki_id が存在しないか無効です"
+        return None
+
+    if collection == "tenpo":
+        tori_id = _strip(data.get("torihikisaki_id"))
+        yagou_id = _strip(data.get("yagou_id"))
+
+        if tori_id:
+            tori = _get_item_by_id("torihikisaki", tori_id)
+            if not _is_active_item(tori):
+                return "torihikisaki_id が存在しないか無効です"
+
+        if yagou_id:
+            yagou = _get_item_by_id("yagou", yagou_id)
+            if not _is_active_item(yagou):
+                return "yagou_id が存在しないか無効です"
+            yagou_tori_id = _strip(yagou.get("torihikisaki_id"))
+            if tori_id and yagou_tori_id and yagou_tori_id != tori_id:
+                return "yagou_id と torihikisaki_id の組み合わせが不正です"
+        return None
+
+    if collection in {"souko", "keiyaku"}:
+        tenpo_id = _strip(data.get("tenpo_id"))
+        if tenpo_id:
+            tenpo = _get_item_by_id("tenpo", tenpo_id)
+            if not _is_active_item(tenpo):
+                return "tenpo_id が存在しないか無効です"
+        return None
+
+    return None
+
+
+def _exists_active_name(collection: str, name: str, parent_values=None) -> bool:
+    target = str(name or "").strip()
+    if not target:
+        return False
+    expr = Attr("jotai").eq("yuko") & Attr("name").eq(target)
+    for k, v in (parent_values or {}).items():
+        sv = str(v or "").strip()
+        if sv:
+            expr = expr & Attr(k).eq(sv)
+
+    table = TABLES[collection]
+    pk_name = PK_MAP[collection]
+    last_key = None
+    while True:
+        kwargs = {
+            "FilterExpression": expr,
+            "ProjectionExpression": pk_name,
+            "Limit": 200,
+        }
+        if last_key:
+            kwargs["ExclusiveStartKey"] = last_key
+        res = table.scan(**kwargs)
+        items = res.get("Items") or []
+        if items:
+            return True
+        last_key = res.get("LastEvaluatedKey")
+        if not last_key:
+            break
+    return False
 
 
 def _build_filter(collection: str, q: dict):
@@ -456,8 +559,14 @@ def _create_onboarding(body: dict):
     torihikisaki_name = _strip(body.get("torihikisaki_name"))
     yagou_name = _strip(body.get("yagou_name"))
     tenpo_name = _strip(body.get("tenpo_name"))
-    if not torihikisaki_name or not yagou_name or not tenpo_name:
-        return _resp(400, {"error": "validation_error", "message": "torihikisaki_name/yagou_name/tenpo_name は必須です"})
+    if not torihikisaki_name:
+        return _resp(400, {"error": "validation_error", "message": "torihikisaki_name は必須です"})
+    if not yagou_name:
+        # 屋号未入力時は取引先名を継承（取引先直下運用の互換）
+        yagou_name = torihikisaki_name
+    if not tenpo_name:
+        # 店舗未入力時は屋号名を継承
+        tenpo_name = yagou_name
 
     idempotency_key = _strip(body.get("idempotency_key"))
     if idempotency_key:
@@ -691,6 +800,7 @@ def lambda_handler(event, context):
 
         if method == "POST":
             body = _parse_body(event)
+            body = _sanitize_create_payload(collection, body, pk_name)
 
             # API Gateway のメソッド構成差異に備え、
             # /master/tenpo + { mode: "onboarding" } でも同じ処理を受け付ける。
@@ -707,6 +817,17 @@ def lambda_handler(event, context):
             err = _validate_create(collection, body, pk_name)
             if err:
                 return _resp(400, {"error": "validation_error", "message": err})
+            parent_err = _validate_parent_relations(collection, body)
+            if parent_err:
+                return _resp(400, {"error": "validation_error", "message": parent_err})
+
+            if collection in {"torihikisaki", "yagou", "tenpo"}:
+                parent_values = {k: body.get(k) for k in REQUIRED_PARENT_KEYS.get(collection, [])}
+                if _exists_active_name(collection, body.get("name"), parent_values):
+                    return _resp(409, {
+                        "error": "duplicate_name",
+                        "message": "同名データが既に存在します",
+                    })
             now = _now_iso()
             if collection in {"torihikisaki", "yagou", "tenpo", "souko", "keiyaku"} and not _strip(body.get("touroku_date")):
                 body = dict(body)
@@ -753,6 +874,11 @@ def lambda_handler(event, context):
                 if k in {pk_name, "created_at"}:
                     continue
                 item[k] = v
+            parent_keys = REQUIRED_PARENT_KEYS.get(collection, [])
+            if any(k in body for k in parent_keys):
+                parent_err = _validate_parent_relations(collection, item)
+                if parent_err:
+                    return _resp(400, {"error": "validation_error", "message": parent_err})
             now = _now_iso()
             item["updated_at"] = now
             _apply_touroku_meta(item, now)

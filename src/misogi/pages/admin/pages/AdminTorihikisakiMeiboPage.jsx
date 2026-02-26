@@ -73,6 +73,13 @@ function normStr(v) {
   return String(v || '').trim();
 }
 
+function resolveYagouLabel(yagouName, torihikisakiName) {
+  const y = normStr(yagouName);
+  if (y) return y;
+  const t = normStr(torihikisakiName);
+  return t || '取引先直下';
+}
+
 function tenpoAddress(tp) {
   return (
     tp?.address ||
@@ -479,9 +486,13 @@ export default function AdminTorihikisakiMeiboPage() {
     fromSearchTenpo.forEach((tp) => {
       const yId = tp?.yagou_id || '(no-yagou)';
       if (uniq.has(yId)) return;
+      const tName = searchNameById.toriById.get(tp?.torihikisaki_id || selectedTorihikisakiId || '') || '';
+      const yName = searchNameById.yagouById.get(tp?.yagou_id || '') || '';
+      const hasYagouName = !!normStr(yName);
       uniq.set(yId, {
-        yagou_id: tp?.yagou_id || '',
-        name: searchNameById.yagouById.get(tp?.yagou_id || '') || tp?.yagou_id || '屋号未設定',
+        yagou_id: hasYagouName ? (tp?.yagou_id || '') : '',
+        raw_yagou_id: tp?.yagou_id || '',
+        name: resolveYagouLabel(yName, tName),
       });
     });
     return Array.from(uniq.values()).sort((a, b) => normStr(a?.name).localeCompare(normStr(b?.name), 'ja'));
@@ -672,18 +683,22 @@ export default function AdminTorihikisakiMeiboPage() {
                   visibleAllYagous.map((y) => {
                     const yagouId = y?.yagou_id || y?.id;
                     const tps = getVisibleAllTenposForYagou(yagouId);
+                    const firstTpToriName = searchNameById.toriById.get(tps?.[0]?.torihikisaki_id || '') || '';
+                    const displayYagouName = resolveYagouLabel(y?.name, firstTpToriName);
+                    const showYagouId = !!normStr(y?.name) && !!normStr(yagouId);
                     return (
                       <details key={yagouId || '(no-yagou)'} className="yagou-block" open>
                         <summary>
-                          <span className="yagou-name">{y?.name || '(no name)'}</span>
-                          <span className="yagou-id">{yagouId || '(no-yagou)'}</span>
+                          <span className="yagou-name">{displayYagouName}</span>
+                          <span className="yagou-id">{showYagouId ? yagouId : '（取引先直下）'}</span>
                           <span className="yagou-count">店舗 {tps.length}</span>
                         </summary>
                         <div className="tenpo-list">
                           {tps.map((tp) => {
                             const tenpoId = tp?.tenpo_id || tp?.id;
                             const toriId = tp?.torihikisaki_id || '';
-                            const yId = tp?.yagou_id || yagouId || '';
+                            const yName = searchNameById.yagouById.get(tp?.yagou_id || '') || '';
+                            const yId = normStr(yName) ? (tp?.yagou_id || yagouId || '') : '';
                             return (
                               <div className="tenpo-row" key={`${yagouId || '(no-yagou)'}-${tenpoId}`}>
                                 <div className="tenpo-main">
@@ -747,13 +762,15 @@ export default function AdminTorihikisakiMeiboPage() {
                   </div>
                 ) : (
                   visibleSelectedYagous.map((y) => {
-                    const yagouId = y?.yagou_id || y?.id;
+                    const yagouId = y?.raw_yagou_id || y?.yagou_id || y?.id;
                     const tps = getVisibleTenposForYagou(yagouId);
+                    const displayYagouName = resolveYagouLabel(y?.name, selectedTorihikisaki?.name);
+                    const showYagouId = !!normStr(y?.name) && !!normStr(y?.yagou_id || y?.id);
                     return (
                       <details key={yagouId} className="yagou-block" open>
                         <summary>
-                          <span className="yagou-name">{y?.name || '(no name)'}</span>
-                          <span className="yagou-id">{yagouId}</span>
+                          <span className="yagou-name">{displayYagouName}</span>
+                          <span className="yagou-id">{showYagouId ? (y?.yagou_id || y?.id) : '（取引先直下）'}</span>
                           <span className="yagou-count">店舗 {tps.length}</span>
                         </summary>
                         <div className="tenpo-list">
@@ -778,7 +795,7 @@ export default function AdminTorihikisakiMeiboPage() {
                                 <Link
                                   to={`/admin/tenpo/${encodeURIComponent(tenpoId)}?${new URLSearchParams({
                                     torihikisaki_id: selectedTorihikisakiId,
-                                    yagou_id: yagouId,
+                                    yagou_id: showYagouId ? (y?.yagou_id || '') : '',
                                   }).toString()}`}
                                   className="link"
                                 >

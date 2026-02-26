@@ -47,15 +47,24 @@ export default function AdminMasterTenpoPage() {
       title="店舗マスタ (tenpo)"
       resource="tenpo"
       idKey="tenpo_id"
+      listLimit={20000}
+      enableColumnSort
+      initialSortKey="tenpo_id"
+      initialSortDir="asc"
+      localSearch={{
+        label: '統合検索',
+        placeholder: '店舗ID / 店舗名 / 屋号ID / 取引先ID',
+        keys: ['tenpo_id', 'name', 'yagou_id', 'torihikisaki_id'],
+      }}
       onAfterSave={handleAfterSave}
       filters={[
         { key: 'torihikisaki_id', label: '取引先', sourceKey: 'torihikisaki', valueKey: 'torihikisaki_id', labelKey: 'name' },
         { key: 'yagou_id', label: '屋号', sourceKey: 'yagou', valueKey: 'yagou_id', labelKey: 'name' },
       ]}
-  parentSources={{
+      parentSources={{
         torihikisaki: { resource: 'torihikisaki', query: { limit: 5000 } },
         yagou: { resource: 'yagou', query: { limit: 5000 } },
-  }}
+      }}
       fields={[
         {
           key: 'torihikisaki_id',

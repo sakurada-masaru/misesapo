@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFlashTransition } from '../ReportTransition/reportTransition';
 import Visualizer from '../Visualizer/Visualizer';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../api/gatewayBase';
 import '../../styles/components.css';
 
 const STATUS_OPTIONS = [
@@ -10,6 +11,14 @@ const STATUS_OPTIONS = [
     { value: 'survey', label: '現地調査', color: '#f59e0b' },
     { value: 'screening', label: '顧客審査', color: '#22c55e' },
 ];
+
+const API_BASE = (() => {
+    if (typeof window !== 'undefined') {
+        const host = String(window.location?.hostname || '').toLowerCase();
+        if (host === 'localhost' || host === '127.0.0.1') return '/api';
+    }
+    return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
+})();
 
 /**
  * リード登録ページ (新規見込み客登録)
@@ -29,8 +38,6 @@ export default function SalesLeadNewPage() {
         next_action_date: '',
         next_action_content: ''
     });
-
-    const API_BASE = '/api';
 
     const handleChange = (e) => {
         const { name, value } = e.target;

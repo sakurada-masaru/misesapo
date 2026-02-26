@@ -4,6 +4,56 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 ---
 
+## Master Registration Integrity Check (2026-02-25)
+
+- [x] `lambda_torihikisaki_api.py` で `name` / 親IDの空白のみ入力を作成時に拒否
+- [x] `torihikisaki/yagou/tenpo/souko` のID直接指定を作成時に拒否（連番ポリシー保護）
+- [x] `torihikisaki/yagou/tenpo` の同名アクティブ重複をサーバ側で作成時に拒否
+- [x] `AdminMasterBase.jsx` で空白文字のみセルを `-` 表示に統一
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` 成功
+- [x] `npm -C src/misogi run build` 成功
+
+## Parent Link Safety / Existing Add Fix (2026-02-26)
+
+- [x] `lambda_torihikisaki_api.py` に親子整合性チェックを追加（`yagou->torihikisaki` / `tenpo->(torihikisaki,yagou)` / `souko,keiyaku->tenpo`）
+- [x] `tenpo` 保存時に `yagou_id` と `torihikisaki_id` の不整合をサーバ側で拒否
+- [x] 既存不整合データの通常更新を止めないよう、`PUT` は親キー変更時のみ整合性検証
+- [x] `AdminTorihikisakiTourokuPage.jsx` で取引先変更時の屋号自動引継ぎを停止（同一取引先に存在する屋号IDのみ維持）
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` 成功
+- [x] `npm -C src/misogi run build` 成功
+
+## Yagou Fallback Rule Fix (2026-02-26)
+
+- [x] 問診票作成（onboarding）で `yagou_name` 未入力時は `torihikisaki_name` を継承（店舗名継承は禁止）
+- [x] 問診票作成（onboarding）で `tenpo_name` 未入力時は `yagou_name` を継承
+- [x] `AdminTorihikisakiTourokuPage.jsx` の一括作成で屋号未入力を許可し、同じフォールバック規則に統一
+- [x] `AdminTorihikisakiTourokuPage.jsx` の一括作成で店舗名未入力を許可し、`tenpo_name <- yagou_name` を適用
+- [x] idempotency key 生成も `effective yagou`（未入力時は取引先名）に統一
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` 成功
+- [x] `npm -C src/misogi run build` 成功
+
+## Meibo Yagou Fallback Display Fix (2026-02-25)
+
+- [x] `屋号名なし` の表示を `取引先直下` 表示へ変更（`yagou_id` 生値表示を抑止）
+- [x] 該当店舗のカルテ遷移時、`屋号名なし` ブロックでは `yagou_id` クエリを空で渡すよう調整
+- [x] `npm -C src/misogi run build` 成功
+
+## 店舗マスタ 全件表示化 (2026-02-25)
+
+- [x] `AdminMasterTenpoPage` で `listLimit={20000}` を指定し、店舗マスタを全件表示
+
+## 取引先/屋号マスタ 表示件数拡張 (2026-02-25)
+
+- [x] `AdminMasterTorihikisakiPage` で `listLimit={20000}` を指定
+- [x] `AdminMasterYagouPage` で `listLimit={20000}` を指定
+- [x] `AdminMasterYagouPage` の取引先親ソース取得上限を `limit=20000` に拡張
+
+## 取引先/屋号/店舗マスタ 検索追加 (2026-02-25)
+
+- [x] 取引先マスタに統合検索（`torihikisaki_id`, `name`）を追加
+- [x] 屋号マスタに統合検索（`yagou_id`, `name`, `torihikisaki_id`）を追加
+- [x] 店舗マスタに統合検索（`tenpo_id`, `name`, `yagou_id`, `torihikisaki_id`）を追加
+
 ## Keiyaku/Yakusoku Separation Integration (2026-02-24)
 
 - [x] `master` API に `keiyaku` コレクションを追加し、CRUD・親キー（`tenpo_id`）・フィルタを有効化
@@ -731,4 +781,33 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 契約サマリー（開始日/周期/単価/サービス）を可視化
 - [x] `souko` アップロードに「書類カテゴリ（見積/契約書/請求/報告提出/写真/その他）」を追加
 - [x] ファイル一覧に書類カテゴリ表示を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Function Review: Route Unification + First Response Inbox (2026-02-25)
+
+- [x] 営業入口のホットバーから `業務フロー` を非表示化（`showFlowGuideButton=false`）
+- [x] 旧営業顧客導線 `/sales/customers` を `/sales/clients/list` へ統一リダイレクト
+- [x] 旧営業登録導線 `/sales/register` を `/sales/clients/new` へ統一リダイレクト
+- [x] 営業ホットバー「進捗」に `一次対応` を追加
+- [x] `一次対応インボックス` 画面（`/sales/inbox`）を追加し、要対応案件の検索・期限別確認・詳細遷移・日報遷移を実装
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales API Base Unification (2026-02-25)
+
+- [x] Salesの主要5画面（顧客一覧/顧客登録/リード一覧/リード登録/リード詳細）の`/api`固定を本番対応APIベース解決へ統一
+- [x] ローカルは`localhost/127.0.0.1`時のみ`/api`を使用し、本番は`VITE_API_BASE`→`YOTEI_GATEWAY`の順で解決
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin 管理日誌 月次リスト表示 (2026-02-25)
+
+- [x] 管理日誌提出ページに「過去提出（月次）」一覧（件数付き）を追加
+- [x] 月次チップ押下で対象月へ切替し、当月提出リストを即時表示
+- [x] 月次一覧は `kanri_log` を別取得して月別集計（`jotai=yuko`）で表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master Sort: Torihikisaki / Yagou / Tenpo (2026-02-26)
+
+- [x] `torihikisaki / yagou / tenpo` 一覧のデフォルト順をID昇順に設定
+- [x] 列ヘッダクリックで昇順/降順を切替できる列ソートを追加
+- [x] ソートUI（矢印・アクティブ表示）をライト/ダークテーマ両対応で追加
 - [x] `npm -C src/misogi run build` でビルド確認

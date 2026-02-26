@@ -113,6 +113,12 @@ function pickId(item, idKey) {
 
 function formatCellValue(value) {
   if (value === null || value === undefined || value === '') return '-';
+  if (typeof value === 'string') {
+    const s = value.trim();
+    if (!s) return '-';
+    if (s.length > 160) return `${s.slice(0, 160)}…`;
+    return s;
+  }
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'object') {
     // Avoid heavy JSON.stringify on arbitrary objects (can freeze with large nested data).
@@ -168,6 +174,38 @@ function toSearchText(value) {
     }
   }
   return String(value);
+}
+
+function normalizeSortDirection(dir) {
+  return String(dir || '').toLowerCase() === 'desc' ? 'desc' : 'asc';
+}
+
+function toSortComparable(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') {
+    const s = value.trim();
+    return s ? s : null;
+  }
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'boolean') return value ? 1 : 0;
+  if (Array.isArray(value)) {
+    const s = value.map((v) => toSearchText(v)).join(' ').trim();
+    return s || null;
+  }
+  if (typeof value === 'object') {
+    const s = toSearchText(value).trim();
+    return s || null;
+  }
+  const s = String(value || '').trim();
+  return s || null;
+}
+
+function compareSortValues(a, b) {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  return String(a).localeCompare(String(b), 'ja', { numeric: true, sensitivity: 'base' });
 }
 
 function isDiagMode() {
@@ -240,6 +278,9 @@ export default function AdminMasterBase({
   normalizeEditingModel = null,
   hideIdColumn = false,
   listColumnKeys = null,
+  enableColumnSort = false,
+  initialSortKey = '',
+  initialSortDir = 'asc',
   onRowClick = null,
   onPreviewRow = null,
   previewButtonLabel = 'プレビュー',
@@ -266,6 +307,8 @@ export default function AdminMasterBase({
   const [searchText, setSearchText] = useState('');
   const [uiDebug, setUiDebug] = useState(null);
   const [overlayRoot, setOverlayRoot] = useState(null);
+  const [sortKey, setSortKey] = useState(() => String(initialSortKey || '').trim());
+  const [sortDir, setSortDir] = useState(() => normalizeSortDirection(initialSortDir));
   const textAreaRefs = useRef({});
   const diagMode = isDiagMode();
   const diagStep = getDiagStep();
@@ -835,6 +878,47 @@ export default function AdminMasterBase({
     );
   }, [items, searchText, localSearchKeysSig, clientFilter]);
 
+  useEffect(() => {
+    if (!enableColumnSort) return;
+    const keys = new Set(columns.map((c) => String(c.key || '')).filter(Boolean));
+    if (!keys.size) return;
+    const desired = String(initialSortKey || '').trim();
+    const fallback = desired && keys.has(desired) ? desired : String(columns[0]?.key || '');
+    if (!fallback) return;
+    if (!String(sortKey || '').trim() || !keys.has(String(sortKey))) {
+      setSortKey(fallback);
+      setSortDir(normalizeSortDirection(initialSortDir));
+    }
+  }, [enableColumnSort, columns, initialSortKey, initialSortDir, sortKey]);
+
+  const sortedVisibleItems = useMemo(() => {
+    if (!enableColumnSort) return visibleItems;
+    const key = String(sortKey || '').trim();
+    if (!key) return visibleItems;
+    const f = fieldByKey.get(key);
+    const dirFactor = normalizeSortDirection(sortDir) === 'desc' ? -1 : 1;
+    return [...(visibleItems || [])].sort((a, b) => {
+      const av = toSortComparable(formatFieldValue(f, a?.[key], a));
+      const bv = toSortComparable(formatFieldValue(f, b?.[key], b));
+      const cmp = compareSortValues(av, bv);
+      return cmp * dirFactor;
+    });
+  }, [enableColumnSort, visibleItems, sortKey, sortDir, fieldByKey, formatFieldValue]);
+
+  const onSortColumn = useCallback((key) => {
+    if (!enableColumnSort) return;
+    const nextKey = String(key || '').trim();
+    if (!nextKey) return;
+    setSortKey((prevKey) => {
+      if (prevKey === nextKey) {
+        setSortDir((prevDir) => (normalizeSortDirection(prevDir) === 'asc' ? 'desc' : 'asc'));
+        return prevKey;
+      }
+      setSortDir('asc');
+      return nextKey;
+    });
+  }, [enableColumnSort]);
+
   const onBulkDelete = useCallback(async () => {
     const targetRows = (visibleItems || []).filter((row) => selectedRowIds.includes(pickId(row, operationalIdKey)));
     if (!targetRows.length) return;
@@ -881,27 +965,44 @@ export default function AdminMasterBase({
                 <input
                   type="checkbox"
                   checked={(() => {
-                    const ids = visibleItems
+                    const ids = sortedVisibleItems
                       .filter((row) => (typeof canDeleteRow !== 'function' || canDeleteRow(row)))
                       .map((row) => pickId(row, operationalIdKey))
                       .filter(Boolean);
                     return ids.length > 0 && ids.every((rid) => selectedRowIds.includes(rid));
                   })()}
-                  onChange={(e) => toggleSelectAllVisible(e.target.checked, visibleItems)}
+                  onChange={(e) => toggleSelectAllVisible(e.target.checked, sortedVisibleItems)}
                 />
               </th>
             ) : null}
-            {columns.map((c) => <th key={c.key}>{c.label}</th>)}
+            {columns.map((c) => {
+              const active = enableColumnSort && String(sortKey) === String(c.key);
+              const arrow = active ? (normalizeSortDirection(sortDir) === 'desc' ? '▼' : '▲') : '↕';
+              return (
+                <th key={c.key}>
+                  {enableColumnSort ? (
+                    <button
+                      type="button"
+                      className={`admin-master-sort-btn ${active ? 'is-active' : ''}`.trim()}
+                      onClick={() => onSortColumn(c.key)}
+                    >
+                      <span>{c.label}</span>
+                      <span className="sort-indicator" aria-hidden>{arrow}</span>
+                    </button>
+                  ) : c.label}
+                </th>
+              );
+            })}
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          {visibleItems.length === 0 && !loading && (
+          {sortedVisibleItems.length === 0 && !loading && (
             <tr>
               <td colSpan={columns.length + 1 + (enableBulkDelete ? 1 : 0)} className="empty">データがありません</td>
             </tr>
           )}
-          {visibleItems.map((row) => {
+          {sortedVisibleItems.map((row) => {
             const rid = pickId(row, operationalIdKey);
             const isExpanded = !!rid && expandedRowId === rid;
             const rowDeletable = typeof canDeleteRow !== 'function' || canDeleteRow(row);
@@ -1042,7 +1143,7 @@ export default function AdminMasterBase({
         </tbody>
       </table>
     </section>
-  ), [visibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, idKey, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName, formatFieldValue, onRowClick, onPreviewRow, previewButtonLabel, showEditAction, showDeleteAction, parents]);
+  ), [sortedVisibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName, formatFieldValue, onRowClick, onPreviewRow, previewButtonLabel, showEditAction, showDeleteAction, parents, enableColumnSort, sortKey, sortDir, onSortColumn]);
 
   return (
     <div className={`admin-master-page ${pageClassName || ''}`.trim()} data-resource={resource}>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
 function todayYmd() {
@@ -11,6 +11,23 @@ function todayYmd() {
   } catch {
     return '';
   }
+}
+
+function isLocalUiHost() {
+  if (typeof window === 'undefined') return false;
+  const h = String(window.location?.hostname || '').toLowerCase();
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+const MASTER_API_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api-master'
+    : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
+
+function getItems(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  return [];
 }
 
 function normalizeYmd(value) {
@@ -65,6 +82,11 @@ function shiftMonth(ymd, delta) {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   return `${yyyy}-${mm}-01`;
+}
+
+function monthLabelFromYm(ym) {
+  const [y, m] = String(ym || '').split('-');
+  return `${y || ''}年${Number(m || 0)}月`;
 }
 
 function monthDays(ymd) {
@@ -250,6 +272,8 @@ export default function AdminAdminLogPage() {
     const t = todayYmd();
     return `${t.slice(0, 7)}-01`;
   });
+  const [allAdminLogs, setAllAdminLogs] = useState([]);
+  const [monthListLoading, setMonthListLoading] = useState(false);
   const [detailDrafts, setDetailDrafts] = useState({});
   const [tomorrowDrafts, setTomorrowDrafts] = useState({});
   // related_kadai_ids は自由入力（検索/タグ運用は廃止）
@@ -261,6 +285,44 @@ export default function AdminAdminLogPage() {
     const [y, m] = String(selectedYm || '').split('-');
     return `${y || ''}年${Number(m || 0)}月`;
   }, [selectedYm]);
+  const monthList = useMemo(() => {
+    const map = new Map();
+    (allAdminLogs || []).forEach((row) => {
+      const reportedAt = normalizeYmd(row?.reported_at || row?.date || row?.created_at || '');
+      if (!reportedAt) return;
+      const ym = reportedAt.slice(0, 7);
+      const prev = map.get(ym) || { ym, count: 0, latestDate: '' };
+      prev.count += 1;
+      if (!prev.latestDate || reportedAt > prev.latestDate) prev.latestDate = reportedAt;
+      map.set(ym, prev);
+    });
+    return Array.from(map.values()).sort((a, b) => String(b.ym).localeCompare(String(a.ym)));
+  }, [allAdminLogs]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setMonthListLoading(true);
+      try {
+        const path = `${MASTER_API_BASE}/master/kanri_log?limit=5000&jotai=yuko`;
+        const res = await fetch(path, {
+          headers: {
+            ...authHeaders(),
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) throw new Error(`kanri_log HTTP ${res.status}`);
+        const data = await res.json();
+        const rows = getItems(data).filter((row) => isAdminLogRow(row));
+        if (!cancelled) setAllAdminLogs(rows);
+      } catch {
+        if (!cancelled) setAllAdminLogs([]);
+      } finally {
+        if (!cancelled) setMonthListLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const appendTaskToPlan = (baseText, task) => {
     const current = String(baseText || '').trim();
@@ -296,6 +358,31 @@ export default function AdminAdminLogPage() {
               <button type="button" onClick={() => setSelectedMonth(shiftMonth(selectedMonth, 1))}>翌月 →</button>
             </div>
             <div className="admin-log-date-strip-head">{monthLabel} 提出分一覧</div>
+          </div>
+          <div className="admin-log-monthly-list" aria-label="管理日誌 過去月次一覧">
+            <div className="admin-log-monthly-list-head">過去提出（月次）</div>
+            <div className="admin-log-monthly-list-scroll">
+              {monthListLoading ? (
+                <div className="admin-log-monthly-empty">読み込み中...</div>
+              ) : monthList.length ? (
+                monthList.map((m) => {
+                  const active = selectedYm === m.ym;
+                  return (
+                    <button
+                      key={m.ym}
+                      type="button"
+                      className={`admin-log-monthly-chip${active ? ' active' : ''}`}
+                      onClick={() => setSelectedMonth(`${m.ym}-01`)}
+                    >
+                      <span>{monthLabelFromYm(m.ym)}</span>
+                      <span>{m.count}件</span>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="admin-log-monthly-empty">月次データはありません</div>
+              )}
+            </div>
           </div>
         </div>
       )}

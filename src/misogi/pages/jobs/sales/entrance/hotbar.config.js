@@ -15,6 +15,7 @@ export const SALES_HOTBAR = [
     role: 'status',
     label: '進捗',
     subItems: [
+      { id: 'first-response', label: '一次対応', path: '/sales/inbox' },
       { id: 'lead-new', label: 'リード登録', path: '/sales/leads/new' },
       { id: 'lead-info', label: 'リード情報', path: '/sales/leads' },
     ]

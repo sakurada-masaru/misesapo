@@ -89,9 +89,10 @@ function stableHash(input) {
 }
 
 function buildOnboardingIdempotencyKey(tName, yName, tenpoName) {
+  const effectiveYagou = norm(yName) || norm(tName);
   const keySource = [
     normalizeKeyPart(tName),
-    normalizeKeyPart(yName),
+    normalizeKeyPart(effectiveYagou),
     normalizeKeyPart(tenpoName),
   ].join('|');
   return `onboarding-${stableHash(keySource)}`;
@@ -252,7 +253,12 @@ export default function AdminTorihikisakiTourokuPage() {
       const data = await apiJson(`/master/yagou?${qs.toString()}`);
       const items = getItems(data).sort((a, b) => norm(a?.name).localeCompare(norm(b?.name), 'ja'));
       setYagouList(items);
-      setSelectedYagouId((cur) => cur || items?.[0]?.yagou_id || '');
+      setSelectedYagouId((cur) => {
+        const current = String(cur || '').trim();
+        if (!current) return '';
+        const exists = items.some((it) => String(it?.yagou_id || '').trim() === current);
+        return exists ? current : '';
+      });
     } catch (e) {
       setErr(e?.message || '屋号の読み込みに失敗しました');
     } finally {
@@ -867,10 +873,12 @@ export default function AdminTorihikisakiTourokuPage() {
 
   const onBulkCreate = useCallback(async () => {
     const tName = norm(bulkTorihikisakiName);
-    const yName = norm(bulkYagouName);
-    const tenpoName = norm(bulkTenpoName);
-    if (!tName || !yName || !tenpoName) {
-      window.alert('取引先名・屋号名・店舗名は必須です');
+    const yNameInput = norm(bulkYagouName);
+    const yName = yNameInput || tName;
+    const tenpoNameInput = norm(bulkTenpoName);
+    const tenpoName = tenpoNameInput || yName;
+    if (!tName) {
+      window.alert('取引先名は必須です');
       return;
     }
     setErr('');
@@ -1152,14 +1160,14 @@ export default function AdminTorihikisakiTourokuPage() {
                 <span>取引先名</span>
                 <input value={bulkTorihikisakiName} onChange={(e) => setBulkTorihikisakiName(e.target.value)} placeholder="例: 株式会社○○" />
               </label>
-              <label>
-                <span>屋号名</span>
-                <input value={bulkYagouName} onChange={(e) => setBulkYagouName(e.target.value)} placeholder="例: ○○カフェ" />
-              </label>
-              <label>
-                <span>店舗名</span>
-                <input value={bulkTenpoName} onChange={(e) => setBulkTenpoName(e.target.value)} placeholder="例: 新宿店" />
-              </label>
+                <label>
+                  <span>屋号名</span>
+                <input value={bulkYagouName} onChange={(e) => setBulkYagouName(e.target.value)} placeholder="未入力なら取引先名を継承" />
+                </label>
+                <label>
+                  <span>店舗名</span>
+                <input value={bulkTenpoName} onChange={(e) => setBulkTenpoName(e.target.value)} placeholder="未入力なら屋号名を継承" />
+                </label>
               <label>
                 <span>電話番号</span>
                 <input value={bulkPhone} onChange={(e) => setBulkPhone(e.target.value)} placeholder="例: 03-xxxx-xxxx" />

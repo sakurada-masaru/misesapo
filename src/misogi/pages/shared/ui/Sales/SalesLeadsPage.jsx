@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFlashTransition } from '../ReportTransition/reportTransition';
 import Visualizer from '../Visualizer/Visualizer';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../api/gatewayBase';
 import '../../styles/components.css';
 
 const LEAD_TABS = [
@@ -26,6 +27,14 @@ const STATUS_LABELS = {
     screening: '顧客審査',
 };
 
+const API_BASE = (() => {
+    if (typeof window !== 'undefined') {
+        const host = String(window.location?.hostname || '').toLowerCase();
+        if (host === 'localhost' || host === '127.0.0.1') return '/api';
+    }
+    return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
+})();
+
 /**
  * リード情報ページ (タブ切り替え版)
  */
@@ -35,8 +44,6 @@ export default function SalesLeadsPage() {
     const [leads, setLeads] = useState([]);
     const [activeTab, setActiveTab] = useState('all');
     const { startTransition } = useFlashTransition();
-
-    const API_BASE = '/api';
 
     useEffect(() => {
         const fetchData = async () => {

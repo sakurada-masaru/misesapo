@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFlashTransition } from '../ReportTransition/reportTransition';
 import Visualizer from '../Visualizer/Visualizer';
+import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../api/gatewayBase';
 import '../../styles/components.css';
 
 const STATUS_OPTIONS = [
@@ -25,6 +26,14 @@ const TOUCH_TYPES = [
     { value: 'other', label: 'その他', icon: '📝' },
 ];
 
+const API_BASE = (() => {
+    if (typeof window !== 'undefined') {
+        const host = String(window.location?.hostname || '').toLowerCase();
+        if (host === 'localhost' || host === '127.0.0.1') return '/api';
+    }
+    return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
+})();
+
 /**
  * リード詳細ページ (フルセット版)
  */
@@ -40,8 +49,6 @@ export default function SalesLeadDetailPage() {
     const [nextAction, setNextAction] = useState({ date: '', content: '' });
     const [memo, setMemo] = useState('');
     const [saving, setSaving] = useState(false);
-
-    const API_BASE = '/api';
 
     useEffect(() => {
         const fetchLead = async () => {

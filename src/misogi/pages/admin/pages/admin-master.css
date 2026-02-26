@@ -211,6 +211,32 @@
   font-size: 12px;
 }
 
+.admin-master-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+.admin-master-sort-btn .sort-indicator {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.admin-master-sort-btn.is-active {
+  color: #cbd5e1;
+}
+
+.admin-master-sort-btn.is-active .sort-indicator {
+  color: #93c5fd;
+}
+
 .admin-master-table th.bulk-check-col,
 .admin-master-table td.bulk-check-col {
   width: 40px;
@@ -1099,6 +1125,55 @@
   padding: 8px 10px;
 }
 
+.admin-master-page.admin-admin-log-page .admin-log-monthly-list {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(71, 85, 105, 0.55);
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-monthly-list-head {
+  font-size: 12px;
+  color: #9aa6c5;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-monthly-list-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-monthly-chip {
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-monthly-chip.active {
+  color: #eff6ff;
+  background: rgba(37, 99, 235, 0.35);
+  border-color: #2563eb;
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-monthly-empty {
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 4px 0;
+}
+
 .admin-master-page.admin-admin-log-page .admin-log-date-inline {
   display: flex;
   align-items: center;
@@ -1401,6 +1476,22 @@
 
 [data-theme="light"] .admin-master-table th {
   color: #000000;
+}
+
+[data-theme="light"] .admin-master-sort-btn {
+  color: #111827;
+}
+
+[data-theme="light"] .admin-master-sort-btn .sort-indicator {
+  color: #64748b;
+}
+
+[data-theme="light"] .admin-master-sort-btn.is-active {
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-sort-btn.is-active .sort-indicator {
+  color: #2563eb;
 }
 
 [data-theme="light"] .admin-master-header h1,
