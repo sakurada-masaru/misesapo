@@ -22,6 +22,8 @@ import CLEAN_FLOOR_WAX_V1 from './CLEAN_FLOOR_WAX_V1.json';
 import SALES_ACTIVITY_REPORT_V1 from './SALES_ACTIVITY_REPORT_V1.json';
 import SIMPLE_FREE_INPUT_V1 from './SIMPLE_FREE_INPUT_V1.json';
 import CLEANING_SHEETS_3_V1 from './CLEANING_SHEETS_3_V1.json';
+import OFFICE_ADMIN_V1 from './OFFICE_ADMIN_V1.json';
+import ENGINEERING_V1 from './ENGINEERING_V1.json';
 
 // テンプレートマップ
 const TEMPLATES = {
@@ -43,6 +45,8 @@ const TEMPLATES = {
     'SALES_ACTIVITY_REPORT_V1': SALES_ACTIVITY_REPORT_V1,
     'SIMPLE_FREE_INPUT_V1': SIMPLE_FREE_INPUT_V1,
     'CLEANING_SHEETS_3_V1': CLEANING_SHEETS_3_V1,
+    'OFFICE_ADMIN_V1': OFFICE_ADMIN_V1,
+    'ENGINEERING_V1': ENGINEERING_V1,
 };
 
 /**
@@ -51,7 +55,18 @@ const TEMPLATES = {
  * @returns {object|null}
  */
 export const getTemplateById = (templateId) => {
-    return TEMPLATES[templateId] || null;
+    const id = String(templateId || '').trim();
+    if (!id) return null;
+    if (TEMPLATES[id]) return TEMPLATES[id];
+
+    // Department fallback mapping (legacy / variant IDs)
+    if (id === 'OFFICE_V1' || id.startsWith('OFFICE_')) {
+        return TEMPLATES['OFFICE_ADMIN_V1'] || null;
+    }
+    if (id === 'ENGINEERING_V1' || id.startsWith('ENGINEERING_') || id.startsWith('DEV_')) {
+        return TEMPLATES['ENGINEERING_V1'] || null;
+    }
+    return null;
 };
 
 /**

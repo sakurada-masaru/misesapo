@@ -1,0 +1,48 @@
+{
+  "id": "ENGINEERING_V1",
+  "template_id": "ENGINEERING_V1",
+  "title": "開発報告書",
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "basic_info",
+      "type": "group",
+      "label": "1. 基本情報",
+      "meta_fields": [
+        { "key": "work_date", "label": "日付" },
+        { "key": "user_name", "label": "担当者" }
+      ],
+      "fields": [
+        { "key": "project", "label": "プロジェクト", "type": "text" },
+        {
+          "key": "status",
+          "label": "状態",
+          "type": "radio",
+          "options": [
+            { "value": "進行中", "label": "進行中" },
+            { "value": "完了", "label": "完了" },
+            { "value": "課題あり", "label": "課題あり" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "progress",
+      "type": "group",
+      "label": "2. 進捗",
+      "fields": [
+        { "key": "tasks_done", "label": "完了タスク", "type": "textarea" },
+        { "key": "tasks_next", "label": "次タスク", "type": "textarea" },
+        { "key": "issues", "label": "課題", "type": "textarea" }
+      ]
+    },
+    {
+      "id": "attachments",
+      "type": "photos",
+      "label": "3. 添付",
+      "groups": [
+        { "key": "attachments", "label": "添付ファイル" }
+      ]
+    }
+  ]
+}

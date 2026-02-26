@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import './admin-yotei.css';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
 // Hamburger / admin-top are provided by GlobalNav.
@@ -653,11 +652,6 @@ export default function AdminYoteiPage() {
   return (
     <div className="report-page admin-yotei-page" data-job="admin">
       <div className="report-page-content admin-yotei-content">
-        <p className="admin-yotei-back">
-          <span className="admin-top-left">
-            {/* GlobalNav handles navigation */}
-          </span>
-        </p>
         <h1>YOTEI 予約管理（病院型）</h1>
         <div className="ops-tabs">
           <button type="button" className={activeTab === 'yotei' ? 'active' : ''} onClick={() => setActiveTab('yotei')}>YOTEI</button>

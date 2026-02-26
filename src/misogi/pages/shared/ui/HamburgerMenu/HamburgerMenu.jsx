@@ -1,8 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import { useAuth } from '../../auth/useAuth';
+import { ADMIN_HOTBAR } from '../../../admin/pages/admin-entrance-hotbar.config';
 import './hamburger-menu.css';
 
 /**
@@ -24,9 +25,20 @@ const MENU_LINKS = [
   { to: '/flow-guide', label: '業務フロー', dept: 'ANY' },
 ];
 
+function groupBy(items, getKey) {
+  const map = new Map();
+  (items || []).forEach((item) => {
+    const key = String(getKey(item) || 'その他');
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(item);
+  });
+  return [...map.entries()].map(([groupLabel, rows]) => ({ groupLabel, rows }));
+}
+
 export default function HamburgerMenu() {
-  const { isAuthenticated, login, logout, user, authz } = useAuth();
+  const { isAuthenticated, logout, user, authz } = useAuth();
   const [open, setOpen] = useState(false);
+  const [openSections, setOpenSections] = useState({});
   const location = useLocation();
 
   const close = useCallback(() => setOpen(false), []);
@@ -53,9 +65,15 @@ export default function HamburgerMenu() {
   };
 
   const userName = user?.name || user?.displayName || user?.username || user?.email || (isAuthenticated ? 'ログイン済み' : '');
+  const isAdminRoute = String(location?.pathname || '').startsWith('/admin');
+  const isPathActive = useCallback((path) => {
+    const p = String(path || '');
+    if (!p) return false;
+    return location.pathname === p || location.pathname.startsWith(`${p}/`);
+  }, [location.pathname]);
 
   // 所属部署によるリンクのフィルタリング
-  const filteredLinks = MENU_LINKS.filter(link => {
+  const filteredLinks = useMemo(() => MENU_LINKS.filter((link) => {
     if (link.dept === 'ANY') return true;
 
     const userDept = authz?.dept || '';
@@ -77,7 +95,62 @@ export default function HamburgerMenu() {
       return !['SALES', 'ENGINEERING', 'OFFICE', 'ADMIN', 'ADMINISTRATION'].includes(userDept);
     }
     return false;
-  });
+  }), [authz?.dept, authz?.isAdmin, authz?.isDev]);
+
+  const sidebarSections = useMemo(() => {
+    if (isAdminRoute) {
+      const adminSections = (ADMIN_HOTBAR || []).map((section) => ({
+        id: `admin-${String(section?.id || '')}`,
+        label: String(section?.label || ''),
+        groups: groupBy(section?.subItems || [], (row) => row?.group || 'その他'),
+      }));
+      return adminSections;
+    }
+
+    return [
+      {
+        id: 'jobs',
+        label: 'ジョブ切替',
+        groups: [{ groupLabel: 'メニュー', rows: filteredLinks.map((row) => ({ id: row.to, label: row.label, to: row.to })) }],
+      },
+    ];
+  }, [isAdminRoute, filteredLinks]);
+
+  useEffect(() => {
+    if (!sidebarSections.length) return;
+    setOpenSections((prev) => {
+      const next = {};
+      sidebarSections.forEach((section, idx) => {
+        const hasActive = section.groups.some((g) => g.rows.some((r) => isPathActive(r.path || r.to)));
+        next[section.id] = Object.prototype.hasOwnProperty.call(prev, section.id)
+          ? !!prev[section.id]
+          : (hasActive || idx === 0);
+      });
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(next);
+      const unchanged = prevKeys.length === nextKeys.length
+        && nextKeys.every((key) => prev[key] === next[key]);
+      return unchanged ? prev : next;
+    });
+  }, [sidebarSections, isPathActive]);
+
+  useEffect(() => {
+    if (!sidebarSections.length) return;
+    const activeSection = sidebarSections.find((section) =>
+      section.groups.some((g) => g.rows.some((r) => isPathActive(r.path || r.to)))
+    );
+    if (!activeSection) return;
+    setOpenSections((prev) => {
+      if (prev[activeSection.id]) return prev;
+      return { ...prev, [activeSection.id]: true };
+    });
+  }, [location.pathname, sidebarSections, isPathActive]);
+
+  const onNavigate = (path) => {
+    if (!path) return;
+    navigate(path);
+    close();
+  };
 
   return (
     <>
@@ -116,11 +189,45 @@ export default function HamburgerMenu() {
               ×
             </button>
           </div>
-          <nav className="hamburger-menu-nav">
-            {filteredLinks.map(({ to, label }) => (
-              <Link key={to} to={to} className="hamburger-menu-link" onClick={close}>
-                {label}
-              </Link>
+          <nav className="hamburger-menu-sidebar" aria-label="サイドバー">
+            {sidebarSections.map((section) => (
+              <section key={section.id} className="hamburger-menu-sidebar-section">
+                <button
+                  type="button"
+                  className={`hamburger-menu-sidebar-section-title ${openSections[section.id] ? 'open' : ''}`.trim()}
+                  onClick={() => setOpenSections((prev) => ({ ...prev, [section.id]: !prev[section.id] }))}
+                >
+                  <span>{section.label}</span>
+                  <span className="hamburger-menu-sidebar-section-icon">{openSections[section.id] ? '▾' : '▸'}</span>
+                </button>
+                {openSections[section.id] ? (
+                  <div className="hamburger-menu-sidebar-groups">
+                    {section.groups.map((group) => (
+                      <div key={`${section.id}-${group.groupLabel}`} className="hamburger-menu-sidebar-group">
+                        {group.groupLabel ? (
+                          <p className="hamburger-menu-sidebar-group-label">{group.groupLabel}</p>
+                        ) : null}
+                        <div className="hamburger-menu-sidebar-links">
+                          {group.rows.map((row) => {
+                            const path = row.path || row.to;
+                            const active = isPathActive(path);
+                            return (
+                              <button
+                                key={String(row.id || path || row.label)}
+                                type="button"
+                                className={`hamburger-menu-sidebar-link ${active ? 'active' : ''}`.trim()}
+                                onClick={() => onNavigate(path)}
+                              >
+                                {row.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
             ))}
           </nav>
           <div className="hamburger-menu-footer">

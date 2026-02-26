@@ -10,19 +10,18 @@
   width: 44px;
   height: 44px;
   padding: 0;
-  background: var(--surface);
+  background: var(--card-bg);
   color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.15));
+  transition: background 0.2s ease, border-color 0.2s ease;
+  box-shadow: none;
 }
 
 .hamburger-menu-trigger:hover {
-  background: var(--card-bg);
+  background: var(--surface);
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 1px var(--accent-color);
 }
 
 .hamburger-menu-trigger:focus-visible {
@@ -52,34 +51,32 @@
 .hamburger-menu-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 10000;
-  background: rgba(0, 0, 0, 0.4);
+  z-index: 1400;
+  background: rgba(2, 6, 23, 0.42);
   opacity: 0;
-  visibility: hidden;
-  /* Safety: even if visibility/opacity state gets out of sync, never block clicks while closed. */
   pointer-events: none;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
 .hamburger-menu-backdrop.is-open {
   opacity: 1;
-  visibility: visible;
   pointer-events: auto;
 }
 
 /* 左からスライドするドロワー */
 .hamburger-menu-drawer {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: min(280px, 85vw);
-  height: 100%;
-  background: var(--surface);
+  bottom: 0;
+  width: min(236px, 80vw);
+  z-index: 1450;
+  background: rgba(5, 10, 24, 0.94);
   color: var(--fg);
-  border-right: 1px solid var(--border);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  border-right: 1px solid var(--card-border);
+  box-shadow: 8px 0 24px rgba(0, 0, 0, 0.35);
   transform: translateX(-100%);
-  transition: transform 0.25s ease;
+  transition: transform 0.24s ease;
   display: flex;
   flex-direction: column;
 }
@@ -92,24 +89,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4, 16px);
-  border-bottom: 1px solid var(--border);
+  padding: calc(12px + env(safe-area-inset-top)) var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--card-border);
 }
 
 .hamburger-menu-title {
   font-weight: 700;
-  font-size: var(--fs-16, 16px);
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .hamburger-menu-close {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   padding: 0;
   background: transparent;
   color: var(--fg);
   border: none;
-  border-radius: var(--radius-md, 8px);
-  font-size: 1.5rem;
+  border-radius: 8px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   transition: background 0.2s ease;
@@ -119,33 +119,112 @@
   background: var(--card-bg);
 }
 
-.hamburger-menu-nav {
+.hamburger-menu-nav,
+.hamburger-menu-sidebar {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-3, 12px) 0;
+  padding: var(--space-3);
+  padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
 }
 
-.hamburger-menu-link {
-  display: block;
-  padding: var(--space-3, 12px) var(--space-4, 16px);
+.hamburger-menu-sidebar-section {
+  margin-bottom: var(--space-3);
+}
+
+.hamburger-menu-sidebar-section-title {
+  width: 100%;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 0;
+  background: transparent;
   color: var(--fg);
-  text-decoration: none;
-  font-size: var(--fs-14, 14px);
-  transition: background 0.15s ease;
+  font-size: var(--fs-14);
+  font-weight: 700;
+  text-align: left;
+  letter-spacing: 0.02em;
+  padding: 6px 2px;
+  cursor: pointer;
+  transition: color 0.16s ease;
 }
 
-.hamburger-menu-link:hover {
+.hamburger-menu-sidebar-section-title:hover {
+  color: var(--accent-color);
+}
+
+.hamburger-menu-sidebar-section-title.open {
+  color: var(--accent-color);
+}
+
+.hamburger-menu-sidebar-section-icon {
+  color: currentColor;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.hamburger-menu-sidebar-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hamburger-menu-sidebar-group {
+  margin: 0 0 8px 10px;
+  padding-left: 10px;
+  border-left: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger-menu-sidebar-group-label {
+  margin: 0;
+  padding: 0;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hamburger-menu-sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hamburger-menu-sidebar-link {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  background: transparent;
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 7px 8px;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.hamburger-menu-sidebar-link:hover {
   background: var(--card-bg);
+  color: var(--accent-color);
 }
 
-.hamburger-menu-link:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: -2px;
+.hamburger-menu-sidebar-link.active {
+  border-left-color: var(--accent-color);
+  background: var(--card-bg);
+  color: var(--accent-color);
+  font-weight: 600;
 }
 
 .hamburger-menu-footer {
   padding: var(--space-4, 16px);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--card-border);
+  background: transparent;
 }
 
 .hamburger-menu-section {
@@ -156,9 +235,10 @@
 
 .hamburger-menu-section-title {
   font-weight: 600;
-  font-size: var(--fs-14, 14px);
-  color: var(--fg);
-  opacity: 0.8;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   margin-bottom: var(--space-2, 8px);
 }
 
@@ -190,9 +270,10 @@
 .hamburger-menu-footer .lang-switcher > select {
   min-width: 145px;
   height: 36px;
-  background: var(--surface);
+  background: var(--card-bg);
   color: var(--fg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
 }
 
 .hamburger-menu-button {
@@ -211,14 +292,74 @@
 }
 
 .hamburger-menu-button:hover {
-  background: var(--surface);
+  background: var(--card-bg);
   border-color: var(--accent-color);
 }
 
 .hamburger-menu-user-info {
   font-size: var(--fs-12, 12px);
   color: var(--fg);
-  opacity: 0.6;
+  opacity: 0.9;
   margin-bottom: var(--space-1, 4px);
-  padding: 0 var(--space-1, 4px);
+  padding: 0;
+}
+
+[data-theme="light"] .hamburger-menu-drawer {
+  background: rgba(248, 250, 252, 0.97);
+  border-right-color: #cbd5e1;
+  box-shadow: 8px 0 24px rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .hamburger-menu-header {
+  border-bottom-color: #cbd5e1;
+}
+
+[data-theme="light"] .hamburger-menu-title {
+  color: #475569;
+}
+
+[data-theme="light"] .hamburger-menu-sidebar-section-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .hamburger-menu-sidebar-group {
+  border-left-color: #cbd5e1;
+}
+
+[data-theme="light"] .hamburger-menu-sidebar-group-label {
+  color: #64748b;
+}
+
+[data-theme="light"] .hamburger-menu-sidebar-link {
+  color: #0f172a;
+}
+
+[data-theme="light"] .hamburger-menu-sidebar-link:hover {
+  background: #e2e8f0;
+  color: #1d4ed8;
+}
+
+[data-theme="light"] .hamburger-menu-sidebar-link.active {
+  background: #dbeafe;
+  color: #1e40af;
+  border-left-color: #2563eb;
+}
+
+[data-theme="dark"] .hamburger-menu-title {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+[data-theme="dark"] .hamburger-menu-sidebar-group {
+  border-left-color: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme="dark"] .hamburger-menu-sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .hamburger-menu-sidebar-link.active {
+  background: rgba(59, 130, 246, 0.18);
+  color: #bfdbfe;
+  border-left-color: #60a5fa;
 }

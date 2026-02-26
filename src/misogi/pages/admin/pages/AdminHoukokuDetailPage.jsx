@@ -19,12 +19,23 @@ const AdminHoukokuDetailPage = () => {
             try {
                 const token = getToken() || localStorage.getItem('cognito_id_token');
                 const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
+                const encodedId = encodeURIComponent(reportId);
+                const isLegacyHoukokuId = /^HK-/i.test(String(reportId || ''));
+                const paths = isLegacyHoukokuId
+                    ? [`/houkoku/${encodedId}`, `/admin/work-reports/${encodedId}`]
+                    : [`/admin/work-reports/${encodedId}`, `/houkoku/${encodedId}`];
+
                 let data = null;
-                try {
-                    data = await apiFetchWorkReport(`/admin/work-reports/${encodeURIComponent(reportId)}`, { headers });
-                } catch (_) {
-                    data = await apiFetchWorkReport(`/houkoku/${encodeURIComponent(reportId)}`, { headers });
+                let lastErr = null;
+                for (const path of paths) {
+                    try {
+                        data = await apiFetchWorkReport(path, { headers });
+                        if (data) break;
+                    } catch (e) {
+                        lastErr = e;
+                    }
                 }
+                if (!data) throw lastErr || new Error('not found');
                 setReport(data);
             } catch (e) {
                 setError('データの取得に失敗しました。');
@@ -147,6 +158,7 @@ const AdminHoukokuDetailPage = () => {
                         {/* 選択された店舗の報告書 */}
                         {activeStore && (() => {
                             const s = activeStore;
+                            const resolvedTemplate = s.template_id ? getTemplateById(s.template_id) : null;
                             const attachments = s.attachments || [];
                             const attachmentsAfter = s.attachments_after || [];
                             const services = s.services || [];
@@ -155,9 +167,9 @@ const AdminHoukokuDetailPage = () => {
 
                             return (
                                 <ReportDocument>
-                                    {s.template_id ? (
+                                    {resolvedTemplate ? (
                                         <TemplateRenderer
-                                            template={getTemplateById(s.template_id)}
+                                            template={resolvedTemplate}
                                             report={{
                                                 ...reportMeta,
                                                 work_date: header.work_date || reportMeta.work_date,
@@ -179,6 +191,11 @@ const AdminHoukokuDetailPage = () => {
                                         />
                                     ) : (
                                         <>
+                                            {s.template_id ? (
+                                                <UnknownTemplateNote>
+                                                    テンプレート未登録: <code>{s.template_id}</code>（汎用表示で表示中）
+                                                </UnknownTemplateNote>
+                                            ) : null}
                                             {/* 旧レイアウト（後方互換用） */}
                                             <ReportTitle>グリストラップ清掃 作業報告書</ReportTitle>
 
@@ -430,6 +447,21 @@ const ReportDocument = styled.div`
     margin: 0 auto;
     @media print {
         padding: 0;
+    }
+`;
+
+const UnknownTemplateNote = styled.div`
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #fde68a;
+    background: #fffbeb;
+    color: #92400e;
+    font-size: 13px;
+    font-weight: 700;
+    code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+        font-size: 12px;
     }
 `;
 

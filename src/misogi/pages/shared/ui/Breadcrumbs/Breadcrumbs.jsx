@@ -11,6 +11,10 @@ function isEntrancePath(pathname) {
   return false;
 }
 
+function isAdminPath(pathname) {
+  return String(pathname || '/').startsWith('/admin');
+}
+
 function isWorkerReportPath(pathname) {
   const p = String(pathname || '/');
   // 現場の報告画面は余計なUIを増やさない（AGENTS.md ルール優先）
@@ -103,6 +107,7 @@ export default function Breadcrumbs() {
   const pathname = location?.pathname || '/';
 
   const hidden = isEntrancePath(pathname) || isWorkerReportPath(pathname);
+  const isAdmin = isAdminPath(pathname);
   const crumbs = useMemo(() => crumbsForPath(pathname), [pathname]);
   const onBack = () => {
     if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
@@ -111,6 +116,37 @@ export default function Breadcrumbs() {
     }
     navigate('/');
   };
+
+  if (isAdmin) {
+    return (
+      <nav className={`breadcrumbs breadcrumbs-admin ${hidden ? 'breadcrumbs-admin-hidden' : ''}`.trim()} aria-label="パンくず">
+        <div className="breadcrumbs-admin-left">
+          <HamburgerMenu />
+        </div>
+        {!hidden ? (
+          <>
+            <div className="breadcrumbs-main">
+              {crumbs.map((c, idx) => {
+                const isLast = idx === crumbs.length - 1;
+                return (
+                  <span key={`${c.to}-${idx}`} className="breadcrumbs-item">
+                    {isLast ? (
+                      <span className="breadcrumbs-current">{c.label}</span>
+                    ) : (
+                      <Link className="breadcrumbs-link" to={c.to}>{c.label}</Link>
+                    )}
+                    {!isLast ? <span className="breadcrumbs-sep" aria-hidden="true">/</span> : null}
+                  </span>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="breadcrumbs-main breadcrumbs-main-empty" />
+        )}
+      </nav>
+    );
+  }
 
   if (hidden) {
     return (

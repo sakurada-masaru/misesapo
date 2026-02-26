@@ -1,0 +1,85 @@
+{
+  "id": "OFFICE_ADMIN_V1",
+  "template_id": "OFFICE_ADMIN_V1",
+  "title": "事務報告書",
+  "schema_version": 1,
+  "sections": [
+    {
+      "id": "basic_info",
+      "type": "group",
+      "label": "1. 基本情報",
+      "meta_fields": [
+        { "key": "work_date", "label": "日付" },
+        { "key": "user_name", "label": "アカウント名" }
+      ],
+      "fields": [
+        { "key": "work_start_time", "label": "業務開始時刻", "type": "text" },
+        { "key": "work_end_time", "label": "業務終了時刻", "type": "text" },
+        { "key": "total_minutes", "label": "総時間（分）", "type": "number", "min": 0 }
+      ]
+    },
+    {
+      "id": "work_items",
+      "type": "group",
+      "label": "2. 今日やったこと",
+      "fields": [
+        {
+          "key": "work_items",
+          "label": "作業項目",
+          "type": "checkbox_group",
+          "options": [
+            { "value": "inquiry", "label": "問合せ対応" },
+            { "value": "schedule", "label": "日程調整" },
+            { "value": "billing", "label": "請求処理" },
+            { "value": "payment", "label": "入金確認" },
+            { "value": "order", "label": "発注/手配" },
+            { "value": "doc", "label": "書類作成" },
+            { "value": "master_update", "label": "マスタ更新" },
+            { "value": "other", "label": "その他(分類)" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "counts",
+      "type": "group",
+      "label": "3. 件数",
+      "fields": [
+        { "key": "counts.inquiry", "label": "問合せ", "type": "number", "min": 0 },
+        { "key": "counts.schedule", "label": "日程", "type": "number", "min": 0 },
+        { "key": "counts.billing", "label": "請求", "type": "number", "min": 0 },
+        { "key": "counts.payment", "label": "入金", "type": "number", "min": 0 },
+        { "key": "counts.master_update", "label": "更新", "type": "number", "min": 0 },
+        { "key": "counts.other", "label": "その他", "type": "number", "min": 0 }
+      ]
+    },
+    {
+      "id": "exceptions",
+      "type": "group",
+      "label": "4. 例外・関連課題",
+      "fields": [
+        {
+          "key": "exception_flags",
+          "label": "例外フラグ",
+          "type": "checkbox_group",
+          "options": [
+            { "value": "blocked", "label": "詰まり" },
+            { "value": "return_required", "label": "差し戻し" },
+            { "value": "urgent", "label": "至急" },
+            { "value": "unconfirmed", "label": "未確認" }
+          ]
+        },
+        { "key": "exception_note", "label": "例外メモ", "type": "textarea" },
+        { "key": "related_kadai_ids", "label": "関連課題ID", "type": "text" }
+      ]
+    },
+    {
+      "id": "attachments",
+      "type": "photos",
+      "label": "5. 添付",
+      "groups": [
+        { "key": "attachments", "label": "添付ファイル" }
+      ]
+    }
+  ]
+}

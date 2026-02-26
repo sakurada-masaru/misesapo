@@ -15,11 +15,6 @@
   padding: 16px;
 }
 
-.admin-yotei-back a {
-  color: var(--muted);
-  text-decoration: none;
-}
-
 .admin-yotei-content h1 {
   margin: 8px 0 14px;
   font-size: 1.35rem;

@@ -260,6 +260,7 @@ export default function AdminMasterBase({
   onAfterSave,
   localSearch = null,
   renderModalExtra = null,
+  modalExtraPosition = 'bottom',
   headerTabs = null,
   activeHeaderTab = '',
   onHeaderTabChange = null,
@@ -304,6 +305,7 @@ export default function AdminMasterBase({
   const [expandedRowId, setExpandedRowId] = useState('');
   const [inlineSaving, setInlineSaving] = useState({});
   const [multiSelectOverlayField, setMultiSelectOverlayField] = useState('');
+  const [selectSearchTextByField, setSelectSearchTextByField] = useState({});
   const [searchText, setSearchText] = useState('');
   const [uiDebug, setUiDebug] = useState(null);
   const [overlayRoot, setOverlayRoot] = useState(null);
@@ -410,7 +412,10 @@ export default function AdminMasterBase({
           const data = await res.json();
           next[key] = getItems(data);
         } catch (e) {
-          console.error(`failed to fetch parent source: ${key}`, e);
+          // Timeout aborts are expected during fast filter/page changes.
+          if (e?.name !== 'AbortError') {
+            console.error(`failed to fetch parent source: ${key}`, e);
+          }
           next[key] = [];
         }
       })
@@ -552,6 +557,7 @@ export default function AdminMasterBase({
   const closeModal = useCallback(() => {
     setUiDebug({ action: 'closeModal', at: new Date().toISOString() });
     setMultiSelectOverlayField('');
+    setSelectSearchTextByField({});
     setModalOpen(false);
     setEditing(null);
   }, []);
@@ -1208,8 +1214,13 @@ export default function AdminMasterBase({
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="admin-master-inline-editor-title">{pickId(editing, operationalIdKey) ? '編集' : '新規登録'}</h2>
+              {typeof renderModalExtra === 'function' && String(modalExtraPosition) === 'top' ? (
+                <div style={{ marginBottom: 12 }}>
+                  {renderModalExtra({ editing, setEditing, parents })}
+                </div>
+              ) : null}
               <div className="admin-master-modal-grid">
-              {fields.map((f) => {
+              {fields.filter((f) => f?.modalHidden !== true).map((f) => {
                 const options = f.sourceKey
                   ? (parents[f.sourceKey] || [])
                   : (typeof f.options === 'function' ? (f.options(parents || EMPTY_OBJ) || []) : (f.options || []));
@@ -1217,6 +1228,93 @@ export default function AdminMasterBase({
                   const modalColSpan = Number(f.modalColSpan || 0);
                   const valueKey = f.valueKey || f.key;
                   const labelKey = f.labelKey || 'name';
+                  const normalizedOptions = options
+                    .map((opt) => {
+                      const v = String(opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '').trim();
+                      const l = String(opt?.[labelKey] ?? opt?.label ?? v).trim();
+                      return { value: v, label: l };
+                    })
+                    .filter((opt) => opt.value);
+                  const optionLabelByValue = new Map(normalizedOptions.map((opt) => [opt.value, opt.label]));
+                  const currentValue = String(editing[f.key] || '').trim();
+                  const currentLabel = optionLabelByValue.get(currentValue) || currentValue;
+                  const applySelectValue = (value) => {
+                    setEditing((prev) => {
+                      let next = { ...prev, [f.key]: value };
+                      if (typeof f.onChange === 'function') {
+                        const patch = f.onChange({ value, prev: next });
+                        if (patch && typeof patch === 'object') next = { ...next, ...patch };
+                      }
+                      return next;
+                    });
+                  };
+                  const searchable = f.searchable === true;
+                  if (searchable) {
+                    const qRaw = selectSearchTextByField[f.key];
+                    const q = String(qRaw ?? currentLabel ?? '').trim().toLowerCase();
+                    const filtered = q
+                      ? normalizedOptions.filter((opt) => (
+                        opt.label.toLowerCase().includes(q) || opt.value.toLowerCase().includes(q)
+                      ))
+                      : normalizedOptions;
+                    const displayRows = filtered.slice(0, 80);
+                    return (
+                      <div
+                        key={f.key}
+                        className={`admin-master-field field-${String(f.key || '').replace(/[^a-zA-Z0-9_-]/g, '_')}`}
+                        style={modalColSpan > 1 ? { gridColumn: `span ${modalColSpan}` } : undefined}
+                      >
+                        <span>{f.label}</span>
+                        <div className="admin-master-search-select">
+                          <input
+                            type="text"
+                            value={String(qRaw ?? currentLabel ?? '')}
+                            placeholder={f.searchPlaceholder || '検索して選択'}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setSelectSearchTextByField((prev) => ({ ...prev, [f.key]: v }));
+                            }}
+                            disabled={f.readOnly === true}
+                          />
+                          <div className="admin-master-search-select-meta">
+                            <span>ID: {currentValue || '-'}</span>
+                            {currentValue ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectSearchTextByField((prev) => ({ ...prev, [f.key]: '' }));
+                                  applySelectValue('');
+                                }}
+                                disabled={f.readOnly === true}
+                              >
+                                解除
+                              </button>
+                            ) : null}
+                          </div>
+                          <div className="admin-master-search-select-list">
+                            {displayRows.map((opt) => (
+                              <button
+                                type="button"
+                                key={`${f.key}-${opt.value}`}
+                                className={currentValue === opt.value ? 'is-selected' : ''}
+                                onClick={() => {
+                                  applySelectValue(opt.value);
+                                  setSelectSearchTextByField((prev) => ({ ...prev, [f.key]: opt.label }));
+                                }}
+                                disabled={f.readOnly === true}
+                              >
+                                <span>{opt.label}</span>
+                                <code>{opt.value}</code>
+                              </button>
+                            ))}
+                            {displayRows.length === 0 ? (
+                              <div className="empty">一致する候補がありません</div>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
                   return (
                     <label
                       key={f.key}
@@ -1226,25 +1324,12 @@ export default function AdminMasterBase({
                       <span>{f.label}</span>
                       <select
                         value={editing[f.key] || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setEditing((prev) => {
-                            let next = { ...prev, [f.key]: value };
-                            if (typeof f.onChange === 'function') {
-                              const patch = f.onChange({ value, prev: next });
-                              if (patch && typeof patch === 'object') next = { ...next, ...patch };
-                            }
-                            return next;
-                          });
-                        }}
+                        onChange={(e) => applySelectValue(e.target.value)}
                         disabled={f.readOnly === true}
                       >
                         <option value="">選択してください</option>
-                        {options.map((opt) => {
-                          const v = opt?.[valueKey] ?? opt?.value ?? opt?.id ?? '';
-                          const l = opt?.[labelKey] ?? opt?.label ?? v;
-                          if (!v) return null;
-                          return <option key={v} value={v}>{l}</option>;
+                        {normalizedOptions.map((opt) => {
+                          return <option key={opt.value} value={opt.value}>{opt.label}</option>;
                         })}
                       </select>
                     </label>
@@ -1476,7 +1561,7 @@ export default function AdminMasterBase({
               ) : null}
               </div>
 
-              {typeof renderModalExtra === 'function' ? (
+              {typeof renderModalExtra === 'function' && String(modalExtraPosition) !== 'top' ? (
                 <div style={{ marginTop: 12 }}>
                   {renderModalExtra({ editing, setEditing, parents })}
                 </div>

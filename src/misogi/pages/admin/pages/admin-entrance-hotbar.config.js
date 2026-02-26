@@ -1,5 +1,7 @@
 /**
- * 管理エントランス用ホットバー（4枠・他エントランスと同様）
+ * 管理エントランス用ナビ設定
+ * - 管理エントランスは左サイドバー表示（JobEntranceScreen 側で admin をサイドバー化）
+ * - 他ジョブとの互換のためフォーマットは HOTBAR 設定を流用
  */
 export const ADMIN_HOTBAR = [
   {
@@ -27,6 +29,13 @@ export const ADMIN_HOTBAR = [
       { id: 'torihikisaki-touroku', label: '顧客登録(新)', path: '/admin/torihikisaki-touroku', group: '登録' },
       { id: 'torihikisaki-meibo', label: '取引先名簿', path: '/admin/torihikisaki-meibo', group: '名簿' },
       { id: 'jinzai-meibo', label: '人材名簿', path: '/admin/jinzai-meibo', group: '名簿' },
+    ]
+  },
+  {
+    id: 'masters',
+    role: 'target',
+    label: 'マスタ情報',
+    subItems: [
       { id: 'master-torihikisaki', label: '取引先マスタ', path: '/admin/master/torihikisaki', group: 'マスタ(顧客)' },
       { id: 'master-yagou', label: '屋号マスタ', path: '/admin/master/yagou', group: 'マスタ(顧客)' },
       { id: 'master-tenpo', label: '店舗マスタ', path: '/admin/master/tenpo', group: 'マスタ(顧客)' },

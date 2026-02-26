@@ -146,6 +146,71 @@
   line-height: 1.45;
 }
 
+.admin-master-search-select {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-master-search-select-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: #9aa6c5;
+}
+
+.admin-master-search-select-meta button {
+  height: 26px;
+  padding: 0 10px;
+}
+
+.admin-master-search-select-list {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+  max-height: 180px;
+  overflow: auto;
+  display: grid;
+}
+
+.admin-master-search-select-list button {
+  border: 0;
+  border-bottom: 1px solid #334155;
+  background: transparent;
+  color: #e2e8f0;
+  text-align: left;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.admin-master-search-select-list button:last-child {
+  border-bottom: 0;
+}
+
+.admin-master-search-select-list button code {
+  font-size: 11px;
+  color: #93c5fd;
+}
+
+.admin-master-search-select-list button:hover {
+  background: rgba(59, 130, 246, 0.14);
+}
+
+.admin-master-search-select-list button.is-selected {
+  background: rgba(59, 130, 246, 0.22);
+}
+
+.admin-master-search-select-list .empty {
+  padding: 10px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
 .admin-master-header-actions .primary,
 .admin-master-modal-actions .primary {
   background: #2563eb;
@@ -1451,6 +1516,36 @@
 [data-theme="light"] .admin-master-toolbar label,
 [data-theme="light"] .admin-master-modal-grid label {
   color: #000000;
+}
+
+[data-theme="light"] .admin-master-search-select-meta {
+  color: #475569;
+}
+
+[data-theme="light"] .admin-master-search-select-list {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+[data-theme="light"] .admin-master-search-select-list button {
+  border-bottom-color: #e2e8f0;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-search-select-list button code {
+  color: #2563eb;
+}
+
+[data-theme="light"] .admin-master-search-select-list button:hover {
+  background: #eff6ff;
+}
+
+[data-theme="light"] .admin-master-search-select-list button.is-selected {
+  background: #dbeafe;
+}
+
+[data-theme="light"] .admin-master-search-select-list .empty {
+  color: #64748b;
 }
 
 [data-theme="light"] .admin-master-error {

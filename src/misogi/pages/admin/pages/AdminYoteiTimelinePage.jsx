@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
-import GlobalBackButton from '../../shared/ui/BackButton/GlobalBackButton';
 // Hamburger / admin-top are provided by GlobalNav.
 
 function isLocalUiHost() {
@@ -1208,9 +1207,6 @@ export default function AdminYoteiTimelinePage() {
         <div className={`admin-yotei-timeline-page ${activeCapacityClass}`}>
             <div className="admin-yotei-timeline-content">
                 <header className="yotei-head">
-                    <div className="admin-top-left">
-                        <GlobalBackButton />
-                    </div>
                     <h1>清掃管制スケジュール (16:00-翌04:00 / 04:00-16:00){isDemo ? ' [DEMO]' : ''}</h1>
                     <div className="yotei-head-actions">
                         <div className="yotei-head-nav">

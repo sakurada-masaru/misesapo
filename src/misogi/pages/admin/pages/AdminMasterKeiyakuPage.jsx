@@ -2,12 +2,6 @@ import React from 'react';
 import AdminMasterBase from './AdminMasterBase';
 import { formatMasterDateTime } from './masterDateTime';
 
-function formatYen(v, row) {
-  const n = Number(v ?? row?.price ?? 0);
-  if (!Number.isFinite(n) || n <= 0) return '-';
-  return `¥${Math.trunc(n).toLocaleString()}`;
-}
-
 function txt(v) {
   const s = String(v ?? '').trim();
   return s || '-';
@@ -23,6 +17,19 @@ function toNameMap(list, idKey = 'id') {
   return m;
 }
 
+function buildPartyNameParts({ torihikisakiName, yagouName, tenpoName }) {
+  return [
+    String(torihikisakiName || '').trim(),
+    String(yagouName || '').trim(),
+    String(tenpoName || '').trim(),
+  ].filter(Boolean);
+}
+
+function buildPartyNameText(parts) {
+  if (!Array.isArray(parts) || parts.length === 0) return '';
+  return parts.join(' / ');
+}
+
 function renderKeiyakuPreview({ row, parents }) {
   const toriMap = toNameMap(parents?.torihikisaki, 'torihikisaki_id');
   const yagouMap = toNameMap(parents?.yagou, 'yagou_id');
@@ -32,9 +39,10 @@ function renderKeiyakuPreview({ row, parents }) {
   const yagouName = yagouMap.get(String(row?.yagou_id || '').trim()) || row?.yagou_name || '';
   const tenpoName = tenpoMap.get(String(row?.tenpo_id || '').trim()) || row?.tenpo_name || '';
 
+  const partyParts = buildPartyNameParts({ torihikisakiName, yagouName, tenpoName });
   const storeName = txt(row?.store_name || tenpoName);
   const storeAddress = txt(row?.store_address || row?.address);
-  const pricing = txt(row?.pricing) !== '-' ? txt(row?.pricing) : '料金表または見積書に定めるとおりとします。';
+  const pricing = txt(row?.pricing) !== '-' ? txt(row?.pricing) : '別途料金表、または見積書に定めるとおりとする';
   const cancelRule = txt(row?.cancel_rule) !== '-' ? txt(row?.cancel_rule) : '別途定めるとおりとします。';
   const paymentMethod = txt(row?.payment_method) !== '-' ? txt(row?.payment_method) : '請求書を送付いたします。指定の口座に当月締め翌月末までに支払いください。';
   const validTerm = txt(row?.valid_term) !== '-' ? txt(row?.valid_term) : '原則利用開始日から1年間（自動更新）';
@@ -115,7 +123,7 @@ function renderKeiyakuPreview({ row, parents }) {
             <tr>
               <td style={labelTd}>個人／法人名</td>
               <td style={{ ...td, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <span>{norm(row?.company_name)}</span>
+                <span>{norm(row?.name || row?.company_name || buildPartyNameText(partyParts))}</span>
                 <span>{norm(row?.company_stamp, '㊞')}</span>
               </td>
             </tr>
@@ -159,7 +167,6 @@ function renderKeiyakuPreview({ row, parents }) {
               <td style={labelTd}>料金</td>
               <td style={td}>
                 {pricing}
-                {txt(row?.price) !== '-' ? <span style={{ marginLeft: 8 }}>（{formatYen(row?.price, row)}）</span> : null}
               </td>
             </tr>
 
@@ -210,6 +217,7 @@ function renderKeiyakuPreview({ row, parents }) {
 export default function AdminMasterKeiyakuPage() {
   const [previewRow, setPreviewRow] = React.useState(null);
   const [previewParents, setPreviewParents] = React.useState({});
+  const [linkQuery, setLinkQuery] = React.useState('');
 
   const openPreview = React.useCallback((row, ctx = {}) => {
     setPreviewRow(row || null);
@@ -219,6 +227,163 @@ export default function AdminMasterKeiyakuPage() {
   const closePreview = React.useCallback(() => {
     setPreviewRow(null);
   }, []);
+
+  const renderUnifiedLinkSearch = React.useCallback(({ editing, setEditing, parents }) => {
+    const toriItems = Array.isArray(parents?.torihikisaki) ? parents.torihikisaki : [];
+    const yagouItems = Array.isArray(parents?.yagou) ? parents.yagou : [];
+    const tenpoItems = Array.isArray(parents?.tenpo) ? parents.tenpo : [];
+
+    const toriNameById = new Map(
+      toriItems
+        .map((it) => [String(it?.torihikisaki_id || it?.id || '').trim(), String(it?.name || '').trim()])
+        .filter(([id]) => Boolean(id))
+    );
+    const yagouMetaById = new Map(
+      yagouItems
+        .map((it) => [
+          String(it?.yagou_id || it?.id || '').trim(),
+          {
+            name: String(it?.name || '').trim(),
+            torihikisaki_id: String(it?.torihikisaki_id || '').trim(),
+          },
+        ])
+        .filter(([id]) => Boolean(id))
+    );
+
+    const candidates = [];
+    tenpoItems.forEach((it) => {
+      const tenpoId = String(it?.tenpo_id || it?.id || '').trim();
+      if (!tenpoId) return;
+      const tenpoName = String(it?.name || '').trim();
+      const yagouId = String(it?.yagou_id || '').trim();
+      const toriId = String(it?.torihikisaki_id || '').trim();
+      const yagouName = String(yagouMetaById.get(yagouId)?.name || '').trim();
+      const toriName = String(toriNameById.get(toriId) || '').trim();
+      const label = [toriName || '取引先未設定', yagouName || '屋号未設定', tenpoName || tenpoId].join(' / ');
+      candidates.push({
+        key: `tenpo:${tenpoId}`,
+        label,
+        searchBlob: [label, tenpoId, tenpoName, yagouId, yagouName, toriId, toriName].join(' ').toLowerCase(),
+        torihikisaki_id: toriId,
+        torihikisaki_name: toriName,
+        yagou_id: yagouId,
+        yagou_name: yagouName,
+        tenpo_id: tenpoId,
+        tenpo_name: tenpoName,
+      });
+    });
+
+    yagouItems.forEach((it) => {
+      const yagouId = String(it?.yagou_id || it?.id || '').trim();
+      if (!yagouId) return;
+      const yagouName = String(it?.name || '').trim();
+      const toriId = String(it?.torihikisaki_id || '').trim();
+      const toriName = String(toriNameById.get(toriId) || '').trim();
+      const label = [toriName || '取引先未設定', yagouName || yagouId, '（屋号指定）'].join(' / ');
+      candidates.push({
+        key: `yagou:${yagouId}`,
+        label,
+        searchBlob: [label, yagouId, yagouName, toriId, toriName].join(' ').toLowerCase(),
+        torihikisaki_id: toriId,
+        torihikisaki_name: toriName,
+        yagou_id: yagouId,
+        yagou_name: yagouName,
+        tenpo_id: '',
+        tenpo_name: '',
+      });
+    });
+
+    toriItems.forEach((it) => {
+      const toriId = String(it?.torihikisaki_id || it?.id || '').trim();
+      if (!toriId) return;
+      const toriName = String(it?.name || '').trim();
+      const label = [toriName || toriId, '（取引先指定）'].join(' / ');
+      candidates.push({
+        key: `tori:${toriId}`,
+        label,
+        searchBlob: [label, toriId, toriName].join(' ').toLowerCase(),
+        torihikisaki_id: toriId,
+        torihikisaki_name: toriName,
+        yagou_id: '',
+        yagou_name: '',
+        tenpo_id: '',
+        tenpo_name: '',
+      });
+    });
+
+    const q = String(linkQuery || '').trim().toLowerCase();
+    const shouldShowResults = q.length > 0;
+    const displayRows = shouldShowResults
+      ? candidates.filter((c) => c.searchBlob.includes(q)).slice(0, 80)
+      : [];
+
+    const selectedSummary = [
+      String(editing?.torihikisaki_id || '').trim() || '-',
+      String(editing?.yagou_id || '').trim() || '-',
+      String(editing?.tenpo_id || '').trim() || '-',
+    ].join(' / ');
+
+    return (
+      <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 10, background: 'rgba(2,6,23,0.25)' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>統合検索（取引先 / 屋号 / 店舗）</div>
+        <input
+          type="text"
+          value={linkQuery}
+          onChange={(e) => setLinkQuery(e.target.value)}
+          placeholder="名称 or ID で横断検索（例: ニーハオ / TORI# / YAGO# / TENPO#）"
+          style={{ width: '100%' }}
+        />
+        <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
+          現在選択ID: {selectedSummary}
+        </div>
+        {shouldShowResults ? (
+          <div style={{ marginTop: 8, maxHeight: 220, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: 8 }}>
+            {displayRows.map((row) => (
+              <button
+                key={row.key}
+                type="button"
+                onClick={() => {
+                  setEditing((prev) => ({
+                    ...prev,
+                    name: buildPartyNameText(buildPartyNameParts({
+                      torihikisakiName: row.torihikisaki_name,
+                      yagouName: row.yagou_name,
+                      tenpoName: row.tenpo_name,
+                    })) || prev?.name || '',
+                    torihikisaki_id: row.torihikisaki_id,
+                    torihikisaki_name: row.torihikisaki_name,
+                    yagou_id: row.yagou_id,
+                    yagou_name: row.yagou_name,
+                    tenpo_id: row.tenpo_id,
+                    tenpo_name: row.tenpo_name,
+                  }));
+                  setLinkQuery('');
+                }}
+                style={{
+                  width: '100%',
+                  border: 0,
+                  borderBottom: '1px solid var(--line)',
+                  background: 'transparent',
+                  color: 'var(--text)',
+                  textAlign: 'left',
+                  padding: '8px 10px',
+                  display: 'grid',
+                  gap: 2,
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ fontSize: 11, color: 'var(--muted)' }}>検索結果</div>
+                <div>{row.label}</div>
+              </button>
+            ))}
+            {displayRows.length === 0 ? (
+              <div style={{ padding: 10, fontSize: 12, color: 'var(--muted)' }}>一致する候補がありません</div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    );
+  }, [linkQuery]);
 
   return (
     <>
@@ -236,8 +401,6 @@ export default function AdminMasterKeiyakuPage() {
           'yagou_id',
           'tenpo_id',
           'start_date',
-          'price',
-          'status',
           'touroku_at',
         ]}
         localSearch={{
@@ -252,7 +415,7 @@ export default function AdminMasterKeiyakuPage() {
             'yagou_name',
             'torihikisaki_id',
             'torihikisaki_name',
-            'company_name',
+            'company_address',
             'contact_person',
             'phone',
             'email',
@@ -279,13 +442,26 @@ export default function AdminMasterKeiyakuPage() {
           yagou: { resource: 'yagou', query: { limit: 8000, jotai: 'yuko' } },
           tenpo: { resource: 'tenpo', query: { limit: 20000, jotai: 'yuko' } },
         }}
+        fixedNewValues={{
+          status: 'active',
+          pricing: '別途料金表、または見積書に定めるとおりとする',
+        }}
+        renderModalExtra={renderUnifiedLinkSearch}
+        modalExtraPosition="top"
         fields={[
-          { key: 'name', label: '契約名', required: true, modalColSpan: 2 },
+          { key: 'application_date', label: '申込日' },
+          { key: 'start_date', label: '利用開始日', columnLabel: '利用開始日' },
+          { key: 'name', label: '個人/法人名', required: true, modalColSpan: 2 },
+          { key: 'company_address', label: '所在地/本社所在地', modalColSpan: 2 },
+          { key: 'contact_person', label: '担当者' },
+          { key: 'phone', label: '電話番号' },
+          { key: 'email', label: 'メール' },
           {
             key: 'torihikisaki_id',
             label: '取引先',
             columnLabel: '取引先',
             type: 'select',
+            modalHidden: true,
             sourceKey: 'torihikisaki',
             valueKey: 'torihikisaki_id',
             labelKey: 'name',
@@ -295,6 +471,7 @@ export default function AdminMasterKeiyakuPage() {
             label: '屋号',
             columnLabel: '屋号',
             type: 'select',
+            modalHidden: true,
             sourceKey: 'yagou',
             valueKey: 'yagou_id',
             labelKey: 'name',
@@ -304,30 +481,12 @@ export default function AdminMasterKeiyakuPage() {
             label: '店舗',
             columnLabel: '店舗',
             type: 'select',
+            modalHidden: true,
             sourceKey: 'tenpo',
             valueKey: 'tenpo_id',
             labelKey: 'name',
           },
-          { key: 'application_date', label: '申込日' },
-          { key: 'start_date', label: '契約開始日', columnLabel: '開始日' },
-          { key: 'price', label: '契約金額', columnLabel: '金額', type: 'number', format: formatYen },
-          {
-            key: 'status',
-            label: '契約状態',
-            type: 'select',
-            defaultValue: 'active',
-            options: [
-              { value: 'active', label: 'active' },
-              { value: 'inactive', label: 'inactive' },
-              { value: 'draft', label: 'draft' },
-            ],
-            valueKey: 'value',
-            labelKey: 'label',
-          },
-          { key: 'company_name', label: '契約先名' },
-          { key: 'contact_person', label: '担当者' },
-          { key: 'phone', label: '電話番号' },
-          { key: 'email', label: 'メール' },
+          { key: 'pricing', label: '料金', modalColSpan: 2, readOnly: true },
           { key: 'payment_method', label: '支払方法', type: 'textarea', rows: 3, modalColSpan: 2 },
           { key: 'valid_term', label: '有効期間', type: 'textarea', rows: 3, modalColSpan: 2 },
           { key: 'cancel_rule', label: 'キャンセル条件', type: 'textarea', rows: 3, modalColSpan: 2 },

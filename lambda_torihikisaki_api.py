@@ -16,7 +16,7 @@ HEADERS = {
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
 }
 
-ALLOWED_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko", "jinzai", "service", "kadai", "kanri_log", "keiyaku", "zaiko", "zaiko_hacchu"}
+ALLOWED_COLLECTIONS = {"torihikisaki", "yagou", "tenpo", "souko", "jinzai", "service", "kadai", "kanri_log", "keiyaku", "zaiko", "zaiko_hacchu", "admin_chat"}
 
 PK_MAP = {
     "torihikisaki": "torihikisaki_id",
@@ -30,6 +30,7 @@ PK_MAP = {
     "keiyaku": "keiyaku_id",
     "zaiko": "zaiko_id",
     "zaiko_hacchu": "hacchu_id",
+    "admin_chat": "chat_id",
 }
 
 # 子テーブルの最低限親キー
@@ -52,6 +53,7 @@ ID_PREFIX = {
     "keiyaku": "KEIYAKU",
     "zaiko": "ZAIKO",
     "zaiko_hacchu": "HACCHU",
+    "admin_chat": "CHAT",
 }
 
 # 登録情報（取引先/屋号/店舗/倉庫）は連番採番にする。
@@ -70,6 +72,7 @@ TABLE_MAP = {
     "keiyaku": os.environ.get("TABLE_KEIYAKU", "keiyaku"),
     "zaiko": os.environ.get("TABLE_ZAIKO", "zaiko"),
     "zaiko_hacchu": os.environ.get("TABLE_ZAIKO_HACCHU", "zaiko_hacchu"),
+    "admin_chat": os.environ.get("TABLE_ADMIN_CHAT", "admin_chat"),
 }
 
 TENPO_KARTE_TABLE = os.environ.get("TABLE_TENPO_KARTE", "tenpo_karte")
@@ -387,6 +390,13 @@ def _build_filter(collection: str, q: dict):
 
     if collection == "zaiko_hacchu":
         for k in ["status", "zaiko_id", "supplier_name", "ordered_by"]:
+            v = q.get(k)
+            if v:
+                k_expr = Attr(k).eq(v)
+                expr = k_expr if expr is None else expr & k_expr
+
+    if collection == "admin_chat":
+        for k in ["room", "sender_id", "source"]:
             v = q.get(k)
             if v:
                 k_expr = Attr(k).eq(v)

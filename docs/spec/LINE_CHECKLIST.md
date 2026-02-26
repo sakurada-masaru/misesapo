@@ -4,6 +4,27 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 ---
 
+## HamburgerMenu Maximum Update Depth Fix (2026-02-26)
+
+- [x] `HamburgerMenu.jsx` の `filteredLinks` を `useMemo` 化し、毎レンダーで新配列が生成されないよう修正
+- [x] セクション初期化 `useEffect` で同値 state 更新を抑止（`openSections` 差分なしなら `prev` を返す）
+- [x] アクティブセクション展開 `useEffect` で no-op 更新を抑止（既に開いている場合は更新しない）
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Sidebar Visual Alignment (Entrance / Page) (2026-02-26)
+
+- [x] `hamburger-menu.css` を `job-entrance-sidebar` と同じ情報設計（幅・階層・アクティブ表示）に統一
+- [x] ライト/ダーク配色をエントランス側のトーンに合わせて調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Sidebar Settings Placement (2026-02-26)
+
+- [x] `JobEntranceScreen.jsx` のサイドバー下部に「設定」セクションを追加
+- [x] 設定セクションに `LanguageSwitcher`（言語）と `ThemeToggle`（ダーク/ライト）を追加
+- [x] `components.css` でサイドバー内設定セクションのライト/ダーク両対応スタイルを追加
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+
 ## Master Registration Integrity Check (2026-02-25)
 
 - [x] `lambda_torihikisaki_api.py` で `name` / 親IDの空白のみ入力を作成時に拒否
@@ -81,6 +102,13 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 管理報告一覧の日表示を `/admin/work-reports` 優先取得に変更（`states` に `approved/archived` も含める）
 - [x] 互換のため `/houkoku` 取得結果を日表示でマージ（重複除外）する
 - [x] 報告詳細を `/admin/work-reports/{id}` 優先＋`/houkoku/{id}` フォールバックに変更
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Houkoku Template Resolve Fix (2026-02-26)
+
+- [x] `OFFICE_ADMIN_V1` テンプレートを追加し、事務報告を専用テンプレートで表示
+- [x] `ENGINEERING_V1` テンプレートを追加し、開発報告を専用テンプレートで表示
+- [x] `getTemplateById` に `OFFICE_*` / `ENGINEERING_*` / `DEV_*` のフォールバック解決を追加
 - [x] `npm -C src/misogi run build` でビルド成功を確認
 
 ## Customer Registration Contract Tab (2026-02-24)
@@ -810,4 +838,99 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `torihikisaki / yagou / tenpo` 一覧のデフォルト順をID昇順に設定
 - [x] 列ヘッダクリックで昇順/降順を切替できる列ソートを追加
 - [x] ソートUI（矢印・アクティブ表示）をライト/ダークテーマ両対応で追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yakusoku Keiyaku Optional + Reference Sync Fix (2026-02-26)
+
+- [x] `teiki` 新規作成時の `keiyaku` 必須バリデーションを解除
+- [x] `keiyaku` 選択時に `keiyaku_name / keiyaku_start_date` を確実に同期
+- [x] 現場確定時（候補選択・一致確定）に契約参照を同期し、`tenpo` への反映を安定化
+- [x] 契約開始日は `start_date` 優先、未設定時は `application_date` をフォールバック
+
+## Keiyaku Edit: Searchable Parent Selectors (2026-02-26)
+
+- [x] `AdminMasterBase` の `select` フィールドに検索選択UI（候補フィルタ/選択/解除）を追加
+- [x] `keiyaku` 編集の `取引先 / 屋号 / 店舗` フィールドで検索選択を有効化
+- [x] ライト/ダークテーマ両方で検索選択UIのスタイルを追加
+
+## Keiyaku Edit: Unified Cross-Search (2026-02-26)
+
+- [x] `keiyaku` モーダルに `取引先 / 屋号 / 店舗` 横断の統合検索を追加
+- [x] 統合検索の候補選択で `torihikisaki_id / yagou_id / tenpo_id` を一括反映
+- [x] 個別の検索付きセレクト依存を外し、統合検索中心で選択できる構成に変更
+
+## Keiyaku Form Label/Field Cleanup (2026-02-26)
+
+- [x] 統合検索選択時に `name`（個人/法人名）へ自動反映
+- [x] `契約名` ラベルを `個人/法人名` に変更
+- [x] 候補ラベルを `検索結果` 表記へ統一
+- [x] `契約先名` フィールドを削除
+- [x] `契約開始日` 表記を `利用開始日` に変更
+- [x] 料金欄を `別途料金表、または見積書に定めるとおりとする` の固定文言へ統一
+- [x] `所在地/本社所在地` フィールドを追加
+
+## Keiyaku Unified Search UX Tuning (2026-02-26)
+
+- [x] 統合検索は入力時のみ検索結果を表示（デフォルト非表示）
+- [x] 検索結果選択時に検索入力をリセットし、結果リストを自動クローズ
+
+## Admin Entrance: Sidebar Dashboard Navigation (2026-02-26)
+
+- [x] 管理エントランス(`job=admin`)のみ HOTバー/サブHOTバー表示を無効化
+- [x] 左サイドバー（PC常時表示 / スマホオーバーレイ）で管理リンク群を表示
+- [x] サイドバーは既存 `ADMIN_HOTBAR` の構成をそのままセクション・グループ化して再利用
+- [x] 現在ルートに応じたアクティブ表示を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Narrow Sidebar + Accordion Sections (2026-02-26)
+
+- [x] サイドバー幅を縮小（PC 236px / モバイル最大80vw）
+- [x] 大カテゴリ（報告/予定/情報/運用ツール）を開閉式アコーディオンに変更
+- [x] 現在ルートを含むカテゴリは自動展開
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Master Info Category Split (2026-02-26)
+
+- [x] 管理サイドバーの「情報」からマスタ系リンクを分離
+- [x] 新規大カテゴリ「マスタ情報」を追加し、マスタ系リンクを集約
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Sidebar Visual Simplification (2026-02-26)
+
+- [x] 枠付きカード表現を削除し、テキストナビ中心の軽量デザインへ変更
+- [x] 階層を「大カテゴリ > 小カテゴリ > リンク」のインデントと補助線で明確化
+- [x] 開閉アイコンを `▸ / ▾` へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Light/Dark Theme Contrast Tuning (2026-02-26)
+
+- [x] サイドバーのライトモード配色（背景/文字/hover/active）を明示設定
+- [x] サイドバーのダークモード配色（補助線/hover/active）を明示設定
+- [x] ライト/ダークで階層視認性を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Right Chat Overlay (2026-02-26)
+
+- [x] 管理エントランス右側にチャットオーバーレイUIを追加（PC固定表示 / スマホトグル）
+- [x] 5秒ポーリングで `admin_chat` を取得し、リアルタイム更新
+- [x] メッセージ投稿（最大280文字）と送信エラー表示を追加
+- [x] ライト/ダークテーマ両対応のチャット配色を追加
+- [x] `api-master` Lambda に `admin_chat` コレクション定義を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` で構文確認
+
+## Admin: Back/Hamburger Moved To Sidebar (2026-02-26)
+
+- [x] `/admin` 配下のみ上部Breadcrumbsから `戻る` / `ハンバーガー` を除去
+- [x] 左固定サイドバーに `戻る` と `ハンバーガーメニュー` を配置
+- [x] 管理エントランス（`/admin/entrance`）でも同サイドバー表示に統一
+- [x] モバイルではサイドバーをコンパクト化（戻るは矢印表示）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Global Hamburger: Sidebar Menu Content (2026-02-26)
+
+- [x] 共通 `HamburgerMenu` の中身をサイドバー形式（カテゴリ開閉＋リンク）に変更
+- [x] 管理ルートでは `ADMIN_HOTBAR` 構成を流用して階層表示
+- [x] 非管理ルートでもジョブ切替をサイドバー形式で表示
+- [x] 現在ルートのアクティブ表示を追加
 - [x] `npm -C src/misogi run build` でビルド確認
