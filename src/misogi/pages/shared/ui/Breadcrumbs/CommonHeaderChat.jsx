@@ -39,6 +39,17 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function readStoredUserProfile() {
+  try {
+    const raw = localStorage.getItem('cognito_user');
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === 'object' ? obj : {};
+  } catch {
+    return {};
+  }
+}
+
 function asItems(data) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.items)) return data.items;
@@ -116,19 +127,28 @@ export default function CommonHeaderChat() {
   });
 
   const senderName = useMemo(() => {
+    const stored = readStoredUserProfile();
     const email = String(user?.email || user?.attributes?.email || '').trim();
     const display = String(
       user?.name
       || user?.display_name
       || user?.full_name
+      || user?.attributes?.name
+      || user?.attributes?.preferred_username
       || user?.nickname
       || user?.username
+      || stored?.name
+      || stored?.display_name
+      || stored?.full_name
+      || stored?.attributes?.name
+      || stored?.attributes?.preferred_username
+      || stored?.username
       || user?.id
       || ''
     ).trim();
-    if (display) return display;
+    if (display && !/^unknown$/i.test(display)) return display;
     if (email.includes('@')) return email.split('@')[0];
-    return email || 'User';
+    return email || '名無し';
   }, [user]);
 
   const senderId = useMemo(() => String(
@@ -235,6 +255,7 @@ export default function CommonHeaderChat() {
         room: CHAT_ROOM,
         name: titleBase.length > 24 ? `${titleBase.slice(0, 24)}…` : titleBase,
         sender_name: senderName,
+        sender_display_name: senderName,
         sender_id: senderId,
         message: msg,
         source: 'common_header_chat',
@@ -403,13 +424,23 @@ export default function CommonHeaderChat() {
           ) : (
             items.map((row) => {
               const mine = senderId && String(row?.sender_id || '') === senderId;
+              const senderDisplayName = String(
+                row?.sender_name
+                || row?.sender_display_name
+                || row?.updated_by_name
+                || row?.created_by_name
+                || row?.sender_id
+                || row?.updated_by
+                || row?.created_by
+                || '名無し'
+              ).trim();
               const rowAttachments = asRowAttachments(row);
               const hasAttachment = rowAttachments.length > 0;
               const dataPayload = row?.data_payload && typeof row.data_payload === 'object' ? row.data_payload : null;
               return (
                 <article key={String(row?.chat_id || row?.created_at || Math.random())} className={`header-chat-item ${mine ? 'mine' : ''}`}>
                   <header>
-                    <span className="who">{String(row?.sender_name || 'User')}</span>
+                    <span className="who">{senderDisplayName}</span>
                     <span className="at">{toDisplayDateTime(row?.created_at)}</span>
                   </header>
                   {String(row?.message || '').trim() ? (
@@ -426,14 +457,16 @@ export default function CommonHeaderChat() {
                         return (
                           <div key={`${attName}-${idx}`} className="attachment-row">
                             {isImageContentType(attType) ? (
-                              <a href={attUrl} target="_blank" rel="noreferrer">
+                              <a className="attachment-thumb" href={attUrl} target="_blank" rel="noreferrer">
                                 <img src={attUrl} alt={attName} loading="lazy" />
                               </a>
                             ) : null}
-                            <a className="attachment-link" href={attUrl} target="_blank" rel="noreferrer">
-                              {attName}
-                            </a>
-                            {attSize ? <span className="attachment-meta">{attSize}</span> : null}
+                            <div className="attachment-info">
+                              <a className="attachment-link" href={attUrl} target="_blank" rel="noreferrer">
+                                {attName}
+                              </a>
+                              {attSize ? <span className="attachment-meta">{attSize}</span> : null}
+                            </div>
                           </div>
                         );
                       })}

@@ -64,6 +64,19 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `python3 -m py_compile lambda_torihikisaki_api.py` 成功
 - [x] `npm -C src/misogi run build` 成功
 
+## Entrance Chat Unification (2026-02-26)
+
+- [x] `JobEntranceScreen.jsx` の管理エントランス専用チャット（`admin_entrance`）を廃止
+- [x] 管理エントランスで `CommonHeaderChat` を利用するよう統一
+- [x] エントランス用にチャット呼び出しボタン位置を `components.css` で固定
+- [x] `npm -C src/misogi run build` 成功
+
+## Common Chat S3 Presign Stability (2026-02-26)
+
+- [x] `lambda_torihikisaki_api.py` の S3 client を `region=ap-northeast-1` + `signature_version=s3v4` 固定化
+- [x] S3 presigned URL のグローバル endpoint/古い署名形式による CORS 失敗リスクを低減
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` 成功
+
 
 ## Master Registration Integrity Check (2026-02-25)
 

@@ -736,6 +736,19 @@ button:disabled {
   justify-content: center;
 }
 
+.job-entrance-common-chat-anchor .breadcrumbs-chat-trigger {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(58px + env(safe-area-inset-right));
+  z-index: 1400;
+}
+
+@media (min-width: 1024px) {
+  .job-entrance-common-chat-anchor .breadcrumbs-chat-trigger {
+    right: calc(10px + env(safe-area-inset-right));
+  }
+}
+
 .job-entrance-chat-backdrop {
   position: fixed;
   inset: 0;

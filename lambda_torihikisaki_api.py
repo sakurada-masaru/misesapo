@@ -7,6 +7,7 @@ from urllib.parse import unquote
 
 import boto3
 from boto3.dynamodb.conditions import Attr
+from botocore.config import Config
 
 
 HEADERS = {
@@ -80,7 +81,15 @@ TENPO_KARTE_TABLE = os.environ.get("TABLE_TENPO_KARTE", "tenpo_karte")
 dynamodb = boto3.resource("dynamodb")
 TABLES = {k: dynamodb.Table(v) for k, v in TABLE_MAP.items()}
 TENPO_KARTE = dynamodb.Table(TENPO_KARTE_TABLE)
-s3 = boto3.client("s3")
+AWS_REGION = os.environ.get("AWS_REGION", "ap-northeast-1")
+s3 = boto3.client(
+    "s3",
+    region_name=AWS_REGION,
+    config=Config(
+        signature_version="s3v4",
+        s3={"addressing_style": "virtual"},
+    ),
+)
 STORAGE_BUCKET = os.environ.get("STORAGE_BUCKET", "")
 CHAT_STORAGE_BUCKET = os.environ.get("CHAT_STORAGE_BUCKET", "").strip() or STORAGE_BUCKET
 
