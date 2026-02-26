@@ -1388,6 +1388,42 @@
   padding: 4px 0;
 }
 
+.admin-master-page.admin-admin-log-page .admin-log-submitter-list {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(71, 85, 105, 0.55);
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-submitter-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-submitter-chip {
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-submitter-chip.active {
+  color: #eff6ff;
+  background: rgba(37, 99, 235, 0.35);
+  border-color: #2563eb;
+}
+
 .admin-master-page.admin-admin-log-page .admin-log-date-inline {
   display: flex;
   align-items: center;
@@ -1965,6 +2001,69 @@
 
 [data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-readonly-note {
   color: #475569;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-date-strip {
+  border-color: #cbd5e1;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-monthly-list {
+  border-top-color: #d5deea;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-submitter-list {
+  border-top-color: #d5deea;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-monthly-list-head {
+  color: #334155;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-date-strip-head {
+  color: #334155;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-month-switch button,
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-monthly-chip {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-submitter-chip {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-month-switch button:hover,
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-monthly-chip:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #0b3b87;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-submitter-chip:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #0b3b87;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-monthly-chip.active {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-submitter-chip.active {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-monthly-empty {
+  color: #64748b;
 }
 
 [data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-editor-tools button {

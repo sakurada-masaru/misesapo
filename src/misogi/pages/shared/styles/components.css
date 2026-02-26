@@ -136,6 +136,17 @@ button:disabled {
   --accent-glow: var(--job-admin-glow);
 }
 
+[data-theme="light"] .report-page[data-job="admin"] {
+  --accent-color: #000;
+  --accent-glow: transparent;
+}
+
+[data-theme="light"] .report-page[data-job="admin"] .visualizer-container .core-circle,
+[data-theme="light"] .report-page[data-job="admin"] .visualizer-container.active .core-circle {
+  box-shadow: none;
+  filter: none;
+}
+
 .report-page[data-job="dev"] {
   --accent-color: var(--job-dev);
   --accent-glow: var(--job-dev-glow);
@@ -346,6 +357,20 @@ button:disabled {
 .job-entrance-page[data-job="admin"] {
   --accent-color: var(--job-admin);
   --accent-glow: var(--job-admin-glow);
+}
+
+[data-theme="light"] .job-entrance-page[data-job="admin"] {
+  --accent-color: #000;
+  --accent-glow: transparent;
+  background:
+    radial-gradient(800px 500px at 50% 40%, rgba(0, 0, 0, 0.08), transparent 55%),
+    var(--bg-gradient);
+}
+
+[data-theme="light"] .job-entrance-page[data-job="admin"] .visualizer-container .core-circle,
+[data-theme="light"] .job-entrance-page[data-job="admin"] .visualizer-container.active .core-circle {
+  box-shadow: none;
+  filter: none;
 }
 
 .job-entrance-page[data-job="cleaning"] {

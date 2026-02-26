@@ -11,6 +11,60 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] アクティブセクション展開 `useEffect` で no-op 更新を抑止（既に開いている場合は更新しない）
 - [x] `npm -C src/misogi run build` でビルド成功を確認
 
+## Admin Light Visualizer Black Tone (2026-02-26)
+
+- [x] `components.css` でライトモード時の `data-job="admin"` に限定して `--accent-color` を黒へ上書き
+- [x] 同上で `--accent-glow` を透明化し、余計な光彩（青み含む）を抑止
+- [x] 管理ライトモード限定で `Visualizer` コアの `box-shadow` と `filter(blur)` を無効化
+- [x] 管理ライトモード限定でエントランス背景の青系グラデーションを黒系へ置換
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## February Daily PR Report Document (2026-02-26)
+
+- [x] `docs/spec/PR_DAILY_REPORT_2026_02.md` を新規作成
+- [x] `2026-02-01` 起点で日付順に主要実装を要約
+- [x] 未完タスク（2026-02-15起票）を継続項目として明記
+
+## Admin Log Modal Field Order Tuning (2026-02-26)
+
+- [x] `AdminAdminLogPage.jsx` の新規登録モーダルで `日誌本文` と `明日の予定` を縦積み表示へ変更
+- [x] `明日の予定` が `日誌本文` の直下に出るよう `modalColSpan` を調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Diary Backfill Script (2026-02-26)
+
+- [x] `scripts/create_kanri_logs_from_pr_report.py` を追加（PR日次報告から `kanri_log` を自動生成）
+- [x] 2/17〜2/25 の投入を実行し、重複日付は自動スキップで保護
+- [x] `python3 -m py_compile scripts/create_kanri_logs_from_pr_report.py` で構文確認
+
+## Admin Diary Date Strip Light Theme Tuning (2026-02-26)
+
+- [x] `admin-log-date-strip` / `admin-log-monthly-list` のライトモード配色を調整
+- [x] 月切替ボタン・月次チップの枠線/背景/文字色をライトモード向けに調整
+- [x] active/hover 状態の視認性を改善
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Diary Submitter Tag Filter (2026-02-26)
+
+- [x] 管理日誌月次ヘッダーに提出者別タグ（件数付き）を追加
+- [x] タグクリックで提出者フィルタ（全員/個人）を切替可能に実装
+- [x] 提出者候補を `jinzai`（管理系ロール）から取得し、未提出者も `0件` で表示
+- [x] 月切替時に存在しない提出者選択は自動で `全員` にリセット
+- [x] ライト/ダーク両テーマで提出者タグ配色を調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Diary List Sort By Reported Date (2026-02-26)
+
+- [x] 管理日誌一覧のソートを `reported_at`（日付）優先へ変更
+- [x] 同日内のみ `updated_at`（更新時刻）で並ぶように調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Diary Legacy Source Removal (2026-02-26)
+
+- [x] `AdminAdminLogPage.jsx` の管理日誌取得から `kadai`（legacy）参照を削除
+- [x] 管理日誌一覧を `kanri_log` コレクションのみで表示するよう統一
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
 ## Sidebar Visual Alignment (Entrance / Page) (2026-02-26)
 
 - [x] `hamburger-menu.css` を `job-entrance-sidebar` と同じ情報設計（幅・階層・アクティブ表示）に統一

@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
+const SUBMITTER_FILTER_ALL = '__ALL__';
+
 function todayYmd() {
   try {
     const d = new Date();
@@ -23,6 +25,11 @@ const MASTER_API_BASE =
   (import.meta.env?.DEV || isLocalUiHost())
     ? '/api-master'
     : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
+
+const JINZAI_API_BASE =
+  (import.meta.env?.DEV || isLocalUiHost())
+    ? '/api-jinzai'
+    : (import.meta.env?.VITE_JINZAI_API_BASE || '/api-jinzai');
 
 function getItems(data) {
   if (Array.isArray(data)) return data;
@@ -278,6 +285,10 @@ function timestampOf(row) {
   return Number.isFinite(fallback) ? fallback : 0;
 }
 
+function reportDateOf(row) {
+  return normalizeYmd(row?.reported_at || row?.date || row?.created_at || '');
+}
+
 export default function AdminAdminLogPage() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const t = todayYmd();
@@ -285,6 +296,9 @@ export default function AdminAdminLogPage() {
   });
   const [allAdminLogs, setAllAdminLogs] = useState([]);
   const [monthListLoading, setMonthListLoading] = useState(false);
+  const [selectedSubmitter, setSelectedSubmitter] = useState(SUBMITTER_FILTER_ALL);
+  const [submitterCandidates, setSubmitterCandidates] = useState([]);
+  const [submitterLoading, setSubmitterLoading] = useState(false);
   const [detailDrafts, setDetailDrafts] = useState({});
   const [tomorrowDrafts, setTomorrowDrafts] = useState({});
   // related_kadai_ids は自由入力（検索/タグ運用は廃止）
@@ -310,36 +324,16 @@ export default function AdminAdminLogPage() {
     const settled = await Promise.allSettled([
       fetchCollection('kanri_log', 'yuko'),
       fetchCollection('kanri_log', 'torikeshi'),
-      fetchCollection('kadai', 'yuko'),
-      fetchCollection('kadai', 'torikeshi'),
     ]);
 
     const take = (idx) => (settled[idx]?.status === 'fulfilled' ? settled[idx].value : []);
     const kanriRowsRaw = [...take(0), ...take(1)].filter((row) => isAdminLogRow(row));
-    const kanriRows = kanriRowsRaw.map((row) => ({ ...row, _legacy_source: '' }));
-    const kanriIdSet = new Set(kanriRows.map((row) => String(row?.kanri_log_id || '').trim()).filter(Boolean));
-
-    const legacyRowsRaw = [...take(2), ...take(3)].filter((row) => isAdminLogRow(row));
-    const legacyById = new Map();
-    legacyRowsRaw.forEach((row) => {
-      const kadaiId = String(row?.kadai_id || '').trim();
-      if (!kadaiId) return;
-      const suffix = kadaiId.includes('#') ? kadaiId.split('#').slice(1).join('#') : kadaiId;
-      const migratedKanriId = suffix ? `KANRI#${suffix}` : '';
-      if (migratedKanriId && kanriIdSet.has(migratedKanriId)) return;
-      if (!legacyById.has(kadaiId)) {
-        legacyById.set(kadaiId, {
-          ...row,
-          kanri_log_id: `LEGACY:${kadaiId}`,
-          _legacy_source: 'kadai',
-          _legacy_kadai_id: kadaiId,
-          source: String(row?.source || '').trim() || 'legacy_kadai_admin_log',
-        });
-      }
-    });
-
-    const merged = [...kanriRows, ...Array.from(legacyById.values())];
+    const merged = kanriRowsRaw.map((row) => ({ ...row, _legacy_source: '' }));
     merged.sort((a, b) => {
+      const ad = reportDateOf(a);
+      const bd = reportDateOf(b);
+      const dateCmp = String(bd || '').localeCompare(String(ad || ''));
+      if (dateCmp !== 0) return dateCmp;
       const diff = timestampOf(b) - timestampOf(a);
       if (diff !== 0) return diff;
       return String(b?.kanri_log_id || '').localeCompare(String(a?.kanri_log_id || ''));
@@ -364,6 +358,77 @@ export default function AdminAdminLogPage() {
     });
     return Array.from(map.values()).sort((a, b) => String(b.ym).localeCompare(String(a.ym)));
   }, [allAdminLogs]);
+
+  const monthlyRows = useMemo(() => {
+    return (allAdminLogs || []).filter((row) => {
+      if (!isAdminLogRow(row)) return false;
+      const reportedAt = normalizeYmd(row?.reported_at || row?.date || row?.created_at || '');
+      const ym = reportedAt ? reportedAt.slice(0, 7) : '';
+      return ym === selectedYm;
+    });
+  }, [allAdminLogs, selectedYm]);
+
+  const submitterSummary = useMemo(() => {
+    const map = new Map();
+    monthlyRows.forEach((row) => {
+      const name = String(row?.reported_by || '').trim() || '未設定';
+      map.set(name, (map.get(name) || 0) + 1);
+    });
+    const knownSubmitters = new Set(
+      (allAdminLogs || [])
+        .map((row) => String(row?.reported_by || '').trim())
+        .filter(Boolean)
+    );
+    const pool = new Set([
+      ...submitterCandidates,
+      ...knownSubmitters,
+      ...Array.from(map.keys()),
+    ]);
+    return Array.from(pool.values())
+      .map((name) => ({ name, count: Number(map.get(name) || 0) }))
+      .sort((a, b) => {
+        const c = Number(b.count || 0) - Number(a.count || 0);
+        if (c !== 0) return c;
+        return String(a.name || '').localeCompare(String(b.name || ''), 'ja');
+      });
+  }, [allAdminLogs, monthlyRows, submitterCandidates]);
+
+  useEffect(() => {
+    if (selectedSubmitter === SUBMITTER_FILTER_ALL) return;
+    if (submitterSummary.some((x) => x.name === selectedSubmitter)) return;
+    setSelectedSubmitter(SUBMITTER_FILTER_ALL);
+  }, [selectedSubmitter, submitterSummary]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setSubmitterLoading(true);
+      try {
+        const path = `${JINZAI_API_BASE}/jinzai?limit=2000&jotai=yuko`;
+        const res = await fetch(path, {
+          headers: {
+            ...authHeaders(),
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) throw new Error(`jinzai HTTP ${res.status}`);
+        const data = await res.json();
+        const rows = getItems(data);
+        const names = rows
+          .filter(isAdminRoleMember)
+          .map(jinzaiDisplayName)
+          .map((v) => String(v || '').trim())
+          .filter(Boolean);
+        const uniq = Array.from(new Set(names)).sort((a, b) => a.localeCompare(b, 'ja'));
+        if (!cancelled) setSubmitterCandidates(uniq);
+      } catch {
+        if (!cancelled) setSubmitterCandidates([]);
+      } finally {
+        if (!cancelled) setSubmitterLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -413,7 +478,10 @@ export default function AdminAdminLogPage() {
         const reportedAt = normalizeYmd(row?.reported_at || row?.date || row?.created_at || '');
         const ym = reportedAt ? reportedAt.slice(0, 7) : '';
         const inMonth = ym === selectedYm;
-        return inMonth && isAdminLogRow(row);
+        if (!(inMonth && isAdminLogRow(row))) return false;
+        if (selectedSubmitter === SUBMITTER_FILTER_ALL) return true;
+        const submitterName = String(row?.reported_by || '').trim() || '未設定';
+        return submitterName === selectedSubmitter;
       }}
       renderHeaderExtra={() => (
         <div className="admin-log-date-strip" aria-label="管理日誌 月別一覧">
@@ -447,6 +515,39 @@ export default function AdminAdminLogPage() {
                 })
               ) : (
                 <div className="admin-log-monthly-empty">月次データはありません</div>
+              )}
+            </div>
+          </div>
+          <div className="admin-log-submitter-list" aria-label="管理日誌 提出者別集計">
+            <div className="admin-log-monthly-list-head">提出者別（月内）</div>
+            <div className="admin-log-submitter-scroll">
+              {monthListLoading || submitterLoading ? (
+                <div className="admin-log-monthly-empty">読み込み中...</div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={`admin-log-submitter-chip${selectedSubmitter === SUBMITTER_FILTER_ALL ? ' active' : ''}`}
+                    onClick={() => setSelectedSubmitter(SUBMITTER_FILTER_ALL)}
+                  >
+                    <span>全員</span>
+                    <span>{monthlyRows.length}件</span>
+                  </button>
+                  {submitterSummary.map((s) => {
+                    const active = selectedSubmitter === s.name;
+                    return (
+                      <button
+                        key={s.name}
+                        type="button"
+                        className={`admin-log-submitter-chip${active ? ' active' : ''}`}
+                        onClick={() => setSelectedSubmitter(s.name)}
+                      >
+                        <span>{s.name}</span>
+                        <span>{s.count}件</span>
+                      </button>
+                    );
+                  })}
+                </>
               )}
             </div>
           </div>
@@ -767,7 +868,7 @@ export default function AdminAdminLogPage() {
           label: '日誌本文',
           type: 'textarea',
           rows: 22,
-          modalColSpan: 2,
+          modalColSpan: 4,
           enableTools: true,
           required: true,
           render: (v) => {
@@ -781,7 +882,7 @@ export default function AdminAdminLogPage() {
           label: '明日の予定',
           type: 'textarea',
           rows: 22,
-          modalColSpan: 2,
+          modalColSpan: 4,
           enableTools: true,
           render: (v) => {
             const raw = String(v || '').trim().replace(/\s+/g, ' ');
