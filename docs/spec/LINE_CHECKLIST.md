@@ -39,6 +39,31 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] モバイル幅（`max-width: 980px`）で1カラムに自動切替
 - [x] `npm -C src/misogi run build` でビルド成功を確認
 
+## Admin Entrance Header Removal (2026-02-26)
+
+- [x] `/admin/entrance` で `Breadcrumbs` を描画しないよう調整（管理エントランスのヘッダー非表示）
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Global Header Common Chat Overlay (2026-02-26)
+
+- [x] 共通ヘッダーに `CommonHeaderChat` を追加（右側チャット呼び出しボタン）
+- [x] チャットUIをドロワーではなく「移動可能なオーバーレイボックス」に変更
+- [x] オーバーレイに送受信・5秒更新・閉じる・リサイズ（`resize: both`）を実装
+- [x] スマホ幅（`<=900px`）では共通チャットを非表示化
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Common Header Chat Dedicated S3 Storage (2026-02-26)
+
+- [x] `lambda_torihikisaki_api.py` に `CHAT_STORAGE_BUCKET`（未設定時は `STORAGE_BUCKET` フォールバック）を追加
+- [x] `admin_chat` に `mode=presign_upload` を追加し、`admin_chat/{room}/YYYY/MM/...` へアップロードURLを発行
+- [x] `admin_chat` GET 一覧で `attachment_key` を自動presignして `attachment_url` を返す処理を追加
+- [x] `CommonHeaderChat.jsx` に添付アップロード（S3 presign -> PUT）と添付付き投稿を実装
+- [x] `breadcrumbs.css` に添付プレビュー/リンク/選択済み表示のスタイルを追加
+- [x] 複数添付（写真/ファイル）を1投稿で送信できるように実装
+- [x] 共有データ(JSON)を投稿本文と一緒に送受信・表示・コピーできるように実装
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` 成功
+- [x] `npm -C src/misogi run build` 成功
+
 
 ## Master Registration Integrity Check (2026-02-25)
 

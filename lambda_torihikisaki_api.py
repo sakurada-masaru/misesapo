@@ -82,6 +82,7 @@ TABLES = {k: dynamodb.Table(v) for k, v in TABLE_MAP.items()}
 TENPO_KARTE = dynamodb.Table(TENPO_KARTE_TABLE)
 s3 = boto3.client("s3")
 STORAGE_BUCKET = os.environ.get("STORAGE_BUCKET", "")
+CHAT_STORAGE_BUCKET = os.environ.get("CHAT_STORAGE_BUCKET", "").strip() or STORAGE_BUCKET
 
 
 def _now_iso() -> str:
@@ -448,6 +449,81 @@ def _presign_upload_souko(body: dict):
     }, None
 
 
+def _presign_upload_admin_chat(body: dict):
+    bucket = CHAT_STORAGE_BUCKET
+    if not bucket:
+        return None, _resp(500, {"error": "chat_storage_bucket_not_configured"})
+
+    room = _strip(body.get("room")) or "common_header"
+    file_name = _safe_file_name(body.get("file_name", "file.bin"))
+    content_type = body.get("content_type", "application/octet-stream")
+    key = f"admin_chat/{room}/{datetime.now(timezone.utc).strftime('%Y/%m')}/{uuid.uuid4().hex}_{file_name}"
+    expires_in = int(body.get("expires_in", 900))
+    expires_in = min(max(expires_in, 60), 3600)
+
+    put_url = s3.generate_presigned_url(
+        "put_object",
+        Params={"Bucket": bucket, "Key": key, "ContentType": content_type},
+        ExpiresIn=expires_in,
+    )
+    get_url = s3.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": bucket, "Key": key},
+        ExpiresIn=expires_in,
+    )
+    return {
+        "bucket": bucket,
+        "key": key,
+        "content_type": content_type,
+        "expires_in": expires_in,
+        "put_url": put_url,
+        "get_url": get_url,
+    }, None
+
+
+def _enrich_admin_chat_items(items: list):
+    if not isinstance(items, list):
+        return items
+    out = []
+    for src in items:
+        row = dict(src or {})
+        attachments = row.get("attachments")
+        if isinstance(attachments, list):
+            enriched_attachments = []
+            for a in attachments:
+                if not isinstance(a, dict):
+                    continue
+                att = dict(a)
+                key_multi = _strip(att.get("key"))
+                bucket_multi = _strip(att.get("bucket")) or CHAT_STORAGE_BUCKET
+                if key_multi and bucket_multi:
+                    try:
+                        att["url"] = s3.generate_presigned_url(
+                            "get_object",
+                            Params={"Bucket": bucket_multi, "Key": key_multi},
+                            ExpiresIn=3600,
+                        )
+                    except Exception as e:
+                        print(f"[admin_chat] attachment presign failed key={key_multi} err={str(e)}")
+                enriched_attachments.append(att)
+            row["attachments"] = enriched_attachments
+
+        key = _strip(row.get("attachment_key"))
+        if key:
+            bucket = _strip(row.get("attachment_bucket")) or CHAT_STORAGE_BUCKET
+            if bucket:
+                try:
+                    row["attachment_url"] = s3.generate_presigned_url(
+                        "get_object",
+                        Params={"Bucket": bucket, "Key": key},
+                        ExpiresIn=3600,
+                    )
+                except Exception as e:
+                    print(f"[admin_chat] attachment presign failed key={key} err={str(e)}")
+        out.append(row)
+    return out
+
+
 def _strip(v):
     return str(v or "").strip()
 
@@ -806,6 +882,8 @@ def lambda_handler(event, context):
                 if not last_key:
                     break
 
+            if collection == "admin_chat":
+                items = _enrich_admin_chat_items(items)
             return _resp(200, {"items": items, "count": len(items)})
 
         if method == "POST":
@@ -820,6 +898,12 @@ def lambda_handler(event, context):
             # 既存ゲートを増やさずに、/master/souko から presign を発行する
             if collection == "souko" and body.get("mode") == "presign_upload":
                 payload, err_resp = _presign_upload_souko(body)
+                if err_resp:
+                    return err_resp
+                return _resp(200, payload)
+
+            if collection == "admin_chat" and body.get("mode") == "presign_upload":
+                payload, err_resp = _presign_upload_admin_chat(body)
                 if err_resp:
                     return err_resp
                 return _resp(200, payload)

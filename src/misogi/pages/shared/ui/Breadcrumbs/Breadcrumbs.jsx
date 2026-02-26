@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './breadcrumbs.css';
 import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
+import CommonHeaderChat from './CommonHeaderChat';
 
 function isEntrancePath(pathname) {
   const p = String(pathname || '/');
@@ -109,6 +110,11 @@ export default function Breadcrumbs() {
   const hidden = isEntrancePath(pathname) || isWorkerReportPath(pathname);
   const isAdmin = isAdminPath(pathname);
   const crumbs = useMemo(() => crumbsForPath(pathname), [pathname]);
+
+  if (isAdmin && hidden) {
+    return null;
+  }
+
   const onBack = () => {
     if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
       navigate(-1);
@@ -144,6 +150,9 @@ export default function Breadcrumbs() {
         ) : (
           <div className="breadcrumbs-main breadcrumbs-main-empty" />
         )}
+        <div className="breadcrumbs-controls-wrap">
+          <CommonHeaderChat />
+        </div>
       </nav>
     );
   }
@@ -155,6 +164,7 @@ export default function Breadcrumbs() {
           ← 戻る
         </button>
         <div className="breadcrumbs-lang-wrap">
+          <CommonHeaderChat />
           <HamburgerMenu />
         </div>
       </nav>
@@ -182,6 +192,7 @@ export default function Breadcrumbs() {
         })}
       </div>
       <div className="breadcrumbs-controls-wrap">
+        <CommonHeaderChat />
         <HamburgerMenu />
       </div>
     </nav>
