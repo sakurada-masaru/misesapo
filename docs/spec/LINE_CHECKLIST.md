@@ -24,6 +24,21 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `components.css` でサイドバー内設定セクションのライト/ダーク両対応スタイルを追加
 - [x] `npm -C src/misogi run build` でビルド成功を確認
 
+## Admin Log Historical Visibility Fix (2026-02-26)
+
+- [x] `AdminAdminLogPage.jsx` の一覧取得を `kanri_log` + 旧 `kadai(admin_log/kanri_logタグ)` の統合取得に変更
+- [x] 月次チップに旧データも含め、現在月にデータがない場合は最新提出月へ自動切替
+- [x] 旧 `kadai` 管理ログは参照専用表示にし、編集/取消ボタンを非表示化
+- [x] `AdminMasterBase.jsx` に `loadItemsOverride` / `canEditRow` 拡張を追加
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Log Preview Layout Tuning (2026-02-26)
+
+- [x] 管理日誌プレビュー（行展開）の2カラム詳細レイアウトを管理日誌専用CSSで再定義
+- [x] 情報カード/本文エリア/保存ボタンの視認性と余白を調整（ライト/ダーク両対応）
+- [x] モバイル幅（`max-width: 980px`）で1カラムに自動切替
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
 
 ## Master Registration Integrity Check (2026-02-25)
 

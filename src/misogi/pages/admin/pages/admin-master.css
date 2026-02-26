@@ -1098,6 +1098,138 @@
   width: min(1120px, calc(100vw - 24px));
 }
 
+.admin-master-page.admin-admin-log-page .admin-master-table-wrap {
+  overflow-x: hidden;
+}
+
+.admin-master-page.admin-admin-log-page .admin-master-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.admin-master-page.admin-admin-log-page .admin-master-table th,
+.admin-master-page.admin-admin-log-page .admin-master-table td {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.admin-master-page.admin-admin-log-page .admin-master-table td.actions {
+  white-space: nowrap;
+  width: 132px;
+}
+
+.admin-master-page.admin-admin-log-page .admin-master-table td.actions button {
+  height: 30px;
+  min-width: 52px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.admin-master-page.admin-admin-log-page .admin-master-table tr.row-detail td {
+  background: linear-gradient(180deg, rgba(3, 8, 22, 0.86), rgba(2, 6, 23, 0.76));
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-two-col {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-left {
+  display: grid;
+  gap: 8px;
+  align-self: start;
+  min-width: 0;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-row {
+  border: 1px solid #273049;
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.45);
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-row .k {
+  font-size: 12px;
+  color: #9aa6c5;
+  margin-bottom: 4px;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-row .v {
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-right {
+  border: 1px solid #273049;
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.4);
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-right-top {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-note-head {
+  font-size: 13px;
+  color: #9aa6c5;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-right input,
+.admin-master-page.admin-admin-log-page .kadai-detail-right textarea {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 8px 10px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-right textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-note-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.admin-master-page.admin-admin-log-page .kadai-detail-note-actions button {
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #eaf1ff;
+  padding: 0 12px;
+}
+
 .admin-master-page.admin-admin-log-page .admin-log-related-box {
   margin-top: 10px;
   border: 1px solid #273049;
@@ -1178,8 +1310,25 @@
 
 .admin-master-page.admin-admin-log-page .admin-log-note-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-readonly-block {
+  min-height: 220px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.42);
+  color: #e2e8f0;
+  padding: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-master-page.admin-admin-log-page .admin-log-readonly-note {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #93a7c6;
 }
 
 .admin-master-page.admin-admin-log-page .admin-log-date-strip {
@@ -1304,6 +1453,10 @@
 }
 
 @media (max-width: 980px) {
+  .admin-master-page.admin-admin-log-page .kadai-detail-two-col {
+    grid-template-columns: 1fr;
+  }
+
   .admin-master-page.admin-admin-log-page .admin-log-date-inline {
     flex-wrap: wrap;
   }
@@ -1769,6 +1922,49 @@
 
 [data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-note-head {
   color: #334155;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-master-table tr.row-detail td {
+  background: linear-gradient(180deg, #eef2f7, #f8fafc);
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .kadai-detail-row {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .kadai-detail-row .k {
+  color: #475569;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .kadai-detail-row .v {
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .kadai-detail-right {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .kadai-detail-note-head {
+  color: #334155;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .kadai-detail-right input,
+[data-theme="light"] .admin-master-page.admin-admin-log-page .kadai-detail-right textarea {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-readonly-block {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .admin-master-page.admin-admin-log-page .admin-log-readonly-note {
+  color: #475569;
 }
 
 [data-theme="light"] .admin-master-page[data-resource="kadai"] .kadai-detail-editor-tools button {

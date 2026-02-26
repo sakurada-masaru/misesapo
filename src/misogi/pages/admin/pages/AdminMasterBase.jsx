@@ -256,6 +256,7 @@ export default function AdminMasterBase({
   fields,
   parentSources = EMPTY_OBJ,
   fixedQuery = EMPTY_OBJ,
+  loadItemsOverride = null,
   fixedNewValues = EMPTY_OBJ,
   onAfterSave,
   localSearch = null,
@@ -267,6 +268,7 @@ export default function AdminMasterBase({
   renderHeaderExtra = null,
   clientFilter = null,
   rowClassName = null,
+  canEditRow = null,
   canDeleteRow = null,
   beforeDelete = null,
   enableBulkDelete = false,
@@ -427,6 +429,18 @@ export default function AdminMasterBase({
     setLoading(true);
     setError('');
     try {
+      if (typeof loadItemsOverride === 'function') {
+        const loaded = await loadItemsOverride({
+          resource,
+          listLimit,
+          filtersValue,
+          fixedQuery,
+          apiBase,
+          buildResourcePath,
+        });
+        setItems(getItems(loaded));
+        return;
+      }
       // master API の scan を前提にしているため、過大な limit は 500/timeout の原因になる。
       // 一覧はデフォルト 50 件に抑えつつ、ページ側で必要があれば listLimit を上げられるようにする。
       const limit = (() => {
@@ -449,7 +463,7 @@ export default function AdminMasterBase({
     } finally {
       setLoading(false);
     }
-  }, [resource, filtersValue, apiBase, buildResourcePath, fixedQuery, listLimit]);
+  }, [resource, filtersValue, apiBase, buildResourcePath, fixedQuery, listLimit, loadItemsOverride]);
 
   useEffect(() => {
     loadParents();
@@ -1011,6 +1025,7 @@ export default function AdminMasterBase({
           {sortedVisibleItems.map((row) => {
             const rid = pickId(row, operationalIdKey);
             const isExpanded = !!rid && expandedRowId === rid;
+            const rowEditable = typeof canEditRow !== 'function' || canEditRow(row);
             const rowDeletable = typeof canDeleteRow !== 'function' || canDeleteRow(row);
             const customRowClass = typeof rowClassName === 'function' ? String(rowClassName(row) || '').trim() : '';
             return (
@@ -1091,7 +1106,7 @@ export default function AdminMasterBase({
                         {previewButtonLabel || 'プレビュー'}
                       </button>
                     ) : null}
-                    {showEditAction ? (
+                    {showEditAction && rowEditable ? (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -1149,7 +1164,7 @@ export default function AdminMasterBase({
         </tbody>
       </table>
     </section>
-  ), [sortedVisibleItems, columns, fieldByKey, loading, openEdit, onDelete, canDeleteRow, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName, formatFieldValue, onRowClick, onPreviewRow, previewButtonLabel, showEditAction, showDeleteAction, parents, enableColumnSort, sortKey, sortDir, onSortColumn]);
+  ), [sortedVisibleItems, columns, fieldByKey, loading, openEdit, onDelete, canEditRow, canDeleteRow, enableBulkDelete, selectedRowIds, toggleRowSelect, toggleSelectAllVisible, enableRowDetail, toggleRowDetail, expandedRowId, rowDetailItems, inlineSaving, onInlineFieldChange, renderRowDetail, rowClassName, formatFieldValue, onRowClick, onPreviewRow, previewButtonLabel, showEditAction, showDeleteAction, parents, enableColumnSort, sortKey, sortDir, onSortColumn]);
 
   return (
     <div className={`admin-master-page ${pageClassName || ''}`.trim()} data-resource={resource}>

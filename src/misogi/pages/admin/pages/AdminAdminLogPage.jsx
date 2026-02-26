@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminMasterBase from './AdminMasterBase';
 
 function todayYmd() {
@@ -267,6 +267,17 @@ function isAdminLogRow(row) {
   return allow.has(listScopeToken) || allow.has(categoryToken) || allow.has(sourceToken) || allow.has(tagToken);
 }
 
+function timestampOf(row) {
+  const raw = String(row?.updated_at || row?.reported_at || row?.date || row?.created_at || '').trim();
+  if (!raw) return 0;
+  const t = Date.parse(raw);
+  if (Number.isFinite(t)) return t;
+  const ymd = normalizeYmd(raw);
+  if (!ymd) return 0;
+  const fallback = Date.parse(`${ymd}T00:00:00Z`);
+  return Number.isFinite(fallback) ? fallback : 0;
+}
+
 export default function AdminAdminLogPage() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const t = todayYmd();
@@ -281,6 +292,61 @@ export default function AdminAdminLogPage() {
     const ymd = normalizeYmd(selectedMonth) || todayYmd();
     return ymd.slice(0, 7);
   }, [selectedMonth]);
+
+  const fetchAdminLogItems = useCallback(async () => {
+    const fetchCollection = async (resource, jotai) => {
+      const path = `${MASTER_API_BASE}/master/${resource}?limit=5000&jotai=${encodeURIComponent(String(jotai || ''))}`;
+      const res = await fetch(path, {
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) throw new Error(`${resource} HTTP ${res.status}`);
+      const data = await res.json();
+      return getItems(data);
+    };
+
+    const settled = await Promise.allSettled([
+      fetchCollection('kanri_log', 'yuko'),
+      fetchCollection('kanri_log', 'torikeshi'),
+      fetchCollection('kadai', 'yuko'),
+      fetchCollection('kadai', 'torikeshi'),
+    ]);
+
+    const take = (idx) => (settled[idx]?.status === 'fulfilled' ? settled[idx].value : []);
+    const kanriRowsRaw = [...take(0), ...take(1)].filter((row) => isAdminLogRow(row));
+    const kanriRows = kanriRowsRaw.map((row) => ({ ...row, _legacy_source: '' }));
+    const kanriIdSet = new Set(kanriRows.map((row) => String(row?.kanri_log_id || '').trim()).filter(Boolean));
+
+    const legacyRowsRaw = [...take(2), ...take(3)].filter((row) => isAdminLogRow(row));
+    const legacyById = new Map();
+    legacyRowsRaw.forEach((row) => {
+      const kadaiId = String(row?.kadai_id || '').trim();
+      if (!kadaiId) return;
+      const suffix = kadaiId.includes('#') ? kadaiId.split('#').slice(1).join('#') : kadaiId;
+      const migratedKanriId = suffix ? `KANRI#${suffix}` : '';
+      if (migratedKanriId && kanriIdSet.has(migratedKanriId)) return;
+      if (!legacyById.has(kadaiId)) {
+        legacyById.set(kadaiId, {
+          ...row,
+          kanri_log_id: `LEGACY:${kadaiId}`,
+          _legacy_source: 'kadai',
+          _legacy_kadai_id: kadaiId,
+          source: String(row?.source || '').trim() || 'legacy_kadai_admin_log',
+        });
+      }
+    });
+
+    const merged = [...kanriRows, ...Array.from(legacyById.values())];
+    merged.sort((a, b) => {
+      const diff = timestampOf(b) - timestampOf(a);
+      if (diff !== 0) return diff;
+      return String(b?.kanri_log_id || '').localeCompare(String(a?.kanri_log_id || ''));
+    });
+    return merged;
+  }, []);
+
   const monthLabel = useMemo(() => {
     const [y, m] = String(selectedYm || '').split('-');
     return `${y || ''}年${Number(m || 0)}月`;
@@ -304,16 +370,7 @@ export default function AdminAdminLogPage() {
     (async () => {
       setMonthListLoading(true);
       try {
-        const path = `${MASTER_API_BASE}/master/kanri_log?limit=5000&jotai=yuko`;
-        const res = await fetch(path, {
-          headers: {
-            ...authHeaders(),
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!res.ok) throw new Error(`kanri_log HTTP ${res.status}`);
-        const data = await res.json();
-        const rows = getItems(data).filter((row) => isAdminLogRow(row));
+        const rows = await fetchAdminLogItems();
         if (!cancelled) setAllAdminLogs(rows);
       } catch {
         if (!cancelled) setAllAdminLogs([]);
@@ -322,7 +379,13 @@ export default function AdminAdminLogPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [fetchAdminLogItems]);
+
+  useEffect(() => {
+    if (!monthList.length) return;
+    if (monthList.some((m) => m.ym === selectedYm)) return;
+    setSelectedMonth(`${monthList[0].ym}-01`);
+  }, [monthList, selectedYm]);
 
   const appendTaskToPlan = (baseText, task) => {
     const current = String(baseText || '').trim();
@@ -342,7 +405,10 @@ export default function AdminAdminLogPage() {
       resource="kanri_log"
       idKey="kanri_log_id"
       listLimit={1000}
-      fixedQuery={{ jotai: 'yuko' }}
+      loadItemsOverride={fetchAdminLogItems}
+      fixedQuery={{}}
+      canEditRow={(row) => !row?._legacy_source}
+      canDeleteRow={(row) => !row?._legacy_source}
       clientFilter={(row) => {
         const reportedAt = normalizeYmd(row?.reported_at || row?.date || row?.created_at || '');
         const ym = reportedAt ? reportedAt.slice(0, 7) : '';
@@ -476,6 +542,69 @@ export default function AdminAdminLogPage() {
         const tomorrowSaving = !!inlineSaving?.[`${rowId}:tomorrow_plan`];
         const titleSaving = !!inlineSaving?.[`${rowId}:name`];
         const relatedIds = parseRelatedIds(row?.related_kadai_ids);
+        const isLegacy = !!row?._legacy_source;
+
+        if (isLegacy) {
+          return (
+            <div className="kadai-detail-two-col">
+              <div className="kadai-detail-left">
+                <div className="kadai-detail-row">
+                  <div className="k">日付</div>
+                  <div className="v">{String(row?.reported_at || '-')}</div>
+                </div>
+                <div className="kadai-detail-row">
+                  <div className="k">提出者</div>
+                  <div className="v">{String(row?.reported_by || '-')}</div>
+                </div>
+                <div className="kadai-detail-row">
+                  <div className="k">稼働時間</div>
+                  <div className="v">{String(row?.work_time || '-')}</div>
+                </div>
+                <div className="kadai-detail-row">
+                  <div className="k">更新日時</div>
+                  <div className="v">{formatJpDateTime(row?.updated_at)}</div>
+                </div>
+                <div className="kadai-detail-row">
+                  <div className="k">旧ID</div>
+                  <div className="v">{String(row?._legacy_kadai_id || '-')}</div>
+                </div>
+              </div>
+
+              <div className="kadai-detail-right">
+                <div className="kadai-detail-right-top">
+                  <div className="kadai-detail-row">
+                    <div className="k">PRタイトル</div>
+                    <div className="v">{String(row?.name || '-')}</div>
+                  </div>
+                </div>
+
+                <div className="admin-log-note-grid">
+                  <div>
+                    <div className="kadai-detail-note-head">日誌本文</div>
+                    <div className="admin-log-readonly-block">{String(row?.request || '-')}</div>
+                  </div>
+                  <div>
+                    <div className="kadai-detail-note-head">明日の予定</div>
+                    <div className="admin-log-readonly-block">{String(row?.tomorrow_plan || '-')}</div>
+                  </div>
+                </div>
+
+                <div className="admin-log-related-box">
+                  <div className="admin-log-related-head">
+                    <div>関連タスク</div>
+                  </div>
+                  <div className="admin-log-readonly-block" style={{ minHeight: 84 }}>
+                    {relatedIds.length ? relatedIds.join(', ') : '-'}
+                  </div>
+                </div>
+
+                <div className="admin-log-readonly-note">
+                  旧管理ログ（kadai）を参照表示しています。編集は新しい管理日誌で行ってください。
+                </div>
+              </div>
+            </div>
+          );
+        }
 
         return (
           <div className="kadai-detail-two-col">
