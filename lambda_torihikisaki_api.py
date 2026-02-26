@@ -1,5 +1,6 @@
 import json
 import os
+import base64
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -134,6 +135,137 @@ def _record_id_from_event(event):
     params = event.get("pathParameters") or {}
     rid = params.get("id")
     return unquote(rid) if rid else None
+
+
+def _get_headers(event):
+    headers = event.get("headers") or {}
+    return headers if isinstance(headers, dict) else {}
+
+
+def _get_auth_header(event):
+    headers = _get_headers(event)
+    return headers.get("Authorization") or headers.get("authorization") or ""
+
+
+def _decode_jwt_payload(token: str) -> dict:
+    if not token:
+        return {}
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            return {}
+        payload_part = parts[1]
+        padding = 4 - (len(payload_part) % 4)
+        if padding != 4:
+            payload_part += "=" * padding
+        payload_json = base64.urlsafe_b64decode(payload_part.encode("utf-8"))
+        payload = json.loads(payload_json.decode("utf-8"))
+        return payload if isinstance(payload, dict) else {}
+    except Exception:
+        return {}
+
+
+def _norm_identity(value) -> str:
+    return _strip(value).lower()
+
+
+def _extract_actor(event) -> dict:
+    request_context = event.get("requestContext") or {}
+    authorizer = request_context.get("authorizer") or {}
+    claims = authorizer.get("claims") if isinstance(authorizer, dict) else {}
+    if not isinstance(claims, dict):
+        claims = {}
+
+    token = _get_auth_header(event)
+    token = token.replace("Bearer ", "").strip() if token else ""
+    token_claims = _decode_jwt_payload(token)
+
+    def _pick(*values):
+        for v in values:
+            sv = _strip(v)
+            if sv:
+                return sv
+        return ""
+
+    actor_id = _pick(
+        claims.get("custom:worker_id"),
+        claims.get("worker_id"),
+        authorizer.get("workerId") if isinstance(authorizer, dict) else None,
+        authorizer.get("worker_id") if isinstance(authorizer, dict) else None,
+        claims.get("sub"),
+        claims.get("cognito:username"),
+        authorizer.get("principalId") if isinstance(authorizer, dict) else None,
+        token_claims.get("custom:worker_id"),
+        token_claims.get("worker_id"),
+        token_claims.get("sub"),
+        token_claims.get("cognito:username"),
+        claims.get("email"),
+        token_claims.get("email"),
+    )
+    actor_name = _pick(
+        claims.get("name"),
+        claims.get("preferred_username"),
+        token_claims.get("name"),
+        token_claims.get("preferred_username"),
+        claims.get("email"),
+        token_claims.get("email"),
+    )
+
+    ids = set()
+    for v in [
+        actor_id,
+        actor_name,
+        claims.get("email"),
+        token_claims.get("email"),
+        claims.get("sub"),
+        token_claims.get("sub"),
+        claims.get("cognito:username"),
+        token_claims.get("cognito:username"),
+        claims.get("custom:worker_id"),
+        token_claims.get("custom:worker_id"),
+        claims.get("worker_id"),
+        token_claims.get("worker_id"),
+    ]:
+        sv = _strip(v)
+        if not sv:
+            continue
+        ids.add(_norm_identity(sv))
+        if "@" in sv:
+            ids.add(_norm_identity(sv.split("@")[0]))
+
+    if not actor_name and actor_id:
+        actor_name = actor_id.split("@")[0] if "@" in actor_id else actor_id
+
+    return {"id": actor_id, "name": actor_name, "ids": ids}
+
+
+def _is_admin_chat_owner(event, item: dict) -> bool:
+    actor = _extract_actor(event)
+    actor_ids = actor.get("ids") or set()
+    if not actor_ids:
+        # 開発環境などで authorizer 情報が無い場合は互換性優先
+        return True
+
+    owner_ids = set()
+    for v in [
+        item.get("sender_id"),
+        item.get("created_by"),
+        item.get("updated_by"),
+        item.get("sender_name"),
+        item.get("sender_display_name"),
+        item.get("created_by_name"),
+        item.get("updated_by_name"),
+    ]:
+        sv = _strip(v)
+        if not sv:
+            continue
+        owner_ids.add(_norm_identity(sv))
+        if "@" in sv:
+            owner_ids.add(_norm_identity(sv.split("@")[0]))
+
+    if not owner_ids:
+        return True
+    return len(actor_ids.intersection(owner_ids)) > 0
 
 
 def _is_conditional_check_failed(err: Exception) -> bool:
@@ -898,6 +1030,7 @@ def lambda_handler(event, context):
         if method == "POST":
             body = _parse_body(event)
             body = _sanitize_create_payload(collection, body, pk_name)
+            actor = _extract_actor(event) if collection == "admin_chat" else {"id": "", "name": ""}
 
             # API Gateway のメソッド構成差異に備え、
             # /master/tenpo + { mode: "onboarding" } でも同じ処理を受け付ける。
@@ -916,6 +1049,23 @@ def lambda_handler(event, context):
                 if err_resp:
                     return err_resp
                 return _resp(200, payload)
+
+            if collection == "admin_chat":
+                sender_id = _strip(body.get("sender_id")) or _strip(actor.get("id"))
+                sender_name = (
+                    _strip(body.get("sender_name"))
+                    or _strip(body.get("sender_display_name"))
+                    or _strip(actor.get("name"))
+                )
+                if sender_id:
+                    body["sender_id"] = sender_id
+                if sender_name:
+                    body["sender_name"] = sender_name
+                    body["sender_display_name"] = _strip(body.get("sender_display_name")) or sender_name
+                if sender_id and not _strip(body.get("created_by")):
+                    body["created_by"] = sender_id
+                if sender_name and not _strip(body.get("created_by_name")):
+                    body["created_by_name"] = sender_name
 
             err = _validate_create(collection, body, pk_name)
             if err:
@@ -973,6 +1123,9 @@ def lambda_handler(event, context):
             item = res.get("Item")
             if not item:
                 return _resp(404, {"error": "not_found"})
+            actor = _extract_actor(event) if collection == "admin_chat" else {"id": "", "name": ""}
+            if collection == "admin_chat" and not _is_admin_chat_owner(event, item):
+                return _resp(403, {"error": "forbidden", "message": "自分の投稿のみ更新できます"})
             for k, v in body.items():
                 if k in {pk_name, "created_at"}:
                     continue
@@ -984,6 +1137,11 @@ def lambda_handler(event, context):
                     return _resp(400, {"error": "validation_error", "message": parent_err})
             now = _now_iso()
             item["updated_at"] = now
+            if collection == "admin_chat":
+                if _strip(actor.get("id")):
+                    item["updated_by"] = _strip(actor.get("id"))
+                if _strip(actor.get("name")):
+                    item["updated_by_name"] = _strip(actor.get("name"))
             _apply_touroku_meta(item, now)
             if collection == "tenpo":
                 _normalize_tenpo_billing_owner(item)
@@ -994,6 +1152,23 @@ def lambda_handler(event, context):
             if not record_id:
                 return _resp(400, {"error": "missing_id"})
             now = _now_iso()
+            if collection == "admin_chat":
+                res = table.get_item(Key={pk_name: record_id})
+                item = res.get("Item")
+                if not item:
+                    return _resp(404, {"error": "not_found"})
+                if not _is_admin_chat_owner(event, item):
+                    return _resp(403, {"error": "forbidden", "message": "自分の投稿のみ削除できます"})
+                actor = _extract_actor(event)
+                item["jotai"] = "torikeshi"
+                item["updated_at"] = now
+                item["torikeshi_at"] = now
+                if _strip(actor.get("id")):
+                    item["updated_by"] = _strip(actor.get("id"))
+                if _strip(actor.get("name")):
+                    item["updated_by_name"] = _strip(actor.get("name"))
+                table.put_item(Item=item)
+                return _resp(200, {"ok": True, "id": record_id, "jotai": "torikeshi"})
             table.update_item(
                 Key={pk_name: record_id},
                 UpdateExpression="SET jotai = :torikeshi, updated_at = :u",

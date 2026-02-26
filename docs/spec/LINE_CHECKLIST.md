@@ -59,6 +59,16 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 同日内のみ `updated_at`（更新時刻）で並ぶように調整
 - [x] `npm -C src/misogi run build` でビルド成功を確認
 
+## Admin Diary Aggregation Refresh Fix (2026-02-26)
+
+- [x] `AdminAdminLogPage.jsx` の `fetchAdminLogItems` 実行時に `allAdminLogs` も同時更新するよう修正
+- [x] 管理日誌の保存/取消後に `loadItemsOverride` 再実行で月次・提出者集計が最新化されるよう調整
+- [x] 集計専用の初回 `useEffect` 二重取得を削除し、取得経路を一本化
+- [x] 管理日誌集計取得（`kanri_log`）に 12秒タイムアウトを追加し、`読み込み中...` 固着を防止
+- [x] 管理日誌ページの `parentSources.kadai` 取得を廃止し、親データ大量取得による `ERR_INSUFFICIENT_RESOURCES` を抑止
+- [x] 提出者セレクトを `submitterCandidates + 既存ログ提出者` 由来に変更し、`parents` 依存なしで選択肢を維持
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
 ## Admin Diary Legacy Source Removal (2026-02-26)
 
 - [x] `AdminAdminLogPage.jsx` の管理日誌取得から `kadai`（legacy）参照を削除
@@ -130,6 +140,24 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `lambda_torihikisaki_api.py` の S3 client を `region=ap-northeast-1` + `signature_version=s3v4` 固定化
 - [x] S3 presigned URL のグローバル endpoint/古い署名形式による CORS 失敗リスクを低減
 - [x] `python3 -m py_compile lambda_torihikisaki_api.py` 成功
+
+## Common Header Chat: Own Message Delete (2026-02-26)
+
+- [x] `CommonHeaderChat.jsx` に自分の投稿のみ `削除` ボタンを追加（削除中状態つき）
+- [x] `lambda_torihikisaki_api.py` の `admin_chat` PUT/DELETE で投稿者チェックを追加（本人以外は 403）
+- [x] `admin_chat` POST 時に `sender_id/sender_name/created_by` を補完して投稿者判定を安定化
+
+## Common Header Chat: Mine Alignment Restore (2026-02-27)
+
+- [x] チャットの「自分投稿判定」を `sender_id` 単独比較から複合比較（`sender_id/created_by/sender_name/email系`）へ拡張
+- [x] 右寄せ（`.header-chat-item.mine`）が再度適用されるよう `CommonHeaderChat.jsx` の `mine` 判定を修正
+- [x] `python3 scripts/create_kanri_logs_from_pr_report.py --from 2026-02-23 --to 2026-02-26` を実行し、既存4件を確認（created=0 / skipped=4）
+
+## Common Header Chat: Unread Badge (2026-02-27)
+
+- [x] ヘッダーチャット呼び出しボタンに未読バッジを追加（`99+` 上限表示）
+- [x] 既読管理を `localStorage`（ユーザー×room単位）で保持し、チャットを開いた時点でバッジを消去
+- [x] チャットが閉じている間も5秒ポーリングで新着検知し、未読数を更新
 
 
 ## Master Registration Integrity Check (2026-02-25)

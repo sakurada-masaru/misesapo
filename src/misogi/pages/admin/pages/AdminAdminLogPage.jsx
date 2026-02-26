@@ -178,17 +178,6 @@ function isAdminRoleMember(item) {
   ));
 }
 
-function buildAdminSubmitterOptions(parents) {
-  const list = Array.isArray(parents?.jinzai) ? parents.jinzai : [];
-  const names = list
-    .filter(isAdminRoleMember)
-    .map(jinzaiDisplayName)
-    .map((v) => String(v || '').trim())
-    .filter(Boolean);
-  const uniq = Array.from(new Set(names)).sort((a, b) => a.localeCompare(b, 'ja'));
-  return uniq.map((name) => ({ value: name, label: name }));
-}
-
 function clipText(value, limit) {
   const s = String(value || '').trim();
   if (!s) return '-';
@@ -205,35 +194,6 @@ function parseRelatedIds(value) {
       .filter((v) => /^KADAI#/i.test(v))
       .map((v) => (/^kadai#/i.test(v) ? `KADAI#${v.slice(6)}` : v))
   ));
-}
-
-function mergeRelatedIds(currentValue, addingId) {
-  const now = parseRelatedIds(currentValue);
-  const add = String(addingId || '').trim();
-  if (!add) return now.join(', ');
-  const normalizedAdd = /^kadai#/i.test(add) ? `KADAI#${add.slice(6)}` : add;
-  if (!/^KADAI#/i.test(normalizedAdd)) return now.join(', ');
-  return Array.from(new Set([...now, normalizedAdd])).join(', ');
-}
-
-function filterTaskOptions(taskOptions, query) {
-  const q = String(query || '').trim().toLowerCase();
-  if (!q) return taskOptions;
-  return taskOptions.filter((opt) => (
-    String(opt?.label || '').toLowerCase().includes(q)
-    || String(opt?.value || '').toLowerCase().includes(q)
-  ));
-}
-
-function normalizeTaskOptions(parents) {
-  const items = Array.isArray(parents?.kadai) ? parents.kadai : [];
-  const filtered = items.filter((x) => !isAdminLogRow(x));
-  const mapped = filtered.map((x) => ({
-    value: String(x?.kadai_id || ''),
-    label: `${String(x?.kadai_id || '')} ${String(x?.name || '').trim() || '課題'}`.trim(),
-    item: x,
-  })).filter((x) => x.value);
-  return mapped.slice(0, 500);
 }
 
 function formatJpDateTime(value) {
@@ -308,37 +268,57 @@ export default function AdminAdminLogPage() {
   }, [selectedMonth]);
 
   const fetchAdminLogItems = useCallback(async () => {
-    const fetchCollection = async (resource, jotai) => {
-      const path = `${MASTER_API_BASE}/master/${resource}?limit=5000&jotai=${encodeURIComponent(String(jotai || ''))}`;
-      const res = await fetch(path, {
-        headers: {
-          ...authHeaders(),
-          'Content-Type': 'application/json',
-        },
+    setMonthListLoading(true);
+    try {
+      const fetchCollection = async (resource, jotai) => {
+        const path = `${MASTER_API_BASE}/master/${resource}?limit=5000&jotai=${encodeURIComponent(String(jotai || ''))}`;
+        const controller = new AbortController();
+        const timeoutMs = 12000;
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const res = await fetch(path, {
+            signal: controller.signal,
+            headers: {
+              ...authHeaders(),
+              'Content-Type': 'application/json',
+            },
+          });
+          if (!res.ok) throw new Error(`${resource} HTTP ${res.status}`);
+          const data = await res.json();
+          return getItems(data);
+        } catch (e) {
+          if (e?.name === 'AbortError') throw new Error(`${resource} timeout`);
+          throw e;
+        } finally {
+          clearTimeout(timer);
+        }
+      };
+
+      const settled = await Promise.allSettled([
+        fetchCollection('kanri_log', 'yuko'),
+        fetchCollection('kanri_log', 'torikeshi'),
+      ]);
+
+      const take = (idx) => (settled[idx]?.status === 'fulfilled' ? settled[idx].value : []);
+      const kanriRowsRaw = [...take(0), ...take(1)].filter((row) => isAdminLogRow(row));
+      const merged = kanriRowsRaw.map((row) => ({ ...row, _legacy_source: '' }));
+      merged.sort((a, b) => {
+        const ad = reportDateOf(a);
+        const bd = reportDateOf(b);
+        const dateCmp = String(bd || '').localeCompare(String(ad || ''));
+        if (dateCmp !== 0) return dateCmp;
+        const diff = timestampOf(b) - timestampOf(a);
+        if (diff !== 0) return diff;
+        return String(b?.kanri_log_id || '').localeCompare(String(a?.kanri_log_id || ''));
       });
-      if (!res.ok) throw new Error(`${resource} HTTP ${res.status}`);
-      const data = await res.json();
-      return getItems(data);
-    };
-
-    const settled = await Promise.allSettled([
-      fetchCollection('kanri_log', 'yuko'),
-      fetchCollection('kanri_log', 'torikeshi'),
-    ]);
-
-    const take = (idx) => (settled[idx]?.status === 'fulfilled' ? settled[idx].value : []);
-    const kanriRowsRaw = [...take(0), ...take(1)].filter((row) => isAdminLogRow(row));
-    const merged = kanriRowsRaw.map((row) => ({ ...row, _legacy_source: '' }));
-    merged.sort((a, b) => {
-      const ad = reportDateOf(a);
-      const bd = reportDateOf(b);
-      const dateCmp = String(bd || '').localeCompare(String(ad || ''));
-      if (dateCmp !== 0) return dateCmp;
-      const diff = timestampOf(b) - timestampOf(a);
-      if (diff !== 0) return diff;
-      return String(b?.kanri_log_id || '').localeCompare(String(a?.kanri_log_id || ''));
-    });
-    return merged;
+      setAllAdminLogs(merged);
+      return merged;
+    } catch (e) {
+      setAllAdminLogs([]);
+      throw e;
+    } finally {
+      setMonthListLoading(false);
+    }
   }, []);
 
   const monthLabel = useMemo(() => {
@@ -392,6 +372,18 @@ export default function AdminAdminLogPage() {
         return String(a.name || '').localeCompare(String(b.name || ''), 'ja');
       });
   }, [allAdminLogs, monthlyRows, submitterCandidates]);
+  const submitterSelectOptions = useMemo(() => {
+    const knownSubmitters = (allAdminLogs || [])
+      .map((row) => String(row?.reported_by || '').trim())
+      .filter(Boolean);
+    const pool = new Set([
+      ...submitterCandidates,
+      ...knownSubmitters,
+    ]);
+    return Array.from(pool.values())
+      .sort((a, b) => String(a).localeCompare(String(b), 'ja'))
+      .map((name) => ({ value: name, label: name }));
+  }, [allAdminLogs, submitterCandidates]);
 
   useEffect(() => {
     if (selectedSubmitter === SUBMITTER_FILTER_ALL) return;
@@ -431,22 +423,6 @@ export default function AdminAdminLogPage() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setMonthListLoading(true);
-      try {
-        const rows = await fetchAdminLogItems();
-        if (!cancelled) setAllAdminLogs(rows);
-      } catch {
-        if (!cancelled) setAllAdminLogs([]);
-      } finally {
-        if (!cancelled) setMonthListLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [fetchAdminLogItems]);
-
-  useEffect(() => {
     if (!monthList.length) return;
     if (monthList.some((m) => m.ym === selectedYm)) return;
     setSelectedMonth(`${monthList[0].ym}-01`);
@@ -471,7 +447,6 @@ export default function AdminAdminLogPage() {
       idKey="kanri_log_id"
       listLimit={1000}
       loadItemsOverride={fetchAdminLogItems}
-      fixedQuery={{}}
       canEditRow={(row) => !row?._legacy_source}
       canDeleteRow={(row) => !row?._legacy_source}
       clientFilter={(row) => {
@@ -563,18 +538,6 @@ export default function AdminAdminLogPage() {
         reported_at: todayYmd(),
         reported_by: '管理',
         jotai: 'yuko',
-      }}
-      parentSources={{
-        jinzai: {
-          apiBase: '/api-jinzai',
-          resourceBasePath: '',
-          resource: 'jinzai',
-          query: { limit: 2000, jotai: 'yuko' },
-        },
-        kadai: {
-          resource: 'kadai',
-          query: { limit: 500, jotai: 'yuko' },
-        },
       }}
       normalizeEditingModel={(model) => {
         const m = { ...(model || {}) };
@@ -843,7 +806,7 @@ export default function AdminAdminLogPage() {
           key: 'reported_by',
           label: '提出者',
           type: 'select',
-          options: buildAdminSubmitterOptions,
+          options: submitterSelectOptions,
           valueKey: 'value',
           labelKey: 'label',
           required: true,

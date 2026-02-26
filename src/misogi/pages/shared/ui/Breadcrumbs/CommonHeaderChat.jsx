@@ -100,6 +100,23 @@ function asRowAttachments(row) {
   }];
 }
 
+function buildIdentitySet(values) {
+  const set = new Set();
+  for (const v of values || []) {
+    const s = String(v || '').trim();
+    if (!s) continue;
+    const lower = s.toLowerCase();
+    set.add(lower);
+    if (lower.includes('@')) set.add(lower.split('@')[0]);
+  }
+  return set;
+}
+
+function toEpochMs(value) {
+  const t = Date.parse(String(value || '').trim());
+  return Number.isNaN(t) ? 0 : t;
+}
+
 export default function CommonHeaderChat() {
   const { user, authz } = useAuth();
   const [desktopOnly, setDesktopOnly] = useState(() => {
@@ -112,11 +129,14 @@ export default function CommonHeaderChat() {
   const [error, setError] = useState('');
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
   const [uploading, setUploading] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [showDataEditor, setShowDataEditor] = useState(false);
   const [dataText, setDataText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [lastSeenAt, setLastSeenAt] = useState('');
   const listRef = useRef(null);
   const fileInputRef = useRef(null);
   const dragRef = useRef({ active: false, startX: 0, startY: 0, baseX: 0, baseY: 0 });
@@ -159,6 +179,64 @@ export default function CommonHeaderChat() {
     || user?.email
     || ''
   ).trim(), [authz?.workerId, user]);
+
+  const viewerKey = useMemo(() => {
+    const base = String(
+      senderId
+      || user?.email
+      || user?.username
+      || senderName
+      || 'anon'
+    ).trim().toLowerCase();
+    return base.replace(/\s+/g, '_') || 'anon';
+  }, [senderId, senderName, user?.email, user?.username]);
+
+  const seenStorageKey = useMemo(
+    () => `misogi.chat.lastSeen.${CHAT_ROOM}.${viewerKey}`,
+    [viewerKey]
+  );
+
+  const identitySet = useMemo(() => {
+    const stored = readStoredUserProfile();
+    return buildIdentitySet([
+      senderId,
+      senderName,
+      user?.id,
+      user?.sub,
+      user?.username,
+      user?.email,
+      user?.attributes?.email,
+      user?.attributes?.name,
+      stored?.name,
+      stored?.display_name,
+      stored?.username,
+      stored?.email,
+      stored?.attributes?.email,
+      authz?.workerId,
+    ]);
+  }, [authz?.workerId, senderId, senderName, user]);
+
+  const isMyRow = useCallback((row) => {
+    if (!row || identitySet.size === 0) return false;
+    const rowIds = buildIdentitySet([
+      row?.sender_id,
+      row?.created_by,
+      row?.updated_by,
+      row?.sender_name,
+      row?.sender_display_name,
+      row?.created_by_name,
+      row?.updated_by_name,
+    ]);
+    for (const id of rowIds) {
+      if (identitySet.has(id)) return true;
+    }
+    return false;
+  }, [identitySet]);
+
+  const latestMessageAt = useMemo(() => {
+    if (!Array.isArray(items) || items.length === 0) return '';
+    return String(items[items.length - 1]?.created_at || '').trim();
+  }, [items]);
 
   const fetchChat = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -324,6 +402,42 @@ export default function CommonHeaderChat() {
     setText((prev) => truncateByCodePoints(`${prev || ''}${emoji || ''}`, MAX_MESSAGE_LEN));
   }, []);
 
+  const removeOwnMessage = useCallback(async (row) => {
+    const chatId = String(row?.chat_id || '').trim();
+    if (!chatId || deletingId) return;
+    setDeletingId(chatId);
+    try {
+      const base = MASTER_API_BASE.replace(/\/$/, '');
+      const res = await fetch(`${base}/master/admin_chat/${encodeURIComponent(chatId)}`, {
+        method: 'DELETE',
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`削除失敗: HTTP ${res.status}${txt ? ` ${txt}` : ''}`);
+      }
+      await fetchChat(true);
+      setError('');
+    } catch (e) {
+      setError(String(e?.message || e || '削除エラー'));
+    } finally {
+      setDeletingId('');
+    }
+  }, [deletingId, fetchChat]);
+
+  const markAsRead = useCallback((explicitSeenAt = '') => {
+    const seenAt = String(explicitSeenAt || latestMessageAt || new Date().toISOString()).trim();
+    if (!seenAt) return;
+    setLastSeenAt(seenAt);
+    setUnreadCount(0);
+    try {
+      localStorage.setItem(seenStorageKey, seenAt);
+    } catch {}
+  }, [latestMessageAt, seenStorageKey]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     const onResize = () => {
@@ -336,18 +450,53 @@ export default function CommonHeaderChat() {
   }, []);
 
   useEffect(() => {
+    if (!desktopOnly) return undefined;
+    fetchChat(true);
+    const timer = setInterval(() => { fetchChat(true); }, POLL_MS);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [desktopOnly, fetchChat]);
+
+  useEffect(() => {
     if (!open) return undefined;
     fetchChat(false);
-    const timer = setInterval(() => { fetchChat(true); }, POLL_MS);
+    markAsRead();
     const onEsc = (e) => {
       if (e.key === 'Escape') setOpen(false);
     };
     document.addEventListener('keydown', onEsc);
     return () => {
-      clearInterval(timer);
       document.removeEventListener('keydown', onEsc);
     };
-  }, [open, fetchChat]);
+  }, [fetchChat, markAsRead, open]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(seenStorageKey) || '';
+      setLastSeenAt(saved);
+    } catch {
+      setLastSeenAt('');
+    }
+  }, [seenStorageKey]);
+
+  useEffect(() => {
+    if (open) {
+      setUnreadCount(0);
+      return;
+    }
+    const seenTs = toEpochMs(lastSeenAt);
+    const unread = (items || []).filter((row) => {
+      if (isMyRow(row)) return false;
+      return toEpochMs(row?.created_at) > seenTs;
+    }).length;
+    setUnreadCount(unread);
+  }, [isMyRow, items, lastSeenAt, open]);
+
+  useEffect(() => {
+    if (!open || !latestMessageAt) return;
+    markAsRead(latestMessageAt);
+  }, [latestMessageAt, markAsRead, open]);
 
   const onDragStart = useCallback((e) => {
     if (!desktopOnly) return;
@@ -402,9 +551,17 @@ export default function CommonHeaderChat() {
         type="button"
         className="breadcrumbs-chat-trigger"
         aria-label="共通チャットを開く"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+          markAsRead();
+        }}
       >
         💬
+        {unreadCount > 0 ? (
+          <span className="breadcrumbs-chat-badge" aria-label={`${unreadCount}件の未読`}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        ) : null}
       </button>
       <section
         className={`header-chat-overlay ${open ? 'open' : ''}`}
@@ -423,7 +580,8 @@ export default function CommonHeaderChat() {
             <div className="header-chat-empty">まだ投稿がありません</div>
           ) : (
             items.map((row) => {
-              const mine = senderId && String(row?.sender_id || '') === senderId;
+              const mine = isMyRow(row);
+              const rowChatId = String(row?.chat_id || '').trim();
               const senderDisplayName = String(
                 row?.sender_name
                 || row?.sender_display_name
@@ -441,7 +599,19 @@ export default function CommonHeaderChat() {
                 <article key={String(row?.chat_id || row?.created_at || Math.random())} className={`header-chat-item ${mine ? 'mine' : ''}`}>
                   <header>
                     <span className="who">{senderDisplayName}</span>
-                    <span className="at">{toDisplayDateTime(row?.created_at)}</span>
+                    <div className="meta-right">
+                      <span className="at">{toDisplayDateTime(row?.created_at)}</span>
+                      {mine && rowChatId ? (
+                        <button
+                          type="button"
+                          className="msg-cancel"
+                          onClick={() => removeOwnMessage(row)}
+                          disabled={deletingId === rowChatId}
+                        >
+                          {deletingId === rowChatId ? '削除中...' : '削除'}
+                        </button>
+                      ) : null}
+                    </div>
                   </header>
                   {String(row?.message || '').trim() ? (
                     <p>{String(row?.message || '')}</p>
