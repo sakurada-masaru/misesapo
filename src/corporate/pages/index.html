@@ -99,12 +99,10 @@
         }
 
         .about-highlight__inner {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 32px 10px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            text-align: center;
         }
 
 
@@ -130,6 +128,7 @@
             z-index: 1;
             display: flex;
             align-items: center;
+            justify-content: center;
         }
 
         .about-highlight__lead {
@@ -140,15 +139,24 @@
             position: relative;
             z-index: 1;
         }
+        .about-highlight__lead img{
+            margin:20px auto;
+            width: 450px;
+        }
 
         @media (max-width: 768px) {
+            .about-highlight__lead img{
+            margin:20px auto 0;
+            width: 100%;
+        }
+
             .about-highlight {
                 margin: 180px auto 0;
                 padding: 0 16px;
             }
 
             .about-highlight__inner {
-                padding: 24px 20px 0;
+                padding: 0;
                 border-radius: 16px;
                 display: block;
             }
@@ -161,6 +169,7 @@
             }
             .about-highlight__lead {
             text-align: center;
+            font-size: 22px;
         }
         .about-highlight__image{
             margin:10px auto 0;
@@ -1604,8 +1613,9 @@
             background: #FDEDED;
             overflow: hidden;
             position: relative;
-            top: 145px;
+            top: 130px;
             padding-bottom: 20px;
+            z-index: 100;
         }
         .client-logos-marquee {
             margin: 0 auto;
@@ -3618,6 +3628,47 @@ width: 320px;
 .section-box{
     padding: 3rem 1rem;
 }
+
+.circle_box {
+max-width: 1200px;
+}
+
+.circle_box ul {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 50px;
+}
+.circle_box_content {
+    width: 190px;
+    height: 180px;
+    flex-shrink: 0;
+    background-image: url('/images/top/circle.png');
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    line-height: 1.5;
+    margin: 3px;
+}
+.circle_box_content span{
+font-weight: bold;
+font-size: 24px;
+}
+@media screen and (max-width:768px) {
+    .circle_box_content {
+    width: 150px;
+    height: 140px;
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 3px;
+}
+.circle_box_content span{
+font-size: 20px;
+}
+}
 </style>
 <meta name="google-site-verification" content="1p_D4TeZPs9QD3zGxNqkjrKZPkTHlsa9MCXkPR83wJk" />
 </head>
@@ -3804,7 +3855,17 @@ width: 320px;
 
     <section class="about-highlight" aria-labelledby="about-highlight-title">
         <div class="about-highlight__inner">
-        <div>
+            <div class="circle_box">
+                <ul>
+                    <ii class="circle_box_content"><p>取引店舗<br><span>300</span>以上</p></ii>
+                    <ii class="circle_box_content"><p><span>都内最高水準</span><br>の従業員報酬</p></ii>
+                    <ii class="circle_box_content"><p>最速で<span>即日</span>勤務<br><span>準備金不要</span></p></ii>
+                    <ii class="circle_box_content"><p>定期清掃は驚額<br><span>3万円</span>～</p></ii>
+                    <ii class="circle_box_content"><p>関東を中心に<br><span>全国展開</span></p></ii>
+                    <ii class="circle_box_content"><p><span>保健所対応</span><br>が可能</p></ii>
+                </ul>
+            </div>    
+            <div class="about-highlight__title-box">
             <h2 id="about-highlight-title" class="about-highlight__title">
                 <img src="images/top_about_rogo.png" width="200px" alt="ミセサポ">
                 とは
@@ -3814,10 +3875,8 @@ width: 320px;
                 <p class="about-top-text">
                     トータルサポートを提供する<br class="sp-only">プラットフォームサービスです
                 </p>
+                <img src="/images/top_about_img.png" alt="ミセサポ">
             </div>
-        </div>
-        <div class="about-highlight__image">
-            <img src="/images/top_about_img.png" alt="ミセサポ">
         </div>
         </div>
     </section>
