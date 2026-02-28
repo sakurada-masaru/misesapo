@@ -40,6 +40,8 @@ import AdminTorihikisakiMeiboPage from '../admin/pages/AdminTorihikisakiMeiboPag
 import AdminJinzaiMeiboPage from '../admin/pages/AdminJinzaiMeiboPage';
 import AdminTenpoKartePage from '../admin/pages/AdminTenpoKartePage';
 import AdminTorihikisakiTourokuPage from '../admin/pages/AdminTorihikisakiTourokuPage';
+import AdminCleaningHoukokuToolPage from '../admin/pages/AdminCleaningHoukokuToolPage';
+import AdminCleaningHoukokuListPage from '../admin/pages/AdminCleaningHoukokuListPage';
 import HrAttendance from '../admin/pages/hr/Attendance';
 import ReportCreatePage from '../shared/ui/Report/ReportCreatePage';
 import SalesStoreKartePage from '../shared/ui/Sales/SalesStoreKartePage';
@@ -176,6 +178,8 @@ export default function Router() {
       <Route path="/admin/master/zaiko-order" element={<AdminMasterOnly><AdminZaikoOrderPage /></AdminMasterOnly>} />
       <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />
       <Route path="/admin/houkoku/:reportId" element={<AdminHoukokuDetailPage />} />
+      <Route path="/admin/tools/cleaning-houkoku" element={<AdminCleaningHoukokuToolPage />} />
+      <Route path="/admin/tools/cleaning-houkoku/list" element={<AdminCleaningHoukokuListPage />} />
       <Route path="/admin/kadai" element={<AdminKadaiListPage />} />
       <Route path="/admin/admin-log" element={<AdminAdminLogPage />} />
       <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />

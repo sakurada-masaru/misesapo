@@ -106,7 +106,20 @@ export const validateTemplatePayload = (template, payload) => {
  * @param {function} onPayloadChange - payload変更時のコールバック (newPayload) => void
  * @param {string} mode - 'view' | 'edit'
  */
-const TemplateRenderer = ({ template, payload, report, onChange, onPayloadChange, onFileUpload, onFileRemove, mode = 'view', footer }) => {
+const TemplateRenderer = ({
+    template,
+    payload,
+    report,
+    onChange,
+    onPayloadChange,
+    onFileUpload,
+    onFileRemove,
+    mode = 'view',
+    footer,
+    hideHeader = false,
+    suppressEditGlow = false,
+    editMaxWidth = null
+}) => {
     // AdminReportNewPage 等で onPayloadChange を使っている場合への配慮
     const handleChange = onChange || onPayloadChange;
 
@@ -131,11 +144,17 @@ const TemplateRenderer = ({ template, payload, report, onChange, onPayloadChange
 
     return (
         <ReportContainer $mode={mode}>
-            <MobileCanvas $mode={mode}>
+            <MobileCanvas
+                $mode={mode}
+                $suppressEditGlow={suppressEditGlow}
+                $editMaxWidth={editMaxWidth}
+            >
                 {/* ヘッダー */}
-                <ReportHeader $mode={mode}>
-                    <ReportTitle $mode={mode}>{template.title || template.name}</ReportTitle>
-                </ReportHeader>
+                {!hideHeader && (
+                    <ReportHeader $mode={mode} $suppressEditGlow={suppressEditGlow}>
+                        <ReportTitle $mode={mode}>{template.title || template.name}</ReportTitle>
+                    </ReportHeader>
+                )}
 
                 {/* ボディ（スクロールエリア） */}
                 <ReportBody $mode={mode}>
@@ -610,6 +629,28 @@ const PhotosSection = ({ section, payload, onFileUpload, onFileRemove, mode }) =
 // ===== スタイル =====
 
 const ReportContainer = styled.div`
+    --tr-edit-bg: #0f172a;
+    --tr-edit-fg: #f8fafc;
+    --tr-edit-sub: rgba(248,250,252,0.72);
+    --tr-edit-border: rgba(255,255,255,0.10);
+    --tr-edit-card: rgba(255,255,255,0.03);
+    --tr-edit-card-strong: rgba(255,255,255,0.06);
+    --tr-edit-accent: #3b82f6;
+    --tr-edit-danger: #ef4444;
+    --tr-edit-picker-filter: invert(1);
+
+    [data-theme="light"] & {
+        --tr-edit-bg: #f8fbff;
+        --tr-edit-fg: #0f2747;
+        --tr-edit-sub: rgba(15,39,71,0.72);
+        --tr-edit-border: rgba(23,67,124,0.20);
+        --tr-edit-card: rgba(20,66,126,0.05);
+        --tr-edit-card-strong: rgba(20,66,126,0.10);
+        --tr-edit-accent: #2f67d8;
+        --tr-edit-danger: #dc2626;
+        --tr-edit-picker-filter: invert(0);
+    }
+
     display: flex;
     justify-content: center;
     background: ${props => props.$mode === 'edit' ? 'transparent' : '#f8fafc'};
@@ -619,20 +660,20 @@ const ReportContainer = styled.div`
 
 const MobileCanvas = styled.div`
     width: 100%;
-    max-width: ${props => props.$mode === 'edit' ? '800px' : '850px'};
-    background: ${props => props.$mode === 'edit' ? '#0f172a' : '#ffffff'};
-    color: ${props => props.$mode === 'edit' ? '#f8fafc' : '#1e293b'};
+    max-width: ${props => props.$mode === 'edit' ? (props.$editMaxWidth || '800px') : '850px'};
+    background: ${props => props.$mode === 'edit' ? 'var(--tr-edit-bg, #0f172a)' : '#ffffff'};
+    color: ${props => props.$mode === 'edit' ? 'var(--tr-edit-fg, #f8fafc)' : '#1e293b'};
     min-height: ${props => props.$mode === 'edit' ? 'auto' : '100vh'};
     display: flex;
     flex-direction: column;
     margin: 0 auto;
     
     ${props => props.$mode === 'edit' && `
-        box-shadow: 0 12px 60px rgba(0,0,0,0.5);
+        box-shadow: ${props.$suppressEditGlow ? 'none' : '0 12px 60px rgba(0,0,0,0.5)'};
         border-radius: 24px;
         margin-bottom: 40px;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--tr-edit-border);
         font-family: 'Noto Sans JP', sans-serif;
     `}
     ${props => props.$mode !== 'edit' && `
@@ -659,9 +700,9 @@ const ReportHeader = styled.header`
     z-index: 5;
     pointer-events: none;
     padding: 16px;
-    background: ${props => props.$mode === 'edit' ? 'rgba(15, 23, 42, 0.85)' : '#ffffff'};
-    backdrop-filter: ${props => props.$mode === 'edit' ? 'blur(10px)' : 'none'};
-    border-bottom: 1px solid ${props => props.$mode === 'edit' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'};
+    background: ${props => props.$mode === 'edit' ? 'var(--tr-edit-card-strong)' : '#ffffff'};
+    backdrop-filter: ${props => (props.$mode === 'edit' && !props.$suppressEditGlow) ? 'blur(10px)' : 'none'};
+    border-bottom: 1px solid ${props => props.$mode === 'edit' ? 'var(--tr-edit-border)' : '#e2e8f0'};
     ${props => props.$mode !== 'edit' && `
         margin-bottom: 24px;
         padding: 24px 16px;
@@ -677,7 +718,7 @@ const ReportTitle = styled.h1`
     margin: 0;
     ${props => props.$mode === 'edit' ? `
         font-size: 16px;
-        color: #f8fafc;
+        color: var(--tr-edit-fg);
     ` : `
         font-size: 28px;
         padding-bottom: 8px;
@@ -719,14 +760,14 @@ const SectionTitle = styled.h2`
     
     ${props => props.$mode === 'edit' ? `
         font-size: 14px;
-        color: #f8fafc;
+        color: var(--tr-edit-fg);
         opacity: 0.9;
         &::before {
             content: '';
             display: block;
             width: 3px;
             height: 14px;
-            background: ${props.$required ? '#f87171' : '#3b82f6'};
+            background: ${props.$required ? '#f87171' : 'var(--tr-edit-accent)'};
             border-radius: 99px;
         }
         ${props.$required ? `
@@ -794,7 +835,7 @@ const FieldLabel = styled.span`
                 content: '必須';
                 font-size: 9px;
                 padding: 1px 5px;
-                background: #ef4444;
+                background: var(--tr-edit-danger);
                 color: white;
                 border-radius: 4px;
                 font-weight: 800;
@@ -812,11 +853,11 @@ const FieldValue = styled.div`
     font-weight: 500;
     ${props => props.$mode === 'edit' ? `
         font-size: 15px;
-        color: #f8fafc;
+        color: var(--tr-edit-fg);
         padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--tr-edit-card);
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--tr-edit-border);
     ` : `
         font-size: 16px;
         color: #1e293b;
@@ -851,9 +892,9 @@ const ChoiceRow = styled.button`
         justify-content: space-between;
         padding: 14px 16px;
         border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.03);
-        color: #f8fafc;
+        border: 1px solid var(--tr-edit-border);
+        background: var(--tr-edit-card);
+        color: var(--tr-edit-fg);
         font-size: 15px;
         cursor: pointer;
         pointer-events: auto;
@@ -866,21 +907,21 @@ const ChoiceRow = styled.button`
             width: 18px;
             height: 18px;
             border-radius: 99px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid var(--tr-edit-border);
             transition: all 0.2s;
             flex-shrink: 0;
         }
 
         &.is-active {
-            border-color: rgba(59, 130, 246, 0.5);
-            background: rgba(59, 130, 246, 0.12);
+            border-color: var(--tr-edit-accent);
+            background: var(--tr-edit-card-strong);
             &::after {
-                border-color: #3b82f6;
-                box-shadow: inset 0 0 0 5px #3b82f6;
+                border-color: var(--tr-edit-accent);
+                box-shadow: inset 0 0 0 5px var(--tr-edit-accent);
             }
         }
         &:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.06);
+            background: var(--tr-edit-card-strong);
         }
     ` : `
         border: none;
@@ -907,12 +948,12 @@ const ChoiceDot = styled.div`
     width: 20px;
     height: 20px;
     border-radius: 999px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--tr-edit-border);
     transition: all 0.2s;
     position: relative;
     
     &.is-active {
-        border-color: #3b82f6;
+        border-color: var(--tr-edit-accent);
         &::after {
             content: '';
             position: absolute;
@@ -920,7 +961,7 @@ const ChoiceDot = styled.div`
             left: 4px;
             width: 8px;
             height: 8px;
-            background: #3b82f6;
+            background: var(--tr-edit-accent);
             border-radius: 99px;
         }
     }
@@ -931,15 +972,15 @@ const ChoiceBox = styled.div`
     width: 20px;
     height: 20px;
     border-radius: 6px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--tr-edit-border);
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
     font-size: 10px;
     
     &.is-checked {
-        border-color: #3b82f6;
-        background: #3b82f6;
+        border-color: var(--tr-edit-accent);
+        background: var(--tr-edit-accent);
         color: white;
     }
 `;
@@ -953,10 +994,10 @@ const TextInput = styled.input`
     transition: border-color 0.2s;
     
     ${props => props.$mode === 'edit' ? `
-        color: #f8fafc;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.03);
-        &:focus { border-color: #3b82f6; outline: none; }
+        color: var(--tr-edit-fg);
+        border: 1px solid var(--tr-edit-border);
+        background: var(--tr-edit-card);
+        &:focus { border-color: var(--tr-edit-accent); outline: none; }
     ` : `
         color: #1e293b;
         border: 1px solid #e2e8f0;
@@ -979,16 +1020,16 @@ const DateInput = styled(TextInput)`
     &[type="date"] {
         appearance: none;
         -webkit-appearance: none;
-        color-scheme: dark;
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
+        color-scheme: ${props => props.$mode === 'edit' ? 'light dark' : 'light'};
+        background: var(--tr-edit-card-strong);
+        color: var(--tr-edit-fg);
         position: relative;
         min-height: 48px;
     }
     &::-webkit-calendar-picker-indicator {
         position: absolute;
         right: 12px;
-        filter: invert(1);
+        filter: ${props => props.$mode === 'edit' ? 'var(--tr-edit-picker-filter)' : 'invert(0)'};
         cursor: pointer;
     }
 `;
@@ -1003,10 +1044,10 @@ const TextareaInput = styled.textarea`
     transition: border-color 0.2s;
     
     ${props => props.$mode === 'edit' ? `
-        color: #f8fafc;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.03);
-        &:focus { border-color: #3b82f6; outline: none; }
+        color: var(--tr-edit-fg);
+        border: 1px solid var(--tr-edit-border);
+        background: var(--tr-edit-card);
+        &:focus { border-color: var(--tr-edit-accent); outline: none; }
     ` : `
         color: #1e293b;
         border: 1px solid #e2e8f0;
@@ -1034,7 +1075,7 @@ const NoteBlock = styled(TextareaValue)``;
 const DescriptionText = styled.p`
     font-size: 14px;
     line-height: 1.7;
-    opacity: 0.7;
+    opacity: 0.85;
     margin: 0;
 `;
 
@@ -1043,12 +1084,12 @@ const BulletList = styled.ul`
     padding: 0;
     font-size: 14px;
     line-height: 1.7;
-    opacity: 0.7;
+    opacity: 0.85;
 `;
 
 const HelperText = styled.p`
     font-size: 11px;
-    color: #f87171;
+    color: var(--tr-edit-danger);
     opacity: 0.8;
     margin: 12px 0 0 4px;
     display: flex;
@@ -1064,7 +1105,7 @@ const HelperText = styled.p`
 
 const HintText = styled.p`
     font-size: 12px;
-    opacity: 0.5;
+    opacity: 0.8;
     margin: -8px 0 16px 4px;
 `;
 
@@ -1109,13 +1150,13 @@ const PhotoItem = styled.a`
     height: 100%;
     border-radius: 14px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--tr-edit-card);
+    border: 1px solid var(--tr-edit-border);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
     &:hover {
         transform: scale(1.02);
-        border-color: rgba(255, 255, 255, 0.2);
+        border-color: var(--tr-edit-border);
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
     
@@ -1133,9 +1174,9 @@ const PhotoRemoveBtn = styled.button`
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: #ef4444;
+    background: var(--tr-edit-danger);
     color: white;
-    border: 2px solid #0f172a;
+    border: 2px solid var(--tr-edit-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1147,22 +1188,22 @@ const PhotoRemoveBtn = styled.button`
 const UploadBox = styled.label`
     width: 100%;
     aspect-ratio: 1;
-    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border: 2px dashed var(--tr-edit-border);
     border-radius: 14px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--tr-edit-sub);
     cursor: pointer;
     transition: all 0.2s;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--tr-edit-card);
     
     &:hover {
-        background: rgba(59, 130, 246, 0.05);
-        border-color: rgba(59, 130, 246, 0.5);
-        color: #3b82f6;
+        background: var(--tr-edit-card-strong);
+        border-color: var(--tr-edit-accent);
+        color: var(--tr-edit-accent);
     }
     
     i { font-size: 24px; }
@@ -1172,7 +1213,7 @@ const UploadBox = styled.label`
 const EmptyPhoto = styled.div`
     padding: 24px;
     text-align: center;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--tr-edit-card);
     border-radius: 12px;
     font-size: 13px;
     opacity: 0.5;
@@ -1185,15 +1226,15 @@ const ReportFooter = styled.footer`
     bottom: 0;
     z-index: 5;
     padding: 16px;
-    background: rgba(15, 23, 42, 0.92);
+    background: var(--tr-edit-card-strong);
     backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--tr-edit-border);
 `;
 
 const ReportFooterInfo = styled.div`
     margin-top: 40px;
     padding: 24px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--tr-edit-border);
     display: flex;
     flex-direction: column;
     gap: 8px;

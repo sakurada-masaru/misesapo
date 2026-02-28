@@ -2,12 +2,27 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { normalizeGatewayBase } from '../../api/gatewayBase';
 import { useAuth } from '../../auth/useAuth';
 
-const CHAT_ROOM = 'common_header';
+const DEFAULT_CHAT_ROOM = 'common_header';
+const ROOM_STORAGE_KEY = 'misogi.chat.activeRoom';
+const ROOM_PRESETS = [
+  { key: 'common_header', label: '共通' },
+  { key: 'kanri', label: '管理' },
+  { key: 'sales', label: '営業' },
+  { key: 'cleaning', label: '清掃' },
+  { key: 'office', label: '事務' },
+  { key: 'dev', label: '開発' },
+];
 const POLL_MS = 5000;
 const MAX_ITEMS = 120;
 const MAX_UPLOAD_SIZE = 15 * 1024 * 1024;
 const MAX_MESSAGE_LEN = 280;
 const BASIC_EMOJIS = ['😀', '😊', '😂', '🙏', '👍', '👏', '✅', '⚠️', '❗', '📷', '📎', '📌', '💡', '🔥'];
+const QUICK_TEMPLATES = [
+  '承知しました。確認して折り返します。',
+  '対応完了しました。ご確認をお願いします。',
+  '現場到着しました。',
+  '資料を添付します。',
+];
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -117,17 +132,50 @@ function toEpochMs(value) {
   return Number.isNaN(t) ? 0 : t;
 }
 
+function normalizeLangCode(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return 'auto';
+  if (raw.startsWith('ja')) return 'ja';
+  if (raw.startsWith('pt')) return 'pt';
+  if (raw.startsWith('en')) return 'en';
+  if (raw === 'auto') return 'auto';
+  return raw;
+}
+
+function clampRoomKey(value) {
+  const k = String(value || '').trim();
+  return ROOM_PRESETS.some((row) => row.key === k) ? k : DEFAULT_CHAT_ROOM;
+}
+
+function shortMessage(value, maxLen = 72) {
+  const s = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  const chars = Array.from(s);
+  return chars.length > maxLen ? `${chars.slice(0, maxLen).join('')}…` : s;
+}
+
 export default function CommonHeaderChat() {
   const { user, authz } = useAuth();
   const [desktopOnly, setDesktopOnly] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.innerWidth > 900;
   });
+  const [activeRoom, setActiveRoom] = useState(() => {
+    if (typeof window === 'undefined') return DEFAULT_CHAT_ROOM;
+    try {
+      return clampRoomKey(localStorage.getItem(ROOM_STORAGE_KEY) || DEFAULT_CHAT_ROOM);
+    } catch {
+      return DEFAULT_CHAT_ROOM;
+    }
+  });
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
+  const [query, setQuery] = useState('');
+  const [filterMode, setFilterMode] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [text, setText] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
   const [sending, setSending] = useState(false);
   const [deletingId, setDeletingId] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -135,6 +183,12 @@ export default function CommonHeaderChat() {
   const [showDataEditor, setShowDataEditor] = useState(false);
   const [dataText, setDataText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showTools, setShowTools] = useState(false);
+  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [translationTarget, setTranslationTarget] = useState('auto');
+  const [translationCache, setTranslationCache] = useState({});
+  const [translationOpen, setTranslationOpen] = useState({});
+  const [translating, setTranslating] = useState({});
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastSeenAt, setLastSeenAt] = useState('');
   const listRef = useRef(null);
@@ -192,8 +246,8 @@ export default function CommonHeaderChat() {
   }, [senderId, senderName, user?.email, user?.username]);
 
   const seenStorageKey = useMemo(
-    () => `misogi.chat.lastSeen.${CHAT_ROOM}.${viewerKey}`,
-    [viewerKey]
+    () => `misogi.chat.lastSeen.${activeRoom}.${viewerKey}`,
+    [activeRoom, viewerKey]
   );
 
   const identitySet = useMemo(() => {
@@ -238,11 +292,38 @@ export default function CommonHeaderChat() {
     return String(items[items.length - 1]?.created_at || '').trim();
   }, [items]);
 
+  const visibleItems = useMemo(() => {
+    const q = String(query || '').trim().toLowerCase();
+    return (items || []).filter((row) => {
+      const mine = isMyRow(row);
+      const hasAttachment = asRowAttachments(row).length > 0;
+      const hasData = !!(row?.data_payload && typeof row.data_payload === 'object');
+      if (filterMode === 'mine' && !mine) return false;
+      if (filterMode === 'files' && !hasAttachment) return false;
+      if (filterMode === 'data' && !hasData) return false;
+      if (!q) return true;
+      const haystack = [
+        row?.message,
+        row?.sender_name,
+        row?.sender_display_name,
+        row?.reply_to_message,
+        row?.reply_to_sender_name,
+        ...asRowAttachments(row).map((a) => a?.name),
+      ].map((v) => String(v || '').toLowerCase());
+      return haystack.some((v) => v.includes(q));
+    });
+  }, [filterMode, isMyRow, items, query]);
+
+  const activeRoomLabel = useMemo(() => {
+    const found = ROOM_PRESETS.find((row) => row.key === activeRoom);
+    return found?.label || '共通';
+  }, [activeRoom]);
+
   const fetchChat = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
       const base = MASTER_API_BASE.replace(/\/$/, '');
-      const url = `${base}/master/admin_chat?limit=300&jotai=yuko&room=${encodeURIComponent(CHAT_ROOM)}`;
+      const url = `${base}/master/admin_chat?limit=500&jotai=yuko&room=${encodeURIComponent(activeRoom)}`;
       const res = await fetch(url, {
         headers: {
           ...authHeaders(),
@@ -266,7 +347,7 @@ export default function CommonHeaderChat() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [activeRoom]);
 
   const uploadAttachment = useCallback(async (file) => {
     if (!file) return;
@@ -283,7 +364,7 @@ export default function CommonHeaderChat() {
       },
       body: JSON.stringify({
         mode: 'presign_upload',
-        room: CHAT_ROOM,
+        room: activeRoom,
         file_name: file.name,
         content_type: contentType,
       }),
@@ -309,7 +390,7 @@ export default function CommonHeaderChat() {
       size: Number(file.size || 0),
       url: String(presign?.get_url || ''),
     };
-  }, []);
+  }, [activeRoom]);
 
   const send = useCallback(async () => {
     const msg = String(text || '').trim();
@@ -330,7 +411,7 @@ export default function CommonHeaderChat() {
       }
       const titleBase = msg || attachments[0]?.name || '添付';
       const body = {
-        room: CHAT_ROOM,
+        room: activeRoom,
         name: titleBase.length > 24 ? `${titleBase.slice(0, 24)}…` : titleBase,
         sender_name: senderName,
         sender_display_name: senderName,
@@ -340,6 +421,11 @@ export default function CommonHeaderChat() {
         jotai: 'yuko',
         has_attachment: hasAttachments,
       };
+      if (replyTo?.chat_id) {
+        body.reply_to_chat_id = String(replyTo.chat_id);
+        body.reply_to_sender_name = String(replyTo.sender_name || replyTo.sender_display_name || '');
+        body.reply_to_message = shortMessage(replyTo.message || '');
+      }
       if (hasAttachments) {
         body.attachments = attachments;
         const firstAttachment = attachments[0];
@@ -367,6 +453,7 @@ export default function CommonHeaderChat() {
       }
       setText('');
       setDataText('');
+      setReplyTo(null);
       setAttachments([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
       await fetchChat(true);
@@ -376,7 +463,7 @@ export default function CommonHeaderChat() {
     } finally {
       setSending(false);
     }
-  }, [attachments, dataText, fetchChat, senderId, senderName, sending, text, uploading]);
+  }, [activeRoom, attachments, dataText, fetchChat, replyTo, senderId, senderName, sending, text, uploading]);
 
   const onClickAttach = useCallback(() => {
     if (uploading || sending) return;
@@ -428,6 +515,148 @@ export default function CommonHeaderChat() {
     }
   }, [deletingId, fetchChat]);
 
+  const buildTranslationKey = useCallback((row, messageText) => {
+    const rowKey = String(row?.chat_id || row?.created_at || '').trim();
+    const msg = String(messageText || '').trim();
+    return `${rowKey}:${translationTarget}:${msg}`;
+  }, [translationTarget]);
+
+  const translateOnce = useCallback(async (messageText, targetLang) => {
+    const msg = String(messageText || '').trim();
+    if (!msg) return { text: '', sourceLang: 'auto', targetLang: normalizeLangCode(targetLang) };
+    const base = MASTER_API_BASE.replace(/\/$/, '');
+    const res = await fetch(`${base}/master/admin_chat`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mode: 'translate_text',
+        text: msg,
+        source_lang: 'auto',
+        target_lang: normalizeLangCode(targetLang) || 'ja',
+      }),
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`翻訳失敗: HTTP ${res.status}${txt ? ` ${txt}` : ''}`);
+    }
+    const data = await res.json();
+    return {
+      text: String(data?.translated_text || '').trim(),
+      sourceLang: normalizeLangCode(data?.source_language || 'auto'),
+      targetLang: normalizeLangCode(data?.target_language || targetLang),
+    };
+  }, []);
+
+  const fetchTranslation = useCallback(async (messageText) => {
+    const msg = String(messageText || '').trim();
+    if (!msg) return '';
+    const selected = normalizeLangCode(translationTarget);
+
+    // 自動モード: ja / pt の両方を試し、原文と異なる結果を優先採用。
+    if (selected === 'auto') {
+      const first = await translateOnce(msg, 'ja');
+      const firstText = String(first.text || '').trim();
+      if (firstText && firstText !== msg) return firstText;
+      const second = await translateOnce(msg, 'pt');
+      const secondText = String(second.text || '').trim();
+      if (secondText && secondText !== msg) return secondText;
+      return firstText || secondText || msg;
+    }
+
+    const first = await translateOnce(msg, selected);
+    // 同一言語判定で未変換に見える場合、ja<->pt を自動反転して再試行。
+    if ((first.sourceLang === selected || !first.text || first.text === msg) && (selected === 'ja' || selected === 'pt')) {
+      const alt = selected === 'ja' ? 'pt' : 'ja';
+      const second = await translateOnce(msg, alt);
+      return String(second.text || msg).trim();
+    }
+    return String(first.text || msg).trim();
+  }, [translationTarget, translateOnce]);
+
+  const toggleTranslation = useCallback(async (row) => {
+    const msg = String(row?.message || '').trim();
+    if (!msg) return;
+    const key = buildTranslationKey(row, msg);
+    if (translationOpen[key]) {
+      setTranslationOpen((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+      return;
+    }
+    if (translationCache[key]) {
+      setTranslationOpen((prev) => ({ ...prev, [key]: true }));
+      return;
+    }
+    if (translating[key]) return;
+    setTranslating((prev) => ({ ...prev, [key]: true }));
+    try {
+      const translated = await fetchTranslation(msg);
+      const normalized = String(translated || '').trim();
+      if (normalized && normalized !== msg) {
+        setTranslationCache((prev) => ({ ...prev, [key]: normalized }));
+        setTranslationOpen((prev) => ({ ...prev, [key]: true }));
+        setError('');
+      } else {
+        setError('翻訳結果を取得できませんでした（原文と同一）');
+      }
+    } catch (e) {
+      setError(String(e?.message || e || '翻訳エラー'));
+    } finally {
+      setTranslating((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  }, [buildTranslationKey, fetchTranslation, translationCache, translationOpen, translating]);
+
+  const ensureTranslation = useCallback(async (row) => {
+    const msg = String(row?.message || '').trim();
+    if (!msg) return;
+    const key = buildTranslationKey(row, msg);
+    if (translationCache[key] || translating[key]) return;
+    setTranslating((prev) => ({ ...prev, [key]: true }));
+    try {
+      const translated = await fetchTranslation(msg);
+      const normalized = String(translated || '').trim();
+      if (normalized && normalized !== msg) {
+        setTranslationCache((prev) => ({ ...prev, [key]: normalized }));
+        setTranslationOpen((prev) => ({ ...prev, [key]: true }));
+      }
+    } finally {
+      setTranslating((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  }, [buildTranslationKey, fetchTranslation, translationCache, translating]);
+
+  useEffect(() => {
+    setTranslationOpen({});
+    setTranslationCache({});
+  }, [activeRoom, translationTarget]);
+
+  useEffect(() => {
+    if (!autoTranslate || !open) return;
+    const targets = visibleItems.filter((row) => !isMyRow(row) && String(row?.message || '').trim());
+    let canceled = false;
+    (async () => {
+      for (const row of targets) {
+        if (canceled) return;
+        await ensureTranslation(row);
+      }
+    })();
+    return () => {
+      canceled = true;
+    };
+  }, [autoTranslate, ensureTranslation, isMyRow, open, visibleItems]);
+
   const markAsRead = useCallback((explicitSeenAt = '') => {
     const seenAt = String(explicitSeenAt || latestMessageAt || new Date().toISOString()).trim();
     if (!seenAt) return;
@@ -448,6 +677,19 @@ export default function CommonHeaderChat() {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(ROOM_STORAGE_KEY, activeRoom);
+    } catch {}
+    setQuery('');
+    setFilterMode('all');
+    setReplyTo(null);
+    setAttachments([]);
+    setShowEmojiPicker(false);
+    setShowDataEditor(false);
+    setShowTools(false);
+  }, [activeRoom]);
 
   useEffect(() => {
     if (!desktopOnly) return undefined;
@@ -570,16 +812,71 @@ export default function CommonHeaderChat() {
       >
         <div className="header-chat-head" onMouseDown={onDragStart}>
           <strong>共通チャット</strong>
-          <span className="status">5秒更新</span>
+          <span className="status">{activeRoomLabel} / 5秒更新</span>
+          <label className="chat-translate-target" title="翻訳先言語">
+            <span>翻訳</span>
+            <select value={translationTarget} onChange={(e) => setTranslationTarget(String(e.target.value || 'auto'))}>
+              <option value="auto">自動(ja⇄pt)</option>
+              <option value="ja">日本語</option>
+              <option value="pt">Português</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            className={`auto-translate ${autoTranslate ? 'active' : ''}`}
+            onClick={() => setAutoTranslate((v) => !v)}
+            title="表示中メッセージを自動翻訳"
+          >
+            {autoTranslate ? '自動翻訳ON' : '自動翻訳OFF'}
+          </button>
           <button type="button" className="close" onClick={() => setOpen(false)} aria-label="閉じる">×</button>
         </div>
+        <div className="header-chat-room-tabs" aria-label="チャットルーム">
+          {ROOM_PRESETS.map((room) => (
+            <button
+              key={room.key}
+              type="button"
+              className={activeRoom === room.key ? 'active' : ''}
+              onClick={() => setActiveRoom(room.key)}
+            >
+              {room.label}
+            </button>
+          ))}
+        </div>
+        <div className="header-chat-toolbar">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(String(e.target.value || '').slice(0, 80))}
+            placeholder="メッセージ/投稿者/添付名で検索"
+          />
+          <div className="header-chat-filter-chips">
+            {[
+              { key: 'all', label: '全件' },
+              { key: 'mine', label: '自分' },
+              { key: 'files', label: '添付' },
+              { key: 'data', label: 'データ' },
+            ].map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                className={filterMode === f.key ? 'active' : ''}
+                onClick={() => setFilterMode(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <span className="result-count">{visibleItems.length}/{items.length}</span>
+        </div>
         <div className="header-chat-log" ref={listRef}>
-          {loading && items.length === 0 ? (
+          {loading && visibleItems.length === 0 ? (
             <div className="header-chat-empty">読み込み中...</div>
-          ) : items.length === 0 ? (
+          ) : visibleItems.length === 0 ? (
             <div className="header-chat-empty">まだ投稿がありません</div>
           ) : (
-            items.map((row) => {
+            visibleItems.map((row, idx) => {
               const mine = isMyRow(row);
               const rowChatId = String(row?.chat_id || '').trim();
               const senderDisplayName = String(
@@ -595,12 +892,44 @@ export default function CommonHeaderChat() {
               const rowAttachments = asRowAttachments(row);
               const hasAttachment = rowAttachments.length > 0;
               const dataPayload = row?.data_payload && typeof row.data_payload === 'object' ? row.data_payload : null;
+              const messageText = String(row?.message || '').trim();
+              const translationKey = buildTranslationKey(row, messageText);
+              const translatedText = String(translationCache[translationKey] || '').trim();
+              const translationShown = !!translationOpen[translationKey];
+              const translatingNow = !!translating[translationKey];
+              const replySummary = shortMessage(row?.reply_to_message || '');
+              const replySender = String(row?.reply_to_sender_name || '').trim();
               return (
-                <article key={String(row?.chat_id || row?.created_at || Math.random())} className={`header-chat-item ${mine ? 'mine' : ''}`}>
+                <article key={String(row?.chat_id || row?.created_at || `idx-${idx}`)} className={`header-chat-item ${mine ? 'mine' : ''}`}>
                   <header>
                     <span className="who">{senderDisplayName}</span>
                     <div className="meta-right">
                       <span className="at">{toDisplayDateTime(row?.created_at)}</span>
+                      {messageText ? (
+                        <button
+                          type="button"
+                          className="msg-reply"
+                          onClick={() => {
+                            setReplyTo(row);
+                            setShowTools(true);
+                          }}
+                        >
+                          返信
+                        </button>
+                      ) : null}
+                      {messageText ? (
+                        <button
+                          type="button"
+                          className="msg-copy"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(messageText);
+                            } catch {}
+                          }}
+                        >
+                          コピー
+                        </button>
+                      ) : null}
                       {mine && rowChatId ? (
                         <button
                           type="button"
@@ -611,10 +940,28 @@ export default function CommonHeaderChat() {
                           {deletingId === rowChatId ? '削除中...' : '削除'}
                         </button>
                       ) : null}
+                      {messageText ? (
+                        <button
+                          type="button"
+                          className="msg-translate"
+                          onClick={() => toggleTranslation(row)}
+                          disabled={translatingNow}
+                        >
+                          {translationShown ? '原文' : (translatingNow ? '翻訳中...' : '翻訳')}
+                        </button>
+                      ) : null}
                     </div>
                   </header>
-                  {String(row?.message || '').trim() ? (
+                  {replySummary ? (
+                    <div className="reply-ref">
+                      <span>{replySender || '返信先'}:</span> {replySummary}
+                    </div>
+                  ) : null}
+                  {messageText ? (
                     <p>{String(row?.message || '')}</p>
+                  ) : null}
+                  {translationShown && translatedText ? (
+                    <div className="translated-text">{translatedText}</div>
                   ) : null}
                   {hasAttachment ? (
                     <div className="attachment">
@@ -666,6 +1013,13 @@ export default function CommonHeaderChat() {
           )}
         </div>
         <div className="header-chat-compose">
+          {replyTo ? (
+            <div className="reply-box">
+              <div className="reply-box-title">返信先: {String(replyTo?.sender_name || replyTo?.sender_display_name || '不明')}</div>
+              <div className="reply-box-body">{shortMessage(replyTo?.message || '') || '(本文なし)'}</div>
+              <button type="button" onClick={() => setReplyTo(null)}>返信解除</button>
+            </div>
+          ) : null}
           <input
             ref={fileInputRef}
             type="file"
@@ -677,8 +1031,32 @@ export default function CommonHeaderChat() {
             value={text}
             onChange={(e) => setText(truncateByCodePoints(e.target.value, MAX_MESSAGE_LEN))}
             placeholder={`メッセージ（最大${MAX_MESSAGE_LEN}文字）`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
           />
-          {showEmojiPicker ? (
+          <div className="compose-template-row">
+            <select
+              value=""
+              onChange={(e) => {
+                const picked = String(e.target.value || '');
+                if (!picked) return;
+                setText((prev) => truncateByCodePoints(`${prev ? `${prev}\n` : ''}${picked}`, MAX_MESSAGE_LEN));
+              }}
+            >
+              <option value="">定型文を挿入</option>
+              {QUICK_TEMPLATES.map((tpl) => (
+                <option key={tpl} value={tpl}>{tpl}</option>
+              ))}
+            </select>
+            <button type="button" onClick={() => setShowTools((v) => !v)}>
+              {showTools ? 'ツールを隠す' : 'ツールを表示'}
+            </button>
+          </div>
+          {showTools && showEmojiPicker ? (
             <div className="emoji-picker" aria-label="絵文字選択">
               {BASIC_EMOJIS.map((emoji) => (
                 <button key={emoji} type="button" onClick={() => onInsertEmoji(emoji)} aria-label={`絵文字 ${emoji}`}>
@@ -704,7 +1082,7 @@ export default function CommonHeaderChat() {
               ))}
             </div>
           ) : null}
-          {showDataEditor ? (
+          {showTools && showDataEditor ? (
             <textarea
               className="data-input"
               value={dataText}
@@ -718,11 +1096,33 @@ export default function CommonHeaderChat() {
               <button type="button" onClick={onClickAttach} disabled={uploading || sending}>
                 {uploading ? '添付中...' : '添付'}
               </button>
-              <button type="button" onClick={() => setShowEmojiPicker((v) => !v)} disabled={sending || uploading}>
-                {showEmojiPicker ? '絵文字閉じる' : '絵文字'}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!showTools) {
+                    setShowTools(true);
+                    setShowEmojiPicker(true);
+                    return;
+                  }
+                  setShowEmojiPicker((v) => !v);
+                }}
+                disabled={sending || uploading}
+              >
+                {showTools ? (showEmojiPicker ? '絵文字閉じる' : '絵文字') : '絵文字表示'}
               </button>
-              <button type="button" onClick={() => setShowDataEditor((v) => !v)} disabled={sending || uploading}>
-                {showDataEditor ? 'データ閉じる' : 'データ'}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!showTools) {
+                    setShowTools(true);
+                    setShowDataEditor(true);
+                    return;
+                  }
+                  setShowDataEditor((v) => !v);
+                }}
+                disabled={sending || uploading}
+              >
+                {showTools ? (showDataEditor ? 'データ閉じる' : 'データ') : 'データ表示'}
               </button>
               <button
                 type="button"

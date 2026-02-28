@@ -49,6 +49,8 @@ function labelForPath(pathname) {
   if (p === '/admin/master/keiyaku') return '契約マスタ';
   if (p === '/admin/master/zaiko') return '在庫管理DB';
   if (p === '/admin/master/zaiko-order') return '在庫発注フォーム';
+  if (p === '/admin/tools/cleaning-houkoku') return '清掃レポート作成';
+  if (p === '/admin/tools/cleaning-houkoku/list') return 'レポート一覧';
 
   // Jobs (v2)
   if (/^\/jobs\/[^/]+\/yotei$/.test(p)) return '予定';

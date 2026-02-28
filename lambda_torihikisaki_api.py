@@ -93,6 +93,7 @@ s3 = boto3.client(
 )
 STORAGE_BUCKET = os.environ.get("STORAGE_BUCKET", "")
 CHAT_STORAGE_BUCKET = os.environ.get("CHAT_STORAGE_BUCKET", "").strip() or STORAGE_BUCKET
+translate_client = boto3.client("translate", region_name=AWS_REGION)
 
 
 def _now_iso() -> str:
@@ -622,6 +623,58 @@ def _presign_upload_admin_chat(body: dict):
     }, None
 
 
+def _normalize_lang_code(lang: str, default_value: str) -> str:
+    raw = _strip(lang).lower()
+    if not raw:
+        return default_value
+    if raw in {"auto", "ja", "pt", "en"}:
+        return raw
+    if raw in {"pt-br", "pt_br", "ptbr"}:
+        return "pt"
+    return default_value
+
+
+def _translate_admin_chat_text(body: dict):
+    text = str(body.get("text") or "")
+    if not text.strip():
+        return {
+            "translated_text": "",
+            "source_language": "auto",
+            "target_language": _normalize_lang_code(body.get("target_lang"), "ja"),
+        }, None
+    if len(text) > 4000:
+        text = text[:4000]
+
+    target_lang = _normalize_lang_code(body.get("target_lang"), "ja")
+    source_lang = _normalize_lang_code(body.get("source_lang"), "auto")
+
+    try:
+        params = {
+            "Text": text,
+            "TargetLanguageCode": target_lang,
+        }
+        if source_lang != "auto":
+            params["SourceLanguageCode"] = source_lang
+        res = translate_client.translate_text(**params)
+        return {
+            "translated_text": _strip(res.get("TranslatedText")),
+            "source_language": _strip(res.get("SourceLanguageCode")) or source_lang,
+            "target_language": target_lang,
+            "fallback": False,
+        }, None
+    except Exception as e:
+        print(f"[admin_chat] translate failed err={str(e)}")
+        # 権限不足/一時障害でもチャット操作を止めない。
+        # 200 で原文を返し、UI 側でフォールバック表示できるようにする。
+        return {
+            "translated_text": text,
+            "source_language": source_lang,
+            "target_language": target_lang,
+            "fallback": True,
+            "error": str(e),
+        }, None
+
+
 def _enrich_admin_chat_items(items: list):
     if not isinstance(items, list):
         return items
@@ -1050,6 +1103,14 @@ def lambda_handler(event, context):
                     return err_resp
                 return _resp(200, payload)
 
+            mode = _strip(body.get("mode")).lower()
+            looks_like_translate = ("text" in body)
+            if collection == "admin_chat" and (mode in {"translate_text", "translate", "translation"} or looks_like_translate):
+                payload, err_resp = _translate_admin_chat_text(body)
+                if err_resp:
+                    return err_resp
+                return _resp(200, payload)
+
             if collection == "admin_chat":
                 sender_id = _strip(body.get("sender_id")) or _strip(actor.get("id"))
                 sender_name = (
@@ -1179,4 +1240,22 @@ def lambda_handler(event, context):
         return _resp(405, {"error": "method_not_allowed"})
     except Exception as e:
         print(f"[torihikisaki-data] error: {str(e)}")
+        # 翻訳はチャット操作の補助機能のため、失敗時でもUIを止めない。
+        try:
+            method = event.get("httpMethod", "")
+            collection = _collection_from_event(event)
+            if method == "POST" and collection == "admin_chat":
+                body = _parse_body(event)
+                if isinstance(body, dict) and "text" in body:
+                    target_lang = _normalize_lang_code(body.get("target_lang"), "ja")
+                    source_lang = _normalize_lang_code(body.get("source_lang"), "auto")
+                    return _resp(200, {
+                        "translated_text": str(body.get("text") or ""),
+                        "source_language": source_lang,
+                        "target_language": target_lang,
+                        "fallback": True,
+                        "error": str(e),
+                    })
+        except Exception:
+            pass
         return _resp(500, {"error": "internal_error", "message": str(e)})
