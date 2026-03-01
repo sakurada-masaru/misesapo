@@ -6,9 +6,9 @@
 export const ADMIN_HOTBAR = [
   {
     id: 'reports',
-    label: '報告',
+    label: '業務報告',
     subItems: [
-      { id: 'houkoku-list', label: '報告一覧', path: '/admin/houkoku', group: '報告' },
+      { id: 'houkoku-list', label: '業務報告一覧', path: '/admin/houkoku', group: '業務報告' },
       { id: 'admin-log', label: '管理ログ(提出)', path: '/admin/admin-log', group: '提出' },
     ]
   },

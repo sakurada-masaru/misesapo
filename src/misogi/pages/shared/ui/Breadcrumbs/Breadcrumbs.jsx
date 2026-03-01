@@ -29,8 +29,8 @@ function labelForPath(pathname) {
   // Admin
   if (p === '/admin') return '管理TOP';
   if (p === '/admin/kadai') return 'Kadaiリスト';
-  if (p === '/admin/houkoku') return '報告一覧';
-  if (p.startsWith('/admin/houkoku/')) return '報告詳細';
+  if (p === '/admin/houkoku') return '業務報告一覧';
+  if (p.startsWith('/admin/houkoku/')) return '業務報告詳細';
   if (p === '/admin/yotei') return '予定';
   if (p === '/admin/ugoki') return 'UGOKI';
   if (p === '/admin/yakusoku') return 'YAKUSOKU';

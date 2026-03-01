@@ -1287,3 +1287,11 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 清掃ジョブ経路（`ReportCreatePage`）のみ `forceDirectBucketUpload` を有効化
 - [x] 管理 `清掃レポート作成` では共通画像プールを再表示
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Houkoku: Label Rename (2026-03-01)
+
+- [x] 管理サイドバーの `報告` セクション名を `業務報告` に変更
+- [x] 管理サイドバーの `報告一覧` を `業務報告一覧` に変更
+- [x] `/admin/houkoku` のパンくずを `業務報告一覧`、詳細を `業務報告詳細` に変更
+- [x] 管理報告一覧ページの見出しを `業務報告一覧` に変更
+- [x] `npm -C src/misogi run build` でビルド確認

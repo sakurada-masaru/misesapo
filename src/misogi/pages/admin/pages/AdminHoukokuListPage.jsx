@@ -546,7 +546,7 @@ const AdminHoukokuListPage = () => {
                         <i className="fas fa-chevron-left"></i>
                         <span>管理トップ</span>
                     </BackButton>
-                    <Title>報告一覧</Title>
+                    <Title>業務報告一覧</Title>
                 </HeaderLeft>
                 <Controls>
                     <ModeTabs role="tablist" aria-label="表示形式">
