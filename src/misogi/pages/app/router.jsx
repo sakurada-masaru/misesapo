@@ -151,6 +151,7 @@ export default function Router() {
       <Route path="/entrance" element={<Navigate to="/" replace />} />
       <Route path="/jobs/:job/entrance" element={<JobEntranceRoute />} />
       <Route path="/jobs/:job/report" element={<ReportCreatePage />} />
+      <Route path="/jobs/:job/houkoku" element={<ReportCreatePage />} />
       <Route path="/jobs/:job/yotei" element={<MyYoteiListPage />} />
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/entrance" element={<AdminEntrancePage />} />

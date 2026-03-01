@@ -238,6 +238,7 @@ export default function AdminCleaningHoukokuBuilderPage() {
   }, [template]);
   const printRef = React.useRef(null);
   const reportPhotosInputRef = React.useRef(null);
+  const bucketPhotoInputRefs = React.useRef({});
   const supplementFilesInputRef = React.useRef(null);
   const [payload, setPayload] = useState(() => ({
     work_date: todayYmd(),
@@ -254,6 +255,9 @@ export default function AdminCleaningHoukokuBuilderPage() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState(null); // {type,text}
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+  const [previewPdfUrl, setPreviewPdfUrl] = useState('');
   const [pdfBusy, setPdfBusy] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [soukoBusy, setSoukoBusy] = useState(false);
@@ -270,6 +274,8 @@ export default function AdminCleaningHoukokuBuilderPage() {
   const [draggingPhoto, setDraggingPhoto] = useState(null); // {type:'pool'|'service',serviceId?,bucket?,index}
   const localPhotoObjectUrlsRef = React.useRef(new Set());
   const [localPhotoSrcByKey, setLocalPhotoSrcByKey] = useState({});
+  // 共通画像プールを廃止し、各バケットへの直接アップロード運用に統一。
+  const directBucketUploadMode = true;
 
   // Keep user_name updated when auth finishes.
   React.useEffect(() => {
@@ -287,6 +293,15 @@ export default function AdminCleaningHoukokuBuilderPage() {
     });
     localPhotoObjectUrlsRef.current.clear();
   }, []);
+
+  React.useEffect(() => () => {
+    if (!previewPdfUrl) return;
+    try {
+      URL.revokeObjectURL(previewPdfUrl);
+    } catch (_) {
+      // no-op
+    }
+  }, [previewPdfUrl]);
 
   const reportPhotosState = useMemo(
     () => normalizeReportPhotos(getNestedValue(payload, 'report_photos'), serviceIds),
@@ -736,6 +751,58 @@ export default function AdminCleaningHoukokuBuilderPage() {
     }
   }, [serviceIds, uploadOne]);
 
+  const addBucketPhotos = useCallback(async (serviceIdRaw, bucketRaw, files) => {
+    const serviceId = norm(serviceIdRaw);
+    const bucket = String(bucketRaw || '').trim();
+    if (!serviceId || !REPORT_PHOTO_BUCKETS.includes(bucket)) return;
+    const list = Array.from(files || []).filter(Boolean);
+    if (!list.length) return;
+    setPhotoBusy(true);
+    setStatus(null);
+    try {
+      const uploaded = [];
+      for (const file of list) {
+        // eslint-disable-next-line no-await-in-loop
+        const att = await uploadOne(file);
+        uploaded.push(att);
+      }
+      const localEntries = uploaded
+        .map((att, idx) => {
+          const key = norm(att?.key);
+          if (!key) return null;
+          const file = list[idx];
+          if (!file) return null;
+          const objectUrl = URL.createObjectURL(file);
+          localPhotoObjectUrlsRef.current.add(objectUrl);
+          return [key, objectUrl];
+        })
+        .filter(Boolean);
+      if (localEntries.length) {
+        setLocalPhotoSrcByKey((prev) => ({ ...prev, ...Object.fromEntries(localEntries) }));
+      }
+      setPayload((prev) => {
+        const state = normalizeReportPhotos(getNestedValue(prev, 'report_photos'), serviceIds);
+        const byService = { ...state.byService };
+        const baseNo = getMaxPhotoNo(state);
+        const numbered = uploaded.map((att, idx) => ({ ...att, photo_no: baseNo + idx + 1 }));
+        const current = byService[serviceId] || emptyServicePhotoBuckets();
+        byService[serviceId] = {
+          ...current,
+          [bucket]: [...coerceArray(current[bucket]), ...numbered],
+        };
+        return setNestedValue(prev, 'report_photos', {
+          pool: coerceArray(state.pool),
+          by_service: byService,
+        });
+      });
+    } catch (e) {
+      console.error(e);
+      setStatus({ type: 'error', text: `写真アップロード失敗: ${e?.message || e}` });
+    } finally {
+      setPhotoBusy(false);
+    }
+  }, [serviceIds, uploadOne]);
+
   const removeReportPhoto = useCallback((serviceIdRaw, bucketRaw, index) => {
     const serviceId = norm(serviceIdRaw);
     const bucket = String(bucketRaw || '').trim();
@@ -1128,6 +1195,45 @@ export default function AdminCleaningHoukokuBuilderPage() {
     }
   }, [buildReportPdfBlob]);
 
+  const closePreview = useCallback(() => {
+    setPreviewOpen(false);
+    setPreviewBusy(false);
+    setPreviewError('');
+    setPreviewPdfUrl((prev) => {
+      if (!prev) return '';
+      try {
+        URL.revokeObjectURL(prev);
+      } catch (_) {
+        // no-op
+      }
+      return '';
+    });
+  }, []);
+
+  const openPreview = useCallback(async () => {
+    setPreviewOpen(true);
+    setPreviewBusy(true);
+    setPreviewError('');
+    try {
+      const { blob } = await buildReportPdfBlob();
+      const nextUrl = URL.createObjectURL(blob);
+      setPreviewPdfUrl((prev) => {
+        if (prev) {
+          try {
+            URL.revokeObjectURL(prev);
+          } catch (_) {
+            // no-op
+          }
+        }
+        return nextUrl;
+      });
+    } catch (e) {
+      setPreviewError(e?.message || 'プレビュー生成に失敗しました');
+    } finally {
+      setPreviewBusy(false);
+    }
+  }, [buildReportPdfBlob]);
+
   const ensureSoukoForTenpo = useCallback(async (targetTenpoId) => {
     const tid = norm(targetTenpoId);
     if (!tid) throw new Error('souko保存先の店舗が未選択です');
@@ -1268,33 +1374,67 @@ export default function AdminCleaningHoukokuBuilderPage() {
     <PhotoBucket
       key={`${serviceId}-${bucketKey}`}
       onDragOver={(e) => {
+        if (directBucketUploadMode) return;
         e.preventDefault();
       }}
       onDrop={(e) => {
+        if (directBucketUploadMode) return;
         e.preventDefault();
         onPhotoDrop(serviceId, bucketKey);
       }}
     >
       <div className="bucket-head">
         <strong>{serviceName} / {bucketLabel}</strong>
-        <span>{photos.length}枚</span>
+        <div className="bucket-actions">
+          {directBucketUploadMode ? (
+            <>
+              <button
+                type="button"
+                className="upload-btn"
+                disabled={photoBusy}
+                onClick={() => bucketPhotoInputRefs.current[`${serviceId}::${bucketKey}`]?.click()}
+              >
+                {photoBusy ? 'アップロード中...' : '写真追加'}
+              </button>
+              <input
+                ref={(el) => {
+                  if (el) bucketPhotoInputRefs.current[`${serviceId}::${bucketKey}`] = el;
+                  else delete bucketPhotoInputRefs.current[`${serviceId}::${bucketKey}`];
+                }}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (files?.length) addBucketPhotos(serviceId, bucketKey, files);
+                  e.target.value = '';
+                }}
+              />
+            </>
+          ) : null}
+          <span>{photos.length}枚</span>
+        </div>
       </div>
       <PhotoGrid className="bucket-grid">
         {photos.map((att, idx) => (
           <PhotoItem
             key={`${serviceId}-${bucketKey}-${att?.key || att?.url || 'photo'}-${idx}`}
-            draggable
+            draggable={!directBucketUploadMode}
             onDragStart={(e) => {
+              if (directBucketUploadMode) return;
               e.dataTransfer.effectAllowed = 'move';
               e.dataTransfer.setData('text/plain', `${serviceId}:${bucketKey}:${idx}`);
               setDraggingPhoto({ type: 'service', serviceId, bucket: bucketKey, index: idx });
             }}
             onDragEnd={() => setDraggingPhoto(null)}
             onDragOver={(e) => {
+              if (directBucketUploadMode) return;
               e.preventDefault();
               e.stopPropagation();
             }}
             onDrop={(e) => {
+              if (directBucketUploadMode) return;
               e.preventDefault();
               e.stopPropagation();
               onPhotoDrop(serviceId, bucketKey, idx);
@@ -1314,11 +1454,13 @@ export default function AdminCleaningHoukokuBuilderPage() {
           </PhotoItem>
         ))}
         {!photos.length ? (
-          <div className="empty">{bucketLabel}写真をここへドラッグ&ドロップ</div>
+          <div className="empty">
+            {directBucketUploadMode ? `${bucketLabel}写真を追加してください` : `${bucketLabel}写真をここへドラッグ&ドロップ`}
+          </div>
         ) : null}
       </PhotoGrid>
     </PhotoBucket>
-  ), [onPhotoDrop, removeReportPhoto]);
+  ), [addBucketPhotos, directBucketUploadMode, onPhotoDrop, photoBusy, removeReportPhoto]);
 
   if (authLoading) return <Wrap>読み込み中...</Wrap>;
     if (!isAuthenticated) {
@@ -1571,81 +1713,95 @@ export default function AdminCleaningHoukokuBuilderPage() {
       <ReportPhotoCard aria-label="作業写真">
         <PhotoHead>
           <div className="t">作業写真（任意枚数）</div>
-          <div className="sub">左の共通画像プールへアップロードし、各サービスの写真枠へドラッグ&ドロップで振り分けてください。</div>
+          <div className="sub">
+            {directBucketUploadMode
+              ? '各サービスのビフォア/アフター枠から直接写真を追加してください。'
+              : '左の共通画像プールへアップロードし、各サービスの写真枠へドラッグ&ドロップで振り分けてください。'}
+          </div>
         </PhotoHead>
-        <PhotoActions>
-          <button type="button" disabled={photoBusy} onClick={() => reportPhotosInputRef.current?.click()}>
-            {photoBusy ? 'アップロード中...' : '共通画像プールへ追加'}
-          </button>
-          <span>割当済み {reportPhotos.length}枚 / プール {reportPhotoPool.length}枚</span>
-        </PhotoActions>
-        <input
-          ref={reportPhotosInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            const files = e.target.files;
-            if (files?.length) addPoolPhotos(files);
-            e.target.value = '';
-          }}
-        />
+        {!directBucketUploadMode ? (
+          <>
+            <PhotoActions>
+              <button type="button" disabled={photoBusy} onClick={() => reportPhotosInputRef.current?.click()}>
+                {photoBusy ? 'アップロード中...' : '共通画像プールへ追加'}
+              </button>
+              <span>割当済み {reportPhotos.length}枚 / プール {reportPhotoPool.length}枚</span>
+            </PhotoActions>
+            <input
+              ref={reportPhotosInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files?.length) addPoolPhotos(files);
+                e.target.value = '';
+              }}
+            />
+          </>
+        ) : (
+          <PhotoActions>
+            <span>割当済み {reportPhotos.length}枚</span>
+          </PhotoActions>
+        )}
         <PhotoWorkbench>
-          <PhotoPoolPanel
-            onDragOver={(e) => {
-              e.preventDefault();
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              onPoolDrop();
-            }}
-          >
-            <PhotoPoolHead>
-              <strong>共通画像プール</strong>
-              <span>{reportPhotoPool.length}枚</span>
-            </PhotoPoolHead>
-            <PhotoPoolHint>ここに置いた写真を、各サービスの写真枠へ移動して使います（重複しません）。</PhotoPoolHint>
-            <PhotoGrid className="pool-grid">
-              {reportPhotoPool.map((att, idx) => (
-                <PhotoItem
-                  className="pool-item"
-                  key={`pool-${att?.key || att?.url || 'photo'}-${idx}`}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', `pool:${idx}`);
-                    setDraggingPhoto({ type: 'pool', index: idx });
-                  }}
-                  onDragEnd={() => setDraggingPhoto(null)}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onPoolDrop(idx);
-                  }}
-                >
-                  <div className="thumb">
-                    {isImageAttachment(att) ? (
-                      <img src={resolvePhotoSrc(att)} alt={String(att?.name || `pool${idx + 1}`)} />
-                    ) : (
-                      <div className="not-image">画像プレビュー不可</div>
-                    )}
-                  </div>
-                  <div className="meta">
-                    <span>{getPhotoIdentity(att)}</span>
-                    <button type="button" onClick={() => removePoolPhoto(idx)}>削除</button>
-                  </div>
-                </PhotoItem>
-              ))}
-              {!reportPhotoPool.length ? (
-                <div className="empty">共通画像プールは空です。まず写真を追加してください。</div>
-              ) : null}
-            </PhotoGrid>
-          </PhotoPoolPanel>
+          {!directBucketUploadMode ? (
+            <PhotoPoolPanel
+              onDragOver={(e) => {
+                e.preventDefault();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                onPoolDrop();
+              }}
+            >
+              <PhotoPoolHead>
+                <strong>共通画像プール</strong>
+                <span>{reportPhotoPool.length}枚</span>
+              </PhotoPoolHead>
+              <PhotoPoolHint>ここに置いた写真を、各サービスの写真枠へ移動して使います（重複しません）。</PhotoPoolHint>
+              <PhotoGrid className="pool-grid">
+                {reportPhotoPool.map((att, idx) => (
+                  <PhotoItem
+                    className="pool-item"
+                    key={`pool-${att?.key || att?.url || 'photo'}-${idx}`}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = 'move';
+                      e.dataTransfer.setData('text/plain', `pool:${idx}`);
+                      setDraggingPhoto({ type: 'pool', index: idx });
+                    }}
+                    onDragEnd={() => setDraggingPhoto(null)}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onPoolDrop(idx);
+                    }}
+                  >
+                    <div className="thumb">
+                      {isImageAttachment(att) ? (
+                        <img src={resolvePhotoSrc(att)} alt={String(att?.name || `pool${idx + 1}`)} />
+                      ) : (
+                        <div className="not-image">画像プレビュー不可</div>
+                      )}
+                    </div>
+                    <div className="meta">
+                      <span>{getPhotoIdentity(att)}</span>
+                      <button type="button" onClick={() => removePoolPhoto(idx)}>削除</button>
+                    </div>
+                  </PhotoItem>
+                ))}
+                {!reportPhotoPool.length ? (
+                  <div className="empty">共通画像プールは空です。まず写真を追加してください。</div>
+                ) : null}
+              </PhotoGrid>
+            </PhotoPoolPanel>
+          ) : null}
 
           <ServicePhotoSections>
             {selectedServices.length ? (
@@ -1801,7 +1957,7 @@ export default function AdminCleaningHoukokuBuilderPage() {
               <span className="v">{supplementFiles.length}件</span>
             </Progress>
             <FooterActions>
-              <SubBtn type="button" disabled={pdfBusy || saving || soukoBusy} onClick={() => setPreviewOpen(true)}>
+              <SubBtn type="button" disabled={previewBusy || pdfBusy || saving || soukoBusy} onClick={openPreview}>
                 プレビュー
               </SubBtn>
               <SubBtn type="button" disabled={pdfBusy || saving || soukoBusy} onClick={outputPdf}>
@@ -1820,8 +1976,16 @@ export default function AdminCleaningHoukokuBuilderPage() {
         <PrintSheet ref={printRef}>
           <ReportPaper>
             <ReportTop data-pdf-block="1">
-              <div className="meta-row">
-                <div className="left-pane">
+              <div
+                className="meta-row"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) 236px',
+                  gap: '14px',
+                  alignItems: 'start',
+                }}
+              >
+                <div className="left-pane" style={{ minWidth: 0 }}>
                   <div className="title-main">
                     作業報告書<span>（作業記録書・作業完了チェック表）</span>
                   </div>
@@ -1843,7 +2007,17 @@ export default function AdminCleaningHoukokuBuilderPage() {
                     </tbody>
                   </ReportPlaceTable>
                 </div>
-                <div className="right-pane">
+                <div
+                  className="right-pane"
+                  style={{
+                    display: 'grid',
+                    gridTemplateRows: 'auto auto',
+                    gap: '8px',
+                    width: '236px',
+                    justifySelf: 'end',
+                    alignSelf: 'start',
+                  }}
+                >
                   <div className="stamp-grid" aria-label="押印欄">
                     <div className="stamp-cell">①清掃担当印</div>
                     <div className="stamp-cell">②現場責任者印</div>
@@ -2006,193 +2180,18 @@ export default function AdminCleaningHoukokuBuilderPage() {
           <PreviewPanel>
             <PreviewHead>
               <strong>報告書プレビュー</strong>
-              <button type="button" onClick={() => setPreviewOpen(false)}>閉じる</button>
+              <button type="button" onClick={closePreview}>閉じる</button>
             </PreviewHead>
             <PreviewBody>
-              <PreviewPaperWrap>
-                <PrintSheet>
-                  <ReportPaper>
-                    <ReportTop>
-                      <div className="meta-row">
-                        <div className="left-pane">
-                          <div className="title-main">
-                            作業報告書<span>（作業記録書・作業完了チェック表）</span>
-                          </div>
-                          <div className="recipient">{recipientName} 様</div>
-                          <ReportLead>
-                            平素より大変お世話になっております。{'\n'}
-                            下記の通り作業を実施いたしましたのでご報告申し上げます。
-                          </ReportLead>
-                          <ReportPlaceTable>
-                            <tbody>
-                              <tr>
-                                <th>作業店舗名</th>
-                                <td>{selectedTenpoWorkLabel || norm(tenpoId) || '-'}</td>
-                              </tr>
-                              <tr>
-                                <th>作業実施場所</th>
-                                <td>{norm(selectedTenpo?.address) || '-'}</td>
-                              </tr>
-                            </tbody>
-                          </ReportPlaceTable>
-                        </div>
-                        <div className="right-pane">
-                          <div className="stamp-grid" aria-label="押印欄">
-                            <div className="stamp-cell">①清掃担当印</div>
-                            <div className="stamp-cell">②現場責任者印</div>
-                            <div className="stamp-cell">③会社印</div>
-                          </div>
-                          <div className="company">
-                            <div className="logo">ミセサポ</div>
-                            <div className="name">株式会社ミセサポ</div>
-                            <div className="meta">〒103-0025</div>
-                            <div className="meta">住所: 東京都中央区日本橋茅場町1-8-1</div>
-                            <div className="meta">茅場町一丁目平和ビル7F</div>
-                            <div className="meta">電話: 070-3332-3939</div>
-                            <div className="meta">メール: info@misesapo.co.jp</div>
-                          </div>
-                        </div>
-                      </div>
-                    </ReportTop>
-
-                    <ReportTable>
-                      <tbody>
-                        <tr>
-                          <th>作業実施日</th>
-                          <td>{formatYmdJaWithWeekday(norm(payload.work_date) || todayYmd())}</td>
-                        </tr>
-                        <tr>
-                          <th>作業実施時間</th>
-                          <td>
-                            作業開始[{norm(payload.work_start_time) || '--:--'}] 〜 作業終了[{norm(payload.work_end_time) || '--:--'}]
-                            {' / '}
-                            総作業時間[{typeof totalWorkMinutes === 'number' ? `${totalWorkMinutes} 分` : '--'}]
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>作業区分</th>
-                          <td>
-                            {WORK_TYPE_OPTIONS.map((it) => (
-                              <span key={it} className="work-type">{norm(payload.work_type) === it ? '☑' : '☐'} {it}</span>
-                            ))}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>作業員氏名</th>
-                          <td>
-                            1: {cleanerNames[0] || '-'}　
-                            2: {cleanerNames[1] || '-'}　
-                            3: {cleanerNames[2] || '-'}　
-                            4: {cleanerNames[3] || '-'}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>作業内容</th>
-                          <td>
-                            <ServiceChecklistGrid>
-                              {selectedServiceGroupsForDoc.length ? selectedServiceGroupsForDoc.map((group) => (
-                                <section key={group.category} className="svc-box">
-                                  <div className="cat">■{group.category}</div>
-                                  {group.names.map((nm) => (
-                                    <div key={`${group.category}-${nm}`} className="item">☑ {nm}</div>
-                                  ))}
-                                </section>
-                              )) : (
-                                <section className="svc-box">
-                                  <div className="cat">■作業項目</div>
-                                  <div className="item">☐ 未選択</div>
-                                </section>
-                              )}
-                            </ServiceChecklistGrid>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </ReportTable>
-
-                    <ReportDetailSection>
-                      <h3>作業内容詳細</h3>
-                      <p>{norm(payload.work_detail) || '記載なし'}</p>
-                    </ReportDetailSection>
-
-                    <ReportPhotoSection>
-                      <h3>作業写真</h3>
-                      {reportPhotoDocGroups.length ? reportPhotoDocGroups.map((group) => (
-                        <div key={group.key} className="service-group">
-                          <div className="service-head">{group.serviceName}</div>
-                          {norm(group.comment) ? (
-                            <div className="service-comment">
-                              <span className="label">作業詳細:</span>
-                              <span className="text">{group.comment}</span>
-                            </div>
-                          ) : null}
-                  {group.singleWorkMode ? (
-                    <div className="group">
-                      <div className="ghead">{group.serviceName} / 作業写真</div>
-                      <div className="grid">
-                        {group.work.length ? group.work.map((att, idx) => (
-                          <div key={`${group.key}-work-${att?.key || att?.url || 'p'}-${idx}`} className="photo">
-                            {isImageAttachment(att) ? (
-                              <img src={resolvePhotoSrc(att)} alt={String(att?.name || `${group.serviceName}作業写真${idx + 1}`)} />
-                            ) : (
-                              <div className="na">画像なし</div>
-                            )}
-                            <div className="cap">作業写真 / {getPhotoIdentity(att)}</div>
-                          </div>
-                        )) : <div className="empty">なし</div>}
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="group">
-                        <div className="ghead">{group.serviceName} / ビフォア</div>
-                        <div className="grid">
-                          {group.before.length ? group.before.map((att, idx) => (
-                            <div key={`${group.key}-before-${att?.key || att?.url || 'p'}-${idx}`} className="photo">
-                              {isImageAttachment(att) ? (
-                                <img src={resolvePhotoSrc(att)} alt={String(att?.name || `${group.serviceName}ビフォア${idx + 1}`)} />
-                              ) : (
-                                <div className="na">画像なし</div>
-                              )}
-                              <div className="cap">ビフォア / {getPhotoIdentity(att)}</div>
-                            </div>
-                          )) : <div className="empty">なし</div>}
-                        </div>
-                      </div>
-                      <div className="group">
-                        <div className="ghead">{group.serviceName} / アフター</div>
-                        <div className="grid">
-                          {group.after.length ? group.after.map((att, idx) => (
-                            <div key={`${group.key}-after-${att?.key || att?.url || 'p'}-${idx}`} className="photo">
-                              {isImageAttachment(att) ? (
-                                <img src={resolvePhotoSrc(att)} alt={String(att?.name || `${group.serviceName}アフター${idx + 1}`)} />
-                              ) : (
-                                <div className="na">画像なし</div>
-                              )}
-                              <div className="cap">アフター / {getPhotoIdentity(att)}</div>
-                            </div>
-                          )) : <div className="empty">なし</div>}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )) : <div className="empty">写真なし</div>}
-            </ReportPhotoSection>
-
-                    <ReportSupplementSection>
-                      <h3>補助資料</h3>
-                      <ul>
-                        {supplementFiles.length ? supplementFiles.map((att, idx) => {
-                          const name = norm(att?.name) || norm(att?.file_name) || `補助資料${idx + 1}`;
-                          return <li key={`${att?.key || att?.url || 'supp'}-${idx}`}>{name}</li>;
-                        }) : (
-                          <li>なし</li>
-                        )}
-                      </ul>
-                    </ReportSupplementSection>
-                  </ReportPaper>
-                </PrintSheet>
-              </PreviewPaperWrap>
+              {previewBusy ? (
+                <PreviewState>PDFプレビューを生成しています...</PreviewState>
+              ) : null}
+              {!previewBusy && previewError ? (
+                <PreviewState>{previewError}</PreviewState>
+              ) : null}
+              {!previewBusy && !previewError && previewPdfUrl ? (
+                <PreviewFrame title="報告書プレビューPDF" src={previewPdfUrl} />
+              ) : null}
             </PreviewBody>
           </PreviewPanel>
         </PreviewOverlay>
@@ -2305,6 +2304,10 @@ const Wrap = styled.div`
   padding: 18px 12px 80px;
   background: var(--ch-bg);
   color: var(--ch-text);
+
+  @media (max-width: 640px) {
+    padding: 12px 8px 56px;
+  }
 `;
 
 const Card = styled.div`
@@ -2336,6 +2339,12 @@ const MasterPickCard = styled.section`
   border: 1px solid var(--ch-border);
   border-radius: 14px;
   background: var(--ch-card-bg);
+
+  @media (max-width: 640px) {
+    margin: 6px auto 10px;
+    padding: 10px;
+    border-radius: 12px;
+  }
 `;
 
 const MasterPickHead = styled.div`
@@ -2435,16 +2444,25 @@ const ServicePickHeader = styled.div`
   justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    align-items: stretch;
+    gap: 8px;
+  }
 `;
 
 const ServiceTagFrame = styled.div`
   flex: 1;
-  min-width: 240px;
+  min-width: 0;
   min-height: 36px;
   border: 1px dashed var(--ch-input-border);
   border-radius: 10px;
   background: var(--ch-input-bg);
   padding: 5px 8px;
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
 `;
 
 const ServicePickerOpenBtn = styled.button`
@@ -2526,6 +2544,11 @@ const CleanerChecklist = styled.div`
     color: var(--ch-sub);
     padding: 4px 2px;
   }
+
+  @media (max-width: 640px) {
+    min-height: 120px;
+    max-height: 180px;
+  }
 `;
 
 const ServiceTags = styled.div`
@@ -2562,9 +2585,14 @@ const ServiceTags = styled.div`
 
 const FooterBar = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    gap: 8px;
+  }
 `;
 
 const FooterActions = styled.div`
@@ -2573,6 +2601,11 @@ const FooterActions = styled.div`
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+
+  @media (max-width: 640px) {
+    width: 100%;
+    justify-content: flex-start;
+  }
 `;
 
 const ReportPhotoCard = styled.section`
@@ -2583,6 +2616,12 @@ const ReportPhotoCard = styled.section`
   border: 1px solid var(--ch-border);
   border-radius: 14px;
   background: var(--ch-card-bg);
+
+  @media (max-width: 640px) {
+    margin: 10px auto;
+    padding: 10px;
+    border-radius: 12px;
+  }
 `;
 
 const WorkDetailCard = styled(ReportPhotoCard)`
@@ -2626,6 +2665,11 @@ const PhotoActions = styled.div`
     font-size: 12px;
     color: var(--ch-sub);
     font-weight: 800;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
   }
 `;
 
@@ -2783,6 +2827,12 @@ const ServiceTabs = styled.div`
     font-weight: 800;
     white-space: nowrap;
   }
+
+  @media (max-width: 640px) {
+    button {
+      min-width: 160px;
+    }
+  }
 `;
 
 const ServicePhotoSection = styled.section`
@@ -2864,6 +2914,26 @@ const PhotoBucket = styled.section`
     font-size: 11px;
     color: var(--ch-sub);
     font-weight: 800;
+  }
+  .bucket-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bucket-actions .upload-btn {
+    height: 30px;
+    border-radius: 9px;
+    border: 1px solid var(--ch-border);
+    background: var(--ch-sub-btn-bg);
+    color: var(--ch-sub-btn-text);
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .bucket-actions .upload-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   .bucket-grid {
     margin-top: 0;
@@ -3052,14 +3122,17 @@ const ReportTop = styled.div`
     display: grid;
     gap: 8px;
     align-content: start;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .right-pane {
     display: grid;
+    grid-template-rows: auto auto;
     gap: 8px;
-    align-content: start;
     width: var(--right-pane-width);
     justify-self: end;
+    align-self: start;
   }
 
   .title-main {
@@ -3079,7 +3152,7 @@ const ReportTop = styled.div`
   .meta-row {
     margin-top: 4px;
     display: grid;
-    grid-template-columns: 1fr var(--right-pane-width);
+    grid-template-columns: minmax(0, 1fr) var(--right-pane-width);
     gap: 14px;
     align-items: start;
   }
@@ -3089,6 +3162,7 @@ const ReportTop = styled.div`
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     width: 100%;
+    grid-row: 1;
   }
 
   .stamp-cell {
@@ -3119,6 +3193,7 @@ const ReportTop = styled.div`
   }
 
   .company {
+    grid-row: 2;
     align-self: start;
     width: 100%;
     padding-bottom: 8px;
@@ -3147,17 +3222,6 @@ const ReportTop = styled.div`
     margin-top: 2px;
     font-size: 10px;
     line-height: 1.3;
-  }
-
-  @media (max-width: 900px) {
-    .meta-row {
-      grid-template-columns: 1fr;
-    }
-    .stamp-cell {
-      width: 72px;
-      min-height: 56px;
-      height: auto;
-    }
   }
 `;
 
@@ -3238,11 +3302,22 @@ const ServiceChecklistGrid = styled.div`
   }
 `;
 
-const PreviewPaperWrap = styled.div`
+const PreviewState = styled.div`
+  min-height: 180px;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 8px 0 20px;
-  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ch-text);
+  padding: 16px;
+`;
+
+const PreviewFrame = styled.iframe`
+  width: 100%;
+  min-height: 76vh;
+  border: none;
+  background: #f8fafc;
 `;
 
 const ReportDetailSection = styled.section`
@@ -3619,6 +3694,9 @@ const WorkMetaGrid = styled.div`
   }
   @media (max-width: 900px) {
     grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
   }
 `;
 
