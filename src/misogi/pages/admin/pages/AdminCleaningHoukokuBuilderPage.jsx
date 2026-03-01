@@ -226,7 +226,7 @@ function fileToBase64(file) {
   });
 }
 
-export default function AdminCleaningHoukokuBuilderPage() {
+export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUpload = false }) {
   const { user, isLoading: authLoading, isAuthenticated, login, getToken } = useAuth();
   const template = useMemo(() => getTemplateById(TEMPLATE_ID), []);
   const editorTemplate = useMemo(() => {
@@ -274,8 +274,8 @@ export default function AdminCleaningHoukokuBuilderPage() {
   const [draggingPhoto, setDraggingPhoto] = useState(null); // {type:'pool'|'service',serviceId?,bucket?,index}
   const localPhotoObjectUrlsRef = React.useRef(new Set());
   const [localPhotoSrcByKey, setLocalPhotoSrcByKey] = useState({});
-  // 共通画像プールを廃止し、各バケットへの直接アップロード運用に統一。
-  const directBucketUploadMode = true;
+  // 清掃ジョブ側は直接アップロード、管理側は共通画像プールを維持する。
+  const directBucketUploadMode = Boolean(forceDirectBucketUpload);
 
   // Keep user_name updated when auth finishes.
   React.useEffect(() => {
@@ -2452,13 +2452,14 @@ const ServicePickHeader = styled.div`
 `;
 
 const ServiceTagFrame = styled.div`
-  flex: 1;
+  flex: 0 0 100%;
+  width: 100%;
   min-width: 0;
-  min-height: 36px;
+  min-height: 30px;
   border: 1px dashed var(--ch-input-border);
   border-radius: 10px;
   background: var(--ch-input-bg);
-  padding: 5px 8px;
+  padding: 4px 6px;
 
   @media (max-width: 640px) {
     width: 100%;
@@ -2554,32 +2555,39 @@ const CleanerChecklist = styled.div`
 const ServiceTags = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
-  min-height: 22px;
+  min-height: 20px;
 
   .empty {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--ch-sub);
   }
 
   button {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     border: 1px solid var(--ch-border);
     background: var(--ch-selected-bg);
     color: var(--ch-text);
     border-radius: 999px;
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: 3px 8px;
+    font-size: 11px;
     font-weight: 700;
     cursor: pointer;
+    max-width: min(100%, 360px);
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
   }
 
   button span {
     font-weight: 900;
     opacity: 0.9;
+    flex: 0 0 auto;
   }
 `;
 
@@ -3658,9 +3666,11 @@ const WorkMetaGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
+  align-items: end;
   label {
     display: grid;
     gap: 6px;
+    min-width: 0;
   }
   label span {
     font-size: 12px;
@@ -3670,6 +3680,8 @@ const WorkMetaGrid = styled.div`
   label input,
   label select {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     height: 38px;
     border-radius: 10px;
     border: 1px solid var(--ch-input-border);
@@ -3677,20 +3689,28 @@ const WorkMetaGrid = styled.div`
     color: var(--ch-input-text);
     padding: 0 10px;
     outline: none;
+    box-sizing: border-box;
+  }
+  label input[type="date"],
+  label input[type="time"] {
+    font-size: 12px;
   }
   .mins {
     align-self: end;
-    height: 38px;
+    min-height: 38px;
     display: flex;
     align-items: center;
     border-radius: 10px;
     border: 1px solid var(--ch-input-border);
     background: var(--ch-list-bg);
     color: var(--ch-text);
-    padding: 0 10px;
+    padding: 6px 10px;
     font-size: 12px;
     font-weight: 900;
-    white-space: nowrap;
+    line-height: 1.25;
+    white-space: normal;
+    box-sizing: border-box;
+    min-width: 0;
   }
   @media (max-width: 900px) {
     grid-template-columns: 1fr 1fr;

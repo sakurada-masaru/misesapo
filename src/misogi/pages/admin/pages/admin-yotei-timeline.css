@@ -1473,6 +1473,31 @@
     gap: 16px;
 }
 
+.yotei-modal-main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "contract"
+        "tenpo";
+    gap: 16px;
+    align-items: start;
+}
+
+.yotei-contract-group {
+    grid-area: contract;
+    min-width: 0;
+}
+
+.yotei-tenpo-search-group {
+    grid-area: tenpo;
+    min-width: 0;
+}
+
+.yotei-tenpo-final-group {
+    width: 100%;
+    min-width: 0;
+}
+
 .yotei-form-group {
     display: flex;
     flex-direction: column;
@@ -1574,6 +1599,15 @@
     background: var(--torikeshi);
     border-color: var(--torikeshi);
     margin-right: auto;
+}
+
+@media (max-width: 900px) {
+    .yotei-modal-main-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "contract"
+            "tenpo";
+    }
 }
 
 /* Yakusoku: service picker overlay (wide, searchable, checkable). */

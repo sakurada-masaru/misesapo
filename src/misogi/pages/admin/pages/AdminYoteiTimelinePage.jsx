@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import './admin-yotei-timeline.css';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
+import { getServiceCategoryLabel } from './serviceCategoryCatalog';
+import { getCognitoUser } from '../../shared/auth/cognitoStorage';
 // Hamburger / admin-top are provided by GlobalNav.
 
 function isLocalUiHost() {
@@ -262,9 +264,9 @@ function demoDataFor({ date, view }) {
     // Week/month views use range fetch; this demo keeps only the selected date populated.
     // (The UI still renders properly and shows 0-count cells elsewhere.)
     if (view === 'week' || view === 'month') {
-        return { workers, yakusokus, services, schedules, ugokiItems, tenpoNameMap };
+        return { workers, yakusokus, services, schedules, ugokiItems, tenpoNameMap, tenpos };
     }
-    return { workers, yakusokus, services, schedules, ugokiItems, tenpoNameMap };
+    return { workers, yakusokus, services, schedules, ugokiItems, tenpoNameMap, tenpos };
 }
 
 async function fetchYakusokuWithFallback(path, options = {}) {
@@ -290,11 +292,13 @@ export default function AdminYoteiTimelinePage() {
     const [workers, setWorkers] = useState([]);
     const [yakusokus, setYakusokus] = useState([]);
     const [services, setServices] = useState([]);
+    const [tenpos, setTenpos] = useState([]);
     const [ugokiItems, setUgokiItems] = useState([]);
     const [tenpoNameMap, setTenpoNameMap] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
     const [timelineBand, setTimelineBand] = useState('both'); // both | night | day
     const [modalData, setModalData] = useState(null);
+    const [servicePickerOpen, setServicePickerOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [handoffLoading, setHandoffLoading] = useState(false);
     const [handoffError, setHandoffError] = useState('');
@@ -311,6 +315,19 @@ export default function AdminYoteiTimelinePage() {
     const durationHours = 12;
     // Timeline vertical density (bigger = easier to operate / read at night)
     const todayLanePx = 64;
+
+    const getServiceCategoryMeta = useCallback((svc) => {
+        const raw = String(svc?.category || svc?.category_concept || '').trim();
+        const normalized = raw || 'uncategorized';
+        return {
+            key: normalized,
+            label: getServiceCategoryLabel(raw),
+        };
+    }, []);
+
+    const normalizeServiceConcept = useCallback((svc) => {
+        return getServiceCategoryMeta(svc).label;
+    }, [getServiceCategoryMeta]);
 
     const clearTenpoCache = useCallback(() => {
         tenpoCacheRef.current = new Map();
@@ -358,6 +375,23 @@ export default function AdminYoteiTimelinePage() {
         window.addEventListener('resize', onResize);
         return () => window.removeEventListener('resize', onResize);
     }, []);
+
+    useEffect(() => {
+        if (typeof document === 'undefined') return undefined;
+        const prevHtmlOverflow = document.documentElement.style.overflow;
+        const prevBodyOverflow = document.body.style.overflow;
+        if (servicePickerOpen) {
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.documentElement.style.overflow = prevHtmlOverflow;
+            document.body.style.overflow = prevBodyOverflow;
+        }
+        return () => {
+            document.documentElement.style.overflow = prevHtmlOverflow;
+            document.body.style.overflow = prevBodyOverflow;
+        };
+    }, [servicePickerOpen]);
 
     const switchView = useCallback((view) => {
         const next = { view };
@@ -486,6 +520,59 @@ export default function AdminYoteiTimelinePage() {
         }
     }, []);
 
+    const fetchTenpos = useCallback(async () => {
+        if (isDemo) return;
+        try {
+            const base = MASTER_API_BASE.replace(/\/$/, '');
+            const [toriRes, yagouRes, tenpoRes] = await Promise.all([
+                fetch(`${base}/master/torihikisaki?limit=5000&jotai=yuko`, { headers: authHeaders(), cache: 'no-store' }),
+                fetch(`${base}/master/yagou?limit=8000&jotai=yuko`, { headers: authHeaders(), cache: 'no-store' }),
+                fetch(`${base}/master/tenpo?limit=20000&jotai=yuko`, { headers: authHeaders(), cache: 'no-store' }),
+            ]);
+            if (!toriRes.ok) throw new Error(`Torihikisaki HTTP ${toriRes.status}`);
+            if (!yagouRes.ok) throw new Error(`Yagou HTTP ${yagouRes.status}`);
+            if (!tenpoRes.ok) throw new Error(`Tenpo HTTP ${tenpoRes.status}`);
+
+            const toriData = await toriRes.json();
+            const yagouData = await yagouRes.json();
+            const tenpoData = await tenpoRes.json();
+            const toriItems = Array.isArray(toriData) ? toriData : (toriData?.items || []);
+            const yagouItems = Array.isArray(yagouData) ? yagouData : (yagouData?.items || []);
+            const tenpoItems = Array.isArray(tenpoData) ? tenpoData : (tenpoData?.items || []);
+
+            const toriNameById = new Map(toriItems.map((it) => [it?.torihikisaki_id || it?.id, it?.name || '']));
+            const yagouNameById = new Map(yagouItems.map((it) => [it?.yagou_id || it?.id, it?.name || '']));
+
+            const normalized = tenpoItems
+                .map((it) => {
+                    const tenpo_id = it?.tenpo_id || it?.id || '';
+                    const name = it?.name || '';
+                    const torihikisaki_id = it?.torihikisaki_id || '';
+                    const yagou_id = it?.yagou_id || '';
+                    const torihikisaki_name = toriNameById.get(torihikisaki_id) || '';
+                    const yagou_name = yagouNameById.get(yagou_id) || '';
+                    const search_blob = [
+                        name,
+                        tenpo_id,
+                        yagou_name,
+                        yagou_id,
+                        torihikisaki_name,
+                        torihikisaki_id,
+                    ]
+                        .filter(Boolean)
+                        .join(' ')
+                        .toLowerCase();
+                    return { tenpo_id, name, torihikisaki_id, yagou_id, torihikisaki_name, yagou_name, search_blob };
+                })
+                .filter((it) => it.tenpo_id && it.name)
+                .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+            setTenpos(normalized);
+        } catch (e) {
+            console.error('Failed to fetch tenpos:', e);
+            setTenpos([]);
+        }
+    }, []);
+
     const fetchSchedules = useCallback(async () => {
         if (isDemo) return;
         setLoading(true);
@@ -561,6 +648,7 @@ export default function AdminYoteiTimelinePage() {
             fetchWorkers();
             fetchYakusokus();
             fetchServices();
+            fetchTenpos();
             return;
         }
         // Demo: inject deterministic data for UI verification.
@@ -568,13 +656,14 @@ export default function AdminYoteiTimelinePage() {
         setWorkers(demo.workers);
         setYakusokus(demo.yakusokus);
         setServices(demo.services);
+        setTenpos(demo.tenpos || []);
         setSchedules(demo.schedules);
         setUgokiItems(demo.ugokiItems);
         setTenpoNameMap(demo.tenpoNameMap);
         setError('');
         setYakusokuError('');
         setLoading(false);
-    }, [isDemo, fetchWorkers, fetchYakusokus, fetchServices, date, currentView]);
+    }, [isDemo, fetchWorkers, fetchYakusokus, fetchServices, fetchTenpos, date, currentView]);
     useEffect(() => {
         // 当日表示キャッシュ方針: 日付/ビュー切替時に店舗名キャッシュをクリア
         clearTenpoCache();
@@ -780,6 +869,40 @@ export default function AdminYoteiTimelinePage() {
         return map;
     }, [workers, normalizeWorkerId]);
 
+    const signedInAccount = useMemo(() => getCognitoUser() || null, []);
+    const signedInWorkerRawId = useMemo(() => {
+        return String(
+            signedInAccount?.jinzai_id ||
+            signedInAccount?.sagyouin_id ||
+            signedInAccount?.worker_id ||
+            signedInAccount?.workerId ||
+            signedInAccount?.id ||
+            ''
+        ).trim();
+    }, [signedInAccount]);
+    const signedInWorkerId = useMemo(() => {
+        return normalizeWorkerId(signedInWorkerRawId);
+    }, [normalizeWorkerId, signedInWorkerRawId]);
+    const signedInWorkerName = useMemo(() => {
+        return String(
+            signedInAccount?.name ||
+            signedInAccount?.displayName ||
+            signedInAccount?.username ||
+            signedInAccount?.email ||
+            ''
+        ).trim();
+    }, [signedInAccount]);
+    const selfWorkerDefault = useMemo(() => {
+        const hit = (workers || []).find((w) => normalizeWorkerId(w?.id) === signedInWorkerId);
+        const workerId = String(hit?.id || signedInWorkerRawId || '').trim();
+        const workerName =
+            String(hit?.name || '').trim() ||
+            workerNameMap[signedInWorkerId] ||
+            signedInWorkerName ||
+            workerId;
+        return { workerId, workerName };
+    }, [workers, normalizeWorkerId, signedInWorkerId, signedInWorkerRawId, workerNameMap, signedInWorkerName]);
+
     const workerKeyFor = useCallback((row) => {
         if (!row) return '';
         const direct = row.sagyouin_id || row.worker_id || row.assigned_to;
@@ -844,6 +967,173 @@ export default function AdminYoteiTimelinePage() {
         const k = workerKeyFor(row);
         return workerNameMap[k] || (k || '担当未設定');
     }, [workerKeyFor, workerNameMap]);
+
+    const normalizeServiceSelection = useCallback((src) => {
+        const ids = Array.isArray(src?.service_ids)
+            ? src.service_ids.map((x) => String(x)).filter(Boolean)
+            : [];
+        const names = Array.isArray(src?.service_names)
+            ? src.service_names.map((x) => String(x)).filter(Boolean)
+            : [];
+        if (!ids.length && src?.service_id) ids.push(String(src.service_id));
+        if (!names.length && src?.service_name) names.push(String(src.service_name));
+        return { service_ids: ids, service_names: names };
+    }, []);
+
+    const formatTenpoDisplay = useCallback((tenpoId, tenpoName, yagouName) => {
+        const name = String(tenpoName || '').trim();
+        if (!name) return '---';
+        return String(yagouName || '').trim() ? `${String(yagouName).trim()} / ${name}` : name;
+    }, []);
+
+    const tenpoMetaById = useMemo(() => {
+        const map = new Map();
+        (tenpos || []).forEach((tp) => {
+            const key = String(tp?.tenpo_id || '').trim();
+            if (!key) return;
+            map.set(key, tp);
+        });
+        return map;
+    }, [tenpos]);
+
+    const tenpoCandidates = useMemo(() => {
+        const q = String(modalData?.tenpo_query || '').trim().toLowerCase();
+        if (!q) return [];
+        return tenpos.filter((it) => String(it?.search_blob || '').includes(q)).slice(0, 20);
+    }, [modalData?.tenpo_query, tenpos]);
+
+    const selectedTenpoSummary = useMemo(() => {
+        const tenpoId = String(modalData?.tenpo_id || '').trim();
+        const direct = tenpoId ? tenpoMetaById.get(tenpoId) : null;
+        const tenpoName = String(direct?.name || modalData?.tenpo_name || '').trim();
+        if (!tenpoName) {
+            return { label: '未選択', tori: '', ids: '' };
+        }
+        const yagouName = String(direct?.yagou_name || modalData?.yagou_name || '').trim();
+        const toriName = String(direct?.torihikisaki_name || modalData?.torihikisaki_name || '').trim();
+        const displayId = [
+            tenpoId || String(direct?.tenpo_id || '').trim(),
+            String(direct?.yagou_id || modalData?.yagou_id || '').trim(),
+            String(direct?.torihikisaki_id || modalData?.torihikisaki_id || '').trim(),
+        ].filter(Boolean).join(' ・ ');
+        return {
+            label: formatTenpoDisplay(tenpoId, tenpoName, yagouName),
+            tori: toriName,
+            ids: displayId,
+        };
+    }, [
+        modalData?.tenpo_id,
+        modalData?.tenpo_name,
+        modalData?.yagou_name,
+        modalData?.yagou_id,
+        modalData?.torihikisaki_name,
+        modalData?.torihikisaki_id,
+        tenpoMetaById,
+        formatTenpoDisplay,
+    ]);
+
+    const tenpoSearchValue = useMemo(() => String(modalData?.tenpo_query || ''), [modalData?.tenpo_query]);
+
+    const hasTenpoQuery = String(modalData?.tenpo_query || '').trim().length > 0;
+
+    const pickPrimaryYakusokuIdForTenpo = useCallback((tenpoId, currentYakusokuId = '') => {
+        const tid = String(tenpoId || '').trim();
+        if (!tid) return '';
+        const rows = (yakusokus || [])
+            .filter((y) => String(y?.tenpo_id || '').trim() === tid)
+            .filter((y) => String(y?.jotai || 'yuko') !== 'torikeshi');
+        const currentId = String(currentYakusokuId || '').trim();
+        if (currentId && rows.some((r) => String(r?.yakusoku_id || '').trim() === currentId)) return currentId;
+        return String(rows?.[0]?.yakusoku_id || '').trim();
+    }, [yakusokus]);
+
+    const selectedWorkerIds = useMemo(() => {
+        const fromArr = Array.isArray(modalData?.worker_ids) ? modalData.worker_ids.map((x) => String(x)).filter(Boolean) : [];
+        if (fromArr.length) return fromArr;
+        const single = String(modalData?.sagyouin_id || modalData?.worker_id || '').trim();
+        return single ? [single] : [];
+    }, [modalData?.worker_ids, modalData?.sagyouin_id, modalData?.worker_id]);
+
+    const selectedWorkerNames = useMemo(() => {
+        return selectedWorkerIds.map((id) => {
+            const normalized = normalizeWorkerId(id);
+            return workerNameMap[normalized] || id;
+        });
+    }, [selectedWorkerIds, normalizeWorkerId, workerNameMap]);
+
+    const toggleServiceSelection = useCallback((svc, checked) => {
+        const sid = String(svc?.service_id || '').trim();
+        if (!sid) return;
+        const sname = String(svc?.name || sid).trim();
+        setModalData((prev) => {
+            if (!prev) return prev;
+            const multiSvc = normalizeServiceSelection(prev);
+            const ids = [...multiSvc.service_ids];
+            const names = [...multiSvc.service_names];
+            const idx = ids.indexOf(sid);
+            if (checked && idx < 0) {
+                ids.push(sid);
+                names.push(sname);
+            }
+            if (!checked && idx >= 0) {
+                ids.splice(idx, 1);
+                names.splice(idx, 1);
+            }
+            return {
+                ...prev,
+                service_ids: ids,
+                service_names: names,
+                service_id: ids[0] || '',
+                service_name: names[0] || '',
+                work_type: ids.length ? (names[0] || prev.work_type) : prev.work_type,
+                end_time:
+                    prev.isNew && checked && Number(svc?.default_duration_min || 0) > 0 && ids.length === 1
+                        ? calcEndTimeByDuration(prev.start_time, svc.default_duration_min)
+                        : prev.end_time,
+            };
+        });
+    }, [normalizeServiceSelection, calcEndTimeByDuration]);
+
+    const serviceCandidates = useMemo(() => {
+        const q = String(modalData?.service_query || '').trim().toLowerCase();
+        if (!q) return services;
+        return (services || []).filter((s) => {
+            const blob = [
+                s?.name,
+                s?.service_id,
+                s?.category,
+                s?.category_concept,
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+            return blob.includes(q);
+        });
+    }, [modalData?.service_query, services]);
+
+    const serviceGroups = useMemo(() => {
+        const bucket = new Map();
+        for (const svc of serviceCandidates) {
+            const meta = getServiceCategoryMeta(svc);
+            if (!bucket.has(meta.key)) bucket.set(meta.key, { key: meta.key, label: meta.label, items: [] });
+            bucket.get(meta.key).items.push(svc);
+        }
+        const order = ['kitchen_haccp', 'aircon', 'floor', 'pest_hygiene', 'maintenance', 'window_wall', 'cleaning', 'pest', 'other', 'uncategorized'];
+        return Array.from(bucket.values()).sort((a, b) => {
+            const ai = order.indexOf(a.key);
+            const bi = order.indexOf(b.key);
+            if (ai >= 0 && bi >= 0) return ai - bi;
+            if (ai >= 0) return -1;
+            if (bi >= 0) return 1;
+            return a.label.localeCompare(b.label, 'ja');
+        });
+    }, [serviceCandidates, getServiceCategoryMeta]);
+
+    const activeServiceCategory = String(modalData?.service_category || 'all');
+    const visibleServiceGroups = useMemo(() => {
+        if (activeServiceCategory === 'all') return serviceGroups;
+        return serviceGroups.filter((g) => g.key === activeServiceCategory);
+    }, [activeServiceCategory, serviceGroups]);
 
     const detectTroubleEventType = useCallback((item) => {
         const text = [
@@ -1055,16 +1345,34 @@ export default function AdminYoteiTimelinePage() {
     }, [schedules, detectTroubleEventType, displayTenpoName]);
 
     const openNewModal = (workerId) => {
+        const defaultWorkerId = selfWorkerDefault.workerId || workerId || (workers[0]?.id || '');
+        const defaultWorkerName =
+            selfWorkerDefault.workerName ||
+            workerNameMap[normalizeWorkerId(defaultWorkerId)] ||
+            defaultWorkerId;
+        setServicePickerOpen(false);
         setModalData({
             isNew: true,
-            sagyouin_id: workerId || (workers[0]?.id || ''),
+            sagyouin_id: defaultWorkerId,
+            sagyouin_name: defaultWorkerName,
+            worker_ids: defaultWorkerId ? [defaultWorkerId] : [],
             yakusoku_id: '',
+            tenpo_id: '',
             service_id: '',
             service_name: '',
+            service_ids: [],
+            service_names: [],
+            service_category: 'all',
+            service_query: '',
             scheduled_date: date,
             start_time: '20:00',
             end_time: '22:00',
+            tenpo_query: '',
             tenpo_name: '',
+            torihikisaki_id: '',
+            yagou_id: '',
+            torihikisaki_name: '',
+            yagou_name: '',
             work_type: '定期清掃（1ヶ月）',
             memo: '',
             jotai: 'yuko',
@@ -1080,11 +1388,32 @@ export default function AdminYoteiTimelinePage() {
 
     const openEditModal = (s) => {
         const { start, end } = resolveScheduleRange(s);
+        const multiSvc = normalizeServiceSelection(s);
+        const workerIds = Array.isArray(s?.worker_ids)
+            ? s.worker_ids.map((x) => String(x)).filter(Boolean)
+            : [];
+        if (!workerIds.length && (s?.sagyouin_id || s?.worker_id)) {
+            workerIds.push(String(s?.sagyouin_id || s?.worker_id));
+        }
+        const tenpoMeta = s?.tenpo_id ? tenpoMetaById.get(String(s.tenpo_id || '').trim()) : null;
+        const tenpoDisplay = formatTenpoDisplay(s?.tenpo_id, s?.tenpo_name, tenpoMeta?.yagou_name || s?.yagou_name);
+        setServicePickerOpen(false);
         setModalData({
             ...s,
             isNew: false,
-            service_id: s.service_id || '',
-            service_name: s.service_name || '',
+            sagyouin_id: workerIds[0] || '',
+            sagyouin_name: s?.sagyouin_name || workerNameMap[normalizeWorkerId(workerIds[0] || '')] || '',
+            worker_ids: workerIds,
+            ...multiSvc,
+            service_id: multiSvc.service_ids[0] || '',
+            service_name: multiSvc.service_names[0] || '',
+            service_category: 'all',
+            service_query: s?.service_name || s?.service_id || '',
+            tenpo_query: '',
+            torihikisaki_id: s?.torihikisaki_id || tenpoMeta?.torihikisaki_id || '',
+            yagou_id: s?.yagou_id || tenpoMeta?.yagou_id || '',
+            torihikisaki_name: s?.torihikisaki_name || tenpoMeta?.torihikisaki_name || '',
+            yagou_name: s?.yagou_name || tenpoMeta?.yagou_name || '',
             start_time: start.isValid() ? start.format('HH:mm') : (s.start_time || '20:00'),
             end_time: end.isValid() ? end.format('HH:mm') : (s.end_time || '22:00'),
             handoff_checks: {
@@ -1134,6 +1463,13 @@ export default function AdminYoteiTimelinePage() {
 
     const saveModal = async () => {
         if (!modalData?.yakusoku_id) { window.alert('紐付ける契約(yakusoku)を選択してください'); return; }
+        const workerIds = Array.isArray(modalData?.worker_ids)
+            ? modalData.worker_ids.map((x) => String(x)).filter(Boolean)
+            : [];
+        const resolvedWorkerIds = workerIds.length
+            ? workerIds
+            : (modalData?.sagyouin_id ? [String(modalData.sagyouin_id)] : []);
+        if (!resolvedWorkerIds.length) { window.alert('担当作業員を1名以上選択してください'); return; }
         setSaving(true);
         try {
             const base = API_BASE.replace(/\/$/, '');
@@ -1144,16 +1480,32 @@ export default function AdminYoteiTimelinePage() {
             const endH = parseInt(modalData.end_time.split(':')[0]);
             const startDate = (startH < 12) ? dayjs(modalData.scheduled_date).add(1, 'day').format('YYYY-MM-DD') : modalData.scheduled_date;
             const endDate = (endH < 12) ? dayjs(modalData.scheduled_date).add(1, 'day').format('YYYY-MM-DD') : modalData.scheduled_date;
+            const serviceSelection = normalizeServiceSelection(modalData);
+            const primaryWorkerId = resolvedWorkerIds[0] || '';
+            const primaryWorkerName =
+                workerNameMap[normalizeWorkerId(primaryWorkerId)] ||
+                modalData.sagyouin_name ||
+                selfWorkerDefault.workerName ||
+                '';
+            const workerNames = resolvedWorkerIds.map((wid) => workerNameMap[normalizeWorkerId(wid)] || wid);
 
             const payload = {
                 ...modalData,
                 start_at: `${startDate}T${modalData.start_time}:00`,
                 end_at: `${endDate}T${modalData.end_time}:00`,
-                service_id: modalData.service_id || '',
-                service_name: modalData.service_name || '',
+                sagyouin_id: primaryWorkerId,
+                worker_ids: resolvedWorkerIds,
+                worker_names: workerNames,
+                service_ids: serviceSelection.service_ids,
+                service_names: serviceSelection.service_names,
+                service_id: serviceSelection.service_ids[0] || '',
+                service_name: serviceSelection.service_names[0] || '',
                 // Make the UI stable even when the API doesn't hydrate names.
-                sagyouin_name: workerNameMap[normalizeWorkerId(modalData.sagyouin_id)] || modalData.sagyouin_name || '',
+                sagyouin_name: primaryWorkerName,
             };
+            delete payload.tenpo_query;
+            delete payload.service_query;
+            delete payload.service_category;
 
             const res = await fetch(url, {
                 method,
@@ -1162,6 +1514,7 @@ export default function AdminYoteiTimelinePage() {
             });
             if (!res.ok) { const err = await res.json(); throw new Error(err.message || `Save failed: ${res.status}`); }
             setModalData(null);
+            setServicePickerOpen(false);
             fetchSchedules();
         } catch (e) { window.alert(e.message); }
         finally { setSaving(false); }
@@ -1175,6 +1528,7 @@ export default function AdminYoteiTimelinePage() {
             if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
             fetchSchedules();
             setModalData(null);
+            setServicePickerOpen(false);
         } catch (e) { window.alert(e.message); }
     };
 
@@ -1977,23 +2331,31 @@ export default function AdminYoteiTimelinePage() {
             </div>
 
             {modalData && (
-                <div className="yotei-modal-overlay" onClick={() => setModalData(null)}>
+                <div className="yotei-modal-overlay" onClick={() => { setModalData(null); setServicePickerOpen(false); }}>
                     <div className="yotei-modal" onClick={e => e.stopPropagation()}>
                         <div className="yotei-modal-header">
                             <h2>{modalData.isNew ? '新規予定登録' : '予定編集'}</h2>
-                            <button onClick={() => setModalData(null)} style={{ background: 'none', border: 'none', color: 'white', fontSize: 24 }}>×</button>
+                            <button onClick={() => { setModalData(null); setServicePickerOpen(false); }} style={{ background: 'none', border: 'none', color: 'white', fontSize: 24 }}>×</button>
                         </div>
                         <div className="yotei-modal-content">
-                            <div className="yotei-form-group">
+                            <div className="yotei-modal-main-grid">
+                            <div className="yotei-form-group yotei-contract-group">
                                 <label>紐付け契約 (yakusoku) *必須</label>
                                 <select value={modalData.yakusoku_id || ''} onChange={e => {
                                     const yid = e.target.value;
                                     const selected = yakusokus.find(y => y.yakusoku_id === yid);
+                                    const linkedTenpo = selected?.tenpo_id ? tenpoMetaById.get(String(selected.tenpo_id || '').trim()) : null;
+                                    const resolvedTenpoName = linkedTenpo?.name || displayTenpoName(selected) || selected?.memo || modalData.tenpo_name;
                                     setModalData({
                                         ...modalData,
                                         yakusoku_id: yid,
                                         tenpo_id: selected?.tenpo_id || modalData.tenpo_id,
-                                        tenpo_name: displayTenpoName(selected) || selected?.memo || modalData.tenpo_name
+                                        tenpo_name: resolvedTenpoName,
+                                        tenpo_query: '',
+                                        torihikisaki_id: linkedTenpo?.torihikisaki_id || modalData?.torihikisaki_id || '',
+                                        yagou_id: linkedTenpo?.yagou_id || modalData?.yagou_id || '',
+                                        torihikisaki_name: linkedTenpo?.torihikisaki_name || modalData?.torihikisaki_name || '',
+                                        yagou_name: linkedTenpo?.yagou_name || modalData?.yagou_name || '',
                                     });
                                 }} required>
                                     <option value="">選択してください</option>
@@ -2012,15 +2374,120 @@ export default function AdminYoteiTimelinePage() {
                                     />
                                 )}
                             </div>
-                            <div className="yotei-form-group">
-                                <label>担当作業員</label>
-                                <select value={modalData.sagyouin_id} onChange={e => setModalData({ ...modalData, sagyouin_id: e.target.value })}>
-                                    {workers.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                                </select>
+                            <div className="yotei-form-group yotei-tenpo-search-group">
+                                <label>現場名（統合検索）</label>
+                                <input
+                                    type="text"
+                                    value={tenpoSearchValue}
+                                    onChange={(e) => setModalData({ ...modalData, tenpo_query: e.target.value })}
+                                    placeholder="取引先 / 屋号 / 店舗 / ID で検索"
+                                />
+                                <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
+                                    候補タップで「最終選択（保存対象）」に反映されます
+                                </div>
+                                {hasTenpoQuery ? (
+                                <div style={{ marginTop: 8, display: 'grid', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
+                                    {tenpoCandidates.map((tp) => {
+                                        const selected = String(modalData?.tenpo_id || '').trim() === String(tp?.tenpo_id || '').trim();
+                                        return (
+                                            <button
+                                                key={tp.tenpo_id}
+                                                type="button"
+                                                aria-pressed={selected}
+                                                onClick={() => {
+                                                    const nextYakusokuId = pickPrimaryYakusokuIdForTenpo(tp.tenpo_id, modalData?.yakusoku_id);
+                                                    setModalData({
+                                                        ...modalData,
+                                                        tenpo_id: tp.tenpo_id,
+                                                        tenpo_name: tp.name,
+                                                        tenpo_query: '',
+                                                        torihikisaki_id: tp.torihikisaki_id || '',
+                                                        yagou_id: tp.yagou_id || '',
+                                                        torihikisaki_name: tp.torihikisaki_name || '',
+                                                        yagou_name: tp.yagou_name || '',
+                                                        yakusoku_id: nextYakusokuId || modalData?.yakusoku_id || '',
+                                                    });
+                                                }}
+                                                style={{
+                                                    textAlign: 'left',
+                                                    padding: '8px 10px',
+                                                    borderRadius: 8,
+                                                    border: selected ? '1px solid #60a5fa' : '1px solid var(--line)',
+                                                    background: selected ? 'rgba(96,165,250,0.15)' : 'var(--panel)',
+                                                    color: 'var(--text)',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                <div style={{ fontWeight: 600 }}>{formatTenpoDisplay(tp.tenpo_id, tp.name, tp.yagou_name)}</div>
+                                                <div style={{ fontSize: 12, opacity: 0.82 }}>
+                                                    {(tp.torihikisaki_name || '取引先未設定')} / {(tp.yagou_name || '屋号未設定')}
+                                                </div>
+                                                <div style={{ fontSize: 11, opacity: 0.7 }}>
+                                                    {tp.tenpo_id} ・ {tp.yagou_id || '-'} ・ {tp.torihikisaki_id || '-'}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                    {!tenpoCandidates.length ? (
+                                        <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                                            一致する候補がありません
+                                        </div>
+                                    ) : null}
+                                </div>
+                                ) : null}
                             </div>
-                            <div className="yotei-form-group">
-                                <label>現場名 (自動設定されます)</label>
-                                <input type="text" value={modalData.tenpo_name} onChange={e => setModalData({ ...modalData, tenpo_name: e.target.value })} placeholder="店舗名・施設名" />
+                            </div>
+                            <div className="yotei-form-group yotei-tenpo-final-group">
+                                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>最終選択ID: {modalData.tenpo_id || '未選択'}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalData({
+                                            ...modalData,
+                                            tenpo_query: '',
+                                            tenpo_id: '',
+                                            tenpo_name: '',
+                                            yakusoku_id: '',
+                                            torihikisaki_id: '',
+                                            yagou_id: '',
+                                            torihikisaki_name: '',
+                                            yagou_name: '',
+                                        })}
+                                        style={{
+                                            border: '1px solid var(--line)',
+                                            borderRadius: 8,
+                                            padding: '2px 8px',
+                                            fontSize: 12,
+                                            background: 'transparent',
+                                            color: 'var(--muted)',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        選択解除
+                                    </button>
+                                </div>
+                                <div
+                                    style={{
+                                        marginTop: 8,
+                                        border: '1px solid var(--line)',
+                                        borderRadius: 8,
+                                        padding: '8px 10px',
+                                        background: 'rgba(15,23,42,0.35)',
+                                    }}
+                                >
+                                    <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>最終選択（保存対象）</div>
+                                    <div style={{ fontSize: 13, fontWeight: 700 }}>{selectedTenpoSummary.label}</div>
+                                    {selectedTenpoSummary.tori ? (
+                                        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+                                            取引先: {selectedTenpoSummary.tori}
+                                        </div>
+                                    ) : null}
+                                    {selectedTenpoSummary.ids ? (
+                                        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                                            {selectedTenpoSummary.ids}
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                                 <div className="yotei-form-group">
@@ -2033,6 +2500,17 @@ export default function AdminYoteiTimelinePage() {
                                 </div>
                             </div>
                             <div className="yotei-form-group">
+                                <label>清掃員（ログインアカウント自動入力）</label>
+                                <input
+                                    type="text"
+                                    value={selectedWorkerNames[0] || modalData.sagyouin_name || selfWorkerDefault.workerName || '未設定'}
+                                    readOnly
+                                />
+                                <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+                                    検索選択は不要です。ログイン中アカウント名を自動設定しています
+                                </div>
+                            </div>
+                            <div className="yotei-form-group">
                                 <label>作業種別</label>
                                 <select value={modalData.work_type} onChange={e => setModalData({ ...modalData, work_type: e.target.value })}>
                                     {WORK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -2040,29 +2518,54 @@ export default function AdminYoteiTimelinePage() {
                             </div>
                             <div className="yotei-form-group">
                                 <label>サービス</label>
-                                <select
-                                    value={modalData.service_id || ''}
-                                    onChange={e => {
-                                        const sid = e.target.value;
-                                        const svc = services.find((x) => x.service_id === sid);
-                                        setModalData({
-                                            ...modalData,
-                                            service_id: sid,
-                                            service_name: svc?.name || '',
-                                            work_type: svc?.name || modalData.work_type,
-                                            end_time: svc?.default_duration_min
-                                                ? calcEndTimeByDuration(modalData.start_time, svc.default_duration_min)
-                                                : modalData.end_time,
-                                        });
-                                    }}
-                                >
-                                    <option value="">選択してください</option>
-                                    {services.map((s) => (
-                                        <option key={s.service_id} value={s.service_id}>
-                                            {s.name} ({s.category})
-                                        </option>
-                                    ))}
-                                </select>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                    <button type="button" onClick={() => setServicePickerOpen(true)}>
+                                        サービスを選択（オーバーレイ）
+                                    </button>
+                                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                                        選択件数: {(modalData.service_ids || []).length} 件
+                                    </span>
+                                </div>
+                                <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                    {(Array.isArray(modalData.service_names) ? modalData.service_names : []).map((nm, idx) => {
+                                        const sid = String((modalData.service_ids || [])[idx] || '');
+                                        const key = `${sid || nm}-${idx}`;
+                                        return (
+                                            <button
+                                                key={key}
+                                                type="button"
+                                                onClick={() => {
+                                                    const ids = [...(modalData.service_ids || [])];
+                                                    const names = [...(modalData.service_names || [])];
+                                                    ids.splice(idx, 1);
+                                                    names.splice(idx, 1);
+                                                    setModalData({
+                                                        ...modalData,
+                                                        service_ids: ids,
+                                                        service_names: names,
+                                                        service_id: ids[0] || '',
+                                                        service_name: names[0] || '',
+                                                    });
+                                                }}
+                                                style={{
+                                                    border: '1px solid var(--line)',
+                                                    background: 'var(--panel)',
+                                                    color: 'var(--text)',
+                                                    borderRadius: 999,
+                                                    padding: '4px 10px',
+                                                    fontSize: 12,
+                                                    cursor: 'pointer',
+                                                }}
+                                                title="クリックで削除"
+                                            >
+                                                {nm || sid} ×
+                                            </button>
+                                        );
+                                    })}
+                                    {!(modalData.service_ids || []).length ? (
+                                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>未選択</span>
+                                    ) : null}
+                                </div>
                             </div>
                             <div className="yotei-form-group">
                                 <label>メモ</label>
@@ -2154,8 +2657,84 @@ export default function AdminYoteiTimelinePage() {
                         </div>
                         <div className="yotei-modal-footer">
                             {!modalData.isNew && <button className="danger" onClick={() => deleteSchedule(modalData.id)}>予定取消</button>}
-                            <button onClick={() => setModalData(null)}>キャンセル</button>
+                            <button onClick={() => { setModalData(null); setServicePickerOpen(false); }}>キャンセル</button>
                             <button className="primary" onClick={saveModal} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {modalData && servicePickerOpen && (
+                <div className="yakusoku-service-overlay" onClick={() => setServicePickerOpen(false)}>
+                    <div className="yakusoku-service-panel" onClick={(e) => e.stopPropagation()}>
+                        <div className="yakusoku-service-head">
+                            <strong>サービス選択</strong>
+                            <button type="button" onClick={() => setServicePickerOpen(false)}>閉じる</button>
+                        </div>
+                        <input
+                            type="text"
+                            value={modalData.service_query || ''}
+                            onChange={(e) => setModalData({ ...modalData, service_query: e.target.value })}
+                            placeholder="サービス名 / ID / カテゴリで検索"
+                        />
+                        <div className="yakusoku-service-count">候補 {serviceCandidates.length} 件 / 選択 {(modalData.service_ids || []).length} 件</div>
+                        <div className="yakusoku-service-categories">
+                            <button
+                                type="button"
+                                className={`yakusoku-service-cat-chip ${activeServiceCategory === 'all' ? 'active' : ''}`}
+                                onClick={() => setModalData({ ...modalData, service_category: 'all' })}
+                            >
+                                全カテゴリ ({serviceCandidates.length})
+                            </button>
+                            {serviceGroups.map((g) => (
+                                <button
+                                    key={g.key}
+                                    type="button"
+                                    className={`yakusoku-service-cat-chip ${activeServiceCategory === g.key ? 'active' : ''}`}
+                                    onClick={() => setModalData({ ...modalData, service_category: g.key })}
+                                >
+                                    {g.label} ({g.items.length})
+                                </button>
+                            ))}
+                        </div>
+                        <div className="yakusoku-service-list">
+                            {visibleServiceGroups.map((group) => (
+                                <section key={group.key} className="yakusoku-service-group">
+                                    <div className="yakusoku-service-group-head">
+                                        <strong>{group.label}</strong>
+                                        <span>{group.items.length}件</span>
+                                    </div>
+                                    <div className="yakusoku-service-group-grid">
+                                        {group.items.map((s) => {
+                                            const sid = String(s?.service_id || '');
+                                            const checked = Array.isArray(modalData?.service_ids) && modalData.service_ids.includes(sid);
+                                            return (
+                                                <label key={sid} className="yakusoku-service-option">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={(e) => toggleServiceSelection(s, e.target.checked)}
+                                                    />
+                                                    <div>
+                                                        <div style={{ fontWeight: 700 }}>{String(s?.name || sid)}</div>
+                                                        <div style={{ fontSize: 12, opacity: 0.82 }}>
+                                                            {normalizeServiceConcept(s)} / {String(s?.category || '未分類')}
+                                                        </div>
+                                                        <div style={{ fontSize: 11, opacity: 0.68 }}>
+                                                            {sid || '-'} ・ 標準単価 ¥{Number(s?.default_price || 0).toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                </section>
+                            ))}
+                            {!visibleServiceGroups.length ? (
+                                <div style={{ fontSize: 12, color: 'var(--muted)' }}>候補がありません。サービスマスタを確認してください。</div>
+                            ) : null}
+                        </div>
+                        <div className="yakusoku-service-foot">
+                            <button type="button" onClick={() => setServicePickerOpen(false)}>選択を反映して閉じる</button>
                         </div>
                     </div>
                 </div>

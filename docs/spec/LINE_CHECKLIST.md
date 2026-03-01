@@ -1248,3 +1248,42 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] PDFヘッダーを画面幅非依存の2カラム固定に変更（左: 取引先名/挨拶/作業店舗名/場所、右: 会社情報/押印欄）
 - [x] PDFヘッダーDOMにインライン2カラム指定を追加し、モバイル幅・CSS競合時でも左右レイアウトが崩れないように固定
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: New Registration UX Sync (2026-03-01)
+
+- [x] 管理 `yotei` 新規登録モーダルに `店舗統合検索` を追加（取引先/屋号/店舗/ID 検索、候補タップで確定）
+- [x] 店舗選択時に `yakusoku` を同一店舗候補から自動補完（既選択維持優先）
+- [x] サービス選択を `yakusoku` 同等のオーバーレイ方式へ変更（カテゴリチップ + 複数チェック + タグ解除）
+- [x] 清掃員選択を複数チェック方式へ変更（検索フィルタ + 選択タグ表示）
+- [x] 保存 payload を拡張（`worker_ids` / `worker_names` / `service_ids` / `service_names` を送信、主担当は先頭IDで `sagyouin_*` に同期）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Modal Two-Column Layout (2026-03-01)
+
+- [x] 新規予定登録モーダルを2カラム化（左: `紐付け契約` + `現場名（統合検索）`、右: `清掃員（複数選択）`）
+- [x] `紐付け契約` を `現場名（統合検索）` の上段へ固定配置
+- [x] `最終選択tenpo` 表示ブロックを2カラム外へ分離し、全幅表示に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku: Tag Layout + Meta Fit (2026-03-01)
+
+- [x] 清掃ジョブ `houkoku` の選択済みサービスタグを `サービスを選択` / `その他` ボタンの下段へ固定配置
+- [x] サービスタグを小型化（フォント・余白縮小）し、高さ占有を抑えて横幅を活かす表示へ調整
+- [x] `作業日 / 作業開始 / 作業終了` 入力の幅はみ出しを防止（`WorkMetaGrid` の縮小制約・入力幅制御を追加）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Tenpo Query Visibility + Self Worker Auto (2026-03-01)
+
+- [x] 店舗統合検索候補はクエリ未入力時に非表示化（入力時のみ候補表示）
+- [x] 現場名検索入力は未入力時に空表示へ変更（選択済み情報は `最終選択tenpo` 全幅ブロックで確認）
+- [x] 清掃員の検索選択UIを廃止し、ログイン中アカウント名を自動入力（read-only）へ変更
+- [x] 清掃員表示を `作業種別` の上へ移設
+- [x] 新規予定モーダル上段は実レイアウトに合わせて `紐付け契約 + 現場名検索` の1カラム構成へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku: Admin Pool Restore (2026-03-01)
+
+- [x] 共通ビルダーの画像運用を用途別に分離（管理: 共通画像プール表示 / 清掃ジョブ: 直接アップロード）
+- [x] 清掃ジョブ経路（`ReportCreatePage`）のみ `forceDirectBucketUpload` を有効化
+- [x] 管理 `清掃レポート作成` では共通画像プールを再表示
+- [x] `npm -C src/misogi run build` でビルド確認

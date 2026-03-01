@@ -12,7 +12,7 @@ export default function ReportCreatePage() {
 
   if (jobKey === 'cleaning') {
     // Always use the same builder as admin to keep preview/PDF(A4) identical.
-    return <AdminCleaningHoukokuBuilderPage />;
+    return <AdminCleaningHoukokuBuilderPage forceDirectBucketUpload />;
   }
   return <ReportUnavailable jobKey={jobKey} />;
 }
