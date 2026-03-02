@@ -120,9 +120,8 @@
         }
 
         .about-highlight__title {
-            font-size: 42px;
-            font-weight: 700;
-            color: #FF679C;
+            font-size: 32px;
+            color: #333;
             margin-bottom: 12px;
             position: relative;
             z-index: 1;
@@ -4326,7 +4325,20 @@ font-size: 20px;
                         <li class="mega-menu-item mega-menu-has-submenu">
                             <a href="/service/service.html" class="mega-menu-link">
                                 <span class="mega-menu-text">サービス一覧</span>
+                                <span class="mega-menu-arrow">▼</span>
                             </a>
+                            <div class="mega-menu-submenu">
+                                <div class="mega-menu-submenu-inner">
+                                    <div class="mega-menu-column">
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/service/service.html?category=厨房設備"><span>厨房設備</span></a></li>
+                                            <li><a href="/service/service.html?category=空調設備"><span>空調設備</span></a></li>
+                                            <li><a href="/service/service.html?category=フロア"><span>フロア</span></a></li>
+                                            <li><a href="/service/service.html?category=その他"><span>その他</span></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
                             <a class="mega-menu-link">
@@ -4355,7 +4367,7 @@ font-size: 20px;
                                     <div class="mega-menu-column">
                                         <ul class="mega-menu-column-list">
                                             <li><a href="/recruit/recruit.html"><span>求人トップ</span></a></li>
-                                            <li><a href="/recruit/cleaning.htm"><span>清掃スタッフ</span></a></li>
+                                            <li><a href="/recruit/cleaning.htl"><span>清掃スタッフ</span></a></li>
                                             <li><a href="/recruit/equipment.html"><span>設備メンテナンススタッフ</span></a></li>
                                             <li><a href="/recruit/inside-sales.html"><span>インサイドセールス</span></a></li>
                                             <li><a href="/recruit/field-sales.html"><span>フィールドセールス</span></a></li>
@@ -4456,7 +4468,15 @@ font-size: 20px;
             </div>
             <nav class="normal-header-nav">
                 <a href="about-more.html">トピック一覧</a>
-                <a href="/service/service.html">サービス一覧</a>
+                <div class="nav-dropdown">
+                    <a href="/service/service.html">サービス一覧</a>
+                    <ul class="nav-dropdown-list">
+                        <li><a href="/service/service.html?category=厨房設備">・ 厨房設備</a></li>
+                        <li><a href="/service/service.html?category=空調設備">・ 空調設備</a></li>
+                        <li><a href="/service/service.html?category=フロア">・ フロア</a></li>
+                        <li><a href="/service/service.html?category=その他">・ その他</a></li>
+                    </ul>
+                </div>
                 <div class="nav-dropdown">
                     <a>企業情報</a>
                     <ul class="nav-dropdown-list">
@@ -4465,7 +4485,16 @@ font-size: 20px;
                         <li><a href="/customer/customer.html">・ 導入店舗一覧</a></li>
                     </ul>
                 </div>
-                <a href="/recruit/recruit.html">求人情報</a>
+                <div class="nav-dropdown">
+                    <a>求人情報</a>
+                    <ul class="nav-dropdown-list">
+                        <li><a href="/recruit/recruit.html">・ 求人トップ</a></li>
+                        <li><a href="/recruit/cleaning.html">・ 清掃スタッフ</a></li>
+                        <li><a href="/recruit/equipment.html">・ 設備メンテナンススタッフ</a></li>
+                        <li><a href="/recruit/inside-sales.html">・ インサイドセールス</a></li>
+                        <li><a href="/recruit/field-sales.html">・ フィールドセールス</a></li>
+                    </ul>
+                </div>
                 <!--<a href="/announcements">お知らせ</a>-->
                 <div class="nav-dropdown">
                     <a>規約＆ポリシー</a>
@@ -4534,6 +4563,15 @@ font-size: 20px;
                 <a href="/service/service.html" class="sp-menu-link">
                     <span>サービス一覧</span>
                 </a>
+                <div class="sp-menu-submenu">
+                    <ul class="sp-menu-submenu-list">
+                        <li class="sp-menu-submenu-item"><a href="/service/service.html?category=厨房設備" class="sp-menu-submenu-link">厨房設備</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service/service.html?category=空調設備" class="sp-menu-submenu-link">空調設備</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service/service.html?category=フロア" class="sp-menu-submenu-link">フロア</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service/service.html?category=その他" class="sp-menu-submenu-link">その他</a></li>
+
+                    </ul>
+                </div>
             </li>
 
             <li class="sp-menu-item sp-menu-item-has-submenu">
