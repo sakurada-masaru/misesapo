@@ -93,6 +93,8 @@ s3 = boto3.client(
 )
 STORAGE_BUCKET = os.environ.get("STORAGE_BUCKET", "")
 CHAT_STORAGE_BUCKET = os.environ.get("CHAT_STORAGE_BUCKET", "").strip() or STORAGE_BUCKET
+FILEBOX_SOUKO_SOURCE = "admin_filebox"
+FILEBOX_SOUKO_TENPO_ID = "filebox_company"
 translate_client = boto3.client("translate", region_name=AWS_REGION)
 
 
@@ -458,6 +460,14 @@ def _validate_parent_relations(collection: str, data: dict):
 
     if collection in {"souko", "keiyaku"}:
         tenpo_id = _strip(data.get("tenpo_id"))
+        source = _strip(data.get("source"))
+        # 会社共通ファイルボックスは擬似 tenpo_id で運用する。
+        if (
+            collection == "souko"
+            and tenpo_id == FILEBOX_SOUKO_TENPO_ID
+            and source == FILEBOX_SOUKO_SOURCE
+        ):
+            return None
         if tenpo_id:
             tenpo = _get_item_by_id("tenpo", tenpo_id)
             if not _is_active_item(tenpo):
@@ -526,6 +536,13 @@ def _build_filter(collection: str, q: dict):
 
     if collection == "zaiko":
         for k in ["category", "supplier_name"]:
+            v = q.get(k)
+            if v:
+                k_expr = Attr(k).eq(v)
+                expr = k_expr if expr is None else expr & k_expr
+
+    if collection == "souko":
+        for k in ["source", "folder_id", "uploaded_by"]:
             v = q.get(k)
             if v:
                 k_expr = Attr(k).eq(v)

@@ -21,12 +21,15 @@ const ADMIN_ENTRANCE_MODE_SEPIA = 'sepia';
 const ADMIN_ENTRANCE_MODE_LEGACY_NIER = 'nier';
 const ADMIN_UPDATES_POLL_MS = 30000;
 const FILEBOX_MAX_UPLOAD_SIZE = 15 * 1024 * 1024;
-const ADMIN_FILEBOX_FOLDERS = [
-  { id: 'contracts', name: '契約書', room: 'filebox_contracts' },
-  { id: 'manuals', name: '業務マニュアル', room: 'filebox_manuals' },
-  { id: 'reports', name: '提出書類', room: 'filebox_reports' },
-  { id: 'common', name: '共通ドキュメント', room: 'filebox_common' },
+const FILEBOX_SOUKO_SOURCE = 'admin_filebox';
+const FILEBOX_SOUKO_TENPO_ID = 'filebox_company';
+const DEFAULT_ADMIN_FILEBOX_FOLDERS = [
+  { id: 'contracts', name: '契約書' },
+  { id: 'manuals', name: '業務マニュアル' },
+  { id: 'reports', name: '提出書類' },
+  { id: 'common', name: '共通ドキュメント' },
 ];
+const DEFAULT_ADMIN_FILEBOX_FOLDER_IDS = new Set(DEFAULT_ADMIN_FILEBOX_FOLDERS.map((row) => row.id));
 const FILEBOX_VIEW_MODE_OPTIONS = [
   { id: 'icon', label: 'アイコン表示', icon: '◼' },
   { id: 'list', label: 'リスト表示', icon: '☰' },
@@ -135,19 +138,90 @@ function isLikelyLoginEvent(row) {
   );
 }
 
+function tryRestoreUtf8Mojibake(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  if (/[ぁ-んァ-ン一-龯]/.test(text)) return text;
+  if (!/[À-ÿ]/.test(text)) return text;
+  try {
+    const chars = Array.from(text);
+    const bytes = Uint8Array.from(chars.map((ch) => {
+      const code = ch.charCodeAt(0);
+      return code <= 0xff ? code : 0x3f;
+    }));
+    const restored = new TextDecoder('utf-8', { fatal: true }).decode(bytes).trim();
+    if (!restored) return text;
+    if (/[ぁ-んァ-ン一-龯]/.test(restored)) return restored;
+    return text;
+  } catch {
+    return text;
+  }
+}
+
+function parsePossibleName(raw) {
+  if (raw == null) return '';
+  if (typeof raw === 'object') {
+    return tryRestoreUtf8Mojibake(String(
+      raw?.name
+      || raw?.display_name
+      || raw?.user_name
+      || raw?.updated_by_name
+      || raw?.created_by_name
+      || ''
+    ).trim());
+  }
+  const s = tryRestoreUtf8Mojibake(String(raw).trim());
+  if (!s) return '';
+  if (s.startsWith('{') && s.endsWith('}')) {
+    try {
+      const j = JSON.parse(s);
+      if (j && typeof j === 'object') {
+        return parsePossibleName(j);
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return s;
+}
+
+function isLikelySystemIdentifier(v) {
+  const s = String(v || '').trim();
+  if (!s) return true;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s)) return true;
+  if (/^arn:aws:/i.test(s)) return true;
+  if (/^aida[0-9a-z]{12,}$/i.test(s)) return true;
+  if (/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(s)) return true;
+  if (s.length >= 36 && /^[A-Za-z0-9:/_.-]+$/.test(s)) return true;
+  return false;
+}
+
+function pickDisplayName(...candidates) {
+  for (const c of candidates) {
+    const parsed = parsePossibleName(c);
+    if (!parsed) continue;
+    if (isLikelySystemIdentifier(parsed)) continue;
+    return parsed;
+  }
+  for (const c of candidates) {
+    const parsed = parsePossibleName(c);
+    if (parsed) return parsed;
+  }
+  return '未設定';
+}
+
 function reportWho(item) {
-  return String(
-    item?.updated_by_name
-    || item?.updated_by
-    || item?.submitted_by_name
-    || item?.submitted_by
-    || item?.user_name
-    || item?.worker_name
-    || item?.reporter_name
-    || item?.created_by_name
-    || item?.created_by
-    || ''
-  ).trim() || '未設定';
+  return pickDisplayName(
+    item?.updated_by_name,
+    item?.submitted_by_name,
+    item?.user_name,
+    item?.worker_name,
+    item?.reporter_name,
+    item?.created_by_name,
+    item?.updated_by,
+    item?.submitted_by,
+    item?.created_by,
+  );
 }
 
 function summarizeFact(row) {
@@ -211,38 +285,52 @@ function readLocalUserName() {
   }
 }
 
-function extractChatAttachments(row) {
-  const arr = Array.isArray(row?.attachments) ? row.attachments : [];
-  const normalized = arr
-    .map((att, idx) => {
-      const name = String(att?.name || att?.file_name || `file_${idx + 1}`).trim();
-      const url = String(att?.url || att?.get_url || att?.preview_url || '').trim();
-      const key = String(att?.key || '').trim();
-      if (!name || (!url && !key)) return null;
+function normalizeFileboxFolderId(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function parseFileboxFolderMeta(row) {
+  const soukoId = String(row?.souko_id || '').trim();
+  const id = normalizeFileboxFolderId(row?.folder_id || '');
+  const name = String(row?.folder_name || row?.name || '').trim();
+  if (!soukoId || !id || !name) return null;
+  return {
+    id,
+    name,
+    soukoId,
+    atMs: toEpochMs(row?.updated_at || row?.created_at),
+  };
+}
+
+function parseFileboxFiles(row, folder) {
+  const list = Array.isArray(row?.files) ? row.files : [];
+  return list
+    .map((it, idx) => {
+      const name = String(it?.file_name || it?.name || '').trim();
+      const key = String(it?.key || '').trim();
+      const url = String(it?.preview_url || it?.get_url || it?.url || '').trim();
+      if (!name || (!key && !url)) return null;
       return {
+        id: `${String(row?.souko_id || folder.id)}-${key || name}-${idx}`,
+        folderId: folder.id,
+        folderName: folder.name,
+        soukoId: String(row?.souko_id || '').trim(),
         name,
         key,
         url,
-        size: Number(att?.size || 0),
-        contentType: String(att?.content_type || att?.mime || '').trim(),
+        size: Number(it?.size || 0),
+        contentType: String(it?.content_type || it?.mime || '').trim(),
+        uploader: String(it?.uploaded_by_name || it?.uploaded_by || row?.updated_by || row?.created_by || '未設定').trim(),
+        atMs: toEpochMs(it?.uploaded_at || it?.updated_at || it?.created_at || row?.updated_at || row?.created_at),
       };
     })
-    .filter(Boolean);
-
-  if (normalized.length > 0) return normalized;
-
-  const legacyName = String(row?.attachment_name || '').trim();
-  const legacyUrl = String(row?.attachment_url || row?.attachment_get_url || '').trim();
-  const legacyKey = String(row?.attachment_key || '').trim();
-  if (!legacyName && !legacyUrl && !legacyKey) return [];
-
-  return [{
-    name: legacyName || 'attachment',
-    key: legacyKey,
-    url: legacyUrl,
-    size: Number(row?.attachment_size || 0),
-    contentType: String(row?.attachment_content_type || '').trim(),
-  }];
+    .filter(Boolean)
+    .sort((a, b) => b.atMs - a.atMs);
 }
 
 function extractFileExtension(name) {
@@ -309,9 +397,14 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const [updatesLoading, setUpdatesLoading] = useState(false);
   const [updatesError, setUpdatesError] = useState('');
   const [todayUpdates, setTodayUpdates] = useState([]);
+  const [fileboxFolders, setFileboxFolders] = useState(() => [...DEFAULT_ADMIN_FILEBOX_FOLDERS]);
   const [activeFileboxFolderId, setActiveFileboxFolderId] = useState(null);
   const [fileboxViewMode, setFileboxViewMode] = useState('list');
+  const [newFileboxFolderName, setNewFileboxFolderName] = useState('');
+  const [fileboxCreatingFolder, setFileboxCreatingFolder] = useState(false);
+  const [fileboxFoldersLoading, setFileboxFoldersLoading] = useState(false);
   const [fileboxMap, setFileboxMap] = useState({});
+  const [, setFileboxSoukoMap] = useState({});
   const [fileboxLoading, setFileboxLoading] = useState(false);
   const [fileboxUploading, setFileboxUploading] = useState(false);
   const [fileboxError, setFileboxError] = useState('');
@@ -463,7 +556,17 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       const logEvents = kanriRows
         .map((row) => {
           const whenMs = toEpochMs(row?.updated_at || row?.created_at || row?.reported_at || row?.date);
-          const who = String(row?.updated_by || row?.reported_by || row?.created_by || row?.user_name || '').trim() || '未設定';
+          const who = pickDisplayName(
+            row?.updated_by_name,
+            row?.reported_by_name,
+            row?.created_by_name,
+            row?.user_name,
+            row?.worker_name,
+            row?.reporter_name,
+            row?.updated_by,
+            row?.reported_by,
+            row?.created_by,
+          );
           const isLogin = isLikelyLoginEvent(row);
           const fact = isLogin ? 'ログインしました' : summarizeFact(row);
           return {
@@ -560,9 +663,21 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const updatesRailLeft = useSidebarNav ? (sidebarOpen ? 'min(236px, 80vw)' : '0px') : '0px';
   const updatesPanelLeft = updatesRailLeft;
   const showAdminFilebox = useSidebarNav && location.pathname === '/admin/filebox';
+  const fileboxActor = useMemo(() => {
+    const name = String(
+      user?.name
+      || user?.display_name
+      || user?.attributes?.name
+      || user?.email
+      || readLocalUserName()
+      || '管理者'
+    ).trim();
+    const id = String(user?.id || user?.worker_id || user?.sagyouin_id || name || 'admin').trim();
+    return { name, id };
+  }, [user]);
   const folderById = useMemo(
-    () => Object.fromEntries(ADMIN_FILEBOX_FOLDERS.map((row) => [row.id, row])),
-    []
+    () => Object.fromEntries(fileboxFolders.map((row) => [row.id, row])),
+    [fileboxFolders]
   );
   const activeFileboxFolder = activeFileboxFolderId ? (folderById[activeFileboxFolderId] || null) : null;
   const activeFolderItems = useMemo(() => {
@@ -572,7 +687,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   }, [activeFileboxFolder?.id, fileboxMap]);
   const fileboxStats = useMemo(() => {
     const stats = {};
-    ADMIN_FILEBOX_FOLDERS.forEach((folder) => {
+    fileboxFolders.forEach((folder) => {
       const list = Array.isArray(fileboxMap[folder.id]) ? fileboxMap[folder.id] : [];
       const latest = list.slice().sort((a, b) => b.atMs - a.atMs)[0];
       stats[folder.id] = {
@@ -581,77 +696,148 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       };
     });
     return stats;
-  }, [fileboxMap]);
+  }, [fileboxFolders, fileboxMap]);
+  const fileboxBusy = fileboxLoading || fileboxUploading || fileboxCreatingFolder || fileboxFoldersLoading;
 
-  const loadFilebox = useCallback(async () => {
+  const createFileboxSoukoFolder = useCallback(async (folder) => {
+    const base = MASTER_API_BASE.replace(/\/$/, '');
+    const res = await fetch(`${base}/master/souko`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tenpo_id: FILEBOX_SOUKO_TENPO_ID,
+        source: FILEBOX_SOUKO_SOURCE,
+        folder_id: folder.id,
+        folder_name: folder.name,
+        name: `${folder.name} フォルダ`,
+        uploaded_by: fileboxActor.id,
+        uploaded_by_name: fileboxActor.name,
+        files: [],
+        jotai: 'yuko',
+      }),
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`フォルダ作成失敗: HTTP ${res.status}${txt ? ` ${txt}` : ''}`);
+    }
+    return res.json();
+  }, [fileboxActor.id, fileboxActor.name]);
+
+  const loadFileboxData = useCallback(async () => {
     if (!useSidebarNav) return;
+    setFileboxFoldersLoading(true);
     setFileboxLoading(true);
     setFileboxError('');
     try {
       const base = MASTER_API_BASE.replace(/\/$/, '');
-      const results = await Promise.all(
-        ADMIN_FILEBOX_FOLDERS.map(async (folder) => {
-          const url = `${base}/master/admin_chat?limit=500&jotai=yuko&room=${encodeURIComponent(folder.room)}`;
-          const res = await fetch(url, {
-            headers: {
-              ...authHeaders(),
-              'Content-Type': 'application/json',
-            },
-            cache: 'no-store',
-          });
-          if (!res.ok) {
-            const txt = await res.text();
-            throw new Error(`${folder.name}: HTTP ${res.status}${txt ? ` ${txt}` : ''}`);
-          }
-          const data = await res.json();
-          const rows = asItems(data);
-          const files = rows.flatMap((row, rowIndex) => {
-            const atMs = toEpochMs(row?.created_at || row?.updated_at);
-            const uploader = String(
-              row?.sender_display_name
-              || row?.sender_name
-              || row?.created_by
-              || row?.updated_by
-              || '未設定'
-            ).trim();
-            return extractChatAttachments(row)
-              .map((att, index) => {
-                const url = String(att.url || '').trim();
-                if (!url) return null;
-                return {
-                  id: `${folder.id}-${row?.chat_id || rowIndex}-${att.key || att.name}-${index}`,
-                  folderId: folder.id,
-                  folderName: folder.name,
-                  name: att.name,
-                  url,
-                  key: att.key,
-                  size: att.size,
-                  contentType: att.contentType,
-                  uploader,
-                  atMs,
-                };
-              })
-              .filter(Boolean);
-          });
-          return [folder.id, files];
-        })
-      );
-      setFileboxMap(Object.fromEntries(results));
+      const qs = new URLSearchParams({
+        limit: '1000',
+        jotai: 'yuko',
+        tenpo_id: FILEBOX_SOUKO_TENPO_ID,
+        source: FILEBOX_SOUKO_SOURCE,
+      });
+      const res = await fetch(`${base}/master/souko?${qs.toString()}`, {
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`フォルダ一覧取得失敗: HTTP ${res.status}${txt ? ` ${txt}` : ''}`);
+      }
+
+      const rows = asItems(await res.json());
+      const rowByFolderId = new Map();
+      rows.forEach((row) => {
+        const parsed = parseFileboxFolderMeta(row);
+        if (!parsed) return;
+        const prev = rowByFolderId.get(parsed.id);
+        if (!prev || parsed.atMs >= prev.atMs) {
+          rowByFolderId.set(parsed.id, row);
+        }
+      });
+
+      const customFolders = [...rowByFolderId.values()]
+        .map((row) => parseFileboxFolderMeta(row))
+        .filter((row) => row && !DEFAULT_ADMIN_FILEBOX_FOLDER_IDS.has(row.id))
+        .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ja'))
+        .map(({ id, name }) => ({ id, name }));
+
+      const mergedFolders = [...DEFAULT_ADMIN_FILEBOX_FOLDERS, ...customFolders];
+      const nextSoukoMap = {};
+      const nextFileMap = {};
+      mergedFolders.forEach((folder) => {
+        const row = rowByFolderId.get(folder.id);
+        if (row) nextSoukoMap[folder.id] = row;
+        nextFileMap[folder.id] = row ? parseFileboxFiles(row, folder) : [];
+      });
+
+      setFileboxFolders(mergedFolders);
+      setFileboxSoukoMap(nextSoukoMap);
+      setFileboxMap(nextFileMap);
     } catch (e) {
-      setFileboxError(String(e?.message || e || 'ファイル一覧の取得に失敗しました'));
+      setFileboxError(String(e?.message || e || 'ファイルボックスの取得に失敗しました'));
+      setFileboxFolders([...DEFAULT_ADMIN_FILEBOX_FOLDERS]);
+      setFileboxSoukoMap({});
+      setFileboxMap({});
     } finally {
+      setFileboxFoldersLoading(false);
       setFileboxLoading(false);
     }
   }, [useSidebarNav]);
+
+  const fetchSoukoFolderRecord = useCallback(async (folderId) => {
+    const normalizedFolderId = normalizeFileboxFolderId(folderId);
+    if (!normalizedFolderId) return null;
+    const base = MASTER_API_BASE.replace(/\/$/, '');
+    const qs = new URLSearchParams({
+      limit: '20',
+      jotai: 'yuko',
+      tenpo_id: FILEBOX_SOUKO_TENPO_ID,
+      source: FILEBOX_SOUKO_SOURCE,
+      folder_id: normalizedFolderId,
+    });
+    const res = await fetch(`${base}/master/souko?${qs.toString()}`, {
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const rows = asItems(await res.json());
+    return rows
+      .slice()
+      .sort((a, b) => toEpochMs(b?.updated_at || b?.created_at) - toEpochMs(a?.updated_at || a?.created_at))[0] || null;
+  }, []);
+
+  const ensureSoukoFolderRecord = useCallback(async (folder) => {
+    const latest = await fetchSoukoFolderRecord(folder.id);
+    if (latest?.souko_id) {
+      setFileboxSoukoMap((prev) => ({ ...prev, [folder.id]: latest }));
+      return latest;
+    }
+    const created = await createFileboxSoukoFolder(folder);
+    setFileboxSoukoMap((prev) => ({ ...prev, [folder.id]: created }));
+    return created;
+  }, [createFileboxSoukoFolder, fetchSoukoFolderRecord]);
 
   const uploadFileboxFile = useCallback(async (folder, file) => {
     if (!folder || !file) return;
     if (file.size > FILEBOX_MAX_UPLOAD_SIZE) {
       throw new Error(`「${file.name}」は15MB以下にしてください`);
     }
+    const currentFolderRecord = await ensureSoukoFolderRecord(folder);
     const base = MASTER_API_BASE.replace(/\/$/, '');
     const contentType = String(file.type || 'application/octet-stream');
-    const presignRes = await fetch(`${base}/master/admin_chat`, {
+    const presignRes = await fetch(`${base}/master/souko`, {
       method: 'POST',
       headers: {
         ...authHeaders(),
@@ -659,7 +845,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       },
       body: JSON.stringify({
         mode: 'presign_upload',
-        room: folder.room,
+        tenpo_id: FILEBOX_SOUKO_TENPO_ID,
         file_name: file.name,
         content_type: contentType,
       }),
@@ -677,61 +863,84 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     if (!putRes.ok) {
       throw new Error(`アップロード失敗: HTTP ${putRes.status}`);
     }
-
-    const sender = String(
-      user?.name
-      || user?.display_name
-      || user?.attributes?.name
-      || user?.email
-      || readLocalUserName()
-      || '管理者'
-    ).trim();
-    const attachment = {
-      key: String(presign?.key || ''),
-      bucket: String(presign?.bucket || ''),
-      name: String(file.name || 'file'),
-      content_type: contentType,
-      size: Number(file.size || 0),
-      url: String(presign?.get_url || ''),
-    };
-    const createRes = await fetch(`${base}/master/admin_chat`, {
-      method: 'POST',
+    const nextFiles = [
+      ...(Array.isArray(currentFolderRecord?.files) ? currentFolderRecord.files : []),
+      {
+        key: String(presign?.key || ''),
+        file_name: String(file.name || 'file'),
+        content_type: contentType,
+        size: Number(file.size || 0),
+        uploaded_at: new Date().toISOString(),
+        uploaded_by: fileboxActor.id,
+        uploaded_by_name: fileboxActor.name,
+        preview_url: String(presign?.get_url || ''),
+      },
+    ];
+    const updateRes = await fetch(`${base}/master/souko/${encodeURIComponent(String(currentFolderRecord?.souko_id || ''))}`, {
+      method: 'PUT',
       headers: {
         ...authHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        room: folder.room,
-        name: String(file.name || 'file').slice(0, 48),
-        sender_name: sender,
-        sender_display_name: sender,
-        sender_id: String(user?.id || user?.worker_id || user?.sagyouin_id || 'admin'),
-        source: 'admin_filebox',
-        jotai: 'yuko',
-        message: `${folder.name} にファイルをアップロード`,
-        has_attachment: true,
-        attachments: [attachment],
-        attachment_key: attachment.key,
-        attachment_bucket: attachment.bucket,
-        attachment_name: attachment.name,
-        attachment_content_type: attachment.content_type,
-        attachment_size: attachment.size,
+        ...currentFolderRecord,
+        tenpo_id: String(currentFolderRecord?.tenpo_id || FILEBOX_SOUKO_TENPO_ID),
+        source: FILEBOX_SOUKO_SOURCE,
+        folder_id: folder.id,
+        folder_name: folder.name,
+        name: String(currentFolderRecord?.name || `${folder.name} フォルダ`),
+        uploaded_by: fileboxActor.id,
+        uploaded_by_name: fileboxActor.name,
+        files: nextFiles,
       }),
     });
-    if (!createRes.ok) {
-      const txt = await createRes.text();
-      throw new Error(`アップロード記録失敗: HTTP ${createRes.status}${txt ? ` ${txt}` : ''}`);
+    if (!updateRes.ok) {
+      const txt = await updateRes.text();
+      throw new Error(`アップロード記録失敗: HTTP ${updateRes.status}${txt ? ` ${txt}` : ''}`);
     }
-  }, [user]);
+    const updated = await updateRes.json();
+    setFileboxSoukoMap((prev) => ({ ...prev, [folder.id]: updated }));
+  }, [ensureSoukoFolderRecord, fileboxActor.id, fileboxActor.name]);
 
   const onFileboxUploadClick = useCallback(() => {
     if (fileboxUploading) return;
     if (!activeFileboxFolder) {
-      setFileboxError('先にフォルダカードを選択してください');
+      setFileboxError('先にフォルダを選択してください');
       return;
     }
     fileboxInputRef.current?.click();
   }, [activeFileboxFolder, fileboxUploading]);
+
+  const onCreateFileboxFolder = useCallback(async () => {
+    const name = String(newFileboxFolderName || '').trim();
+    if (!name) {
+      setFileboxError('フォルダ名を入力してください');
+      return;
+    }
+    if (fileboxFolders.some((row) => row.name === name)) {
+      setFileboxError('同名のフォルダが既にあります');
+      return;
+    }
+    setFileboxCreatingFolder(true);
+    try {
+      const baseId = normalizeFileboxFolderId(name) || `folder_${Date.now().toString(36)}`;
+      let id = baseId;
+      let index = 2;
+      while (fileboxFolders.some((row) => row.id === id)) {
+        id = `${baseId}_${index}`;
+        index += 1;
+      }
+      await createFileboxSoukoFolder({ id, name });
+      await loadFileboxData();
+      setActiveFileboxFolderId(id);
+      setNewFileboxFolderName('');
+      setFileboxError('');
+    } catch (err) {
+      setFileboxError(String(err?.message || err || 'フォルダ作成に失敗しました'));
+    } finally {
+      setFileboxCreatingFolder(false);
+    }
+  }, [createFileboxSoukoFolder, fileboxFolders, loadFileboxData, newFileboxFolderName]);
 
   const onFileboxSelect = useCallback(async (e) => {
     const files = Array.from(e?.target?.files || []);
@@ -742,14 +951,14 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       for (const file of files) {
         await uploadFileboxFile(activeFileboxFolder, file);
       }
-      await loadFilebox();
+      await loadFileboxData();
     } catch (err) {
       setFileboxError(String(err?.message || err || 'アップロードに失敗しました'));
     } finally {
       setFileboxUploading(false);
       if (fileboxInputRef.current) fileboxInputRef.current.value = '';
     }
-  }, [activeFileboxFolder, loadFilebox, uploadFileboxFile]);
+  }, [activeFileboxFolder, loadFileboxData, uploadFileboxFile]);
 
   const onOpenFolderCard = useCallback((folderId) => {
     const folder = folderById[folderId];
@@ -758,10 +967,21 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     setFileboxError('');
   }, [folderById]);
 
+  const onRefreshFilebox = useCallback(async () => {
+    await loadFileboxData();
+  }, [loadFileboxData]);
+
+  useEffect(() => {
+    if (!activeFileboxFolderId) return;
+    if (!folderById[activeFileboxFolderId]) {
+      setActiveFileboxFolderId(null);
+    }
+  }, [activeFileboxFolderId, folderById]);
+
   useEffect(() => {
     if (!showAdminFilebox) return;
-    loadFilebox();
-  }, [showAdminFilebox, loadFilebox]);
+    loadFileboxData();
+  }, [showAdminFilebox, loadFileboxData]);
 
   return (
     <div
@@ -973,22 +1193,30 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                     <span>
                       {activeFileboxFolder
                         ? t('表示方式を選んでファイルを確認できます')
-                        : t('カードを選択すると関連ファイルを表示します')}
+                        : t('フォルダを選択すると関連ファイルを表示します')}
                     </span>
                   </div>
                   <div className="admin-filebox-toolbar-actions">
                     {activeFileboxFolder ? (
-                      <button type="button" onClick={() => setActiveFileboxFolderId(null)} disabled={fileboxLoading || fileboxUploading}>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFileboxFolderId(null)}
+                        disabled={fileboxBusy}
+                      >
                         {t('戻る')}
                       </button>
                     ) : null}
-                    <button type="button" onClick={loadFilebox} disabled={fileboxLoading || fileboxUploading}>
-                      {fileboxLoading ? t('更新中...') : t('更新')}
+                    <button
+                      type="button"
+                      onClick={onRefreshFilebox}
+                      disabled={fileboxBusy}
+                    >
+                      {(fileboxLoading || fileboxFoldersLoading) ? t('更新中...') : t('更新')}
                     </button>
                     <button
                       type="button"
                       onClick={onFileboxUploadClick}
-                      disabled={!activeFileboxFolder || fileboxLoading || fileboxUploading}
+                      disabled={!activeFileboxFolder || fileboxBusy}
                     >
                       {fileboxUploading ? t('アップロード中...') : t('アップロード')}
                     </button>
@@ -1003,9 +1231,26 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                   </div>
                 </div>
                 {fileboxError ? <p className="admin-filebox-error">{fileboxError}</p> : null}
+                <div className="admin-filebox-create">
+                  <input
+                    type="text"
+                    value={newFileboxFolderName}
+                    onChange={(e) => setNewFileboxFolderName(e.target.value)}
+                    placeholder={t('新規フォルダ名を入力')}
+                    maxLength={40}
+                    disabled={fileboxBusy}
+                  />
+                  <button
+                    type="button"
+                    onClick={onCreateFileboxFolder}
+                    disabled={fileboxBusy}
+                  >
+                    {fileboxCreatingFolder ? t('作成中...') : t('フォルダ追加')}
+                  </button>
+                </div>
                 {!activeFileboxFolder ? (
                   <div className="admin-filebox-grid">
-                    {ADMIN_FILEBOX_FOLDERS.map((folder) => (
+                    {fileboxFolders.map((folder) => (
                       <button
                         key={folder.id}
                         type="button"
@@ -1075,7 +1320,13 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                                       />
                                     ) : null}
                                   </span>
-                                  <a className="file" href={item.url} target="_blank" rel="noopener noreferrer">
+                                  <a
+                                    className="file"
+                                    href={item.url || '#'}
+                                    target={item.url ? '_blank' : undefined}
+                                    rel={item.url ? 'noopener noreferrer' : undefined}
+                                    onClick={(e) => { if (!item.url) e.preventDefault(); }}
+                                  >
                                     {item.name}
                                   </a>
                                 </div>
@@ -1093,9 +1344,10 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                               <a
                                 key={item.id}
                                 className="admin-filebox-tile"
-                                href={item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                href={item.url || '#'}
+                                target={item.url ? '_blank' : undefined}
+                                rel={item.url ? 'noopener noreferrer' : undefined}
+                                onClick={(e) => { if (!item.url) e.preventDefault(); }}
                               >
                                 <span className={`file-preview kind-${kind}`} aria-hidden>
                                   <span className="file-preview-icon">{fileKindIcon(kind)}</span>

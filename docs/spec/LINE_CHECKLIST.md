@@ -1514,3 +1514,50 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] カード上に表示方式切替アイコンを追加（`アイコン/リスト/スライダー`）
 - [x] 表示方式に応じてファイル表示を切替（グリッド/行リスト/横スライダー）
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Card Create (2026-03-03)
+
+- [x] ファイルボックスカードをユーザー追加できるUIを追加（カード名入力 + `カード追加`）
+- [x] 追加カードを `localStorage(misogi-v2-admin-filebox-custom-folders)` へ保存し、再訪時に復元
+- [x] 追加カードにも既存と同じアップロード/一覧表示フローを適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Wording Folder (2026-03-03)
+
+- [x] ファイルボックスUI文言の `カード` 表記を `フォルダ` 表記へ統一（選択ガイド/エラーメッセージ/作成UI）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Souko Storage + Loop Fix (2026-03-03)
+
+- [x] ファイルボックスのフォルダ/ファイル永続化を `admin_chat` から `souko` へ移行（`source=admin_filebox` / `tenpo_id=filebox_company`）
+- [x] フォルダ一覧・フォルダ作成・アップロード・一覧表示を `souko` API 経由へ統一
+- [x] `/admin/filebox` 初期表示時の無限ループを修正（依存更新で再取得が連鎖しないように調整）
+- [x] `lambda_torihikisaki_api.py` に filebox 共通ストレージ用の `souko` 親検証例外を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Souko Tenpo Fallback (2026-03-03)
+
+- [x] `filebox_company` が無効な環境で `souko` が 400 を返す問題に対応（有効な `tenpo_id` を自動フォールバック）
+- [x] フォールバック先 `tenpo_id` を `localStorage(misogi-v2-admin-filebox-tenpo-id)` へ保存し再利用
+- [x] フォルダ作成/一覧取得/アップロード準備の全経路にフォールバックを適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Company Storage Fixed (2026-03-03)
+
+- [x] ファイルボックス保存先を `souko(tenpo_id=filebox_company, source=admin_filebox)` 固定へ統一
+- [x] 取引先 `tenpo_id` への自動フォールバック処理と `localStorage` キャッシュを削除
+- [x] フォルダ作成/一覧取得/アップロード準備/更新の全経路で社内共通ストレージIDを使用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Today Updates Poster Name Normalize (2026-03-03)
+
+- [x] `本日の更新通知` の投稿者名解決を `*_name` 優先へ修正（`kanri_log` / `work-report` 共通）
+- [x] UUID/メール/ARN など識別子のみが表示されるケースを通知表示名から除外
+- [x] JSON文字列化された投稿者情報も表示名へ復元する正規化を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Today Updates Name Mojibake Fix (2026-03-03)
+
+- [x] 通知投稿者名の UTF-8 文字化け（例: `æ¡ç°å`）を表示時に自動復元
+- [x] 日本語名はそのまま維持し、`À-ÿ` 系の文字化け候補のみを復元対象に制限
+- [x] `npm -C src/misogi run build` でビルド確認
