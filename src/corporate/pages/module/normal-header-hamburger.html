@@ -1,3 +1,45 @@
+<script>
+    // サービス一覧：URL の ?category= / #category= で該当タブを開く（index のカテゴリリンク遷移用）
+    (function () {
+      function getCategoryFromUrl() {
+        var params = new URLSearchParams(window.location.search || '');
+        var fromQuery = params.get('category');
+        if (fromQuery) return fromQuery;
+        var hash = window.location.hash || '';
+        if (hash.indexOf('category=') !== -1) {
+          var m = hash.match(/category=([^&]+)/);
+          return m ? decodeURIComponent(m[1]) : '';
+        }
+        return '';
+      }
+      function init() {
+        var tabContainer = document.querySelector('.tabs');
+        if (!tabContainer) return;
+        var tabs = tabContainer.querySelectorAll('.tab');
+        var cards = document.querySelectorAll('.service-grid .card-service');
+        if (!tabs.length || !cards.length) return;
+        var category = getCategoryFromUrl();
+        if (!category) return;
+        var targetTab = null;
+        for (var i = 0; i < tabs.length; i++) {
+          var c = (tabs[i].getAttribute('data-category') || '').trim();
+          if (c === category) { targetTab = tabs[i]; break; }
+        }
+        if (!targetTab) return;
+        for (var t = 0; t < tabs.length; t++) tabs[t].classList.remove('active');
+        targetTab.classList.add('active');
+        for (var k = 0; k < cards.length; k++) {
+          var card = cards[k];
+          var cardCat = (card.getAttribute('data-category') || '').trim();
+          if (category === 'all' || cardCat === category) card.classList.remove('hidden');
+          else card.classList.add('hidden');
+        }
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
+    })();
+  </script>
+
 <!-- 通常ヘッダー（768px超は横並びナビ、768px以下はハンバーガーメニュー） -->
 <header class="normal-header visible normal-header-with-hamburger">
     <div class="normal-header-inner">
@@ -41,7 +83,7 @@
                 </ul>
             </div>
 
-                <a href="/#event">イベント</a>
+                <!--<a href="/#event">イベント</a>-->
             <a href="mailto:info@misesapo.co.jp">お問い合わせ</a>
         </nav>
         <button type="button" class="normal-header-hamburger" id="normal-header-hamburger-btn" aria-label="メニューを開く" aria-expanded="false">
@@ -85,7 +127,7 @@
                     <li><a href="/service-terms/">・ サービス利用規約</a></li>
                 </ul>
             </div>
-            <a href="/#event">イベント</a>
+            <!--<a href="/#event">イベント</a>-->
             <a href="mailto:info@misesapo.co.jp">お問い合わせ</a>
         </nav>
     </div>

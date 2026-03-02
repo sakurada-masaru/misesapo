@@ -2,32 +2,22 @@
 
 `src/corporate/pages/` 以下のどの階層のページからも、ここにある HTML を共通パーツとして読み込めます。
 
+**読み込み方法**: `@include` は使わず、**JavaScript で取得して差し込む方式**です。
+
+---
+
 ## normal-header-hamburger（ハンバーガーヘッダー）
 
 ### ファイル配置
 
-```
-src/corporate/pages/
-└── module/
-    └── normal-header-hamburger.html   ← ヘッダーHTML
-```
-
-※ CSS は `public/css/normal-header-hamburger.css`、JS は `public/js/normal-header-hamburger.js` を参照します。
-
-### 読み込み形式（相対パス）
-
-どのページ（`area-info.html` / `lp/fan-belt.html` / `event/2026_yakiniku.html` など）からも **同じ1行** で読み出します。
-
-```html
-@include('module.normal-header-hamburger')
-```
-
-- ドット（`.`）がフォルダの区切りになります。
-- `module.normal-header-hamburger` → `module/normal-header-hamburger.html` として、ビルド時に `src/corporate/pages/module/normal-header-hamburger.html` が解決されます（`scripts/build.py` の `resolve_include` で `CORPORATE_PAGES_DIR` を参照）。
+| 役割 | パス |
+|------|------|
+| ヘッダーHTML（ソース） | `src/corporate/pages/module/normal-header-hamburger.html` |
+| ビルド後の配信用 | ビルドで `public/module/normal-header-hamburger.html` にコピーされる |
+| CSS | `public/css/normal-header-hamburger.css` |
+| JS（取得・差し込み・初期化） | `public/js/normal-header-hamburger.js` |
 
 ### ページに書く内容
-
-ヘッダーを出すページでは、次の3つを追加してください。
 
 **1. head 内（CSS）**
 
@@ -36,15 +26,18 @@ src/corporate/pages/
 <link rel="stylesheet" href="/css/normal-header-hamburger.css">
 ```
 
-**2. body の先頭（HTML）**
+**2. body の先頭（プレースホルダー）**
 
 ```html
 <body>
-    @include('module.normal-header-hamburger')
+    <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
 
     <main>
         ...
 ```
+
+- `data-src` は配信時の URL 相対パス（`<base>` と組み合わせて解決されます）。
+- 同じ書き方で、`area-info.html` や `lp/fan-belt.html` など階層が違うページでもそのまま使えます。
 
 **3. body 末尾（JS）**
 
@@ -54,10 +47,18 @@ src/corporate/pages/
 </body>
 ```
 
+### 動作の流れ
+
+1. ビルド（`python scripts/build.py`）で `src/corporate/pages/module/*.html` が `public/module/` にコピーされる。
+2. 表示時、`normal-header-hamburger.js` が `#normal-header-mount` と `data-src` を参照。
+3. `data-src` の URL を fetch し、取得した HTML をプレースホルダー内に差し込む。
+4. 差し込んだヘッダー内のリンク・画像に GitHub Pages 用のパス解決を適用。
+5. ハンバーガーメニュー（開閉）の初期化を行う。
+
 ### ビルド
 
 ```bash
 python scripts/build.py
 ```
 
-実行後、`@include('module.normal-header-hamburger')` が `normal-header-hamburger.html` の内容に置き換わり、出力 HTML に埋め込まれます。
+実行すると、`public/module/normal-header-hamburger.html` が生成され、配信時に JS から読み出せます。
