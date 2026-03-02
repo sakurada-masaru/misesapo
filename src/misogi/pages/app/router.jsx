@@ -155,6 +155,7 @@ export default function Router() {
       <Route path="/jobs/:job/yotei" element={<MyYoteiListPage />} />
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/entrance" element={<AdminEntrancePage />} />
+      <Route path="/admin/filebox" element={<AdminEntrancePage />} />
       <Route path="/admin/cleaning-reports" element={<AdminCleaningReportsPage />} />
       <Route path="/admin/reports/new" element={<AdminReportNewPage />} />
       <Route path="/houkoku" element={<AdminReportNewPage />} />

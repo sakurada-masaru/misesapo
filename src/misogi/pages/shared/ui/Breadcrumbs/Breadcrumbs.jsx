@@ -8,6 +8,7 @@ function isEntrancePath(pathname) {
   const p = String(pathname || '/');
   if (p === '/' || p === '/portal' || p === '/entrance') return true;
   if (p === '/admin/entrance') return true;
+  if (p === '/admin/filebox') return true;
   if (/^\/jobs\/[^/]+\/entrance$/.test(p)) return true;
   return false;
 }
@@ -34,6 +35,7 @@ function labelForPath(pathname) {
   if (p === '/admin/yotei') return '予定';
   if (p === '/admin/ugoki') return 'UGOKI';
   if (p === '/admin/yakusoku') return 'YAKUSOKU';
+  if (p === '/admin/filebox') return 'ファイルボックス';
   if (p === '/admin/torihikisaki-touroku') return '顧客登録';
   if (p === '/admin/torihikisaki-meibo') return '取引先名簿';
   if (p === '/admin/jinzai-meibo') return '人材名簿';

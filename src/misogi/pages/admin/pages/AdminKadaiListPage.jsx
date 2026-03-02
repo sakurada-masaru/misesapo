@@ -13,14 +13,16 @@ const REQUEST_OPTIONS = [
 ];
 
 const FLOW_STAGE_OPTIONS = [
-  { value: 'sales', label: '営業/提案' },
-  { value: 'yakusoku', label: '契約' },
-  { value: 'yotei', label: '予定' },
-  { value: 'shigoto', label: '作業' },
-  { value: 'houkoku', label: '報告' },
-  { value: 'seikyu', label: '請求/支払' },
-  { value: 'master', label: 'マスタ管理' },
-  { value: 'other', label: 'その他' },
+  { value: '営業', label: '営業' },
+  { value: '清掃', label: '清掃' },
+  { value: '事務', label: '事務' },
+  { value: '経理', label: '経理' },
+  { value: 'OP', label: 'OP' },
+  { value: '現場', label: '現場' },
+  { value: '管理', label: '管理' },
+  { value: '予定', label: '予定' },
+  { value: '約束契約', label: '約束契約' },
+  { value: '動き', label: '動き' },
 ];
 
 const STATUS_OPTIONS = [
@@ -353,12 +355,10 @@ function getCurrentActorName() {
 export default function AdminKadaiListPage() {
   const [detailDrafts, setDetailDrafts] = useState({});
   const [kadaiScopeTab, setKadaiScopeTab] = useState('general');
-  const [titleClickCount, setTitleClickCount] = useState(0);
-  const [deleteUiUnlocked, setDeleteUiUnlocked] = useState(false);
   const currentRole = getCurrentRole();
   const currentActor = getCurrentActorName();
   const isAdminOrAbove = currentRole === 'admin' || currentRole === 'headquarters';
-  const deleteSecret = 'MandC280408';
+  const canDelete = isAdminOrAbove;
   const activeScope = isAdminOrAbove ? kadaiScopeTab : 'general';
   const visibleTabs = isAdminOrAbove ? KADAI_SCOPE_OPTIONS : KADAI_SCOPE_OPTIONS.filter((x) => x.value === 'general');
   const pageClassName = activeScope === 'admin' ? 'kadai-admin-glow' : 'kadai-general-glow';
@@ -373,47 +373,16 @@ export default function AdminKadaiListPage() {
   return (
     <AdminMasterBase
       title="タスクリスト"
-      onTitleClick={() => {
-        if (deleteUiUnlocked) return;
-        setTitleClickCount((prev) => {
-          const next = prev + 1;
-          if (next >= 6) {
-            setDeleteUiUnlocked(true);
-            return 0;
-          }
-          return next;
-        });
-      }}
       pageClassName={pageClassName}
       resource="kadai"
       idKey="kadai_id"
-      canDeleteRow={() => deleteUiUnlocked}
-      enableBulkDelete={deleteUiUnlocked}
+      canDeleteRow={() => canDelete}
+      enableBulkDelete={canDelete}
       beforeDelete={async () => {
-        if (!deleteSecret) {
-          window.alert('削除キー未設定です。');
-          return false;
-        }
-        const input = window.prompt('削除キーを入力してください');
-        if (input === null) return false;
-        if (String(input).trim() !== deleteSecret) {
-          window.alert('削除キーが一致しません。');
-          return false;
-        }
-        return true;
+        return window.confirm('この課題を削除しますか？');
       }}
       beforeBulkDelete={async () => {
-        if (!deleteSecret) {
-          window.alert('削除キー未設定です。');
-          return false;
-        }
-        const input = window.prompt('一括削除キーを入力してください');
-        if (input === null) return false;
-        if (String(input).trim() !== deleteSecret) {
-          window.alert('削除キーが一致しません。');
-          return false;
-        }
-        return true;
+        return window.confirm('選択した課題を一括削除しますか？');
       }}
       headerTabs={visibleTabs}
       activeHeaderTab={activeScope}
@@ -427,7 +396,7 @@ export default function AdminKadaiListPage() {
       rowClassName={(row) => (hasReplyLog(row) ? 'has-reply' : '')}
       localSearch={{
         label: '統合検索',
-        placeholder: '業務フロー段階/タスク/内容など',
+        placeholder: 'カテゴリ/タスク/内容など',
         keys: [
           'flow_stage',
           'list_scope',
@@ -445,7 +414,7 @@ export default function AdminKadaiListPage() {
       filters={[
         {
           key: 'flow_stage',
-          label: '業務フロー段階',
+          label: 'カテゴリ',
           options: FLOW_STAGE_OPTIONS,
           valueKey: 'value',
           labelKey: 'label',
@@ -486,7 +455,7 @@ export default function AdminKadaiListPage() {
         },
       ]}
       fixedNewValues={{
-        flow_stage: 'yotei',
+        flow_stage: '予定',
         list_scope: activeScope,
         category: '',
         request: '確認',
@@ -723,13 +692,13 @@ export default function AdminKadaiListPage() {
         },
         {
           key: 'flow_stage',
-          label: '②業務フロー段階（どこで）',
-          columnLabel: '②業務フロー段階',
+          label: '②カテゴリ',
+          columnLabel: '②カテゴリ',
           type: 'select',
           options: FLOW_STAGE_OPTIONS,
           valueKey: 'value',
           labelKey: 'label',
-          defaultValue: 'yotei',
+          defaultValue: '予定',
           format: (v) => FLOW_STAGE_LABEL_MAP[String(v || '')] || (v || '-'),
           required: true,
         },

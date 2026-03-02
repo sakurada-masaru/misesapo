@@ -1295,3 +1295,222 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `/admin/houkoku` のパンくずを `業務報告一覧`、詳細を `業務報告詳細` に変更
 - [x] 管理報告一覧ページの見出しを `業務報告一覧` に変更
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Display Mode Toggle (2026-03-01)
+
+- [x] 管理エントランスの設定に表示モード（`標準 / NieR風`）トグルを追加
+- [x] 選択モードを `localStorage(misogi-v2-admin-entrance-mode)` に保存し再訪時に復元
+- [x] `NieR風` は管理エントランス限定で適用（背景/タイポ/サイドバー配色を専用化）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Sepia Light Tuning (2026-03-01)
+
+- [x] 表示モード名を `NieR風` から `セピア` に変更
+- [x] 既存保存値 `nier` は互換的に `sepia` として自動移行
+- [x] セピアモードをライト寄り配色へ再設計（背景/タイトル/リンク）
+- [x] セピアモード時のサイドバーを専用デザインに調整（色・境界・ホバー・設定UI）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: MISOGI Support Chat Bubble (2026-03-03)
+
+- [x] 管理エントランスのヘッダーに `MISOGI AI` 呼び出しボタンを追加（チャットバブルオーバーレイ起動）
+- [x] 既存 `CommonHeaderChat` を拡張し、表示名/ARIA/トリガー文言/初期ルーム/保存キーを外部指定可能化
+- [x] 管理エントランス用チャットは初期ルームを `管理` に設定し、ルーム状態を専用キーで保持
+- [x] トリガーボタンのテキスト付きスタイルを追加（管理ヘッダーで視認性向上）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Chat Restore (2026-03-03)
+
+- [x] 管理エントランスのヘッダーチャットを既定の `共通チャット（管理人同士）` へ復元
+- [x] `MISOGI AI` 専用のトリガー文言・専用保存キー・専用スタイル差分をロールバック
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: MISOGI Support Orb (2026-03-03)
+
+- [x] 既存チャットとは別に `MISOGIサポート` 呼び出しボタンを追加（ヘッダー右上）
+- [x] 管理エントランスの通常ビジュアライザーを初期非表示化（サポート球体はボタン押下時のみ表示）
+- [x] ドラッグ移動可能な `MISOGI` 球体オーバーレイを追加（任意位置へ移動可）
+- [x] 球体オーバーレイ内にチャットUIを実装（履歴表示 + 入力 + 送信）
+- [x] Google AI（Gemini API）連携を追加（`VITE_GOOGLE_AI_API_KEY` / `VITE_GOOGLE_AI_MODEL`）
+- [x] `MISOGIサポート` チャットオーバーレイ背景を透明化
+- [x] `MISOGIサポート` の `Google AI` ラベルを削除し、オーバーレイのボーダー/ドロップシャドウを除去
+- [x] `MISOGIサポート` の発言レイアウトを上下分離（上: MISOGI / 下: ユーザー）、タイトルと罫線を非表示化
+- [x] `MISOGIサポート` の表示履歴を最新1往復に限定（過去履歴スクロールとユーザー履歴蓄積を廃止）
+- [x] `MISOGIサポート` のメッセージ表示を球体側へ寄せ、メッセージと球体の間隔を縮小
+- [x] ユーザー側メッセージ（下段）も球体側へさらに寄せるよう余白を追加調整
+- [x] `MISOGIサポート` の上下メッセージ帯を固定高へ変更し、球体との距離をさらに圧縮
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Kadai: Delete + Category Options (2026-03-03)
+
+- [x] `Kadaiリスト` の削除UIを常時利用可能化（管理権限は行削除/一括削除可）
+- [x] 削除前確認を `削除キー入力` 方式から `confirm` ダイアログ方式へ変更
+- [x] `業務フロー段階` 表示を `カテゴリ` 表記へ統一（フィルタ/列ラベル/検索プレースホルダ）
+- [x] カテゴリ候補を指定値へ差し替え（`営業/清掃/事務/経理/OP/現場/管理/予定/約束契約/動き`）
+- [x] `flow_stage` 初期値を `予定` に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Common Chat Translation Removal (2026-03-03)
+
+- [x] 管理エントランスの `共通チャット` から翻訳UIを削除（翻訳先セレクト / 自動翻訳トグル / 各メッセージ翻訳ボタン）
+- [x] 翻訳ロジックと翻訳表示状態を削除し、チャットの通常表示へ統一
+- [x] 翻訳関連CSSを削除し、ヘッダーレイアウト崩れを解消（`header-chat-head` のカラム再調整）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Common Chat Send Trigger Update (2026-03-03)
+
+- [x] 共通チャット入力で `Enter` キー送信を無効化（改行のみ）
+- [x] 投稿は `送信` ボタン押下時のみ実行に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Sidebar IA + Settings/Auth Relayout (2026-03-03)
+
+- [x] 管理サイドバーの大カテゴリ構成を再編（`業務報告 / スケジュール管理 / 顧客管理 / 人材管理 / マスタ情報 / 運用ツール`）
+- [x] 各項目ラベルを指定名へ統一（`業務報告一覧 / 管理業務記録一覧 / yotei / ugoki / yakusoku / 顧客登録 / 顧客情報一覧(取引先名簿) / 人材名簿`）
+- [x] HOTBAR由来の小キャプション表示を削除（グループラベル非表示）
+- [x] サイドバー `設定` 内に `表示モード / 言語 / ライトモード切り替え` を集約
+- [x] サイドバー下部に `ログイン / ログアウト` 操作ブロックを追加
+- [x] 大カテゴリ開閉トリガーのタップ領域とホバー/フォーカス視認性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Sidebar Accordion + Settings Collapse (2026-03-03)
+
+- [x] サイドバー大カテゴリをアコーディオン化（同時に開けるカテゴリは最大1つ）
+- [x] `設定` ブロックを開閉式に変更（デフォルト閉じ）
+- [x] 縦スクロール抑制のため、カテゴリ展開状態を単一選択ロジックへ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Sidebar Item Relocation (2026-03-03)
+
+- [x] `在庫発注フォーム` を `マスタ情報` から `運用ツール` へ移動
+- [x] `顧客ストレージ` を `マスタ情報` から `顧客管理` へ移動
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Right Update Sidebar (2026-03-03)
+
+- [x] 管理エントランス右上に `通知` トグルを追加し、右サイドバーを開閉可能化
+- [x] 右サイドバーに `本日の更新通知` リストを追加（`kanri_log` を本日分抽出）
+- [x] 通知表示を `何時何分 / 誰が / 何をした` 形式へ整形して箇条書き表示
+- [x] 30秒自動更新 + 手動 `更新` ボタンを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Kintai Link in Reports (2026-03-03)
+
+- [x] サイドバー `業務報告` セクションに `勤怠管理` ボタンを追加
+- [x] `勤怠管理` は `https://f.ieyasu.co/misesapo/login/` へ外部遷移するリンクとして設定
+- [x] サイドバー遷移処理を外部URL対応（http/https は新規タブで開く）に拡張
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Notification Rail Toggle (2026-03-03)
+
+- [x] 通知トグルを右上固定ボタンから、左サイドバー右隣の細幅レール（約20px）へ移設
+- [x] レールボタン押下で通知パネルが展開/収縮するUIへ変更
+- [x] 通知パネルを左サイドバー右端に密着表示（左起点スライド）へ調整
+- [x] レイヤー順・ライト/セピア配色を再調整し、表示/操作競合を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Notification Panel Under Sidebar Feel (2026-03-03)
+
+- [x] 通知パネルの表示起点をレール位置へ変更し、左サイドバー直下から出る挙動に調整
+- [x] 通知パネル/背景の `z-index` を左サイドバーより下へ変更し、「サイドバーの下に隠れる」重なり順へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Notification Panel Mode Color Separation (2026-03-03)
+
+- [x] 通知パネル配色を `標準/セピア` かつ `ライト/ダーク` の各モードで分離し、視認性を改善
+- [x] 標準モード（ライト）の通知パネル背景/文字色/罫線/時間色を再調整
+- [x] セピアモード（ダーク）の通知パネル背景/文字色/罫線/時間色を再調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Notification Panel Left Padding Fix (2026-03-03)
+
+- [x] 通知パネル展開時に左レールとの重なりを避けるため、ヘッダーラベル領域へ左パディングを追加
+- [x] 通知本文リストにも左パディングを追加し、先頭文字の欠けを解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Notification Panel Status/Login/Update Timeline (2026-03-03)
+
+- [x] 通知取得元を `kanri_log` のみから `kanri_log + admin/work-reports` へ拡張
+- [x] `業務報告の更新状態` を `業務報告(種別): 状態` 形式で通知表示
+- [x] `ログイン` 判定（`login/signin/ログイン` 系キーワード）を追加し、`本日のログイン時刻` セクションを表示
+- [x] `情報更新: ...` 形式で更新内容と時刻を継続表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Notification Panel System Log Simplification (2026-03-03)
+
+- [x] 通知種別を `ログイン` と `業務報告提出` のみへ絞り込み
+- [x] 通知文を簡潔な管理ログ形式へ統一（`誰が〜しました >>> 時刻`）
+- [x] ログイン専用サマリー表示を廃止し、単一時系列リスト表示に統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Notification Panel Fact + Datetime Format (2026-03-03)
+
+- [x] 通知対象を再拡張し、`ログイン` 以外の更新イベントも表示対象に復帰
+- [x] 通知文を `誰が / 何をした / 日時` の端的フォーマットへ統一（`>>> YYYY/MM/DD HH:mm`）
+- [x] 業務報告イベントは `state/status` に応じて `提出/確認/差し戻し/承認/保管/保存/更新` を表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Top Item (2026-03-03)
+
+- [x] サイドバー最上段に `ファイルボックス` セクションを追加
+- [x] `ファイルボックス` から会社ストレージ（`/admin/master/souko`）へ遷移できるよう設定
+- [x] 重複回避のため `顧客管理` 配下の `顧客ストレージ` リンクを整理（削除）
+- [x] `/admin/master/souko` のパンくずラベルを `ファイルボックス` に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Souko Back to Customers (2026-03-03)
+
+- [x] `顧客管理` 配下に `顧客ストレージ（/admin/master/souko）` を再配置
+- [x] `/admin/master/souko` のパンくずラベルを `顧客ストレージ` に戻して整合
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Independent Panel (2026-03-03)
+
+- [x] `ファイルボックス` を `souko` とは分離し、独立ルート `/admin/filebox` へ変更
+- [x] サイドバー `ファイルボックス` 選択時に、管理エントランスのメイン領域へフォルダカードUIを表示
+- [x] ファイルボックス画面に `最近のファイル` リストを追加（ファイル名 / フォルダ / 更新日時）
+- [x] `/admin/filebox` のパンくずラベルを `ファイルボックス` に追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Centered Layout (2026-03-03)
+
+- [x] ファイルボックス表示時のみメインコンテンツを中央寄せする専用レイアウトクラスを追加
+- [x] フォルダカード/最近ファイルカードをメイン領域中央でバランス表示するよう余白と幅を調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Main Header Removal (2026-03-03)
+
+- [x] `/admin/filebox` 表示時のみメインコンテンツ先頭の自動生成ヘッダー（`管理エントランス` タイトル）を非表示化
+- [x] ファイルボックス内部ヘッダー用の未使用CSSを削除し、カード先頭余白を調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Entrance Header Hide (2026-03-03)
+
+- [x] `/admin/filebox` をエントランス判定に追加し、共通 `Breadcrumbs` ヘッダーを非表示化
+- [x] 管理エントランス系ページと同様に、ファイルボックス表示時はページ上部ヘッダーを描画しない挙動へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Real Open + Upload (2026-03-03)
+
+- [x] ファイルボックス4カテゴリ（契約書/業務マニュアル/提出書類/共通ドキュメント）を `admin_chat` 連携ルームへ紐付け
+- [x] カードクリック時にカテゴリ内の最新ファイルを新規タブで開く挙動を追加
+- [x] カテゴリ別ファイル一覧（クリックで実ファイルURLを開く）を実装
+- [x] ファイルボックスにアップロード機能を追加（presign取得 → PUT → メタ記録）
+- [x] 最近のファイル一覧を実データで表示するよう変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox File Icon + Thumbnail (2026-03-03)
+
+- [x] ファイルボックスのファイル行にプレビュー領域を追加（画像はサムネイル表示）
+- [x] 非画像ファイルは種別アイコン表示へ変更（PDF/文書/表計算/動画/音声/圧縮ファイル等）
+- [x] `選択フォルダのファイル` と `最近のファイル` の両方へ同一表示ルールを適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Filebox Focus + View Mode Switch (2026-03-03)
+
+- [x] ファイルボックスでカード選択前は全カード表示、選択後は選択カードのみ中央表示へ変更
+- [x] 選択状態を解除する `戻る` ボタンを追加
+- [x] `最近のファイル` セクションを削除し、選択カードに紐づくファイル一覧のみ表示へ統一
+- [x] カード上に表示方式切替アイコンを追加（`アイコン/リスト/スライダー`）
+- [x] 表示方式に応じてファイル表示を切替（グリッド/行リスト/横スライダー）
+- [x] `npm -C src/misogi run build` でビルド確認

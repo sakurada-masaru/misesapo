@@ -5,30 +5,46 @@
  */
 export const ADMIN_HOTBAR = [
   {
+    id: 'filebox',
+    label: 'ファイルボックス',
+    subItems: [
+      { id: 'company-filebox', label: 'ファイルボックス', path: '/admin/filebox', group: 'ファイルボックス' },
+    ]
+  },
+  {
     id: 'reports',
     label: '業務報告',
     subItems: [
       { id: 'houkoku-list', label: '業務報告一覧', path: '/admin/houkoku', group: '業務報告' },
-      { id: 'admin-log', label: '管理ログ(提出)', path: '/admin/admin-log', group: '提出' },
+      { id: 'admin-log', label: '管理業務記録一覧', path: '/admin/admin-log', group: '業務報告' },
+      { id: 'kintai', label: '勤怠管理', path: 'https://f.ieyasu.co/misesapo/login/', group: '業務報告' },
     ]
   },
   {
     id: 'schedule',
-    label: '予定',
+    label: 'スケジュール管理',
     subItems: [
-      { id: 'yotei', label: 'Yotei', path: '/admin/yotei', group: '予定' },
-      { id: 'ugoki', label: 'Ugoki', path: '/admin/ugoki', group: '予定' },
-      { id: 'yakusoku', label: 'Yakusoku', path: '/admin/yakusoku', group: '予定' },
+      { id: 'yotei', label: 'yotei', path: '/admin/yotei', group: 'スケジュール管理' },
+      { id: 'ugoki', label: 'ugoki', path: '/admin/ugoki', group: 'スケジュール管理' },
+      { id: 'yakusoku', label: 'yakusoku', path: '/admin/yakusoku', group: 'スケジュール管理' },
     ]
   },
   {
-    id: 'clients',
+    id: 'customers',
     role: 'target',
-    label: '情報',
+    label: '顧客管理',
     subItems: [
-      { id: 'torihikisaki-touroku', label: '顧客登録(新)', path: '/admin/torihikisaki-touroku', group: '登録' },
-      { id: 'torihikisaki-meibo', label: '取引先名簿', path: '/admin/torihikisaki-meibo', group: '名簿' },
-      { id: 'jinzai-meibo', label: '人材名簿', path: '/admin/jinzai-meibo', group: '名簿' },
+      { id: 'torihikisaki-touroku', label: '顧客登録', path: '/admin/torihikisaki-touroku', group: '顧客管理' },
+      { id: 'torihikisaki-meibo', label: '顧客情報一覧(取引先名簿)', path: '/admin/torihikisaki-meibo', group: '顧客管理' },
+      { id: 'master-souko', label: '顧客ストレージ', path: '/admin/master/souko', group: '顧客管理' },
+    ]
+  },
+  {
+    id: 'staff',
+    role: 'target',
+    label: '人材管理',
+    subItems: [
+      { id: 'jinzai-meibo', label: '人材名簿', path: '/admin/jinzai-meibo', group: '人材管理' },
     ]
   },
   {
@@ -39,14 +55,12 @@ export const ADMIN_HOTBAR = [
       { id: 'master-torihikisaki', label: '取引先マスタ', path: '/admin/master/torihikisaki', group: 'マスタ(顧客)' },
       { id: 'master-yagou', label: '屋号マスタ', path: '/admin/master/yagou', group: 'マスタ(顧客)' },
       { id: 'master-tenpo', label: '店舗マスタ', path: '/admin/master/tenpo', group: 'マスタ(顧客)' },
-      { id: 'master-souko', label: '顧客ストレージ', path: '/admin/master/souko', group: 'マスタ(顧客)' },
       { id: 'master-jinzai', label: '人材マスタ', path: '/admin/master/jinzai', group: 'マスタ(人材)' },
       { id: 'master-jinzai-busho', label: '人材部署', path: '/admin/master/jinzai-busho', group: 'マスタ(人材)' },
       { id: 'master-jinzai-shokushu', label: '人材職種', path: '/admin/master/jinzai-shokushu', group: 'マスタ(人材)' },
       { id: 'master-service', label: 'サービスマスタ', path: '/admin/master/service', group: 'マスタ(運用)' },
       { id: 'master-keiyaku', label: '契約マスタ', path: '/admin/master/keiyaku', group: 'マスタ(運用)' },
       { id: 'master-zaiko', label: '在庫管理DB', path: '/admin/master/zaiko', group: 'マスタ(運用)' },
-      { id: 'zaiko-order', label: '在庫発注フォーム', path: '/admin/master/zaiko-order', group: 'マスタ(運用)' },
     ]
   },
   {
@@ -58,6 +72,7 @@ export const ADMIN_HOTBAR = [
       { id: 'cleaning-houkoku-tool', label: '清掃レポート作成', path: '/admin/tools/cleaning-houkoku', group: '報告書' },
       { id: 'cleaning-houkoku-list', label: 'レポート一覧', path: '/admin/tools/cleaning-houkoku/list', group: '報告書' },
       { id: 'kadai', label: 'Kadaiリスト', path: '/admin/kadai', group: '基本' },
+      { id: 'zaiko-order', label: '在庫発注フォーム', path: '/admin/master/zaiko-order', group: '基本' },
     ],
   },
 ];

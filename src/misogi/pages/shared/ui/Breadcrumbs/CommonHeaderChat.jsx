@@ -132,16 +132,6 @@ function toEpochMs(value) {
   return Number.isNaN(t) ? 0 : t;
 }
 
-function normalizeLangCode(value) {
-  const raw = String(value || '').trim().toLowerCase();
-  if (!raw) return 'auto';
-  if (raw.startsWith('ja')) return 'ja';
-  if (raw.startsWith('pt')) return 'pt';
-  if (raw.startsWith('en')) return 'en';
-  if (raw === 'auto') return 'auto';
-  return raw;
-}
-
 function clampRoomKey(value) {
   const k = String(value || '').trim();
   return ROOM_PRESETS.some((row) => row.key === k) ? k : DEFAULT_CHAT_ROOM;
@@ -184,11 +174,6 @@ export default function CommonHeaderChat() {
   const [dataText, setDataText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showTools, setShowTools] = useState(false);
-  const [autoTranslate, setAutoTranslate] = useState(false);
-  const [translationTarget, setTranslationTarget] = useState('auto');
-  const [translationCache, setTranslationCache] = useState({});
-  const [translationOpen, setTranslationOpen] = useState({});
-  const [translating, setTranslating] = useState({});
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastSeenAt, setLastSeenAt] = useState('');
   const listRef = useRef(null);
@@ -515,148 +500,6 @@ export default function CommonHeaderChat() {
     }
   }, [deletingId, fetchChat]);
 
-  const buildTranslationKey = useCallback((row, messageText) => {
-    const rowKey = String(row?.chat_id || row?.created_at || '').trim();
-    const msg = String(messageText || '').trim();
-    return `${rowKey}:${translationTarget}:${msg}`;
-  }, [translationTarget]);
-
-  const translateOnce = useCallback(async (messageText, targetLang) => {
-    const msg = String(messageText || '').trim();
-    if (!msg) return { text: '', sourceLang: 'auto', targetLang: normalizeLangCode(targetLang) };
-    const base = MASTER_API_BASE.replace(/\/$/, '');
-    const res = await fetch(`${base}/master/admin_chat`, {
-      method: 'POST',
-      headers: {
-        ...authHeaders(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        mode: 'translate_text',
-        text: msg,
-        source_lang: 'auto',
-        target_lang: normalizeLangCode(targetLang) || 'ja',
-      }),
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`翻訳失敗: HTTP ${res.status}${txt ? ` ${txt}` : ''}`);
-    }
-    const data = await res.json();
-    return {
-      text: String(data?.translated_text || '').trim(),
-      sourceLang: normalizeLangCode(data?.source_language || 'auto'),
-      targetLang: normalizeLangCode(data?.target_language || targetLang),
-    };
-  }, []);
-
-  const fetchTranslation = useCallback(async (messageText) => {
-    const msg = String(messageText || '').trim();
-    if (!msg) return '';
-    const selected = normalizeLangCode(translationTarget);
-
-    // 自動モード: ja / pt の両方を試し、原文と異なる結果を優先採用。
-    if (selected === 'auto') {
-      const first = await translateOnce(msg, 'ja');
-      const firstText = String(first.text || '').trim();
-      if (firstText && firstText !== msg) return firstText;
-      const second = await translateOnce(msg, 'pt');
-      const secondText = String(second.text || '').trim();
-      if (secondText && secondText !== msg) return secondText;
-      return firstText || secondText || msg;
-    }
-
-    const first = await translateOnce(msg, selected);
-    // 同一言語判定で未変換に見える場合、ja<->pt を自動反転して再試行。
-    if ((first.sourceLang === selected || !first.text || first.text === msg) && (selected === 'ja' || selected === 'pt')) {
-      const alt = selected === 'ja' ? 'pt' : 'ja';
-      const second = await translateOnce(msg, alt);
-      return String(second.text || msg).trim();
-    }
-    return String(first.text || msg).trim();
-  }, [translationTarget, translateOnce]);
-
-  const toggleTranslation = useCallback(async (row) => {
-    const msg = String(row?.message || '').trim();
-    if (!msg) return;
-    const key = buildTranslationKey(row, msg);
-    if (translationOpen[key]) {
-      setTranslationOpen((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      });
-      return;
-    }
-    if (translationCache[key]) {
-      setTranslationOpen((prev) => ({ ...prev, [key]: true }));
-      return;
-    }
-    if (translating[key]) return;
-    setTranslating((prev) => ({ ...prev, [key]: true }));
-    try {
-      const translated = await fetchTranslation(msg);
-      const normalized = String(translated || '').trim();
-      if (normalized && normalized !== msg) {
-        setTranslationCache((prev) => ({ ...prev, [key]: normalized }));
-        setTranslationOpen((prev) => ({ ...prev, [key]: true }));
-        setError('');
-      } else {
-        setError('翻訳結果を取得できませんでした（原文と同一）');
-      }
-    } catch (e) {
-      setError(String(e?.message || e || '翻訳エラー'));
-    } finally {
-      setTranslating((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      });
-    }
-  }, [buildTranslationKey, fetchTranslation, translationCache, translationOpen, translating]);
-
-  const ensureTranslation = useCallback(async (row) => {
-    const msg = String(row?.message || '').trim();
-    if (!msg) return;
-    const key = buildTranslationKey(row, msg);
-    if (translationCache[key] || translating[key]) return;
-    setTranslating((prev) => ({ ...prev, [key]: true }));
-    try {
-      const translated = await fetchTranslation(msg);
-      const normalized = String(translated || '').trim();
-      if (normalized && normalized !== msg) {
-        setTranslationCache((prev) => ({ ...prev, [key]: normalized }));
-        setTranslationOpen((prev) => ({ ...prev, [key]: true }));
-      }
-    } finally {
-      setTranslating((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      });
-    }
-  }, [buildTranslationKey, fetchTranslation, translationCache, translating]);
-
-  useEffect(() => {
-    setTranslationOpen({});
-    setTranslationCache({});
-  }, [activeRoom, translationTarget]);
-
-  useEffect(() => {
-    if (!autoTranslate || !open) return;
-    const targets = visibleItems.filter((row) => !isMyRow(row) && String(row?.message || '').trim());
-    let canceled = false;
-    (async () => {
-      for (const row of targets) {
-        if (canceled) return;
-        await ensureTranslation(row);
-      }
-    })();
-    return () => {
-      canceled = true;
-    };
-  }, [autoTranslate, ensureTranslation, isMyRow, open, visibleItems]);
-
   const markAsRead = useCallback((explicitSeenAt = '') => {
     const seenAt = String(explicitSeenAt || latestMessageAt || new Date().toISOString()).trim();
     if (!seenAt) return;
@@ -813,23 +656,6 @@ export default function CommonHeaderChat() {
         <div className="header-chat-head" onMouseDown={onDragStart}>
           <strong>共通チャット</strong>
           <span className="status">{activeRoomLabel} / 5秒更新</span>
-          <label className="chat-translate-target" title="翻訳先言語">
-            <span>翻訳</span>
-            <select value={translationTarget} onChange={(e) => setTranslationTarget(String(e.target.value || 'auto'))}>
-              <option value="auto">自動(ja⇄pt)</option>
-              <option value="ja">日本語</option>
-              <option value="pt">Português</option>
-              <option value="en">English</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            className={`auto-translate ${autoTranslate ? 'active' : ''}`}
-            onClick={() => setAutoTranslate((v) => !v)}
-            title="表示中メッセージを自動翻訳"
-          >
-            {autoTranslate ? '自動翻訳ON' : '自動翻訳OFF'}
-          </button>
           <button type="button" className="close" onClick={() => setOpen(false)} aria-label="閉じる">×</button>
         </div>
         <div className="header-chat-room-tabs" aria-label="チャットルーム">
@@ -893,10 +719,6 @@ export default function CommonHeaderChat() {
               const hasAttachment = rowAttachments.length > 0;
               const dataPayload = row?.data_payload && typeof row.data_payload === 'object' ? row.data_payload : null;
               const messageText = String(row?.message || '').trim();
-              const translationKey = buildTranslationKey(row, messageText);
-              const translatedText = String(translationCache[translationKey] || '').trim();
-              const translationShown = !!translationOpen[translationKey];
-              const translatingNow = !!translating[translationKey];
               const replySummary = shortMessage(row?.reply_to_message || '');
               const replySender = String(row?.reply_to_sender_name || '').trim();
               return (
@@ -940,16 +762,6 @@ export default function CommonHeaderChat() {
                           {deletingId === rowChatId ? '削除中...' : '削除'}
                         </button>
                       ) : null}
-                      {messageText ? (
-                        <button
-                          type="button"
-                          className="msg-translate"
-                          onClick={() => toggleTranslation(row)}
-                          disabled={translatingNow}
-                        >
-                          {translationShown ? '原文' : (translatingNow ? '翻訳中...' : '翻訳')}
-                        </button>
-                      ) : null}
                     </div>
                   </header>
                   {replySummary ? (
@@ -959,9 +771,6 @@ export default function CommonHeaderChat() {
                   ) : null}
                   {messageText ? (
                     <p>{String(row?.message || '')}</p>
-                  ) : null}
-                  {translationShown && translatedText ? (
-                    <div className="translated-text">{translatedText}</div>
                   ) : null}
                   {hasAttachment ? (
                     <div className="attachment">
@@ -1031,12 +840,6 @@ export default function CommonHeaderChat() {
             value={text}
             onChange={(e) => setText(truncateByCodePoints(e.target.value, MAX_MESSAGE_LEN))}
             placeholder={`メッセージ（最大${MAX_MESSAGE_LEN}文字）`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
           />
           <div className="compose-template-row">
             <select

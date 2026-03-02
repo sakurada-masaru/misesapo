@@ -1,0 +1,40 @@
+.entrance-mode-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.entrance-mode-toggle-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.entrance-mode-toggle-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.entrance-mode-toggle-button {
+  height: 34px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.entrance-mode-toggle-button:hover {
+  border-color: var(--accent-color);
+}
+
+.entrance-mode-toggle-button.active {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 1px var(--accent-color);
+  background: var(--surface);
+}
