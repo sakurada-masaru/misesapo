@@ -940,48 +940,8 @@
     <script src="/js/auth.js"></script>
     <script src="/js/navigation.js"></script>
     <script src="/modal_manager.js"></script>
-    <script>
-      // サービス一覧：URL の ?category= / #category= で該当タブを開く（index のカテゴリリンク遷移用）
-      (function () {
-        function getCategoryFromUrl() {
-          var params = new URLSearchParams(window.location.search || '');
-          var fromQuery = params.get('category');
-          if (fromQuery) return fromQuery;
-          var hash = window.location.hash || '';
-          if (hash.indexOf('category=') !== -1) {
-            var m = hash.match(/category=([^&]+)/);
-            return m ? decodeURIComponent(m[1]) : '';
-          }
-          return '';
-        }
-        function init() {
-          var tabContainer = document.querySelector('.tabs');
-          if (!tabContainer) return;
-          var tabs = tabContainer.querySelectorAll('.tab');
-          var cards = document.querySelectorAll('.service-grid .card-service');
-          if (!tabs.length || !cards.length) return;
-          var category = getCategoryFromUrl();
-          if (!category) return;
-          var targetTab = null;
-          for (var i = 0; i < tabs.length; i++) {
-            var c = (tabs[i].getAttribute('data-category') || '').trim();
-            if (c === category) { targetTab = tabs[i]; break; }
-          }
-          if (!targetTab) return;
-          for (var t = 0; t < tabs.length; t++) tabs[t].classList.remove('active');
-          targetTab.classList.add('active');
-          for (var k = 0; k < cards.length; k++) {
-            var card = cards[k];
-            var cardCat = (card.getAttribute('data-category') || '').trim();
-            if (category === 'all' || cardCat === category) card.classList.remove('hidden');
-            else card.classList.add('hidden');
-          }
-        }
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-        else init();
-      })();
-    </script>
-    <script>
+    <script src="/js/app.js"></script>
+<script>
       // パスを解決（GitHub Pages対応）
       function resolvePath(path) {
           if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
@@ -1041,6 +1001,7 @@
   </script>
   <script src="/js/header.js"></script>
   <script src="/js/normal-header-hamburger.js"></script>
+  <script src="/js/service-tab-from-url.js"></script>
   </body>
   </html>
 
