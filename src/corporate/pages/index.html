@@ -3601,7 +3601,6 @@
 }
 .sns-section{
 background-color: #fff;
-margin-top: 50px;
 }
 .service-btn-box{
 display: flex;
@@ -3667,6 +3666,34 @@ font-size: 24px;
 .circle_box_content span{
 font-size: 20px;
 }
+.sitemap-section{
+display: none;
+}
+.instagran-icon-box {
+    margin-top: 20px;
+}
+}
+.sitemap-section{
+background-color: #FF679C;
+color: #fff;
+padding: 30px;
+font-size: 16px;
+}
+.sitemap-section a{
+color: #fff;
+display: flex;
+}
+.sitemap-content{
+display: flex;
+justify-content: center;
+}
+.sitemap-content span{
+font-size: 8px;
+margin:0 5px ;
+}
+.sitemap-content ul{
+margin: 0 20px;
+line-height: 28px;
 }
 </style>
 <meta name="google-site-verification" content="1p_D4TeZPs9QD3zGxNqkjrKZPkTHlsa9MCXkPR83wJk" />
@@ -4220,13 +4247,52 @@ font-size: 20px;
         </div>
     </section>
 
+    <section class="sitemap-section">
+        <div class="sitemap-content">
+            <ul class="sitemap-list">
+                <li><a href="about-more.html">トピック一覧</a></li>
+            </ul>
+            <ul class="sitemap-list">
+                <li><a href="/service/service.html">サービス一覧</a></li>
+                <li><a href="/service/service_kitchen.html"><span>▶</span> 厨房設備</a></li>
+                <li><a href="/service/service_kitchen.html"><span>▶</span> 空調設備</a></li>
+                <li><a href="/service/service_kitchen.html"><span>▶</span> フロア</a></li>
+                <li><a href="/service/service_kitchen.html"><span>▶</span> その他</a></li>
+            </ul>
+            <ul class="sitemap-list">
+                <li><a>企業情報</a></li>
+                <li><a href="/about/"><span>▶</span> 会社概要</a></li>
+                <li><a href="/customer/customer.html"><span>▶</span> 取引先一覧</a></li>
+                <li><a href="/about/message.html"><span>▶</span> 代表者挨拶</a></li>
+            </ul>
+            <ul class="sitemap-list">
+                <li><a href="recruit/recruit.html">求人情報</a></li>
+                <li><a href="recruit/cleaning.html"><span>▶</span> 清掃スタッフ</a></li>
+                <li><a href="recruit/equipment.html"><span>▶</span> 設備メンテナンススタッフ</a></li>
+                <li><a href="recruit/inside-sales.html"><span>▶</span> インサイドセールス</a></li>
+                <li><a href="recruit/field-sales.html"><span>▶</span> フィールドセールス</a></li>
+            </ul>
+           <ul class="sitemap-list">
+                <li>規約&ポリシー</li>
+                <li><a href="/privacy-policy/"><span>▶</span> 個人情報保護方針</a></li>
+                <li><a href="/tokushoho/"><span>▶</span> 特定商取引に基づく表記</a></li>
+                <li><a href="/workplace-policy/"><span>▶</span> 職場環境改善に向けた方針</a></li>
+                <li><a href="/security-policy/"><span>▶</span> 情報セキュリティ基本方針</a></li>
+                <li><a href="/antisocial-declaration/"><span>▶</span> 反社会的勢力排除宣言</a></li>
+                <li><a href="/service-terms/"><span>▶</span> サービス利用規約</a></li>
+            </ul>
+            <ul class="sitemap-list">
+                <li><a href="mailto:info@misesapo.co.jp">お問い合わせ</a></li>
+            </ul>
+        </div>
+    </section>
+
     <section class="sns-section">
    <div class="instagran-icon-box">
     <a href="https://www.instagram.com/misesapo_0101/" target="_blank">
         <img src="/images/Instagram_Glyph_Gradient.svg"></a> Instagram
    </div>
 </section>
-
 
    <!-- フッター -->
     <footer class="site-footer">
@@ -4331,10 +4397,10 @@ font-size: 20px;
                                 <div class="mega-menu-submenu-inner">
                                     <div class="mega-menu-column">
                                         <ul class="mega-menu-column-list">
-                                            <li><a href="/service/service.html?category=厨房設備"><span>厨房設備</span></a></li>
-                                            <li><a href="/service/service.html?category=空調設備"><span>空調設備</span></a></li>
-                                            <li><a href="/service/service.html?category=フロア"><span>フロア</span></a></li>
-                                            <li><a href="/service/service.html?category=その他"><span>その他</span></a></li>
+                                            <li><a href="/service/service_kitchen.html"><span>厨房設備</span></a></li>
+                                            <li><a href="/service/service_air_conditioning.html"><span>空調設備</span></a></li>
+                                            <li><a href="/service/service_floor.html"><span>フロア</span></a></li>
+                                            <li><a href="/service/service_others.html"><span>その他</span></a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -4471,10 +4537,10 @@ font-size: 20px;
                 <div class="nav-dropdown">
                     <a href="/service/service.html">サービス一覧</a>
                     <ul class="nav-dropdown-list">
-                        <li><a href="/service/service.html?category=厨房設備">・ 厨房設備</a></li>
-                        <li><a href="/service/service.html?category=空調設備">・ 空調設備</a></li>
-                        <li><a href="/service/service.html?category=フロア">・ フロア</a></li>
-                        <li><a href="/service/service.html?category=その他">・ その他</a></li>
+                        <li><a href="/service/service_kitchen.html">・ 厨房設備</a></li>
+                        <li><a href="/service/service_air_conditioning.html">・ 空調設備</a></li>
+                        <li><a href="/service/service_floor.html">・ フロア</a></li>
+                        <li><a href="/service/service_others.html">・ その他</a></li>
                     </ul>
                 </div>
                 <div class="nav-dropdown">
@@ -4565,10 +4631,10 @@ font-size: 20px;
                 </a>
                 <div class="sp-menu-submenu">
                     <ul class="sp-menu-submenu-list">
-                        <li class="sp-menu-submenu-item"><a href="/service/service.html?category=厨房設備" class="sp-menu-submenu-link">厨房設備</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/service/service.html?category=空調設備" class="sp-menu-submenu-link">空調設備</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/service/service.html?category=フロア" class="sp-menu-submenu-link">フロア</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/service/service.html?category=その他" class="sp-menu-submenu-link">その他</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service/service_kitchen.html" class="sp-menu-submenu-link">厨房設備</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service/service_air_conditioning.html" class="sp-menu-submenu-link">空調設備</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service/service_floor.html" class="sp-menu-submenu-link">フロア</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/service/service_others.html" class="sp-menu-submenu-link">その他</a></li>
 
                     </ul>
                 </div>
