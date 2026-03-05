@@ -46,7 +46,7 @@ export const OFFICE_HOTBAR = [
     label: '運用',
     subItems: [
       { id: 'flow-guide', label: '業務フロー', path: '/flow-guide', group: '基本' },
-      { id: 'kadai', label: 'Kadaiリスト', path: '/admin/kadai', group: '基本' },
+      { id: 'kadai', label: '課題リスト', path: '/admin/kadai', group: '基本' },
     ],
   },
 ];

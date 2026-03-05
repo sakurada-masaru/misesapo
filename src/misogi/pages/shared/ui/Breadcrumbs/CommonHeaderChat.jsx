@@ -144,7 +144,15 @@ function shortMessage(value, maxLen = 72) {
   return chars.length > maxLen ? `${chars.slice(0, maxLen).join('')}…` : s;
 }
 
-export default function CommonHeaderChat() {
+export default function CommonHeaderChat({
+  alwaysOpen = false,
+  hideTrigger = false,
+  docked = false,
+  showCloseButton = true,
+  draggable = true,
+  ariaLabel = '共通チャット',
+  triggerAriaLabel = '共通チャットを開く',
+} = {}) {
   const { user, authz } = useAuth();
   const [desktopOnly, setDesktopOnly] = useState(() => {
     if (typeof window === 'undefined') return true;
@@ -158,7 +166,7 @@ export default function CommonHeaderChat() {
       return DEFAULT_CHAT_ROOM;
     }
   });
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(Boolean(alwaysOpen));
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
   const [filterMode, setFilterMode] = useState('all');
@@ -209,6 +217,9 @@ export default function CommonHeaderChat() {
     if (email.includes('@')) return email.split('@')[0];
     return email || '名無し';
   }, [user]);
+
+  const canClose = !alwaysOpen && showCloseButton;
+  const canDrag = draggable && !docked;
 
   const senderId = useMemo(() => String(
     authz?.workerId
@@ -515,11 +526,19 @@ export default function CommonHeaderChat() {
     const onResize = () => {
       const isDesktop = window.innerWidth > 900;
       setDesktopOnly(isDesktop);
-      if (!isDesktop) setOpen(false);
+      if (!isDesktop) {
+        setOpen(false);
+        return;
+      }
+      if (alwaysOpen) setOpen(true);
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, []);
+  }, [alwaysOpen]);
+
+  useEffect(() => {
+    if (alwaysOpen) setOpen(true);
+  }, [alwaysOpen]);
 
   useEffect(() => {
     try {
@@ -548,13 +567,13 @@ export default function CommonHeaderChat() {
     fetchChat(false);
     markAsRead();
     const onEsc = (e) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape' && canClose) setOpen(false);
     };
     document.addEventListener('keydown', onEsc);
     return () => {
       document.removeEventListener('keydown', onEsc);
     };
-  }, [fetchChat, markAsRead, open]);
+  }, [canClose, fetchChat, markAsRead, open]);
 
   useEffect(() => {
     try {
@@ -584,7 +603,7 @@ export default function CommonHeaderChat() {
   }, [latestMessageAt, markAsRead, open]);
 
   const onDragStart = useCallback((e) => {
-    if (!desktopOnly) return;
+    if (!desktopOnly || !canDrag) return;
     if (e.button !== 0) return;
     if (e.target && typeof e.target.closest === 'function') {
       const blocked = e.target.closest('button,textarea,input,select,a');
@@ -598,10 +617,10 @@ export default function CommonHeaderChat() {
       baseY: boxPos.y,
     };
     e.preventDefault();
-  }, [boxPos.x, boxPos.y, desktopOnly]);
+  }, [boxPos.x, boxPos.y, canDrag, desktopOnly]);
 
   useEffect(() => {
-    if (!open || !desktopOnly) return undefined;
+    if (!open || !desktopOnly || !canDrag) return undefined;
     const onMove = (e) => {
       const d = dragRef.current;
       if (!d.active) return;
@@ -620,7 +639,7 @@ export default function CommonHeaderChat() {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
-  }, [open, desktopOnly]);
+  }, [open, desktopOnly, canDrag]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -632,31 +651,35 @@ export default function CommonHeaderChat() {
 
   return (
     <>
-      <button
-        type="button"
-        className="breadcrumbs-chat-trigger"
-        aria-label="共通チャットを開く"
-        onClick={() => {
-          setOpen(true);
-          markAsRead();
-        }}
-      >
-        💬
-        {unreadCount > 0 ? (
-          <span className="breadcrumbs-chat-badge" aria-label={`${unreadCount}件の未読`}>
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        ) : null}
-      </button>
+      {!hideTrigger ? (
+        <button
+          type="button"
+          className="breadcrumbs-chat-trigger"
+          aria-label={triggerAriaLabel}
+          onClick={() => {
+            setOpen(true);
+            markAsRead();
+          }}
+        >
+          💬
+          {unreadCount > 0 ? (
+            <span className="breadcrumbs-chat-badge" aria-label={`${unreadCount}件の未読`}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          ) : null}
+        </button>
+      ) : null}
       <section
-        className={`header-chat-overlay ${open ? 'open' : ''}`}
-        aria-label="共通チャット"
-        style={{ left: `${boxPos.x}px`, top: `${boxPos.y}px` }}
+        className={`header-chat-overlay ${open ? 'open' : ''} ${docked ? 'docked' : ''}`.trim()}
+        aria-label={ariaLabel}
+        style={docked ? undefined : { left: `${boxPos.x}px`, top: `${boxPos.y}px` }}
       >
-        <div className="header-chat-head" onMouseDown={onDragStart}>
+        <div className={`header-chat-head ${canDrag ? '' : 'no-drag'}`.trim()} onMouseDown={canDrag ? onDragStart : undefined}>
           <strong>共通チャット</strong>
           <span className="status">{activeRoomLabel} / 5秒更新</span>
-          <button type="button" className="close" onClick={() => setOpen(false)} aria-label="閉じる">×</button>
+          {canClose ? (
+            <button type="button" className="close" onClick={() => setOpen(false)} aria-label="閉じる">×</button>
+          ) : null}
         </div>
         <div className="header-chat-room-tabs" aria-label="チャットルーム">
           {ROOM_PRESETS.map((room) => (

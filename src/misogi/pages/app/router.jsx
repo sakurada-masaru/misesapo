@@ -24,6 +24,7 @@ import AdminReportNewPage from '../admin/pages/AdminReportNewPage';
 import AdminHoukokuListPage from '../admin/pages/AdminHoukokuListPage';
 import AdminHoukokuDetailPage from '../admin/pages/AdminHoukokuDetailPage';
 import AdminKadaiListPage from '../admin/pages/AdminKadaiListPage';
+import AdminRequestDocumentPage from '../admin/pages/AdminRequestDocumentPage';
 import AdminAdminLogPage from '../admin/pages/AdminAdminLogPage';
 import AdminMasterTorihikisakiPage from '../admin/pages/AdminMasterTorihikisakiPage';
 import AdminMasterYagouPage from '../admin/pages/AdminMasterYagouPage';
@@ -183,6 +184,7 @@ export default function Router() {
       <Route path="/admin/tools/cleaning-houkoku" element={<AdminCleaningHoukokuToolPage />} />
       <Route path="/admin/tools/cleaning-houkoku/list" element={<AdminCleaningHoukokuListPage />} />
       <Route path="/admin/kadai" element={<AdminKadaiListPage />} />
+      <Route path="/admin/request-doc" element={<AdminRequestDocumentPage />} />
       <Route path="/admin/admin-log" element={<AdminAdminLogPage />} />
       <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
       <Route path="/sales/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />

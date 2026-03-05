@@ -289,6 +289,8 @@ export default function AdminMasterBase({
   previewButtonLabel = 'プレビュー',
   showEditAction = true,
   showDeleteAction = true,
+  autoOpenCreateToken = '',
+  onAutoOpenCreateHandled = null,
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -314,6 +316,7 @@ export default function AdminMasterBase({
   const [sortKey, setSortKey] = useState(() => String(initialSortKey || '').trim());
   const [sortDir, setSortDir] = useState(() => normalizeSortDirection(initialSortDir));
   const textAreaRefs = useRef({});
+  const handledAutoOpenTokenRef = useRef('');
   const diagMode = isDiagMode();
   const diagStep = getDiagStep();
   const noTableMode = isNoTableMode();
@@ -547,6 +550,17 @@ export default function AdminMasterBase({
       setModalOpen(true);
     }
   }, [fields, diagMode, diagStep, fixedNewValues, normalizeEditingModel]);
+
+  useEffect(() => {
+    const token = String(autoOpenCreateToken || '').trim();
+    if (!token) return;
+    if (handledAutoOpenTokenRef.current === token) return;
+    handledAutoOpenTokenRef.current = token;
+    openCreate();
+    if (typeof onAutoOpenCreateHandled === 'function') {
+      onAutoOpenCreateHandled(token);
+    }
+  }, [autoOpenCreateToken, openCreate, onAutoOpenCreateHandled]);
 
   const openEdit = useCallback((row) => {
     if (diagMode && !diagStep) {

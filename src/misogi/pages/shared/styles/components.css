@@ -688,8 +688,19 @@ button:disabled {
 }
 
 .job-entrance-main.with-sidebar.with-filebox {
-  align-items: center;
-  text-align: center;
+  align-items: stretch;
+  text-align: left;
+}
+
+.admin-filebox-layout {
+  width: min(1440px, 100%);
+  margin-top: var(--space-4);
+  margin-left: auto;
+  margin-right: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--space-4);
+  align-items: start;
 }
 
 .job-entrance-title {
@@ -705,10 +716,15 @@ button:disabled {
 }
 
 .admin-filebox-panel {
-  width: min(980px, 100%);
-  margin-top: var(--space-4);
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  margin: 0;
+}
+
+.admin-filebox-chat-panel {
+  position: sticky;
+  top: calc(18px + env(safe-area-inset-top));
+  align-self: start;
+  min-width: 0;
 }
 
 .admin-filebox-toolbar {
@@ -2149,8 +2165,17 @@ button:disabled {
     padding-top: calc(64px + env(safe-area-inset-top));
   }
 
-  .admin-filebox-panel {
+  .admin-filebox-layout {
     width: min(100%, 680px);
+    grid-template-columns: 1fr;
+  }
+
+  .admin-filebox-panel {
+    width: 100%;
+  }
+
+  .admin-filebox-chat-panel {
+    position: static;
   }
 
   .admin-filebox-toolbar {

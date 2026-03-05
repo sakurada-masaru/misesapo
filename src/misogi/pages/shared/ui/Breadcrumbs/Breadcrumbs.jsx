@@ -29,13 +29,14 @@ function labelForPath(pathname) {
 
   // Admin
   if (p === '/admin') return '管理TOP';
-  if (p === '/admin/kadai') return 'Kadaiリスト';
+  if (p === '/admin/kadai') return '課題リスト';
+  if (p === '/admin/request-doc') return '依頼書作成';
   if (p === '/admin/houkoku') return '業務報告一覧';
   if (p.startsWith('/admin/houkoku/')) return '業務報告詳細';
   if (p === '/admin/yotei') return '予定';
   if (p === '/admin/ugoki') return 'UGOKI';
   if (p === '/admin/yakusoku') return 'YAKUSOKU';
-  if (p === '/admin/filebox') return 'ファイルボックス';
+  if (p === '/admin/filebox') return 'ダッシュボード';
   if (p === '/admin/torihikisaki-touroku') return '顧客登録';
   if (p === '/admin/torihikisaki-meibo') return '取引先名簿';
   if (p === '/admin/jinzai-meibo') return '人材名簿';

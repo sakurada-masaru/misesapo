@@ -6,9 +6,16 @@
 export const ADMIN_HOTBAR = [
   {
     id: 'filebox',
-    label: 'ファイルボックス',
+    label: 'ダッシュボード',
     subItems: [
-      { id: 'company-filebox', label: 'ファイルボックス', path: '/admin/filebox', group: 'ファイルボックス' },
+      { id: 'company-filebox', label: 'ダッシュボード', path: '/admin/filebox', group: 'ダッシュボード' },
+    ]
+  },
+  {
+    id: 'kintai',
+    label: '勤怠管理',
+    subItems: [
+      { id: 'kintai-link', label: '勤怠管理', path: 'https://f.ieyasu.co/misesapo/login/', group: '勤怠管理' },
     ]
   },
   {
@@ -17,7 +24,13 @@ export const ADMIN_HOTBAR = [
     subItems: [
       { id: 'houkoku-list', label: '業務報告一覧', path: '/admin/houkoku', group: '業務報告' },
       { id: 'admin-log', label: '管理業務記録一覧', path: '/admin/admin-log', group: '業務報告' },
-      { id: 'kintai', label: '勤怠管理', path: 'https://f.ieyasu.co/misesapo/login/', group: '業務報告' },
+    ]
+  },
+  {
+    id: 'workflow-requests',
+    label: '業務依頼',
+    subItems: [
+      { id: 'workflow-request-doc-create', label: '依頼書作成', path: '/admin/request-doc', group: '業務依頼' },
     ]
   },
   {
@@ -44,7 +57,7 @@ export const ADMIN_HOTBAR = [
     role: 'target',
     label: '人材管理',
     subItems: [
-      { id: 'jinzai-meibo', label: '人材名簿', path: '/admin/jinzai-meibo', group: '人材管理' },
+      { id: 'smarthr-link', label: 'スマートHR', path: 'https://misesapo.smarthr.jp/home', group: '人材管理' },
     ]
   },
   {
@@ -69,9 +82,9 @@ export const ADMIN_HOTBAR = [
     label: '運用ツール',
     subItems: [
       { id: 'flow-guide', label: '業務フロー', path: '/flow-guide', group: '基本' },
+      { id: 'kadai', label: '課題リスト', path: '/admin/kadai', group: '基本' },
       { id: 'cleaning-houkoku-tool', label: '清掃レポート作成', path: '/admin/tools/cleaning-houkoku', group: '報告書' },
       { id: 'cleaning-houkoku-list', label: 'レポート一覧', path: '/admin/tools/cleaning-houkoku/list', group: '報告書' },
-      { id: 'kadai', label: 'Kadaiリスト', path: '/admin/kadai', group: '基本' },
       { id: 'zaiko-order', label: '在庫発注フォーム', path: '/admin/master/zaiko-order', group: '基本' },
     ],
   },

@@ -1110,6 +1110,46 @@
   font-size: 12px;
 }
 
+.service-cycle-groups {
+  display: grid;
+  gap: 8px;
+}
+
+.service-cycle-frequency {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.service-cycle-group {
+  display: grid;
+  gap: 6px;
+}
+
+.service-cycle-label {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.68);
+}
+
+.service-cycle-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.service-cycle-tag {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(233, 238, 248, 0.93);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
 .actions-row {
   display: flex;
   gap: 8px;
@@ -1429,6 +1469,7 @@
 [data-theme="light"] .card-accordion > summary .sum-hint,
 [data-theme="light"] .haccp-group-title,
 [data-theme="light"] .service-plan-title .s,
+[data-theme="light"] .service-cycle-label,
 [data-theme="light"] .muted.small,
 [data-theme="light"] .muted,
 [data-theme="light"] .muted-inline,
@@ -1473,6 +1514,7 @@
 [data-theme="light"] .karte-accordion > summary,
 [data-theme="light"] .card-accordion > summary,
 [data-theme="light"] .month-chip,
+[data-theme="light"] .service-cycle-tag,
 [data-theme="light"] .pill,
 [data-theme="light"] .chk {
   border-color: #d1d5db;

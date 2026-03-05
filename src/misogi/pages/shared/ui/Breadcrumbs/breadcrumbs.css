@@ -238,6 +238,21 @@
   display: flex;
 }
 
+.header-chat-overlay.docked{
+  position: relative;
+  left: auto !important;
+  top: auto !important;
+  width: 100%;
+  min-width: 0;
+  height: min(780px, calc(100vh - 120px));
+  min-height: 520px;
+  resize: none;
+}
+
+.header-chat-overlay.docked.open{
+  display: flex;
+}
+
 .header-chat-head{
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -247,6 +262,14 @@
   border-bottom: 1px solid var(--card-border);
   cursor: move;
   user-select: none;
+}
+
+.header-chat-overlay.docked .header-chat-head{
+  grid-template-columns: 1fr auto;
+}
+
+.header-chat-head.no-drag{
+  cursor: default;
 }
 
 .header-chat-head strong{

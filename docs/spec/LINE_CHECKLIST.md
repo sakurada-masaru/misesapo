@@ -1561,3 +1561,320 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 通知投稿者名の UTF-8 文字化け（例: `æ¡ç°å`）を表示時に自動復元
 - [x] 日本語名はそのまま維持し、`À-ÿ` 系の文字化け候補のみを復元対象に制限
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Remove Detail Contract Link + Reflect Primary Yakusoku (2026-03-03)
+
+- [x] `カルテ詳細（管理オペ用）` から `契約連携（yakusoku）` セクションを削除
+- [x] `基本情報` の `主契約に設定` 操作時に `primary_yakusoku_id` だけでなく `plan_frequency` を自動反映
+- [x] 主契約 `yakusoku` のサービス情報を `service_plan` へ同期反映（周期/月情報を自動展開）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Service Menu Cycle Tag View (2026-03-03)
+
+- [x] `サービスプラン` 表示を単純羅列から `周期ごと` のグルーピング表示へ変更
+- [x] 各周期内のサービス項目をタグ表示（チップ）に変更
+- [x] ライト/ダークの両テーマでタグが読めるよう表示スタイルを調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Move Cycle Tags to Karte Section (2026-03-03)
+
+- [x] `基本情報` から `サービスプラン` の周期タグ表示を削除（主契約表示のみ維持）
+- [x] `カルテ詳細 > サービスメニュー（周期管理）` に周期別タグ表示を配置
+- [x] サービスタグ表示を主表示にし、従来の行編集UIは `サービス個別編集` 折りたたみへ移動
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Service Plan Move + Dedup Cleanup (2026-03-03)
+
+- [x] `カルテ詳細` の `サービスメニュー（周期管理）` を上段へ移動し、先頭表示へ変更
+- [x] セクション名を `サービスメニュー` から `サービスプラン` へ変更
+- [x] 重複していた `プラン・評価` セクション（プラン頻度/衛生状態自己評価/最終清掃日）を削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Rule Label + Equipment Right Move (2026-03-03)
+
+- [x] `カルテ詳細` の `運用・鍵` セクション名を `ルール` に変更
+- [x] `設備` セクションを左カラムから右カラムへ移動
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Souko Thumbnail + Open for Existing Files (2026-03-03)
+
+- [x] `souko` GET で既存 `files[].key` から `get_url`（署名URL）を補完して返す処理を追加
+- [x] お客様詳細ストレージで画像判定を拡張（`content_type` + 拡張子）し、既存ファイルもサムネイル表示
+- [x] 登録済みファイルの `開く` リンクを `preview_url/get_url/url` 優先で実ファイルを開けるように変更
+- [x] アップロード保存時に `souko.files` の一時 `get_url` を除外して保存するよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Basic Info Torihikisaki-Keiyaku Link (2026-03-03)
+
+- [x] `お客様詳細 > 基本情報 > 取引先 詳細` に `契約（keiyaku）` 紐付けセレクトを追加
+- [x] 取引先IDに応じて `keiyaku` 候補を取得し、既存紐付けIDが候補外でも履歴選択できるよう補完
+- [x] 基本情報保存時に `torihikisaki` へ `keiyaku_id / keiyaku_name / keiyaku_start_date` を保存
+- [x] 取引先詳細の表示に紐付け契約情報と `契約マスタ` 遷移リンクを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Detail Header Text Cleanup (2026-03-03)
+
+- [x] `カルテ詳細（管理オペ用）` の見出しを `カルテ詳細` に変更
+- [x] `旧カルテの項目を整理して再構築しています。自由記述を最小化し、構造化項目中心で運用します。` の説明文を削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Rule Fields Cleanup (2026-03-03)
+
+- [x] `カルテ詳細 > ルール` から `スタッフルーム` を削除
+- [x] `カルテ詳細 > ルール` から `お客様立会い` を削除
+- [x] `カルテ詳細 > ルール` から `担当者連絡先` と `営業担当` を削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Basic Info Primary Yakusoku Immediate Save (2026-03-03)
+
+- [x] `基本情報 > yakusoku 契約情報` の `主契約に設定` で `karte_detail.plan.primary_yakusoku_id` を即時保存
+- [x] 主契約設定時に `plan_frequency` と `service_plan` 同期値も含めて同時保存
+- [x] 保存中は対象ボタンを `保存中...` 表示に変更し、多重押下を抑止
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Direct Yotei Entry from Customer Detail (2026-03-03)
+
+- [x] お客様詳細ヘッダーに `予定` ボタンを追加
+- [x] `予定` 押下で `create=1 + tenpo/yagou/torihikisaki/yakusoku` を付与して `/admin/yotei` へ遷移
+- [x] `/admin/yotei` 側でクエリを受け、新規予定モーダルを自動起動し対象現場を初期反映
+- [x] 取り込み後は起動クエリをURLから除去（再描画での再起動防止）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Tenpo Select Yakusoku Sync (2026-03-03)
+
+- [x] 現場名（統合検索）候補に `primary_yakusoku_id` を取り込み、現場マスタ由来の主契約を参照可能化
+- [x] 現場選択時の `yakusoku` 解決順を `選択現場の主契約 -> 同現場の有効契約先頭` に統一
+- [x] 現場選択時に前回選択の `yakusoku_id` を持ち越さないよう修正（別現場の契約混入を防止）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Yakusoku Service Auto Reflect (2026-03-03)
+
+- [x] `yakusoku` の `service_ids/service_names`（および単数フィールド）からサービス選択を復元する正規化を追加
+- [x] 新規 `yotei` で `yakusoku` を選択した際、サービス内容（複数タグ）を自動反映
+- [x] 現場選択により `yakusoku` が自動切替された場合も、該当 `yakusoku` のサービス内容を自動反映
+- [x] `yakusoku` 反映時、主サービス1件の標準作業時間がある場合は `end_time` も自動補正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Scheduled Date Editable in Modal (2026-03-03)
+
+- [x] `新規予定登録/予定編集` モーダルに `作業日`（date input）を追加
+- [x] 保存時はモーダルで選択した `scheduled_date` を基準に `start_at/end_at` を計算するよう修正
+- [x] 編集モーダル初期値に `scheduled_date` を必ず設定（空値で保存されないよう補強）
+- [x] 保存前に `scheduled_date` の妥当性チェックを追加（不正値はアラート）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Timeline Card Tenpo Label Includes Yagou (2026-03-03)
+
+- [x] タイムラインカードの現場表示を `店舗名のみ` から `屋号 / 店舗名` へ拡張
+- [x] `displayTenpoName` を `tenpo` マスタ参照ベースに変更し、`yagou_name` 未同梱データでも表示可能化
+- [x] 既存の現場名表示利用箇所（カード/集計）に同一ルールを適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Timeline Card Shows Current Ugoki Jotai (2026-03-03)
+
+- [x] `yotei` タイムラインカードに `UGOKI: <状態>` を表示（夜帯/日中帯の両カード）
+- [x] カード表示の `UGOKI` 状態は `ugoki.jotai` を優先参照し、未取得時は既存状態判定へフォールバック
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Card Edit Save Fix (2026-03-03)
+
+- [x] 予定編集保存時の更新ID解決を `id/yotei_id/schedule_id` フォールバックに変更（`/yotei/undefined` を防止）
+- [x] `yakusoku` 必須バリデーションを新規作成時のみ適用し、既存予定編集保存を阻害しないよう修正
+- [x] 予定取消でも同一ID解決ルールと空IDガードを適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Edit Save Float Payload Guard (2026-03-03)
+
+- [x] 編集保存 payload をホワイトリスト化し、`modalData` 全展開を廃止（不要フィールド混入を防止）
+- [x] `Float types are not supported` の原因となる浮動小数点フィールドが更新APIへ流れないよう修正
+- [x] 必須業務項目（日時/現場/契約/作業員/サービス/メモ/状態/引き継ぎチェック）は明示送信を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Card Cancel Robust Fallback (2026-03-03)
+
+- [x] 予定取消ID解決を候補配列化（`id/schedule_id/yotei_id`）し、ID揺れでの失敗を回避
+- [x] 取消APIは `DELETE` 失敗時に `PUT(jotai=status=torikeshi)` へ自動フォールバック
+- [x] 取消ボタンからはレコード本体を渡し、候補IDを順次試行できるよう修正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Card Cancel Visibility Sync (2026-03-03)
+
+- [x] 予定取得時に `status/state/jokyo` 由来の取消状態も `jotai=torikeshi` へ正規化し、表示判定を統一
+- [x] 取消成功直後は対象カードをローカル state から即時除去し、画面反映遅延を抑制
+- [x] 取消後の再取得は現在ビューに合わせて実行（`timeline/today=日付単日`,`week/month=範囲取得`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Card Hard Delete (2026-03-03)
+
+- [x] 予定カードの危険操作を `予定取消` から `予定削除` に文言統一
+- [x] 削除APIは `DELETE /yotei/{id}` のみ実行し、`PUT torikeshi` フォールバックを廃止
+- [x] 削除成功後はローカル state から即時除去し、ビュー別再取得（日/週/月）で同期
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Ops: Kadai to Workflow Request Board (2026-03-03)
+
+- [x] `/admin/kadai` のタイトルと運用文言を `業務依頼ボード` へ変更（課題管理から依頼管理へ転換）
+- [x] 依頼運用に必要な項目を追加（`request_type` / `due_date` / `priority` / `file_refs`）
+- [x] 進行状態を業務フロー向けに拡張（`依頼中/受付/処理中/承認待ち/差戻し/完了` + 旧値互換）
+- [x] 一覧/詳細/検索/フィルタ/新規初期値を依頼ワークフロー前提へ再編
+- [x] サイドバーとパンくずの `Kadaiリスト` 表記を `業務依頼` へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Workflow Request Category Independent (2026-03-03)
+
+- [x] 管理サイドバーに `業務依頼` の独立カテゴリを追加（`業務依頼ボード` を配下表示）
+- [x] `運用ツール` から `業務依頼` 導線を削除し、カテゴリ重複を解消
+- [x] `/admin/kadai` パンくず名を `業務依頼ボード` に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Request Document Template Page (2026-03-03)
+
+- [x] `業務依頼` カテゴリ配下に `依頼書作成` 導線を追加（`/admin/request-doc`）
+- [x] `依頼書作成` ページを新設し、テンプレート選択（部署間/見積/契約確認/支払処理）に対応
+- [x] テンプレート入力からプレビュー生成、コピー、`.txt` ダウンロードを実装
+- [x] 入力内容を `localStorage(misogi-v2-admin-request-document-draft)` へ自動保存
+- [x] `/admin/request-doc` のパンくず名を `依頼書作成` として追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Request Doc to Board Draft Handoff (2026-03-03)
+
+- [x] `依頼書作成` に `業務依頼ボードへ起票` ボタンを追加し、入力内容を連携できるように変更
+- [x] `依頼書テンプレート` の入力値を `localStorage(misogi-v2-admin-request-doc-seed)` へ一時保存して `/admin/kadai?create=1&seed=request-doc` へ遷移
+- [x] `業務依頼ボード` 側で seed を読込・消費し、新規登録モーダルを自動起動して下書き値を反映
+- [x] 自動起票後は seed 値をクリアし、通常の新規登録時に前回seedが残らないよう調整
+- [x] `AdminMasterBase` に `autoOpenCreateToken` を追加し、ページ側から新規モーダル自動起動を制御可能化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Request Doc A4 Preview + PDF Save (2026-03-04)
+
+- [x] `依頼書作成` のプレビューをテキストエリアから A4 書類風レイアウトへ変更（表形式ヘッダ + セクション本文）
+- [x] `PDF保存（印刷）` ボタンを追加し、同レイアウトを印刷ダイアログ経由でPDF保存できるよう対応
+- [x] 印刷用HTMLを専用生成し、プレビューと同等の文書体裁（余白/罫線/見出し）で出力
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Request Doc Preview Fit in Frame (2026-03-04)
+
+- [x] A4プレビュー用紙の幅を `min(100%, 210mm)` に変更し、枠内に収まるよう自動フィット化
+- [x] プレビュー枠の横方向オーバーフローを抑制し、紙面が枠外へはみ出さないよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Request Doc Container Width 1440 (2026-03-04)
+
+- [x] `依頼書作成` ページのコンテンツ最大幅を `1300px` から `1440px` に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Preview Header PDF Button (2026-03-04)
+
+- [x] `依頼書作成` の右側プレビュー見出し行に `PDFプレビュー` ボタンを追加
+- [x] 既存の `PDF保存（印刷）` と同じ印刷処理をヘッダーボタンから実行可能化
+- [x] プレビューヘッダ用レイアウト/ボタンスタイルを追加（タイトル右配置）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: PDF Preview Open Fix (2026-03-04)
+
+- [x] `PDFプレビュー` を印刷即実行ではなく、専用ウィンドウでのプレビュー表示へ修正
+- [x] `PDF保存（印刷）` は従来どおり印刷ダイアログ起動を維持（プレビューと分離）
+- [x] プレビュー/印刷で共通HTMLを再利用しつつ、`autoPrint` フラグで挙動を切替
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Request Doc Letter Style Preview (2026-03-04)
+
+- [x] `依頼書作成` プレビューを表形式から和文レター形式へ再構成（中央タイトル + 罫線 + 宛先/差出人 + 件名 + 本文 + 敬具）
+- [x] 本文を `依頼目的/依頼内容/期限/優先度` ベースの段落構成に変更し、テンプレート拡張項目も本文へ組み込み
+- [x] `PDFプレビュー` / `PDF保存（印刷）` の出力HTMLも同一レター体裁へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Request Doc PDF A4 Fixed (2026-03-04)
+
+- [x] 印刷用 `@page` を `A4 portrait` 固定へ変更（`margin: 0`）
+- [x] 印刷時の紙面コンテナを `210mm x 297mm` 基準に固定し、PDF保存時のサイズ揺れを抑制
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: My Storage Rename + Workflow Inbox Files (2026-03-04)
+
+- [x] サイドバー/パンくずの `ファイルボックス` 表記を `マイストレージ` に変更
+- [x] `マイストレージ` に `受信業務依頼` フォルダを追加し、`kadai` の受信対象データを疑似ファイル（`.txt`）として一覧表示
+- [x] 受信業務依頼ファイルはクリックで内容を開けるよう `data:text/plain` URL を生成
+- [x] `受信業務依頼` フォルダは読み取り専用化（アップロード不可）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Receiver Person Input in Template (2026-03-04)
+
+- [x] `依頼書作成` に `依頼先担当者名` 入力欄を追加
+- [x] 入力した担当者名を依頼書プレビュー/PDF出力の宛名へ反映
+- [x] `業務依頼ボードへ起票` 時に `target_to` へ依頼先担当者名も連携
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Request Doc Attachment Upload + My Storage Link (2026-03-04)
+
+- [x] `依頼書作成` に添付ファイル選択UIを追加（複数選択/一覧表示/個別削除、1件15MB上限）
+- [x] `業務依頼ボードへ起票` 実行時に添付ファイルを `souko(source=admin_filebox, tenpo_id=filebox_company)` へアップロード
+- [x] 起票単位で `マイストレージ` 用の専用フォルダを自動作成し、`souko_id/folder_id` を `attachment_refs` へ自動追記
+- [x] 添付アップロード中は起票ボタンをロックし、エラー/完了メッセージをページ上に表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Per-Recipient My Storage Isolation (2026-03-04)
+
+- [x] `依頼書作成` 添付アップロード時に `souko` へ `owner_name / owner_key / owner_dept` を保存（受信者基準）
+- [x] `マイストレージ` の `souko` 取得クエリを `owner_key=ログインユーザー` で絞り込み、他者ファイルを一覧に出さないよう変更
+- [x] `souko` API に `owner_user_id / owner_name / owner_key` フィルタを追加し、`admin_filebox` は所有者以外の `GET/PUT/DELETE` を拒否
+- [x] 既存互換として `owner_*` 未設定レコードは `uploaded_by / uploaded_by_name` で所有者判定
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Kintai Promoted to Top Category (2026-03-04)
+
+- [x] サイドバー `業務報告` 配下から `勤怠管理` を削除
+- [x] サイドバー大カテゴリとして独立 `勤怠管理` を追加し、配下に `勤怠管理` リンクを配置
+- [x] 既存リンク先（`https://f.ieyasu.co/misesapo/login/`）は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: SmartHR Link in Staff Category (2026-03-04)
+
+- [x] サイドバー `人材管理` 配下に `スマートHR` 外部リンクを追加
+- [x] リンク先を `https://misesapo.smarthr.jp/home` に設定
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Hide Jinzai Meibo from Staff Category (2026-03-04)
+
+- [x] サイドバー `人材管理` 配下の `人材名簿` リンクを非表示化
+- [x] `人材管理` 配下は `スマートHR` 導線のみ表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Move Kintai Below My Storage (2026-03-04)
+
+- [x] サイドバーの大カテゴリ並びを `マイストレージ -> 勤怠管理 -> 業務報告` に変更
+- [x] `勤怠管理` カテゴリ自体は維持し、リンク先は既存の `https://f.ieyasu.co/misesapo/login/` のまま
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Move Kadai List to Tools (2026-03-04)
+
+- [x] 管理サイドバーの `業務依頼` から `/admin/kadai` 導線を外し、`運用ツール` 配下へ移設
+- [x] `/admin/kadai` 導線ラベルを `業務依頼ボード` から `課題リスト` へ変更（管理/事務ホットバー）
+- [x] パンくずの `/admin/kadai` 表示名を `課題リスト` へ統一
+- [x] `依頼書作成` 画面内の関連導線文言（リンク/起票ボタン）を `課題リスト` 表記に更新
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Save/Send Only + Recipient Select + PDF Delivery (2026-03-05)
+
+- [x] `依頼書作成` の主要アクションを `保存` / `送信` の2つに整理（起票/テキストDL/印刷保存ボタンを除去）
+- [x] `依頼先担当者` を `jinzai` からの選択式へ変更（選択時に担当者名/部署をフォームへ反映）
+- [x] `送信` 押下時にプレビューからA4 PDFを生成し、添付ファイルと同梱してアップロード
+- [x] 保存先を `souko(source=admin_filebox, tenpo_id=filebox_company)` の `workflow_inbox` 固定にし、依頼先 `owner_key` で分離保存
+- [x] 送信済みファイル参照（`souko_id/folder_id/files`）を `attachment_refs` へ追記して下書きへ保持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard Rename + Filebox Right Chat Dock (2026-03-05)
+
+- [x] 管理サイドバー `/admin/filebox` のカテゴリ名・項目名を `マイストレージ` から `ダッシュボード` へ変更
+- [x] `/admin/filebox` のパンくず表示名を `ダッシュボード` に統一
+- [x] `/admin/filebox` 表示時のみ、右カラムへ `共通チャット` を常時展開するドッキングレイアウトを追加
+- [x] ファイル一覧ページ上部のチャットトリガーは `/admin/filebox` のみ非表示化（右カラム常設チャットへ一本化）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Workflow Requests: Recipient Scope Restriction (2026-03-05)
+
+- [x] `依頼書作成` の `依頼先担当者` 候補を `管理 / 事務 / 営業 / 開発` スコープの人材のみに限定
+- [x] 部署名/ロール情報からスコープを正規化（`経理/人事/総務` は `事務` として扱う）
+- [x] フォームに残っている担当者IDが候補外になった場合は自動クリア
+- [x] `依頼先担当者` セレクトのプレースホルダ文言を制限内容に合わせて更新
+- [x] `npm -C src/misogi run build` でビルド確認

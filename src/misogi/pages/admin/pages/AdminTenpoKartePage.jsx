@@ -233,6 +233,111 @@ function normalizeMonths(months) {
   return Array.from(new Set(arr)).sort((a, b) => a - b);
 }
 
+function parseMonthFromBucketKey(key) {
+  const kk = String(key || '').trim();
+  const m = kk.match(/_(?:m|month_)(\d{2})$/);
+  if (!m) return null;
+  const month = Number(m[1]);
+  if (!Number.isFinite(month) || month < 1 || month > 12) return null;
+  return month;
+}
+
+function parseMonthFromYmd(ymd) {
+  const s = String(ymd || '').trim();
+  const m = s.match(/^\d{4}-(\d{2})-\d{2}$/);
+  if (!m) return null;
+  const month = Number(m[1]);
+  if (!Number.isFinite(month) || month < 1 || month > 12) return null;
+  return month;
+}
+
+function pickYakusokuBucketKeys(y, tokens = []) {
+  const tm = y?.recurrence_rule?.task_matrix;
+  if (!tm || typeof tm !== 'object') return [];
+  const tk = (Array.isArray(tokens) ? tokens : [])
+    .map((v) => String(v || '').trim())
+    .filter(Boolean);
+  const hasToken = tk.length > 0;
+  const picked = [];
+  Object.entries(tm).forEach(([key, raw]) => {
+    const arr = Array.isArray(raw) ? raw.map((v) => String(v || '').trim()).filter(Boolean) : [];
+    if (arr.length <= 0) return;
+    if (!hasToken || arr.some((v) => tk.includes(v))) picked.push(String(key || '').trim());
+  });
+  if (picked.length > 0 || !hasToken) return picked;
+  // token指定で見つからない場合は、yakusoku全体の有効バケットを採用
+  return pickYakusokuBucketKeys(y, []);
+}
+
+function deriveServiceCycleFromYakusokuBuckets(keys, y) {
+  const arr = Array.isArray(keys) ? keys : [];
+  if (String(y?.type || '').trim() !== 'teiki') return 'spot';
+  if (arr.some((k) => k === 'yearly')) return 'yearly';
+  if (arr.some((k) => k.startsWith('half_year_'))) return 'half_yearly';
+  if (arr.some((k) => k.startsWith('quarterly_'))) return 'quarterly';
+  if (arr.some((k) => k.startsWith('bimonthly_'))) return 'bimonthly';
+  if (arr.some((k) => k === 'monthly')) return 'monthly';
+  if (arr.some((k) => k.startsWith('weekly_') || k.startsWith('biweekly_') || k === 'daily')) return 'monthly';
+  return 'monthly';
+}
+
+function derivePlanFrequencyFromYakusoku(y) {
+  const keys = pickYakusokuBucketKeys(y, []);
+  if (String(y?.type || '').trim() !== 'teiki') return 'spot';
+  if (keys.some((k) => k === 'yearly')) return 'yearly';
+  if (keys.some((k) => k.startsWith('half_year_'))) return 'q6';
+  if (keys.some((k) => k.startsWith('quarterly_'))) return 'q3';
+  if (keys.some((k) => k.startsWith('bimonthly_'))) return 'bimonthly';
+  if (keys.some((k) => k === 'monthly' || k.startsWith('weekly_') || k.startsWith('biweekly_') || k === 'daily')) return 'monthly';
+  return 'monthly';
+}
+
+function deriveMonthsFromYakusokuBuckets(keys, y) {
+  const arr = Array.isArray(keys) ? keys : [];
+  const directMonths = normalizeMonths(arr.map(parseMonthFromBucketKey).filter(Boolean));
+  if (directMonths.length > 0) return directMonths;
+  const cycle = deriveServiceCycleFromYakusokuBuckets(arr, y);
+  if (cycle === 'spot') return [];
+  const startMonth = parseMonthFromYmd(y?.start_date) || 1;
+  if (cycle === 'monthly') return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  if (cycle === 'bimonthly') return normalizeMonths([startMonth, startMonth + 2, startMonth + 4, startMonth + 6, startMonth + 8, startMonth + 10].map((m) => ((m - 1) % 12) + 1));
+  if (cycle === 'quarterly') return normalizeMonths([startMonth, startMonth + 3, startMonth + 6, startMonth + 9].map((m) => ((m - 1) % 12) + 1));
+  if (cycle === 'half_yearly') return normalizeMonths([startMonth, ((startMonth + 5) % 12) + 1]);
+  if (cycle === 'yearly') return [startMonth];
+  return [];
+}
+
+function buildServicePlanFromYakusoku(y) {
+  const ids = Array.isArray(y?.service_ids)
+    ? y.service_ids.map((v) => String(v || '').trim()).filter(Boolean)
+    : [];
+  const names = Array.isArray(y?.service_names)
+    ? y.service_names.map((v) => String(v || '').trim()).filter(Boolean)
+    : [];
+  const legacyId = String(y?.service_id || '').trim();
+  const legacyName = String(y?.service_name || '').trim();
+  if (!ids.length && legacyId) ids.push(legacyId);
+  if (!names.length && legacyName) names.push(legacyName);
+
+  const rowCount = Math.max(ids.length, names.length);
+  const rows = [];
+  for (let i = 0; i < rowCount; i += 1) {
+    const service_id = ids[i] || '';
+    const service_name = names[i] || service_id || names[0] || '';
+    const bucketKeys = pickYakusokuBucketKeys(y, [service_id, service_name].filter(Boolean));
+    const cycle = deriveServiceCycleFromYakusokuBuckets(bucketKeys, y);
+    const months = deriveMonthsFromYakusokuBuckets(bucketKeys, y);
+    rows.push({
+      service_id,
+      service_name,
+      cycle,
+      months,
+      note: clampStr(`主契約同期(${String(y?.yakusoku_id || '').trim() || 'yakusoku'})`, 120),
+    });
+  }
+  return rows.filter((r) => String(r?.service_id || '').trim() || String(r?.service_name || '').trim());
+}
+
 function findOptionLabel(options, value) {
   const vv = String(value || '').trim();
   if (!vv) return '';
@@ -412,13 +517,6 @@ function ServicePlanRow({
     </div>
   );
 }
-
-const SELF_RATING_OPTIONS = [
-  { value: 'yoi', label: '良い' },
-  { value: 'futsu', label: '普通' },
-  { value: 'kaizen', label: '要改善' },
-  { value: 'mihyouka', label: '未評価' },
-];
 
 const SUPPORT_HISTORY_CATEGORIES = [
   { value: 'ops', label: '運用' },
@@ -663,6 +761,15 @@ function parseYmdToInt(ymd) {
   return Number(`${m[1]}${m[2]}${m[3]}`);
 }
 
+function getKeiyakuStartDate(item) {
+  return String(
+    item?.start_date
+    || item?.application_date
+    || item?.keiyaku_start_date
+    || ''
+  ).trim();
+}
+
 function splitTags(s) {
   const raw = String(s || '').trim();
   if (!raw) return [];
@@ -696,8 +803,14 @@ function isImageContentType(ct = '') {
   return String(ct || '').toLowerCase().startsWith('image/');
 }
 
+function isImageFile(fileName, contentType, key = '') {
+  if (isImageContentType(contentType)) return true;
+  const ext = fileExt(fileName, key);
+  return ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'avif', 'heic', 'heif'].includes(ext);
+}
+
 function fileKindLabel(fileName, contentType, key) {
-  if (isImageContentType(contentType)) return 'IMG';
+  if (isImageFile(fileName, contentType, key)) return 'IMG';
   const ext = fileExt(fileName, key);
   if (ext === 'pdf') return 'PDF';
   if (['doc', 'docx'].includes(ext)) return 'DOC';
@@ -825,6 +938,9 @@ export default function AdminTenpoKartePage() {
   const [yakusokuItems, setYakusokuItems] = useState([]);
   const [yakusokuLoading, setYakusokuLoading] = useState(false);
   const [yakusokuError, setYakusokuError] = useState('');
+  const [keiyakuCandidates, setKeiyakuCandidates] = useState([]);
+  const [keiyakuLoading, setKeiyakuLoading] = useState(false);
+  const [keiyakuError, setKeiyakuError] = useState('');
   const [isMobileLayout, setIsMobileLayout] = useState(() => (
     typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
   ));
@@ -839,6 +955,7 @@ export default function AdminTenpoKartePage() {
   const [savingKarteDetail, setSavingKarteDetail] = useState(false);
   const [editingBasicInfo, setEditingBasicInfo] = useState(false);
   const [savingBasicInfo, setSavingBasicInfo] = useState(false);
+  const [savingPrimaryYakusokuId, setSavingPrimaryYakusokuId] = useState('');
   const [basicInfoDraft, setBasicInfoDraft] = useState({
     name: '',
     address: '',
@@ -852,6 +969,9 @@ export default function AdminTenpoKartePage() {
     customer_contact_name: '',
     customer_contact_phone: '',
     sales_owner: '',
+    torihikisaki_keiyaku_id: '',
+    torihikisaki_keiyaku_name: '',
+    torihikisaki_keiyaku_start_date: '',
   });
   const [peerTenpos, setPeerTenpos] = useState([]);
   const [selectedPeerTenpoId, setSelectedPeerTenpoId] = useState('');
@@ -875,6 +995,34 @@ export default function AdminTenpoKartePage() {
     if (tName) return tName;
     return tenpoId;
   }, [tenpo?.name, yagou?.name, tenpoId]);
+
+  const directYoteiCreateLink = useMemo(() => {
+    const sp = new URLSearchParams();
+    sp.set('create', '1');
+    sp.set('from', 'tenpo_karte');
+    sp.set('tenpo_id', String(tenpoId || '').trim());
+    const tenpoName = String(tenpo?.name || '').trim();
+    const yagouName = String(yagou?.name || '').trim();
+    const torihikisakiName = String(torihikisaki?.name || '').trim();
+    const torihikisakiId = String(tenpo?.torihikisaki_id || '').trim();
+    const yagouId = String(tenpo?.yagou_id || '').trim();
+    const primaryYakusokuId = String(karteDetail?.plan?.primary_yakusoku_id || '').trim();
+    if (tenpoName) sp.set('tenpo_name', tenpoName);
+    if (yagouName) sp.set('yagou_name', yagouName);
+    if (torihikisakiName) sp.set('torihikisaki_name', torihikisakiName);
+    if (torihikisakiId) sp.set('torihikisaki_id', torihikisakiId);
+    if (yagouId) sp.set('yagou_id', yagouId);
+    if (primaryYakusokuId) sp.set('yakusoku_id', primaryYakusokuId);
+    return `/admin/yotei?${sp.toString()}`;
+  }, [
+    tenpoId,
+    tenpo?.name,
+    tenpo?.torihikisaki_id,
+    tenpo?.yagou_id,
+    torihikisaki?.name,
+    yagou?.name,
+    karteDetail?.plan?.primary_yakusoku_id,
+  ]);
 
   const tenpoBasicInfoProfile = useMemo(() => (
     extractBasicInfoProfileFromTenpoRecord({
@@ -940,23 +1088,81 @@ export default function AdminTenpoKartePage() {
     return rows.join(' / ') || '—';
   }, [resolvedBasicInfo?.customer_contact_phone]);
 
-  const servicePlanSummary = useMemo(() => {
-    const planFrequency = String(karteDetail?.plan?.plan_frequency || '').trim();
-    const planFrequencyLabel = findOptionLabel(PLAN_FREQUENCY_OPTIONS, planFrequency);
-    const rows = (Array.isArray(karteDetail?.service_plan) ? karteDetail.service_plan : [])
-      .map((sp) => {
-        const nm = String(sp?.service_name || sp?.service_id || '').trim();
-        const cycle = findOptionLabel(SERVICE_CYCLE_OPTIONS, sp?.cycle);
-        return [nm, cycle].filter(Boolean).join(' ');
-      })
-      .filter(Boolean);
-    const menus = rows.slice(0, 3).join(' / ');
-    const rest = rows.length > 3 ? ` ほか${rows.length - 3}件` : '';
-    const chunks = [];
-    if (planFrequencyLabel) chunks.push(`頻度: ${planFrequencyLabel}`);
-    if (menus) chunks.push(`メニュー: ${menus}${rest}`);
-    return chunks.join(' | ') || '—';
-  }, [karteDetail?.plan?.plan_frequency, karteDetail?.service_plan]);
+  const keiyakuById = useMemo(() => {
+    const m = new Map();
+    (Array.isArray(keiyakuCandidates) ? keiyakuCandidates : []).forEach((c) => {
+      const id = String(c?.keiyaku_id || '').trim();
+      if (!id) return;
+      m.set(id, c);
+    });
+    return m;
+  }, [keiyakuCandidates]);
+
+  const keiyakuRowsForTorihikisaki = useMemo(() => {
+    const rows = Array.isArray(keiyakuCandidates) ? keiyakuCandidates.slice() : [];
+    const currentId = String(
+      (editingBasicInfo ? basicInfoDraft?.torihikisaki_keiyaku_id : '')
+      || torihikisaki?.keiyaku_id
+      || ''
+    ).trim();
+    if (currentId && !rows.some((r) => String(r?.keiyaku_id || '').trim() === currentId)) {
+      rows.unshift({
+        keiyaku_id: currentId,
+        name: String(
+          (editingBasicInfo ? basicInfoDraft?.torihikisaki_keiyaku_name : '')
+          || torihikisaki?.keiyaku_name
+          || currentId
+        ).trim(),
+        start_date: String(
+          (editingBasicInfo ? basicInfoDraft?.torihikisaki_keiyaku_start_date : '')
+          || torihikisaki?.keiyaku_start_date
+          || ''
+        ).trim(),
+        _stale: true,
+      });
+    }
+    return rows;
+  }, [
+    keiyakuCandidates,
+    editingBasicInfo,
+    basicInfoDraft?.torihikisaki_keiyaku_id,
+    basicInfoDraft?.torihikisaki_keiyaku_name,
+    basicInfoDraft?.torihikisaki_keiyaku_start_date,
+    torihikisaki?.keiyaku_id,
+    torihikisaki?.keiyaku_name,
+    torihikisaki?.keiyaku_start_date,
+  ]);
+
+  const servicePlanFrequencyLabel = useMemo(() => (
+    findOptionLabel(PLAN_FREQUENCY_OPTIONS, String(karteDetail?.plan?.plan_frequency || '').trim())
+  ), [karteDetail?.plan?.plan_frequency]);
+
+  const servicePlanCycleGroups = useMemo(() => {
+    const rows = Array.isArray(karteDetail?.service_plan) ? karteDetail.service_plan : [];
+    const cycleOrder = new Map(SERVICE_CYCLE_OPTIONS.map((o, i) => [String(o.value || ''), i]));
+    const byCycle = new Map();
+    rows.forEach((sp) => {
+      const cycleValue = String(sp?.cycle || '').trim() || 'monthly';
+      const cycleLabel = findOptionLabel(SERVICE_CYCLE_OPTIONS, cycleValue) || cycleValue || '未設定';
+      const serviceLabel = String(sp?.service_name || sp?.service_id || '').trim();
+      if (!serviceLabel) return;
+      if (!byCycle.has(cycleValue)) {
+        byCycle.set(cycleValue, {
+          cycleValue,
+          cycleLabel,
+          services: [],
+        });
+      }
+      const row = byCycle.get(cycleValue);
+      if (!row.services.includes(serviceLabel)) row.services.push(serviceLabel);
+    });
+    return Array.from(byCycle.values()).sort((a, b) => {
+      const ai = cycleOrder.has(a.cycleValue) ? cycleOrder.get(a.cycleValue) : 999;
+      const bi = cycleOrder.has(b.cycleValue) ? cycleOrder.get(b.cycleValue) : 999;
+      if (ai !== bi) return ai - bi;
+      return String(a.cycleLabel || '').localeCompare(String(b.cycleLabel || ''), 'ja');
+    });
+  }, [karteDetail?.service_plan]);
 
   const getYakusokuServiceSummary = useCallback((y) => {
     const names = Array.isArray(y?.service_names)
@@ -1042,9 +1248,17 @@ export default function AdminTenpoKartePage() {
     karteDetail,
   ]);
 
-  const buildBasicInfoDraft = useCallback(() => {
-    return resolvedBasicInfo;
-  }, [resolvedBasicInfo]);
+  const buildBasicInfoDraft = useCallback(() => ({
+    ...resolvedBasicInfo,
+    torihikisaki_keiyaku_id: String(torihikisaki?.keiyaku_id || '').trim(),
+    torihikisaki_keiyaku_name: String(torihikisaki?.keiyaku_name || '').trim(),
+    torihikisaki_keiyaku_start_date: String(torihikisaki?.keiyaku_start_date || '').trim(),
+  }), [
+    resolvedBasicInfo,
+    torihikisaki?.keiyaku_id,
+    torihikisaki?.keiyaku_name,
+    torihikisaki?.keiyaku_start_date,
+  ]);
 
   useEffect(() => {
     if (editingBasicInfo) return;
@@ -1058,16 +1272,22 @@ export default function AdminTenpoKartePage() {
   const files = useMemo(() => {
     const arr = safeArr(souko?.files);
     return arr
-      .map((it) => ({
-        key: String(it?.key || '').trim(),
-        file_name: String(it?.file_name || '').trim(),
-        content_type: String(it?.content_type || '').trim(),
-        size: Number(it?.size || 0) || 0,
-        uploaded_at: String(it?.uploaded_at || '').trim(),
-        kubun: String(it?.kubun || '').trim(), // teishutsu|naibu|'' (legacy)
-        doc_category: String(it?.doc_category || '').trim(), // estimate|contract|invoice|report|photo|other
-        preview_url: String(it?.preview_url || it?.get_url || it?.url || '').trim(),
-      }))
+      .map((it) => {
+        const previewUrl = String(it?.preview_url || '').trim();
+        const getUrl = String(it?.get_url || it?.url || '').trim();
+        return {
+          key: String(it?.key || '').trim(),
+          file_name: String(it?.file_name || '').trim(),
+          content_type: String(it?.content_type || '').trim(),
+          size: Number(it?.size || 0) || 0,
+          uploaded_at: String(it?.uploaded_at || '').trim(),
+          kubun: String(it?.kubun || '').trim(), // teishutsu|naibu|'' (legacy)
+          doc_category: String(it?.doc_category || '').trim(), // estimate|contract|invoice|report|photo|other
+          preview_url: previewUrl,
+          get_url: getUrl,
+          open_url: previewUrl || getUrl,
+        };
+      })
       .filter((it) => it.key);
   }, [souko]);
 
@@ -1281,11 +1501,69 @@ export default function AdminTenpoKartePage() {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const toriId = String(tenpo?.torihikisaki_id || '').trim();
+      if (!toriId) {
+        setKeiyakuCandidates([]);
+        setKeiyakuError('');
+        setKeiyakuLoading(false);
+        return;
+      }
+      setKeiyakuLoading(true);
+      setKeiyakuError('');
+      try {
+        const qs = new URLSearchParams();
+        qs.set('limit', '5000');
+        qs.set('jotai', 'yuko');
+        qs.set('torihikisaki_id', toriId);
+        const res = await apiGetJson(`/master/keiyaku?${qs.toString()}`);
+        const rows = asItems(res)
+          .map((it) => ({
+            ...it,
+            keiyaku_id: String(it?.keiyaku_id || it?.id || '').trim(),
+            name: String(it?.name || '').trim(),
+            start_date: getKeiyakuStartDate(it),
+          }))
+          .filter((it) => it.keiyaku_id)
+          .sort((a, b) => {
+            const ad = parseYmdToInt(a.start_date) || -1;
+            const bd = parseYmdToInt(b.start_date) || -1;
+            if (ad !== bd) return bd - ad;
+            return String(a.name || '').localeCompare(String(b.name || ''), 'ja');
+          });
+        if (!cancelled) setKeiyakuCandidates(rows);
+      } catch (e) {
+        if (!cancelled) {
+          setKeiyakuCandidates([]);
+          setKeiyakuError(e?.message || 'keiyakuの取得に失敗しました');
+        }
+      } finally {
+        if (!cancelled) setKeiyakuLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenpo?.torihikisaki_id]);
+
   const applyBasicInfoToDraft = useCallback((profile, withEdit = true) => {
     const normalized = normalizeBasicInfoProfile(profile);
-    setBasicInfoDraft((prev) => mergeBasicInfoProfile(prev, normalized));
+    setBasicInfoDraft((prev) => {
+      const merged = mergeBasicInfoProfile(prev, normalized);
+      const fallbackId = String(torihikisaki?.keiyaku_id || '').trim();
+      const fallbackName = String(torihikisaki?.keiyaku_name || '').trim();
+      const fallbackStart = String(torihikisaki?.keiyaku_start_date || '').trim();
+      return {
+        ...merged,
+        torihikisaki_keiyaku_id: String(prev?.torihikisaki_keiyaku_id || fallbackId).trim(),
+        torihikisaki_keiyaku_name: String(prev?.torihikisaki_keiyaku_name || fallbackName).trim(),
+        torihikisaki_keiyaku_start_date: String(prev?.torihikisaki_keiyaku_start_date || fallbackStart).trim(),
+      };
+    });
     if (withEdit) setEditingBasicInfo(true);
-  }, []);
+  }, [torihikisaki?.keiyaku_id, torihikisaki?.keiyaku_name, torihikisaki?.keiyaku_start_date]);
 
   const copyBasicInfoFromPeer = useCallback(async () => {
     const sourceId = String(selectedPeerTenpoId || '').trim();
@@ -1590,6 +1868,65 @@ export default function AdminTenpoKartePage() {
       return next;
     });
   }, []);
+
+  const buildKarteDetailWithPrimaryYakusoku = useCallback((detail, yakusokuId, selectedYakusoku) => {
+    const targetId = String(yakusokuId || '').trim();
+    const base = detail && typeof detail === 'object' ? detail : {};
+    const next = { ...base };
+    const plan = { ...(next.plan || {}) };
+    plan.primary_yakusoku_id = targetId;
+    if (selectedYakusoku) {
+      plan.plan_frequency = derivePlanFrequencyFromYakusoku(selectedYakusoku);
+      const syncedServicePlan = buildServicePlanFromYakusoku(selectedYakusoku);
+      if (syncedServicePlan.length > 0) next.service_plan = syncedServicePlan;
+    }
+    next.plan = plan;
+    return next;
+  }, []);
+
+  const applyPrimaryYakusokuToKarte = useCallback(async (yakusokuId) => {
+    const targetId = String(yakusokuId || '').trim();
+    if (!targetId || !tenpoId) return;
+    const selected = (Array.isArray(yakusokuItems) ? yakusokuItems : []).find(
+      (y) => String(y?.yakusoku_id || y?.id || '').trim() === targetId
+    ) || null;
+    const prev = ensureKarteDetailDefaults();
+    const next = buildKarteDetailWithPrimaryYakusoku(prev, targetId, selected);
+    setKarteDetail(next);
+    setSavingPrimaryYakusokuId(targetId);
+    setError('');
+    try {
+      const updated = await apiPutJson(`/master/tenpo/${encodeURIComponent(tenpoId)}`, { karte_detail: next });
+      setTenpo(updated);
+      setKarteDetail(updated?.karte_detail || next);
+    } catch (e) {
+      setKarteDetail(prev);
+      setError(e?.message || '主契約の保存に失敗しました');
+    } finally {
+      setSavingPrimaryYakusokuId('');
+    }
+  }, [tenpoId, yakusokuItems, ensureKarteDetailDefaults, buildKarteDetailWithPrimaryYakusoku]);
+
+  useEffect(() => {
+    if (!primaryYakusokuId || !primaryYakusoku) return;
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const currentServicePlan = Array.isArray(base?.service_plan) ? base.service_plan : [];
+      // 既存の手編集がある場合は上書きしない（空の場合のみ初期反映）
+      if (currentServicePlan.length > 0) return prev;
+      const next = { ...base };
+      const plan = { ...(next.plan || {}) };
+      const nextFreq = derivePlanFrequencyFromYakusoku(primaryYakusoku);
+      const nextServicePlan = buildServicePlanFromYakusoku(primaryYakusoku);
+      const hasFreqChange = String(plan.plan_frequency || '') !== String(nextFreq || '');
+      const hasServiceChange = nextServicePlan.length > 0;
+      if (!hasFreqChange && !hasServiceChange) return prev;
+      if (hasFreqChange) plan.plan_frequency = nextFreq;
+      if (hasServiceChange) next.service_plan = nextServicePlan;
+      next.plan = plan;
+      return next;
+    });
+  }, [primaryYakusokuId, primaryYakusoku]);
 
   const toggleEquipment = useCallback((code) => {
     setKarteDetail((prev) => {
@@ -2085,6 +2422,50 @@ export default function AdminTenpoKartePage() {
       const updated = await apiPutJson(`/master/tenpo/${encodeURIComponent(tenpoId)}`, payload);
       setTenpo(updated);
       setKarteDetail(updated?.karte_detail || nextKarte);
+      const torihikisakiId = String(tenpo?.torihikisaki_id || '').trim();
+      const selectedKeiyakuId = String(basicInfoDraft?.torihikisaki_keiyaku_id || '').trim();
+      const selectedKeiyaku = selectedKeiyakuId ? keiyakuById.get(selectedKeiyakuId) : null;
+      const linkedKeiyakuName = selectedKeiyakuId
+        ? clampStr(
+          selectedKeiyaku?.name
+          || basicInfoDraft?.torihikisaki_keiyaku_name
+          || '',
+          120
+        )
+        : '';
+      const linkedKeiyakuStart = selectedKeiyakuId
+        ? clampStr(
+          getKeiyakuStartDate(selectedKeiyaku)
+          || basicInfoDraft?.torihikisaki_keiyaku_start_date
+          || '',
+          20
+        )
+        : '';
+      let updatedTorihikisaki = torihikisaki;
+      if (torihikisakiId) {
+        try {
+          updatedTorihikisaki = await apiPutJson(`/master/torihikisaki/${encodeURIComponent(torihikisakiId)}`, {
+            keiyaku_id: selectedKeiyakuId,
+            keiyaku_name: linkedKeiyakuName,
+            keiyaku_start_date: linkedKeiyakuStart,
+          });
+        } catch {
+          const baseTori = torihikisaki && typeof torihikisaki === 'object' ? torihikisaki : {};
+          updatedTorihikisaki = await apiPutJson(`/master/torihikisaki/${encodeURIComponent(torihikisakiId)}`, {
+            ...baseTori,
+            keiyaku_id: selectedKeiyakuId,
+            keiyaku_name: linkedKeiyakuName,
+            keiyaku_start_date: linkedKeiyakuStart,
+          });
+        }
+        setTorihikisaki((prev) => ({
+          ...(prev || {}),
+          ...(updatedTorihikisaki || {}),
+          keiyaku_id: selectedKeiyakuId,
+          keiyaku_name: linkedKeiyakuName,
+          keiyaku_start_date: linkedKeiyakuStart,
+        }));
+      }
       setBasicInfoDraft({
         name: clampStr(updated?.name || payload.name || '', 120),
         address: clampStr(updated?.address || payload.address || '', 200),
@@ -2114,6 +2495,23 @@ export default function AdminTenpoKartePage() {
           40
         ),
         sales_owner: clampStr(updated?.karte_detail?.spec?.sales_owner || nextSpec.sales_owner || '', 80),
+        torihikisaki_keiyaku_id: String((updatedTorihikisaki?.keiyaku_id || selectedKeiyakuId || '')).trim(),
+        torihikisaki_keiyaku_name: clampStr(
+          String(
+            updatedTorihikisaki?.keiyaku_name
+            || linkedKeiyakuName
+            || ''
+          ),
+          120
+        ),
+        torihikisaki_keiyaku_start_date: clampStr(
+          String(
+            updatedTorihikisaki?.keiyaku_start_date
+            || linkedKeiyakuStart
+            || ''
+          ),
+          20
+        ),
       });
       setEditingBasicInfo(false);
     } catch (e) {
@@ -2121,7 +2519,14 @@ export default function AdminTenpoKartePage() {
     } finally {
       setSavingBasicInfo(false);
     }
-  }, [tenpoId, ensureKarteDetailDefaults, basicInfoDraft]);
+  }, [
+    tenpoId,
+    tenpo?.torihikisaki_id,
+    ensureKarteDetailDefaults,
+    basicInfoDraft,
+    keiyakuById,
+    torihikisaki,
+  ]);
 
   const onUpload = useCallback(async () => {
     if (!file) return;
@@ -2152,8 +2557,16 @@ export default function AdminTenpoKartePage() {
         throw new Error(`S3 upload failed (${putRes.status}) ${text}`.trim());
       }
 
+      const baseFiles = safeArr(souko?.files)
+        .map((it) => {
+          if (!it || typeof it !== 'object') return null;
+          const one = { ...it };
+          delete one.get_url;
+          return one;
+        })
+        .filter((it) => String(it?.key || '').trim());
       const nextFiles = [
-        ...files,
+        ...baseFiles,
         {
           key,
           file_name: file.name || '',
@@ -2177,7 +2590,7 @@ export default function AdminTenpoKartePage() {
     } finally {
       setUploading(false);
     }
-  }, [file, ensureSouko, tenpoId, files, uploadKubun, uploadDocCategory]);
+  }, [file, ensureSouko, tenpoId, souko, uploadKubun, uploadDocCategory]);
 
   const copy = useCallback(async (text) => {
     try {
@@ -2219,6 +2632,7 @@ export default function AdminTenpoKartePage() {
           </div>
         </div>
         <div className="right">
+          <Link to={directYoteiCreateLink} className="btn-primary">予定</Link>
           <Link to="/admin/torihikisaki-meibo" className="link">取引先名簿</Link>
           <Link to="/admin/master/tenpo" className="link">店舗マスタ</Link>
           <button
@@ -2599,12 +3013,6 @@ export default function AdminTenpoKartePage() {
                 </div>
               </div>
               <div className="kv">
-                <div className="k">サービスプラン</div>
-                <div className="v">
-                  <div className="v-main">{servicePlanSummary}</div>
-                </div>
-              </div>
-              <div className="kv">
                 <div className="k">主契約</div>
                 <div className="v">
                   <div className="v-main">
@@ -2667,10 +3075,12 @@ export default function AdminTenpoKartePage() {
                             <div className="actions-row" style={{ marginTop: 6, marginBottom: 0 }}>
                               <button
                                 type="button"
-                                disabled={!id || isPrimary}
-                                onClick={() => setKarteField('plan.primary_yakusoku_id', id)}
+                                disabled={!id || isPrimary || Boolean(savingPrimaryYakusokuId)}
+                                onClick={() => applyPrimaryYakusokuToKarte(id)}
                               >
-                                {isPrimary ? '主契約（設定済み）' : '主契約に設定'}
+                                {savingPrimaryYakusokuId === id
+                                  ? '保存中...'
+                                  : (isPrimary ? '主契約（設定済み）' : '主契約に設定')}
                               </button>
                             </div>
                           </div>
@@ -2701,6 +3111,57 @@ export default function AdminTenpoKartePage() {
                     </div>
                   </div>
                   <div className="kv">
+                    <div className="k">契約（keiyaku）</div>
+                    <div className="v">
+                      <div className="v-main">
+                        {editingBasicInfo ? (
+                          <>
+                            <select
+                              value={String(basicInfoDraft?.torihikisaki_keiyaku_id || '')}
+                              onChange={(e) => {
+                                const nextId = String(e.target.value || '').trim();
+                                const linked = nextId ? keiyakuById.get(nextId) : null;
+                                onBasicInfoField('torihikisaki_keiyaku_id', nextId);
+                                onBasicInfoField('torihikisaki_keiyaku_name', nextId ? String(linked?.name || '').trim() : '');
+                                onBasicInfoField('torihikisaki_keiyaku_start_date', nextId ? getKeiyakuStartDate(linked) : '');
+                              }}
+                            >
+                              <option value="">未設定</option>
+                              {keiyakuRowsForTorihikisaki.map((c) => {
+                                const id = String(c?.keiyaku_id || '').trim();
+                                const nm = String(c?.name || id).trim();
+                                const start = getKeiyakuStartDate(c);
+                                const stale = c?._stale ? ' / 履歴' : '';
+                                return (
+                                  <option key={id} value={id}>
+                                    {[nm || id, start ? `開始:${start}` : '', stale].filter(Boolean).join(' ')}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                            <div className="muted small">
+                              {keiyakuLoading ? 'keiyaku 読み込み中...' : `候補 ${keiyakuRowsForTorihikisaki.length}件`}
+                              {keiyakuError ? ` / ${keiyakuError}` : ''}
+                            </div>
+                          </>
+                        ) : (
+                          String(torihikisaki?.keiyaku_id || '').trim()
+                            ? (
+                              <>
+                                <code>{String(torihikisaki?.keiyaku_id || '').trim()}</code>
+                                {' '}
+                                {String(torihikisaki?.keiyaku_name || '').trim() || ''}
+                                {String(torihikisaki?.keiyaku_start_date || '').trim()
+                                  ? `（開始: ${String(torihikisaki?.keiyaku_start_date || '').trim()}）`
+                                  : ''}
+                              </>
+                            )
+                            : '—'
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="kv">
                     <div className="k">状態</div>
                     <div className="v">{torihikisaki?.jotai || '—'}</div>
                   </div>
@@ -2714,6 +3175,7 @@ export default function AdminTenpoKartePage() {
                   </div>
                   <div className="actions-row">
                     <Link to="/admin/master/torihikisaki" className="link">取引先マスタ</Link>
+                    <Link to="/admin/master/keiyaku" className="link">契約マスタ</Link>
                     {tenpo?.torihikisaki_id ? (
                       <button onClick={() => copy(String(tenpo?.torihikisaki_id))}>IDコピー</button>
                     ) : null}
@@ -3022,8 +3484,8 @@ export default function AdminTenpoKartePage() {
                   {visibleFiles.slice().reverse().map((f) => (
                     <div className="souko-file-card" key={f.key}>
                       <div className="souko-thumb">
-                        {isImageContentType(f.content_type) && f.preview_url ? (
-                          <img src={f.preview_url} alt={f.file_name || f.key} loading="lazy" />
+                        {isImageFile(f.file_name, f.content_type, f.key) && f.open_url ? (
+                          <img src={f.open_url} alt={f.file_name || f.key} loading="lazy" />
                         ) : (
                           <span className="kind">{fileKindLabel(f.file_name, f.content_type, f.key)}</span>
                         )}
@@ -3038,8 +3500,8 @@ export default function AdminTenpoKartePage() {
                         </div>
                       </div>
                       <div className="souko-file-actions">
-                        {f.preview_url ? (
-                          <a className="link" href={f.preview_url} target="_blank" rel="noreferrer">開く</a>
+                        {f.open_url ? (
+                          <a className="link" href={f.open_url} target="_blank" rel="noreferrer">開く</a>
                         ) : null}
                         <button onClick={() => copy(f.key)}>キーコピー</button>
                       </div>
@@ -3056,10 +3518,7 @@ export default function AdminTenpoKartePage() {
           <section className="card card-large card-full">
             <div className="card-title-row">
               <div>
-                <div className="card-title">カルテ詳細（管理オペ用）</div>
-                <div className="muted">
-                  旧カルテの項目を整理して再構築しています。自由記述を最小化し、構造化項目中心で運用します。
-                </div>
+                <div className="card-title">カルテ詳細</div>
                 <div className="muted small" style={{ marginTop: 6 }}>
                   最終更新: <code>{fmtDateTimeJst(karteDetail?.updated_at || tenpo?.updated_at || '') || '—'}</code>
                   {String(karteDetail?.updated_by || '').trim() ? (
@@ -3090,61 +3549,64 @@ export default function AdminTenpoKartePage() {
               <div className="karte-detail-col">
                 <section className="card card-sub">
                   <div className="card-title-row">
-                    <div className="card-title">プラン・評価</div>
+                    <div className="card-title">サービスプラン</div>
+                    <div className="seg-tabs">
+                      <button type="button" onClick={addServicePlan}>追加</button>
+                    </div>
                   </div>
-                  <div className="form-grid">
-                    <label className="f">
-                      <div className="lbl">プラン頻度</div>
-                      <select
-                        value={String(karteDetail?.plan?.plan_frequency || '')}
-                        onChange={(e) => setKarteField('plan.plan_frequency', e.target.value)}
-                      >
-                        <option value="">未設定</option>
-                        {PLAN_FREQUENCY_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="f">
-                      <div className="lbl">衛生状態自己評価</div>
-                      <select
-                        value={String(karteDetail?.plan?.self_rating || '')}
-                        onChange={(e) => setKarteField('plan.self_rating', e.target.value)}
-                      >
-                        <option value="">未設定</option>
-                        {SELF_RATING_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="f">
-                      <div className="lbl">最終清掃日</div>
-                      <input
-                        type="date"
-                        value={String(karteDetail?.plan?.last_clean || '')}
-                        onChange={(e) => setKarteField('plan.last_clean', e.target.value)}
-                      />
-                    </label>
-                  </div>
+                  {servicePlanCycleGroups.length > 0 ? (
+                    <div className="service-cycle-groups">
+                      {servicePlanFrequencyLabel ? (
+                        <div className="service-cycle-frequency">
+                          <span className="pill">頻度: {servicePlanFrequencyLabel}</span>
+                        </div>
+                      ) : null}
+                      {servicePlanCycleGroups.map((g) => (
+                        <div key={String(g?.cycleValue || g?.cycleLabel || '')} className="service-cycle-group">
+                          <span className="service-cycle-label">{g.cycleLabel}</span>
+                          <div className="service-cycle-tags">
+                            {g.services.map((svc) => (
+                              <span key={`${g.cycleValue}:${svc}`} className="service-cycle-tag">{svc}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted">未登録</div>
+                  )}
+                  <details className="karte-accordion" style={{ marginTop: 10 }}>
+                    <summary>
+                      <span className="label">サービス個別編集</span>
+                      <span className="hint">{Array.isArray(karteDetail?.service_plan) ? `${karteDetail.service_plan.length}件` : '0件'}</span>
+                    </summary>
+                    <div className="accordion-body">
+                      {Array.isArray(karteDetail?.service_plan) && karteDetail.service_plan.length > 0 ? (
+                        <div className="service-plan-list">
+                          {karteDetail.service_plan.map((sp, i) => (
+                            <ServicePlanRow
+                              key={i}
+                              index={i}
+                              sp={sp}
+                              services={services}
+                              onUpdate={(idx, patch) => updateServicePlan(idx, patch)}
+                              onRemove={(idx) => removeServicePlan(idx)}
+                              onToggleMonth={(idx, month) => toggleServicePlanMonth(idx, month)}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="muted">未登録</div>
+                      )}
+                    </div>
+                  </details>
                 </section>
 
                 <section className="card card-sub">
                   <div className="card-title-row">
-                    <div className="card-title">運用・鍵</div>
+                    <div className="card-title">ルール</div>
                   </div>
                   <div className="form-grid">
-                    <label className="f">
-                      <div className="lbl">スタッフルーム</div>
-                      <select
-                        value={String(karteDetail?.spec?.staff_room || '')}
-                        onChange={(e) => setKarteField('spec.staff_room', e.target.value)}
-                      >
-                        <option value="">未設定</option>
-                        {STAFF_ROOM_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </label>
                     <label className="f">
                       <div className="lbl">セキュリティボックスNo</div>
                       <input
@@ -3178,18 +3640,6 @@ export default function AdminTenpoKartePage() {
                       />
                     </label>
                     <label className="f">
-                      <div className="lbl">お客様立会い</div>
-                      <select
-                        value={String(karteDetail?.spec?.customer_attendance || '')}
-                        onChange={(e) => setKarteField('spec.customer_attendance', e.target.value)}
-                      >
-                        <option value="">未設定</option>
-                        {CUSTOMER_ATTENDANCE_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="f">
                       <div className="lbl">鍵の扱い *</div>
                       <input
                         value={String(karteDetail?.spec?.key_handling || '')}
@@ -3205,115 +3655,12 @@ export default function AdminTenpoKartePage() {
                         placeholder="例: 電話 / LINE / SMS / メール"
                       />
                     </label>
-                    <label className="f">
-                      <div className="lbl">担当者連絡先 *</div>
-                      <input
-                        value={String(karteDetail?.spec?.customer_contact_phone || '')}
-                        onChange={(e) => setKarteField('spec.customer_contact_phone', clampStr(e.target.value, 40))}
-                        placeholder="例: 090-1234-5678"
-                      />
-                    </label>
-                    <label className="f">
-                      <div className="lbl">営業担当</div>
-                      <input
-                        value={String(karteDetail?.spec?.sales_owner || '')}
-                        onChange={(e) => setKarteField('spec.sales_owner', clampStr(e.target.value, 80))}
-                        placeholder="例: 櫻田 / 田中"
-                      />
-                    </label>
-                  </div>
-                </section>
-
-                <section className="card card-sub">
-                  <div className="card-title-row">
-                    <div className="card-title">設備</div>
-                  </div>
-                  <div className="check-grid">
-                    {EQUIPMENT_OPTIONS.map((it) => (
-                      <label key={it.code} className="chk">
-                        <input
-                          type="checkbox"
-                          checked={Array.isArray(karteDetail?.equipment) && karteDetail.equipment.includes(it.code)}
-                          onChange={() => toggleEquipment(it.code)}
-                        />
-                        <span>{it.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div className="subhead">客席</div>
-                  <div className="check-grid">
-                    {[
-                      { code: 'counter', label: 'カウンター席' },
-                      { code: 'box', label: 'ボックス席' },
-                      { code: 'zashiki', label: '座敷' },
-                    ].map((it) => (
-                      <label key={it.code} className="chk">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(karteDetail?.seats?.[it.code])}
-                          onChange={(e) => setKarteField(`seats.${it.code}`, e.target.checked)}
-                        />
-                        <span>{it.label}</span>
-                      </label>
-                    ))}
                   </div>
                 </section>
 
               </div>
 
               <div className="karte-detail-col">
-                <section className="card card-sub">
-                  <div className="card-title-row">
-                    <div className="card-title">契約連携（yakusoku）</div>
-                    <Link to="/admin/yakusoku" className="link">契約管理へ</Link>
-                  </div>
-                  <div className="muted small">
-                    契約条件は yakusoku を正本として参照。ここでは主契約の指定と内容確認を行います。
-                  </div>
-                  {yakusokuError ? (
-                    <div className="muted" style={{ color: '#fbbf24' }}>{yakusokuError}</div>
-                  ) : null}
-                  {!yakusokuLoading && !yakusokuItems.length ? (
-                    <div className="muted">この店舗に紐づく契約はありません</div>
-                  ) : null}
-                  {yakusokuItems.length > 0 ? (
-                    <div className="yakusoku-mini-list" style={{ marginTop: 10 }}>
-                      {yakusokuItems.map((y) => {
-                        const id = String(y?.yakusoku_id || '').trim();
-                        const isPrimary = id && id === primaryYakusokuId;
-                        const start = String(y?.start_date || '').trim() || '未設定';
-                        const status = String(y?.status || '').trim() || 'active';
-                        const cycle = String(y?.type || '').trim() === 'teiki'
-                          ? `定期 / ${Number(y?.monthly_quota || 0) || '-'}回`
-                          : '単発';
-                        return (
-                          <div key={id} className={`yakusoku-mini-row ${isPrimary ? 'is-primary' : ''}`}>
-                            <div className="id-line">
-                              <code>{id}</code>
-                              <span className={`pill ${status === 'active' ? 'pill-on' : 'pill-off'}`}>{status}</span>
-                            </div>
-                            <div className="meta-line">
-                              <span>開始: {start}</span>
-                              <span>{cycle}</span>
-                              <span>¥{Number(y?.price || 0).toLocaleString()}</span>
-                            </div>
-                            <div className="meta-line">サービス: {getYakusokuServiceSummary(y)}</div>
-                            <div className="actions-row" style={{ marginTop: 6, marginBottom: 0 }}>
-                              <button
-                                type="button"
-                                disabled={!id || isPrimary}
-                                onClick={() => setKarteField('plan.primary_yakusoku_id', id)}
-                              >
-                                {isPrimary ? '主契約（設定済み）' : '主契約に設定'}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                </section>
-
                 <section className="card card-sub">
                   <div className="card-title-row">
                     <div className="card-title">報告設計（現場 → 管理/顧客）</div>
@@ -3418,6 +3765,41 @@ export default function AdminTenpoKartePage() {
               </div>
 
               <div className="karte-detail-col karte-detail-col-right">
+                <section className="card card-sub">
+                  <div className="card-title-row">
+                    <div className="card-title">設備</div>
+                  </div>
+                  <div className="check-grid">
+                    {EQUIPMENT_OPTIONS.map((it) => (
+                      <label key={it.code} className="chk">
+                        <input
+                          type="checkbox"
+                          checked={Array.isArray(karteDetail?.equipment) && karteDetail.equipment.includes(it.code)}
+                          onChange={() => toggleEquipment(it.code)}
+                        />
+                        <span>{it.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="subhead">客席</div>
+                  <div className="check-grid">
+                    {[
+                      { code: 'counter', label: 'カウンター席' },
+                      { code: 'box', label: 'ボックス席' },
+                      { code: 'zashiki', label: '座敷' },
+                    ].map((it) => (
+                      <label key={it.code} className="chk">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(karteDetail?.seats?.[it.code])}
+                          onChange={(e) => setKarteField(`seats.${it.code}`, e.target.checked)}
+                        />
+                        <span>{it.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </section>
+
                 <section className="card card-sub">
                   <div className="card-title-row">
                     <div className="card-title">担当履歴</div>
@@ -3610,32 +3992,6 @@ export default function AdminTenpoKartePage() {
                   )}
                 </section>
               </div>
-
-              <section className="card card-sub card-span-2">
-                <div className="card-title-row">
-                  <div className="card-title">サービスメニュー（周期管理）</div>
-                  <div className="seg-tabs">
-                    <button type="button" onClick={addServicePlan}>追加</button>
-                  </div>
-                </div>
-                {Array.isArray(karteDetail?.service_plan) && karteDetail.service_plan.length > 0 ? (
-                  <div className="service-plan-list">
-                    {karteDetail.service_plan.map((sp, i) => (
-                      <ServicePlanRow
-                        key={i}
-                        index={i}
-                        sp={sp}
-                        services={services}
-                        onUpdate={(idx, patch) => updateServicePlan(idx, patch)}
-                        onRemove={(idx) => removeServicePlan(idx)}
-                        onToggleMonth={(idx, month) => toggleServicePlanMonth(idx, month)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="muted">未登録</div>
-                )}
-              </section>
 
               <section className="card card-sub card-wide">
                 <div className="card-title-row">

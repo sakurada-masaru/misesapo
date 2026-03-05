@@ -154,7 +154,45 @@ function minutesToTimeText(v) {
 }
 
 function itemYoteiId(item) {
-    return item?.yotei_id || item?.id;
+    return item?.yotei_id || item?.id || item?.schedule_id;
+}
+
+function isTorikeshiLike(v) {
+    const s = String(v || '').trim().toLowerCase();
+    return s === 'torikeshi' || s === 'cancelled' || s === 'canceled' || s === 'cancel';
+}
+
+function isTorikeshiYoteiRow(row) {
+    if (!row) return false;
+    return isTorikeshiLike(row?.jotai) || isTorikeshiLike(row?.status) || isTorikeshiLike(row?.state) || isTorikeshiLike(row?.jokyo);
+}
+
+function normalizeYoteiRow(row) {
+    const canceled = isTorikeshiYoteiRow(row);
+    const jotaiRaw = String(row?.jotai || '').trim();
+    const statusRaw = String(row?.status || '').trim();
+    return {
+        ...row,
+        jotai: canceled ? 'torikeshi' : (jotaiRaw || 'yuko'),
+        status: canceled ? 'torikeshi' : (statusRaw || jotaiRaw || 'yuko'),
+    };
+}
+
+function resolveYoteiRecordId(item) {
+    return String(item?.id || item?.yotei_id || item?.schedule_id || '').trim();
+}
+
+function resolveYoteiRecordIdCandidates(itemOrId) {
+    if (typeof itemOrId === 'string') {
+        const v = String(itemOrId || '').trim();
+        return v ? [v] : [];
+    }
+    const candidates = [
+        String(itemOrId?.id || '').trim(),
+        String(itemOrId?.schedule_id || '').trim(),
+        String(itemOrId?.yotei_id || '').trim(),
+    ].filter(Boolean);
+    return Array.from(new Set(candidates));
 }
 
 function normalizeTimelineStatus(v) {
@@ -308,6 +346,7 @@ export default function AdminYoteiTimelinePage() {
     );
     const tenpoCacheRef = useRef(new Map());
     const tenpoMasterLoadedRef = useRef(false);
+    const routeCreateHandledRef = useRef(false);
 
     // 時間枠の定義（2段）
     const nightHours = [16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4]; // 16:00-翌04:00
@@ -433,10 +472,13 @@ export default function AdminYoteiTimelinePage() {
         tenpoCacheRef.current.forEach((v, k) => { nextMap[k] = v; });
         setTenpoNameMap(nextMap);
 
-        return items.map((it) => ({
-            ...it,
-            tenpo_name: nextMap[it.tenpo_id] || it.tenpo_name || '',
-        }));
+        return items.map((it) => {
+            const normalized = normalizeYoteiRow(it);
+            return {
+                ...normalized,
+                tenpo_name: nextMap[normalized.tenpo_id] || normalized.tenpo_name || '',
+            };
+        });
     }, [ensureTenpoMasterCache]);
 
     const fetchWorkers = useCallback(async () => {
@@ -549,6 +591,12 @@ export default function AdminYoteiTimelinePage() {
                     const name = it?.name || '';
                     const torihikisaki_id = it?.torihikisaki_id || '';
                     const yagou_id = it?.yagou_id || '';
+                    const primary_yakusoku_id = String(
+                        it?.karte_detail?.plan?.primary_yakusoku_id
+                        || it?.plan?.primary_yakusoku_id
+                        || it?.primary_yakusoku_id
+                        || ''
+                    ).trim();
                     const torihikisaki_name = toriNameById.get(torihikisaki_id) || '';
                     const yagou_name = yagouNameById.get(yagou_id) || '';
                     const search_blob = [
@@ -562,7 +610,7 @@ export default function AdminYoteiTimelinePage() {
                         .filter(Boolean)
                         .join(' ')
                         .toLowerCase();
-                    return { tenpo_id, name, torihikisaki_id, yagou_id, torihikisaki_name, yagou_name, search_blob };
+                    return { tenpo_id, name, torihikisaki_id, yagou_id, torihikisaki_name, yagou_name, primary_yakusoku_id, search_blob };
                 })
                 .filter((it) => it.tenpo_id && it.name)
                 .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
@@ -718,7 +766,7 @@ export default function AdminYoteiTimelinePage() {
     }, [ugokiItems]);
 
     const statusFor = useCallback((s) => {
-        if (s.jotai === 'torikeshi') return 'torikeshi';
+        if (isTorikeshiYoteiRow(s)) return 'torikeshi';
         const u = ugokiByYoteiId.get(itemYoteiId(s));
         return normalizeTimelineStatus(
             u?.jokyo || u?.jotai || s?.ugoki_jokyo || s?.ugoki_jotai || s?.jokyo
@@ -740,6 +788,17 @@ export default function AdminYoteiTimelinePage() {
         if (st === 'torikeshi') return '取消';
         return '未完了';
     }, [statusFor]);
+
+    const ugokiJotaiLabelFor = useCallback((s) => {
+        const u = ugokiByYoteiId.get(itemYoteiId(s));
+        const ugokiStatus = normalizeTimelineStatus(u?.jotai || s?.ugoki_jotai || statusFor(s));
+        if (ugokiStatus === 'kanryou') return '完了';
+        if (ugokiStatus === 'shinkou') return '進行中';
+        if (ugokiStatus === 'kakunin') return '確認中';
+        if (ugokiStatus === 'chousei') return '調整中';
+        if (ugokiStatus === 'torikeshi') return '取消';
+        return '未完了';
+    }, [ugokiByYoteiId, statusFor]);
 
     const warningLevelFor = useCallback((s) => {
         const u = ugokiByYoteiId.get(itemYoteiId(s));
@@ -955,11 +1014,6 @@ export default function AdminYoteiTimelinePage() {
         setSearchParams({ view: 'timeline' });
     }, [setSearchParams]);
 
-    const displayTenpoName = useCallback((row) => {
-        if (!row) return '現場未設定';
-        return tenpoNameMap[row.tenpo_id] || row.tenpo_name || '現場未設定';
-    }, [tenpoNameMap]);
-
     const displayWorkerName = useCallback((row) => {
         if (!row) return '担当未設定';
         if (row.sagyouin_name) return row.sagyouin_name;
@@ -979,6 +1033,93 @@ export default function AdminYoteiTimelinePage() {
         if (!names.length && src?.service_name) names.push(String(src.service_name));
         return { service_ids: ids, service_names: names };
     }, []);
+
+    const resolveServicesFromYakusoku = useCallback((yakusoku) => {
+        const idNameMap = new Map(
+            (services || []).map((svc) => [String(svc?.service_id || '').trim(), String(svc?.name || '').trim()])
+        );
+        const nameIdMap = new Map(
+            (services || [])
+                .map((svc) => [String(svc?.name || '').trim(), String(svc?.service_id || '').trim()])
+                .filter(([name]) => name)
+        );
+
+        const ids = [];
+        const names = [];
+        const pushPair = (idRaw, nameRaw) => {
+            const sid = String(idRaw || '').trim();
+            const sname = String(nameRaw || '').trim();
+            if (!sid && !sname) return;
+            if (sid && ids.includes(sid)) return;
+            if (!sid && sname && names.includes(sname)) return;
+            if (sid) {
+                ids.push(sid);
+                names.push(sname || idNameMap.get(sid) || sid);
+                return;
+            }
+            const mappedId = nameIdMap.get(sname) || '';
+            ids.push(mappedId);
+            names.push(sname);
+        };
+
+        const srcIds = Array.isArray(yakusoku?.service_ids) ? yakusoku.service_ids : [];
+        const srcNames = Array.isArray(yakusoku?.service_names) ? yakusoku.service_names : [];
+        const maxLen = Math.max(srcIds.length, srcNames.length);
+        for (let i = 0; i < maxLen; i += 1) pushPair(srcIds[i], srcNames[i]);
+
+        if (!ids.length && !names.length) {
+            pushPair(yakusoku?.service_id, yakusoku?.service_name);
+        }
+        return {
+            service_ids: ids.filter(Boolean),
+            service_names: names.filter(Boolean),
+        };
+    }, [services]);
+
+    const applyYakusokuServicesToModal = useCallback((prev, yakusoku) => {
+        if (!prev) return prev;
+        const nextSvc = resolveServicesFromYakusoku(yakusoku);
+        if (!nextSvc.service_ids.length && !nextSvc.service_names.length) return prev;
+
+        const prevSvc = normalizeServiceSelection(prev);
+        const sameIds = prevSvc.service_ids.join('|') === nextSvc.service_ids.join('|');
+        const sameNames = prevSvc.service_names.join('|') === nextSvc.service_names.join('|');
+        const nextPrimaryId = nextSvc.service_ids[0] || '';
+        const nextPrimaryName = nextSvc.service_names[0] || '';
+        const nextWorkType = nextPrimaryName || prev.work_type || '';
+        let nextEndTime = prev.end_time;
+
+        if (prev.isNew && nextPrimaryId) {
+            const matchedService = (services || []).find(
+                (svc) => String(svc?.service_id || '').trim() === nextPrimaryId
+            );
+            const defaultDuration = Number(matchedService?.default_duration_min || 0);
+            if (defaultDuration > 0) {
+                nextEndTime = calcEndTimeByDuration(prev.start_time, defaultDuration);
+            }
+        }
+
+        if (
+            sameIds &&
+            sameNames &&
+            String(prev.service_id || '') === nextPrimaryId &&
+            String(prev.service_name || '') === nextPrimaryName &&
+            String(prev.work_type || '') === nextWorkType &&
+            String(prev.end_time || '') === String(nextEndTime || '')
+        ) {
+            return prev;
+        }
+
+        return {
+            ...prev,
+            service_ids: nextSvc.service_ids,
+            service_names: nextSvc.service_names,
+            service_id: nextPrimaryId,
+            service_name: nextPrimaryName,
+            work_type: nextWorkType,
+            end_time: nextEndTime,
+        };
+    }, [resolveServicesFromYakusoku, normalizeServiceSelection, services, calcEndTimeByDuration]);
 
     const formatTenpoDisplay = useCallback((tenpoId, tenpoName, yagouName) => {
         const name = String(tenpoName || '').trim();
@@ -1036,16 +1177,28 @@ export default function AdminYoteiTimelinePage() {
 
     const hasTenpoQuery = String(modalData?.tenpo_query || '').trim().length > 0;
 
-    const pickPrimaryYakusokuIdForTenpo = useCallback((tenpoId, currentYakusokuId = '') => {
+    const displayTenpoName = useCallback((row) => {
+        if (!row) return '現場未設定';
+        const tenpoId = String(row?.tenpo_id || '').trim();
+        const meta = tenpoId ? tenpoMetaById.get(tenpoId) : null;
+        const tenpoName = String(meta?.name || tenpoNameMap[tenpoId] || row?.tenpo_name || '').trim();
+        if (!tenpoName) return '現場未設定';
+        const yagouName = String(row?.yagou_name || meta?.yagou_name || '').trim();
+        return formatTenpoDisplay(tenpoId, tenpoName, yagouName);
+    }, [tenpoMetaById, tenpoNameMap, formatTenpoDisplay]);
+
+    const pickPrimaryYakusokuIdForTenpo = useCallback((tenpoId, preferredYakusokuId = '') => {
         const tid = String(tenpoId || '').trim();
         if (!tid) return '';
         const rows = (yakusokus || [])
             .filter((y) => String(y?.tenpo_id || '').trim() === tid)
             .filter((y) => String(y?.jotai || 'yuko') !== 'torikeshi');
-        const currentId = String(currentYakusokuId || '').trim();
-        if (currentId && rows.some((r) => String(r?.yakusoku_id || '').trim() === currentId)) return currentId;
+        const preferredId = String(preferredYakusokuId || '').trim();
+        if (preferredId && rows.some((r) => String(r?.yakusoku_id || '').trim() === preferredId)) return preferredId;
+        const linkedPrimaryId = String(tenpoMetaById.get(tid)?.primary_yakusoku_id || '').trim();
+        if (linkedPrimaryId && rows.some((r) => String(r?.yakusoku_id || '').trim() === linkedPrimaryId)) return linkedPrimaryId;
         return String(rows?.[0]?.yakusoku_id || '').trim();
-    }, [yakusokus]);
+    }, [yakusokus, tenpoMetaById]);
 
     const selectedWorkerIds = useMemo(() => {
         const fromArr = Array.isArray(modalData?.worker_ids) ? modalData.worker_ids.map((x) => String(x)).filter(Boolean) : [];
@@ -1344,7 +1497,7 @@ export default function AdminYoteiTimelinePage() {
         return { total, byType, items };
     }, [schedules, detectTroubleEventType, displayTenpoName]);
 
-    const openNewModal = (workerId) => {
+    const openNewModal = useCallback((workerId) => {
         const defaultWorkerId = selfWorkerDefault.workerId || workerId || (workers[0]?.id || '');
         const defaultWorkerName =
             selfWorkerDefault.workerName ||
@@ -1384,11 +1537,75 @@ export default function AdminYoteiTimelinePage() {
                 unresolved_checked: false,
             },
         });
-    };
+    }, [selfWorkerDefault.workerId, selfWorkerDefault.workerName, workers, workerNameMap, normalizeWorkerId, date]);
+
+    useEffect(() => {
+        if (routeCreateHandledRef.current) return;
+        const createRaw = String(searchParams.get('create') || '').trim().toLowerCase();
+        if (!['1', 'true', 'yes', 'on'].includes(createRaw)) return;
+
+        routeCreateHandledRef.current = true;
+        const routeTenpoId = String(searchParams.get('tenpo_id') || '').trim();
+        const routeTenpoName = String(searchParams.get('tenpo_name') || '').trim();
+        const routeYakusokuId = String(searchParams.get('yakusoku_id') || '').trim();
+        const routeTorihikisakiId = String(searchParams.get('torihikisaki_id') || '').trim();
+        const routeYagouId = String(searchParams.get('yagou_id') || '').trim();
+        const routeTorihikisakiName = String(searchParams.get('torihikisaki_name') || '').trim();
+        const routeYagouName = String(searchParams.get('yagou_name') || '').trim();
+
+        const linkedTenpo = routeTenpoId ? tenpoMetaById.get(routeTenpoId) : null;
+        const resolvedYakusokuId = routeYakusokuId || pickPrimaryYakusokuIdForTenpo(routeTenpoId, '');
+        const resolvedTenpoName = routeTenpoName || String(linkedTenpo?.name || '').trim();
+
+        openNewModal();
+        setModalData((prev) => {
+            if (!prev || !prev.isNew) return prev;
+            return {
+                ...prev,
+                tenpo_id: routeTenpoId || prev.tenpo_id,
+                tenpo_name: resolvedTenpoName || prev.tenpo_name,
+                yakusoku_id: resolvedYakusokuId || prev.yakusoku_id,
+                tenpo_query: '',
+                torihikisaki_id: routeTorihikisakiId || linkedTenpo?.torihikisaki_id || prev.torihikisaki_id || '',
+                yagou_id: routeYagouId || linkedTenpo?.yagou_id || prev.yagou_id || '',
+                torihikisaki_name: routeTorihikisakiName || linkedTenpo?.torihikisaki_name || prev.torihikisaki_name || '',
+                yagou_name: routeYagouName || linkedTenpo?.yagou_name || prev.yagou_name || '',
+            };
+        });
+
+        const nextParams = new URLSearchParams(searchParams);
+        [
+            'create',
+            'from',
+            'tenpo_id',
+            'tenpo_name',
+            'yakusoku_id',
+            'torihikisaki_id',
+            'yagou_id',
+            'torihikisaki_name',
+            'yagou_name',
+        ].forEach((k) => nextParams.delete(k));
+        setSearchParams(nextParams, { replace: true });
+    }, [searchParams, setSearchParams, openNewModal, tenpoMetaById, pickPrimaryYakusokuIdForTenpo]);
+
+    useEffect(() => {
+        const yid = String(modalData?.yakusoku_id || '').trim();
+        if (!modalData?.isNew || !yid) return;
+        const selectedYakusoku = (yakusokus || []).find(
+            (y) => String(y?.yakusoku_id || '').trim() === yid
+        );
+        if (!selectedYakusoku) return;
+        setModalData((prev) => {
+            if (!prev || !prev.isNew) return prev;
+            if (String(prev?.yakusoku_id || '').trim() !== yid) return prev;
+            return applyYakusokuServicesToModal(prev, selectedYakusoku);
+        });
+    }, [modalData?.isNew, modalData?.yakusoku_id, yakusokus, applyYakusokuServicesToModal]);
 
     const openEditModal = (s) => {
         const { start, end } = resolveScheduleRange(s);
         const multiSvc = normalizeServiceSelection(s);
+        const editId = resolveYoteiRecordId(s);
         const workerIds = Array.isArray(s?.worker_ids)
             ? s.worker_ids.map((x) => String(x)).filter(Boolean)
             : [];
@@ -1400,7 +1617,10 @@ export default function AdminYoteiTimelinePage() {
         setServicePickerOpen(false);
         setModalData({
             ...s,
+            id: editId,
+            yotei_id: String(s?.yotei_id || editId || ''),
             isNew: false,
+            scheduled_date: String(s?.scheduled_date || s?.date || date || todayDateString()),
             sagyouin_id: workerIds[0] || '',
             sagyouin_name: s?.sagyouin_name || workerNameMap[normalizeWorkerId(workerIds[0] || '')] || '',
             worker_ids: workerIds,
@@ -1462,7 +1682,10 @@ export default function AdminYoteiTimelinePage() {
     }, [modalData?.tenpo_id]);
 
     const saveModal = async () => {
-        if (!modalData?.yakusoku_id) { window.alert('紐付ける契約(yakusoku)を選択してください'); return; }
+        if (modalData?.isNew && !modalData?.yakusoku_id) {
+            window.alert('紐付ける契約(yakusoku)を選択してください');
+            return;
+        }
         const workerIds = Array.isArray(modalData?.worker_ids)
             ? modalData.worker_ids.map((x) => String(x)).filter(Boolean)
             : [];
@@ -1473,13 +1696,25 @@ export default function AdminYoteiTimelinePage() {
         setSaving(true);
         try {
             const base = API_BASE.replace(/\/$/, '');
+            const editingId = resolveYoteiRecordId(modalData);
+            if (!modalData.isNew && !editingId) {
+                throw new Error('予定IDを解決できないため保存できません。再読み込み後に再度お試しください。');
+            }
             const method = modalData.isNew ? 'POST' : 'PUT';
-            const url = modalData.isNew ? `${base}/yotei` : `${base}/yotei/${modalData.id}`;
+            const url = modalData.isNew
+                ? `${base}/yotei`
+                : `${base}/yotei/${encodeURIComponent(editingId)}`;
+            const scheduledDate = String(modalData.scheduled_date || date || todayDateString()).trim();
+            if (!dayjs(scheduledDate, 'YYYY-MM-DD', true).isValid()) {
+                window.alert('作業日を正しく選択してください');
+                setSaving(false);
+                return;
+            }
 
             const startH = parseInt(modalData.start_time.split(':')[0]);
             const endH = parseInt(modalData.end_time.split(':')[0]);
-            const startDate = (startH < 12) ? dayjs(modalData.scheduled_date).add(1, 'day').format('YYYY-MM-DD') : modalData.scheduled_date;
-            const endDate = (endH < 12) ? dayjs(modalData.scheduled_date).add(1, 'day').format('YYYY-MM-DD') : modalData.scheduled_date;
+            const startDate = (startH < 12) ? dayjs(scheduledDate).add(1, 'day').format('YYYY-MM-DD') : scheduledDate;
+            const endDate = (endH < 12) ? dayjs(scheduledDate).add(1, 'day').format('YYYY-MM-DD') : scheduledDate;
             const serviceSelection = normalizeServiceSelection(modalData);
             const primaryWorkerId = resolvedWorkerIds[0] || '';
             const primaryWorkerName =
@@ -1489,23 +1724,51 @@ export default function AdminYoteiTimelinePage() {
                 '';
             const workerNames = resolvedWorkerIds.map((wid) => workerNameMap[normalizeWorkerId(wid)] || wid);
 
+            // NOTE:
+            // 編集時に schedule item 全体をそのまま送ると、不要な float フィールドが混入し
+            // DynamoDB が "Float types are not supported" を返すケースがある。
+            // 保存に必要な項目のみを明示送信する。
             const payload = {
-                ...modalData,
+                id: resolveYoteiRecordId(modalData) || undefined,
+                schedule_id: resolveYoteiRecordId(modalData) || undefined,
+                scheduled_date: scheduledDate,
+                date: scheduledDate,
+                start_time: modalData.start_time,
+                end_time: modalData.end_time,
                 start_at: `${startDate}T${modalData.start_time}:00`,
                 end_at: `${endDate}T${modalData.end_time}:00`,
+                yakusoku_id: String(modalData?.yakusoku_id || '').trim(),
+                tenpo_id: String(modalData?.tenpo_id || '').trim(),
+                tenpo_name: String(modalData?.tenpo_name || '').trim(),
+                store_name: String(modalData?.tenpo_name || modalData?.store_name || '').trim(),
+                torihikisaki_id: String(modalData?.torihikisaki_id || '').trim(),
+                yagou_id: String(modalData?.yagou_id || '').trim(),
+                torihikisaki_name: String(modalData?.torihikisaki_name || '').trim(),
+                yagou_name: String(modalData?.yagou_name || '').trim(),
                 sagyouin_id: primaryWorkerId,
+                worker_id: primaryWorkerId,
+                assigned_to: primaryWorkerId,
+                sagyouin_name: primaryWorkerName,
                 worker_ids: resolvedWorkerIds,
                 worker_names: workerNames,
                 service_ids: serviceSelection.service_ids,
                 service_names: serviceSelection.service_names,
                 service_id: serviceSelection.service_ids[0] || '',
                 service_name: serviceSelection.service_names[0] || '',
-                // Make the UI stable even when the API doesn't hydrate names.
-                sagyouin_name: primaryWorkerName,
+                work_type: String(modalData?.work_type || '').trim(),
+                memo: String(modalData?.memo || '').trim(),
+                notes: String(modalData?.memo || modalData?.notes || '').trim(),
+                description: String(modalData?.memo || modalData?.description || '').trim(),
+                jotai: String(modalData?.jotai || 'yuko').trim() || 'yuko',
+                status: String(modalData?.jotai || modalData?.status || 'yuko').trim() || 'yuko',
+                handoff_checks: {
+                    key_rule: Boolean(modalData?.handoff_checks?.key_rule),
+                    entry_rule: Boolean(modalData?.handoff_checks?.entry_rule),
+                    caution_points: Boolean(modalData?.handoff_checks?.caution_points),
+                    photo_rule: Boolean(modalData?.handoff_checks?.photo_rule),
+                    unresolved_checked: Boolean(modalData?.handoff_checks?.unresolved_checked),
+                },
             };
-            delete payload.tenpo_query;
-            delete payload.service_query;
-            delete payload.service_category;
 
             const res = await fetch(url, {
                 method,
@@ -1520,13 +1783,49 @@ export default function AdminYoteiTimelinePage() {
         finally { setSaving(false); }
     };
 
-    const deleteSchedule = async (id) => {
-        if (!window.confirm('この予定を取り消しますか？')) return;
+    const deleteSchedule = async (itemOrId) => {
+        if (!window.confirm('この予定を削除しますか？')) return;
+        const targetIds = resolveYoteiRecordIdCandidates(itemOrId);
+        if (!targetIds.length) {
+            window.alert('予定IDを解決できないため削除できません。再読み込み後に再度お試しください。');
+            return;
+        }
         try {
             const base = API_BASE.replace(/\/$/, '');
-            const res = await fetch(`${base}/yotei/${id}`, { method: 'DELETE', headers: authHeaders() });
-            if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-            fetchSchedules();
+            let succeeded = false;
+            let lastErrorMessage = '';
+
+            // DELETE 専用: ID候補順に試行
+            for (const targetId of targetIds) {
+                const res = await fetch(`${base}/yotei/${encodeURIComponent(targetId)}`, {
+                    method: 'DELETE',
+                    headers: authHeaders(),
+                });
+                if (res.ok) {
+                    succeeded = true;
+                    break;
+                }
+                const text = await res.text().catch(() => '');
+                lastErrorMessage = `DELETE ${targetId} -> ${res.status}${text ? ` ${text}` : ''}`;
+            }
+
+            if (!succeeded) throw new Error(lastErrorMessage || '予定削除に失敗しました');
+            setSchedules((prev) => {
+                const rows = Array.isArray(prev) ? prev : [];
+                return rows.filter((row) => {
+                    const rowIds = resolveYoteiRecordIdCandidates(row);
+                    return !rowIds.some((rid) => targetIds.includes(rid));
+                });
+            });
+            if (currentView === 'week') {
+                const { from, to } = weekRange(date);
+                fetchSchedulesRange(from, to);
+            } else if (currentView === 'month') {
+                const { from, to } = monthRange(date);
+                fetchSchedulesRange(from, to);
+            } else {
+                fetchSchedules();
+            }
             setModalData(null);
             setServicePickerOpen(false);
         } catch (e) { window.alert(e.message); }
@@ -2222,7 +2521,7 @@ export default function AdminYoteiTimelinePage() {
                                                     <div key={`${s.id}-n`} className={`yotei-card status-${status}`} style={style} onClick={() => openEditModal(s)}>
                                                         <div className="yotei-card-tenpo">{displayTenpoName(s)}</div>
                                                         <div className="yotei-card-time">{formatScheduleTime(s)}</div>
-                                                        <div style={{ fontSize: '9px', opacity: 0.85 }}>{statusLabelFor(s)}</div>
+                                                        <div style={{ fontSize: '9px', opacity: 0.85 }}>UGOKI: {ugokiJotaiLabelFor(s)}</div>
                                                     </div>
                                                 );
                                             })}
@@ -2238,7 +2537,7 @@ export default function AdminYoteiTimelinePage() {
                                                     <div key={`${s.id}-d`} className={`yotei-card status-${status}`} style={style} onClick={() => openEditModal(s)}>
                                                         <div className="yotei-card-tenpo">{displayTenpoName(s)}</div>
                                                         <div className="yotei-card-time">{formatScheduleTime(s)}</div>
-                                                        <div style={{ fontSize: '9px', opacity: 0.85 }}>{statusLabelFor(s)}</div>
+                                                        <div style={{ fontSize: '9px', opacity: 0.85 }}>UGOKI: {ugokiJotaiLabelFor(s)}</div>
                                                     </div>
                                                 );
                                             })}
@@ -2346,7 +2645,7 @@ export default function AdminYoteiTimelinePage() {
                                     const selected = yakusokus.find(y => y.yakusoku_id === yid);
                                     const linkedTenpo = selected?.tenpo_id ? tenpoMetaById.get(String(selected.tenpo_id || '').trim()) : null;
                                     const resolvedTenpoName = linkedTenpo?.name || displayTenpoName(selected) || selected?.memo || modalData.tenpo_name;
-                                    setModalData({
+                                    const baseNext = {
                                         ...modalData,
                                         yakusoku_id: yid,
                                         tenpo_id: selected?.tenpo_id || modalData.tenpo_id,
@@ -2356,7 +2655,8 @@ export default function AdminYoteiTimelinePage() {
                                         yagou_id: linkedTenpo?.yagou_id || modalData?.yagou_id || '',
                                         torihikisaki_name: linkedTenpo?.torihikisaki_name || modalData?.torihikisaki_name || '',
                                         yagou_name: linkedTenpo?.yagou_name || modalData?.yagou_name || '',
-                                    });
+                                    };
+                                    setModalData(selected ? applyYakusokuServicesToModal(baseNext, selected) : baseNext);
                                 }} required>
                                     <option value="">選択してください</option>
                                     {yakusokus.map(y => (
@@ -2395,8 +2695,11 @@ export default function AdminYoteiTimelinePage() {
                                                 type="button"
                                                 aria-pressed={selected}
                                                 onClick={() => {
-                                                    const nextYakusokuId = pickPrimaryYakusokuIdForTenpo(tp.tenpo_id, modalData?.yakusoku_id);
-                                                    setModalData({
+                                                    const nextYakusokuId = pickPrimaryYakusokuIdForTenpo(tp.tenpo_id, tp.primary_yakusoku_id);
+                                                    const nextYakusoku = (yakusokus || []).find(
+                                                        (y) => String(y?.yakusoku_id || '').trim() === String(nextYakusokuId || '').trim()
+                                                    );
+                                                    const baseNext = {
                                                         ...modalData,
                                                         tenpo_id: tp.tenpo_id,
                                                         tenpo_name: tp.name,
@@ -2405,8 +2708,9 @@ export default function AdminYoteiTimelinePage() {
                                                         yagou_id: tp.yagou_id || '',
                                                         torihikisaki_name: tp.torihikisaki_name || '',
                                                         yagou_name: tp.yagou_name || '',
-                                                        yakusoku_id: nextYakusokuId || modalData?.yakusoku_id || '',
-                                                    });
+                                                        yakusoku_id: nextYakusokuId,
+                                                    };
+                                                    setModalData(nextYakusoku ? applyYakusokuServicesToModal(baseNext, nextYakusoku) : baseNext);
                                                 }}
                                                 style={{
                                                     textAlign: 'left',
@@ -2488,6 +2792,14 @@ export default function AdminYoteiTimelinePage() {
                                         </div>
                                     ) : null}
                                 </div>
+                            </div>
+                            <div className="yotei-form-group">
+                                <label>作業日</label>
+                                <input
+                                    type="date"
+                                    value={modalData.scheduled_date || date || todayDateString()}
+                                    onChange={e => setModalData({ ...modalData, scheduled_date: e.target.value })}
+                                />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                                 <div className="yotei-form-group">
@@ -2656,7 +2968,7 @@ export default function AdminYoteiTimelinePage() {
                             </div>
                         </div>
                         <div className="yotei-modal-footer">
-                            {!modalData.isNew && <button className="danger" onClick={() => deleteSchedule(modalData.id)}>予定取消</button>}
+                            {!modalData.isNew && <button className="danger" onClick={() => deleteSchedule(modalData)}>予定削除</button>}
                             <button onClick={() => { setModalData(null); setServicePickerOpen(false); }}>キャンセル</button>
                             <button className="primary" onClick={saveModal} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
                         </div>

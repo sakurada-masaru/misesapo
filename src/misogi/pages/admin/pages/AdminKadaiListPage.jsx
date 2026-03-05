@@ -1,15 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AdminMasterBase from './AdminMasterBase';
 
-const REQUEST_OPTIONS = [
-  { value: '確認', label: '確認' },
-  { value: '対応', label: '対応' },
-  { value: '承認', label: '承認' },
-  { value: '作成', label: '作成' },
-  { value: '修正', label: '修正' },
-  { value: '変更', label: '変更' },
-  { value: '実施', label: '実施' },
-  { value: '提出', label: '提出' },
+const REQUEST_TYPE_OPTIONS = [
+  { value: 'shorui_sofu', label: '書類送付' },
+  { value: 'keiyaku_shinsa', label: '契約審査' },
+  { value: 'mitsumori', label: '見積作成' },
+  { value: 'seikyuu_shiharai', label: '請求/支払' },
+  { value: 'jinji_shinsei', label: '人事申請' },
+  { value: 'ringi_shonin', label: '稟議/承認' },
+  { value: 'other', label: 'その他' },
 ];
 
 const FLOW_STAGE_OPTIONS = [
@@ -26,14 +26,27 @@ const FLOW_STAGE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'open', label: '未着手' },
-  { value: 'in_progress', label: '対応中' },
-  { value: 'blocked', label: '保留' },
+  { value: 'requested', label: '依頼中' },
+  { value: 'accepted', label: '受付' },
+  { value: 'working', label: '処理中' },
+  { value: 'review', label: '承認待ち' },
+  { value: 'returned', label: '差戻し' },
+  { value: 'completed', label: '完了' },
+  { value: 'open', label: '未着手(旧)' },
+  { value: 'in_progress', label: '対応中(旧)' },
+  { value: 'blocked', label: '保留(旧)' },
 ];
 
 const TASK_STATE_OPTIONS = [
   { value: 'mikanryo', label: '未完了' },
   { value: 'done', label: '完了' },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: 'low', label: '低' },
+  { value: 'normal', label: '中' },
+  { value: 'high', label: '高' },
+  { value: 'urgent', label: '緊急' },
 ];
 
 const STATUS_LABEL_MAP = Object.fromEntries(
@@ -44,6 +57,12 @@ const TASK_STATE_LABEL_MAP = Object.fromEntries(
 );
 const FLOW_STAGE_LABEL_MAP = Object.fromEntries(
   FLOW_STAGE_OPTIONS.map((opt) => [String(opt.value), String(opt.label)])
+);
+const REQUEST_TYPE_LABEL_MAP = Object.fromEntries(
+  REQUEST_TYPE_OPTIONS.map((opt) => [String(opt.value), String(opt.label)])
+);
+const PRIORITY_LABEL_MAP = Object.fromEntries(
+  PRIORITY_OPTIONS.map((opt) => [String(opt.value), String(opt.label)])
 );
 const KADAI_SCOPE_OPTIONS = [
   { value: 'general', label: '緑リスト', tone: 'green' },
@@ -61,6 +80,8 @@ const TARGET_DEPARTMENTS = [
   '人事部',
   'オペレーション部',
 ];
+
+const REQUEST_DOC_SEED_STORAGE_KEY = 'misogi-v2-admin-request-doc-seed';
 
 function normalizeNameList(value) {
   if (Array.isArray(value)) {
@@ -143,6 +164,37 @@ function todayYmd() {
   }
 }
 
+function addDaysYmd(baseYmd, days) {
+  const src = String(baseYmd || '').trim();
+  const m = src.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '';
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (Number.isNaN(d.getTime())) return '';
+  d.setDate(d.getDate() + Number(days || 0));
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function consumeRequestDocSeed() {
+  try {
+    const raw = localStorage.getItem(REQUEST_DOC_SEED_STORAGE_KEY);
+    if (!raw) return {};
+    localStorage.removeItem(REQUEST_DOC_SEED_STORAGE_KEY);
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch {
+    try {
+      localStorage.removeItem(REQUEST_DOC_SEED_STORAGE_KEY);
+    } catch {
+      // noop
+    }
+    return {};
+  }
+}
+
 function daysSinceYmd(ymd) {
   const s = String(ymd || '').trim();
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -155,6 +207,21 @@ function daysSinceYmd(ymd) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.floor((today.getTime() - base.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+function dueStatus(ymd) {
+  const s = String(ymd || '').trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return { valid: false, overdue: false, days: 0 };
+  const y = Number(m[1]);
+  const mo = Number(m[2]) - 1;
+  const d = Number(m[3]);
+  const due = new Date(y, mo, d);
+  if (Number.isNaN(due.getTime())) return { valid: false, overdue: false, days: 0 };
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.floor((due.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  return { valid: true, overdue: diffDays < 0, days: diffDays };
 }
 
 function fmtUpdateLog(row) {
@@ -353,8 +420,12 @@ function getCurrentActorName() {
 }
 
 export default function AdminKadaiListPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [detailDrafts, setDetailDrafts] = useState({});
   const [kadaiScopeTab, setKadaiScopeTab] = useState('general');
+  const [prefilledNewValues, setPrefilledNewValues] = useState({});
+  const [autoOpenCreateToken, setAutoOpenCreateToken] = useState('');
   const currentRole = getCurrentRole();
   const currentActor = getCurrentActorName();
   const isAdminOrAbove = currentRole === 'admin' || currentRole === 'headquarters';
@@ -362,6 +433,36 @@ export default function AdminKadaiListPage() {
   const activeScope = isAdminOrAbove ? kadaiScopeTab : 'general';
   const visibleTabs = isAdminOrAbove ? KADAI_SCOPE_OPTIONS : KADAI_SCOPE_OPTIONS.filter((x) => x.value === 'general');
   const pageClassName = activeScope === 'admin' ? 'kadai-admin-glow' : 'kadai-general-glow';
+
+  useEffect(() => {
+    const sp = new URLSearchParams(location.search || '');
+    if (sp.get('create') !== '1') return;
+
+    const seedType = String(sp.get('seed') || '').trim();
+    const seed = seedType === 'request-doc' ? consumeRequestDocSeed() : {};
+    setPrefilledNewValues(seed && typeof seed === 'object' ? seed : {});
+    setAutoOpenCreateToken(`seed:${Date.now()}`);
+
+    navigate({ pathname: location.pathname, search: '' }, { replace: true });
+  }, [location.pathname, location.search, navigate]);
+
+  const fixedNewValues = useMemo(() => ({
+    request_type: 'shorui_sofu',
+    flow_stage: '管理',
+    list_scope: activeScope,
+    category: '',
+    request: '',
+    file_refs: '',
+    priority: 'normal',
+    status: 'requested',
+    task_state: 'mikanryo',
+    jotai: 'yuko',
+    reported_at: todayYmd(),
+    due_date: addDaysYmd(todayYmd(), 3),
+    reported_by: currentActor,
+    ...(prefilledNewValues || {}),
+  }), [activeScope, currentActor, prefilledNewValues]);
+
   const appendDraftText = (rowId, snippet) => {
     setDetailDrafts((prev) => {
       const curr = String(prev?.[rowId] ?? '');
@@ -372,17 +473,17 @@ export default function AdminKadaiListPage() {
 
   return (
     <AdminMasterBase
-      title="タスクリスト"
+      title="業務依頼ボード"
       pageClassName={pageClassName}
       resource="kadai"
       idKey="kadai_id"
       canDeleteRow={() => canDelete}
       enableBulkDelete={canDelete}
       beforeDelete={async () => {
-        return window.confirm('この課題を削除しますか？');
+        return window.confirm('この依頼を削除しますか？');
       }}
       beforeBulkDelete={async () => {
-        return window.confirm('選択した課題を一括削除しますか？');
+        return window.confirm('選択した依頼を一括削除しますか？');
       }}
       headerTabs={visibleTabs}
       activeHeaderTab={activeScope}
@@ -396,22 +497,33 @@ export default function AdminKadaiListPage() {
       rowClassName={(row) => (hasReplyLog(row) ? 'has-reply' : '')}
       localSearch={{
         label: '統合検索',
-        placeholder: 'カテゴリ/タスク/内容など',
+        placeholder: '依頼種別/件名/内容/依頼元/依頼先など',
         keys: [
+          'request_type',
           'flow_stage',
           'list_scope',
           'kadai_id',
           'category',
           'status',
           'task_state',
+          'due_date',
+          'priority',
           'reported_at',
           'reported_by',
           'target_to',
           'request',
+          'file_refs',
           'fact',
         ],
       }}
       filters={[
+        {
+          key: 'request_type',
+          label: '依頼種別',
+          options: REQUEST_TYPE_OPTIONS,
+          valueKey: 'value',
+          labelKey: 'label',
+        },
         {
           key: 'flow_stage',
           label: 'カテゴリ',
@@ -420,14 +532,21 @@ export default function AdminKadaiListPage() {
           labelKey: 'label',
         },
         {
-          key: 'request',
-          label: '内容',
+          key: 'priority',
+          label: '優先度',
+          options: PRIORITY_OPTIONS,
+          valueKey: 'value',
+          labelKey: 'label',
+        },
+        {
+          key: 'due_date',
+          label: '期限',
           type: 'text',
-          placeholder: '例: 確認 / 対応 / 作成 / 修正 など',
+          placeholder: 'YYYY-MM-DD',
         },
         {
           key: 'status',
-          label: '状況',
+          label: '進行状態',
           options: STATUS_OPTIONS,
           valueKey: 'value',
           labelKey: 'label',
@@ -454,15 +573,11 @@ export default function AdminKadaiListPage() {
           labelKey: 'label',
         },
       ]}
-      fixedNewValues={{
-        flow_stage: '予定',
-        list_scope: activeScope,
-        category: '',
-        request: '確認',
-        status: 'open',
-        task_state: 'mikanryo',
-        jotai: 'yuko',
-        reported_at: todayYmd(),
+      fixedNewValues={fixedNewValues}
+      autoOpenCreateToken={autoOpenCreateToken}
+      onAutoOpenCreateHandled={() => {
+        setAutoOpenCreateToken('');
+        setPrefilledNewValues({});
       }}
       parentSources={{
         jinzai: {
@@ -487,7 +602,12 @@ export default function AdminKadaiListPage() {
           m.target_to = [];
         }
         if (!String(m.task_state ?? '').trim()) m.task_state = 'mikanryo';
-        if (!String(m.request ?? '').trim()) m.request = '確認';
+        if (!String(m.request_type ?? '').trim()) m.request_type = 'shorui_sofu';
+        if (!String(m.priority ?? '').trim()) m.priority = 'normal';
+        if (!String(m.status ?? '').trim()) m.status = 'requested';
+        if (!String(m.request ?? '').trim()) m.request = '内容を記載してください';
+        if (!String(m.reported_by ?? '').trim()) m.reported_by = currentActor;
+        if (!String(m.reported_at ?? '').trim()) m.reported_at = todayYmd();
         if (!String(m.jotai ?? '').trim()) m.jotai = 'yuko';
         return m;
       }}
@@ -496,11 +616,15 @@ export default function AdminKadaiListPage() {
       enableRowDetail
       rowDetailKeys={[
         'reported_at',
+        'due_date',
+        'priority',
+        'request_type',
         'flow_stage',
         'reported_by',
         'target_to',
         'category',
         'request',
+        'file_refs',
         'status',
         'task_state',
       ]}
@@ -514,8 +638,8 @@ export default function AdminKadaiListPage() {
         const logText = String(row?.detail_note || '').trim();
         const messages = parseKadaiMessages(logText);
         const byKey = new Map((items || []).map((it) => [it.key, it]));
-        const leftKeys = ['reported_at', 'flow_stage', 'reported_by', 'target_to', 'status', 'task_state'];
-        const rightTopKeys = ['category', 'request'];
+        const leftKeys = ['reported_at', 'due_date', 'priority', 'flow_stage', 'reported_by', 'target_to', 'status', 'task_state'];
+        const rightTopKeys = ['request_type', 'category', 'request', 'file_refs'];
         const leftItemsRaw = leftKeys.map((k) => byKey.get(k)).filter(Boolean);
         const requesterItem = byKey.get('reported_by');
         const targetItem = byKey.get('target_to');
@@ -585,7 +709,7 @@ export default function AdminKadaiListPage() {
                   </div>
                   {it.key === 'flow_stage' && (requesterItem || targetItem) ? (
                     <div className="kadai-detail-row kadai-detail-row-actor-flow">
-                      <div className="k">{requesterItem?.label || '③依頼者'} / {targetItem?.label || '④対象者'}</div>
+                      <div className="k">{requesterItem?.label || '依頼元'} / {targetItem?.label || '依頼先'}</div>
                       <div className="v actor-flow-line">
                         <span>{requesterItem?.value || '-'}</span>
                         <span className="arrow">{' → '}</span>
@@ -639,10 +763,10 @@ export default function AdminKadaiListPage() {
                     ))}
                   </div>
                 ) : (
-                  '返答ログはまだありません'
+                  '対応ログはまだありません'
                 )}
               </div>
-              <div className="kadai-detail-note-head">{'返答内容'}</div>
+              <div className="kadai-detail-note-head">{'対応ログ返信'}</div>
               <div className="kadai-detail-editor-tools">
                 <button type="button" onClick={() => appendDraftText(rowId, '## 見出し')}>見出し</button>
                 <button type="button" onClick={() => appendDraftText(rowId, '- 箇条書き')}>箇条書き</button>
@@ -652,7 +776,7 @@ export default function AdminKadaiListPage() {
               </div>
               <textarea
                 value={draft}
-                placeholder={`返答を入力してください（次の返信 #${messages.length + 1}）`}
+                placeholder={`対応ログを入力してください（次の返信 #${messages.length + 1}）`}
                 onChange={(e) => setDetailDrafts((prev) => ({ ...prev, [rowId]: e.target.value }))}
               />
               <div className="kadai-detail-note-actions">
@@ -662,7 +786,7 @@ export default function AdminKadaiListPage() {
                   disabled={saving || !String(draft || '').trim()}
                   onClick={onReply}
                 >
-                  {saving ? '保存中...' : '返答する'}
+                  {saving ? '保存中...' : '返信する'}
                 </button>
               </div>
             </div>
@@ -672,7 +796,7 @@ export default function AdminKadaiListPage() {
       fields={[
         {
           key: 'reported_at',
-          label: '①起票日（いつ）',
+          label: '①起票日',
           columnLabel: '①起票日',
           required: true,
           render: (v, row) => {
@@ -691,21 +815,67 @@ export default function AdminKadaiListPage() {
           },
         },
         {
+          key: 'due_date',
+          label: '②期限',
+          columnLabel: '②期限',
+          placeholder: 'YYYY-MM-DD',
+          render: (v, row) => {
+            const ymd = String(v || '').trim();
+            if (!ymd) return '-';
+            const isDone = String(row?.task_state || '').trim() === 'done';
+            const ds = dueStatus(ymd);
+            const showOverdue = ds.valid && ds.overdue && !isDone;
+            return (
+              <span className="kadai-reported-at-cell">
+                <span>{ymd}</span>
+                {showOverdue ? (
+                  <span className="kadai-fire-alert" title={`期限超過 ${Math.abs(ds.days)}日`}>⚠</span>
+                ) : null}
+              </span>
+            );
+          },
+        },
+        {
+          key: 'priority',
+          label: '③優先度',
+          columnLabel: '③優先度',
+          type: 'select',
+          options: PRIORITY_OPTIONS,
+          valueKey: 'value',
+          labelKey: 'label',
+          defaultValue: 'normal',
+          format: (v) => PRIORITY_LABEL_MAP[String(v || '')] || (v || '-'),
+          render: (v) => renderMetaTag(PRIORITY_LABEL_MAP[String(v || '')] || (v || '-'), 'is-priority'),
+          required: true,
+        },
+        {
           key: 'flow_stage',
-          label: '②カテゴリ',
-          columnLabel: '②カテゴリ',
+          label: '④カテゴリ',
+          columnLabel: '④カテゴリ',
           type: 'select',
           options: FLOW_STAGE_OPTIONS,
           valueKey: 'value',
           labelKey: 'label',
-          defaultValue: '予定',
+          defaultValue: '管理',
           format: (v) => FLOW_STAGE_LABEL_MAP[String(v || '')] || (v || '-'),
           required: true,
         },
         {
+          key: 'request_type',
+          label: '⑤依頼種別',
+          columnLabel: '⑤依頼種別',
+          type: 'select',
+          options: REQUEST_TYPE_OPTIONS,
+          valueKey: 'value',
+          labelKey: 'label',
+          defaultValue: 'shorui_sofu',
+          format: (v) => REQUEST_TYPE_LABEL_MAP[String(v || '')] || (v || '-'),
+          required: true,
+        },
+        {
           key: 'reported_by',
-          label: '③依頼者（誰が）',
-          columnLabel: '③依頼者',
+          label: '⑥依頼元',
+          columnLabel: '⑥依頼元',
           type: 'select',
           options: buildActorOptions,
           valueKey: 'value',
@@ -719,8 +889,8 @@ export default function AdminKadaiListPage() {
         },
         {
           key: 'target_to',
-          label: '④対象者（誰に）',
-          columnLabel: '④対象者',
+          label: '⑦依頼先',
+          columnLabel: '⑦依頼先',
           type: 'multi_select',
           overlay: true,
           options: buildActorOptions,
@@ -735,8 +905,8 @@ export default function AdminKadaiListPage() {
         },
         {
           key: 'category',
-          label: '⑤タイトル（何を）',
-          columnLabel: '⑤タイトル',
+          label: '⑧件名',
+          columnLabel: '⑧件名',
           required: true,
           render: (v, row) => {
             const raw = String(v || '').trim();
@@ -752,11 +922,11 @@ export default function AdminKadaiListPage() {
         },
         {
           key: 'request',
-          label: '⑥内容（どうする）',
-          columnLabel: '⑥内容',
+          label: '⑨依頼内容',
+          columnLabel: '⑨依頼内容',
           type: 'textarea',
-          rows: 12,
-          defaultValue: '確認',
+          rows: 10,
+          defaultValue: '',
           required: true,
           render: (v) => {
             const raw = String(v || '').trim();
@@ -765,20 +935,38 @@ export default function AdminKadaiListPage() {
           },
         },
         {
+          key: 'file_refs',
+          label: '⑨-2関連ファイル',
+          columnLabel: '関連ファイル',
+          type: 'textarea',
+          rows: 4,
+          render: (v) => {
+            const raw = String(v || '').trim();
+            const clipped = clipText(raw, 26);
+            return <span title={raw || ''}>{clipped || '-'}</span>;
+          },
+        },
+        {
           key: 'status',
-          label: '⑦状況（いまの状態）',
-          columnLabel: '⑦状況',
+          label: '⑩進行状態',
+          columnLabel: '⑩進行状態',
           type: 'select',
           inlineEdit: true,
           options: STATUS_OPTIONS,
           valueKey: 'value',
           labelKey: 'label',
-          defaultValue: 'open',
+          defaultValue: 'requested',
           format: (v) => STATUS_LABEL_MAP[String(v || '')] || (v || '-'),
           render: (v, row) => {
             const key = String(v || '');
             const label = STATUS_LABEL_MAP[key] || (v || '-');
             const cls = {
+              requested: 'kadai-status-badge is-open',
+              accepted: 'kadai-status-badge is-progress',
+              working: 'kadai-status-badge is-progress',
+              review: 'kadai-status-badge is-progress',
+              returned: 'kadai-status-badge is-blocked',
+              completed: 'kadai-status-badge is-done',
               open: 'kadai-status-badge is-open',
               in_progress: 'kadai-status-badge is-progress',
               blocked: 'kadai-status-badge is-blocked',
@@ -795,8 +983,8 @@ export default function AdminKadaiListPage() {
         },
         {
           key: 'task_state',
-          label: '⑧状態',
-          columnLabel: '⑧状態',
+          label: '⑪完了フラグ',
+          columnLabel: '⑪完了',
           type: 'select',
           inlineEdit: true,
           options: TASK_STATE_OPTIONS,

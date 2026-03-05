@@ -172,6 +172,10 @@ def _norm_identity(value) -> str:
     return _strip(value).lower()
 
 
+def _norm_match_token(value) -> str:
+    return "".join(_strip(value).lower().split())
+
+
 def _extract_actor(event) -> dict:
     request_context = event.get("requestContext") or {}
     authorizer = request_context.get("authorizer") or {}
@@ -215,6 +219,7 @@ def _extract_actor(event) -> dict:
     )
 
     ids = set()
+    tokens = set()
     for v in [
         actor_id,
         actor_name,
@@ -233,13 +238,101 @@ def _extract_actor(event) -> dict:
         if not sv:
             continue
         ids.add(_norm_identity(sv))
+        token = _norm_match_token(sv)
+        if token:
+            tokens.add(token)
         if "@" in sv:
-            ids.add(_norm_identity(sv.split("@")[0]))
+            local = _norm_identity(sv.split("@")[0])
+            ids.add(local)
+            local_token = _norm_match_token(local)
+            if local_token:
+                tokens.add(local_token)
 
     if not actor_name and actor_id:
         actor_name = actor_id.split("@")[0] if "@" in actor_id else actor_id
 
-    return {"id": actor_id, "name": actor_name, "ids": ids}
+    return {"id": actor_id, "name": actor_name, "ids": ids, "tokens": tokens}
+
+
+def _is_admin_filebox_item(item: dict) -> bool:
+    if not isinstance(item, dict):
+        return False
+    return (
+        _strip(item.get("source")) == FILEBOX_SOUKO_SOURCE
+        and _strip(item.get("tenpo_id")) == FILEBOX_SOUKO_TENPO_ID
+    )
+
+
+def _is_souko_owner(event, item: dict) -> bool:
+    if not _is_admin_filebox_item(item):
+        return True
+
+    actor = _extract_actor(event)
+    actor_ids = actor.get("ids") or set()
+    actor_tokens = actor.get("tokens") or set()
+    if not actor_ids and not actor_tokens:
+        # 開発環境などで authorizer 情報が無い場合は互換性優先
+        return True
+
+    owner_ids = set()
+    owner_tokens = set()
+    sender_ids = set()
+    sender_tokens = set()
+    owner_sources = [
+        item.get("owner_user_id"),
+        item.get("owner_name"),
+        item.get("owner_key"),
+    ]
+    if not any(_strip(v) for v in owner_sources):
+        # 旧データ互換: owner_* が無いレコードは作成者一致で判定
+        owner_sources.extend([item.get("uploaded_by"), item.get("uploaded_by_name")])
+
+    for v in owner_sources:
+        sv = _strip(v)
+        if not sv:
+            continue
+        owner_ids.add(_norm_identity(sv))
+        token = _norm_match_token(sv)
+        if token:
+            owner_tokens.add(token)
+        if "@" in sv:
+            local = _norm_identity(sv.split("@")[0])
+            owner_ids.add(local)
+            local_token = _norm_match_token(local)
+            if local_token:
+                owner_tokens.add(local_token)
+
+    sender_sources = [
+        item.get("uploaded_by"),
+        item.get("uploaded_by_name"),
+        item.get("request_sender_id"),
+        item.get("request_sender_name"),
+        item.get("request_sender_key"),
+    ]
+    for v in sender_sources:
+        sv = _strip(v)
+        if not sv:
+            continue
+        sender_ids.add(_norm_identity(sv))
+        token = _norm_match_token(sv)
+        if token:
+            sender_tokens.add(token)
+        if "@" in sv:
+            local = _norm_identity(sv.split("@")[0])
+            sender_ids.add(local)
+            local_token = _norm_match_token(local)
+            if local_token:
+                sender_tokens.add(local_token)
+
+    if owner_ids & actor_ids:
+        return True
+    if owner_tokens & actor_tokens:
+        return True
+    if sender_ids & actor_ids:
+        return True
+    if sender_tokens & actor_tokens:
+        return True
+    return False
 
 
 def _is_admin_chat_owner(event, item: dict) -> bool:
@@ -542,7 +635,7 @@ def _build_filter(collection: str, q: dict):
                 expr = k_expr if expr is None else expr & k_expr
 
     if collection == "souko":
-        for k in ["source", "folder_id", "uploaded_by"]:
+        for k in ["source", "folder_id", "uploaded_by", "owner_user_id", "owner_name", "owner_key"]:
             v = q.get(k)
             if v:
                 k_expr = Attr(k).eq(v)
@@ -731,6 +824,36 @@ def _enrich_admin_chat_items(items: list):
                     )
                 except Exception as e:
                     print(f"[admin_chat] attachment presign failed key={key} err={str(e)}")
+        out.append(row)
+    return out
+
+
+def _enrich_souko_items(items: list):
+    if not isinstance(items, list):
+        return items
+    out = []
+    for src in items:
+        row = dict(src or {})
+        files = row.get("files")
+        if isinstance(files, list):
+            enriched_files = []
+            for f in files:
+                if not isinstance(f, dict):
+                    continue
+                one = dict(f)
+                key = _strip(one.get("key"))
+                bucket = _strip(one.get("bucket")) or STORAGE_BUCKET
+                if key and bucket and not _strip(one.get("get_url")):
+                    try:
+                        one["get_url"] = s3.generate_presigned_url(
+                            "get_object",
+                            Params={"Bucket": bucket, "Key": key},
+                            ExpiresIn=3600,
+                        )
+                    except Exception as e:
+                        print(f"[souko] file presign failed key={key} err={str(e)}")
+                enriched_files.append(one)
+            row["files"] = enriched_files
         out.append(row)
     return out
 
@@ -1058,6 +1181,10 @@ def lambda_handler(event, context):
                 item = res.get("Item")
                 if not item:
                     return _resp(404, {"error": "not_found"})
+                if collection == "souko" and not _is_souko_owner(event, item):
+                    return _resp(403, {"error": "forbidden", "message": "このデータへのアクセス権がありません"})
+                if collection == "souko":
+                    item = (_enrich_souko_items([item]) or [item])[0]
                 return _resp(200, item)
 
             q = event.get("queryStringParameters") or {}
@@ -1085,6 +1212,8 @@ def lambda_handler(event, context):
 
                 res = table.scan(**page_kwargs)
                 page_items = res.get("Items", []) or []
+                if collection == "souko":
+                    page_items = [row for row in page_items if _is_souko_owner(event, row)]
                 items.extend(page_items)
                 if len(items) >= limit:
                     items = items[:limit]
@@ -1095,6 +1224,8 @@ def lambda_handler(event, context):
 
             if collection == "admin_chat":
                 items = _enrich_admin_chat_items(items)
+            if collection == "souko":
+                items = _enrich_souko_items(items)
             return _resp(200, {"items": items, "count": len(items)})
 
         if method == "POST":
@@ -1201,6 +1332,8 @@ def lambda_handler(event, context):
             item = res.get("Item")
             if not item:
                 return _resp(404, {"error": "not_found"})
+            if collection == "souko" and not _is_souko_owner(event, item):
+                return _resp(403, {"error": "forbidden", "message": "このデータは更新できません"})
             actor = _extract_actor(event) if collection == "admin_chat" else {"id": "", "name": ""}
             if collection == "admin_chat" and not _is_admin_chat_owner(event, item):
                 return _resp(403, {"error": "forbidden", "message": "自分の投稿のみ更新できます"})
@@ -1230,6 +1363,13 @@ def lambda_handler(event, context):
             if not record_id:
                 return _resp(400, {"error": "missing_id"})
             now = _now_iso()
+            if collection == "souko":
+                res = table.get_item(Key={pk_name: record_id})
+                item = res.get("Item")
+                if not item:
+                    return _resp(404, {"error": "not_found"})
+                if not _is_souko_owner(event, item):
+                    return _resp(403, {"error": "forbidden", "message": "このデータは削除できません"})
             if collection == "admin_chat":
                 res = table.get_item(Key={pk_name: record_id})
                 item = res.get("Item")
