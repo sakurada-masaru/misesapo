@@ -50,6 +50,21 @@ const FILEBOX_VIEW_MODE_OPTIONS = [
 const FILEBOX_IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'avif', 'heic', 'heif']);
 const FILEBOX_VIDEO_EXTENSIONS = new Set(['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv', 'm4v']);
 const FILEBOX_AUDIO_EXTENSIONS = new Set(['mp3', 'wav', 'aac', 'm4a', 'ogg', 'flac']);
+const DASHBOARD_EXPLORER_WIDTH_STORAGE_KEY = 'misogi-v2-admin-dashboard-explorer-width';
+const DASHBOARD_CHAT_WIDTH_STORAGE_KEY = 'misogi-v2-admin-dashboard-chat-width';
+const DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY = 'misogi-v2-admin-dashboard-explorer-visible';
+const DASHBOARD_CHAT_VISIBLE_STORAGE_KEY = 'misogi-v2-admin-dashboard-chat-visible';
+const DASHBOARD_EXPLORER_WIDTH_DEFAULT = 260;
+const DASHBOARD_EXPLORER_WIDTH_MIN = 220;
+const DASHBOARD_EXPLORER_WIDTH_MAX = 520;
+const DASHBOARD_CHAT_WIDTH_DEFAULT = 440;
+const DASHBOARD_CHAT_WIDTH_MIN = 320;
+const DASHBOARD_CHAT_WIDTH_MAX = 760;
+const DASHBOARD_RESIZER_ENABLED_MIN_WIDTH = 1024;
+const DASHBOARD_RESIZER_BAR_WIDTH = 10;
+const DASHBOARD_WORKSPACE_MIN_WIDTH = 420;
+const DASHBOARD_PANEL_MIN_WIDTH = 700;
+const DASHBOARD_PANE_TOGGLE_EVENT = 'misogi-dashboard-pane-toggle';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -475,6 +490,34 @@ function fileKindIcon(kind) {
   }
 }
 
+function clampNumber(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function readStoredPaneWidth(key, fallback, min, max) {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = Number(localStorage.getItem(key));
+    if (!Number.isFinite(raw) || raw <= 0) return fallback;
+    return clampNumber(Math.round(raw), min, max);
+  } catch {
+    return fallback;
+  }
+}
+
+function readStoredBoolean(key, fallback = true) {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = String(localStorage.getItem(key) || '').trim().toLowerCase();
+    if (!raw) return fallback;
+    if (raw === '1' || raw === 'true') return true;
+    if (raw === '0' || raw === 'false') return false;
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowGuideButton = true }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -511,7 +554,37 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const [fileboxLoading, setFileboxLoading] = useState(false);
   const [fileboxUploading, setFileboxUploading] = useState(false);
   const [fileboxError, setFileboxError] = useState('');
+  const [dashboardExplorerWidth, setDashboardExplorerWidth] = useState(() =>
+    readStoredPaneWidth(
+      DASHBOARD_EXPLORER_WIDTH_STORAGE_KEY,
+      DASHBOARD_EXPLORER_WIDTH_DEFAULT,
+      DASHBOARD_EXPLORER_WIDTH_MIN,
+      DASHBOARD_EXPLORER_WIDTH_MAX,
+    )
+  );
+  const [dashboardChatWidth, setDashboardChatWidth] = useState(() =>
+    readStoredPaneWidth(
+      DASHBOARD_CHAT_WIDTH_STORAGE_KEY,
+      DASHBOARD_CHAT_WIDTH_DEFAULT,
+      DASHBOARD_CHAT_WIDTH_MIN,
+      DASHBOARD_CHAT_WIDTH_MAX,
+    )
+  );
+  const [dashboardResizingPane, setDashboardResizingPane] = useState('');
+  const [dashboardExplorerVisible, setDashboardExplorerVisible] = useState(() =>
+    readStoredBoolean(DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY, true)
+  );
+  const [dashboardChatVisible, setDashboardChatVisible] = useState(() =>
+    readStoredBoolean(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, true)
+  );
   const fileboxInputRef = useRef(null);
+  const fileboxLayoutRef = useRef(null);
+  const fileboxShellRef = useRef(null);
+  const dashboardResizeRef = useRef({
+    startX: 0,
+    explorerWidth: DASHBOARD_EXPLORER_WIDTH_DEFAULT,
+    chatWidth: DASHBOARD_CHAT_WIDTH_DEFAULT,
+  });
 
   const onHotbar = (id) => {
     const action = actions?.find((a) => a.id === id);
@@ -766,6 +839,160 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const updatesRailLeft = useSidebarNav ? (sidebarOpen ? 'min(236px, 80vw)' : '0px') : '0px';
   const updatesPanelLeft = updatesRailLeft;
   const showAdminFilebox = useSidebarNav && location.pathname === '/admin/filebox';
+  const beginDashboardResize = useCallback((pane, event) => {
+    if (!showAdminFilebox) return;
+    if (typeof window === 'undefined' || window.innerWidth < DASHBOARD_RESIZER_ENABLED_MIN_WIDTH) return;
+    if (pane === 'explorer' && !dashboardExplorerVisible) return;
+    if (pane === 'chat' && !dashboardChatVisible) return;
+    dashboardResizeRef.current = {
+      startX: Number(event?.clientX || 0),
+      explorerWidth: dashboardExplorerWidth,
+      chatWidth: dashboardChatWidth,
+    };
+    setDashboardResizingPane(pane);
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  }, [dashboardChatVisible, dashboardChatWidth, dashboardExplorerVisible, dashboardExplorerWidth, showAdminFilebox]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DASHBOARD_EXPLORER_WIDTH_STORAGE_KEY, String(Math.round(dashboardExplorerWidth)));
+    } catch {
+      // ignore
+    }
+  }, [dashboardExplorerWidth]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DASHBOARD_CHAT_WIDTH_STORAGE_KEY, String(Math.round(dashboardChatWidth)));
+    } catch {
+      // ignore
+    }
+  }, [dashboardChatWidth]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY, dashboardExplorerVisible ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [dashboardExplorerVisible]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, dashboardChatVisible ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [dashboardChatVisible]);
+
+  useEffect(() => {
+    if (!dashboardResizingPane) return undefined;
+    const onMove = (event) => {
+      const startX = Number(dashboardResizeRef.current.startX || 0);
+      if (dashboardResizingPane === 'explorer') {
+        const shellRect = fileboxShellRef.current?.getBoundingClientRect();
+        const shellWidth = Number(shellRect?.width || 0);
+        const dynamicMax = shellWidth > 0
+          ? Math.max(
+            DASHBOARD_EXPLORER_WIDTH_MIN,
+            Math.floor(shellWidth - DASHBOARD_RESIZER_BAR_WIDTH - DASHBOARD_WORKSPACE_MIN_WIDTH),
+          )
+          : DASHBOARD_EXPLORER_WIDTH_MAX;
+        const maxWidth = clampNumber(dynamicMax, DASHBOARD_EXPLORER_WIDTH_MIN, DASHBOARD_EXPLORER_WIDTH_MAX);
+        const next = dashboardResizeRef.current.explorerWidth + (Number(event?.clientX || 0) - startX);
+        setDashboardExplorerWidth(clampNumber(Math.round(next), DASHBOARD_EXPLORER_WIDTH_MIN, maxWidth));
+        return;
+      }
+      if (dashboardResizingPane === 'chat') {
+        const layoutRect = fileboxLayoutRef.current?.getBoundingClientRect();
+        const layoutWidth = Number(layoutRect?.width || 0);
+        const dynamicMax = layoutWidth > 0
+          ? Math.max(
+            DASHBOARD_CHAT_WIDTH_MIN,
+            Math.floor(layoutWidth - DASHBOARD_RESIZER_BAR_WIDTH - DASHBOARD_PANEL_MIN_WIDTH),
+          )
+          : DASHBOARD_CHAT_WIDTH_MAX;
+        const maxWidth = clampNumber(dynamicMax, DASHBOARD_CHAT_WIDTH_MIN, DASHBOARD_CHAT_WIDTH_MAX);
+        const next = dashboardResizeRef.current.chatWidth + (startX - Number(event?.clientX || 0));
+        setDashboardChatWidth(clampNumber(Math.round(next), DASHBOARD_CHAT_WIDTH_MIN, maxWidth));
+      }
+    };
+    const stop = () => {
+      setDashboardResizingPane('');
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [dashboardResizingPane]);
+
+  useEffect(() => {
+    if (dashboardResizingPane === 'explorer' && !dashboardExplorerVisible) {
+      setDashboardResizingPane('');
+    }
+    if (dashboardResizingPane === 'chat' && !dashboardChatVisible) {
+      setDashboardResizingPane('');
+    }
+  }, [dashboardChatVisible, dashboardExplorerVisible, dashboardResizingPane]);
+
+  useEffect(() => {
+    const onPaneToggle = (event) => {
+      const pane = String(event?.detail?.pane || '').toLowerCase();
+      const requestedVisible = event?.detail?.visible;
+      if (pane === 'explorer') {
+        setDashboardExplorerVisible((prev) => (typeof requestedVisible === 'boolean' ? requestedVisible : !prev));
+        return;
+      }
+      if (pane === 'chat') {
+        setDashboardChatVisible((prev) => (typeof requestedVisible === 'boolean' ? requestedVisible : !prev));
+      }
+    };
+    window.addEventListener(DASHBOARD_PANE_TOGGLE_EVENT, onPaneToggle);
+    return () => window.removeEventListener(DASHBOARD_PANE_TOGGLE_EVENT, onPaneToggle);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const clampDashboardPaneWidths = () => {
+      const layoutRect = fileboxLayoutRef.current?.getBoundingClientRect();
+      const shellRect = fileboxShellRef.current?.getBoundingClientRect();
+      const layoutWidth = Number(layoutRect?.width || 0);
+      const shellWidth = Number(shellRect?.width || 0);
+      const dynamicChatMax = layoutWidth > 0
+        ? Math.max(
+          DASHBOARD_CHAT_WIDTH_MIN,
+          Math.floor(layoutWidth - DASHBOARD_RESIZER_BAR_WIDTH - DASHBOARD_PANEL_MIN_WIDTH),
+        )
+        : DASHBOARD_CHAT_WIDTH_MAX;
+      const chatMax = clampNumber(dynamicChatMax, DASHBOARD_CHAT_WIDTH_MIN, DASHBOARD_CHAT_WIDTH_MAX);
+      const dynamicExplorerMax = shellWidth > 0
+        ? Math.max(
+          DASHBOARD_EXPLORER_WIDTH_MIN,
+          Math.floor(shellWidth - DASHBOARD_RESIZER_BAR_WIDTH - DASHBOARD_WORKSPACE_MIN_WIDTH),
+        )
+        : DASHBOARD_EXPLORER_WIDTH_MAX;
+      const explorerMax = clampNumber(dynamicExplorerMax, DASHBOARD_EXPLORER_WIDTH_MIN, DASHBOARD_EXPLORER_WIDTH_MAX);
+      setDashboardChatWidth((prev) => clampNumber(prev, DASHBOARD_CHAT_WIDTH_MIN, chatMax));
+      setDashboardExplorerWidth((prev) => clampNumber(prev, DASHBOARD_EXPLORER_WIDTH_MIN, explorerMax));
+    };
+    if (showAdminFilebox) {
+      window.requestAnimationFrame(clampDashboardPaneWidths);
+    }
+    window.addEventListener('resize', clampDashboardPaneWidths);
+    return () => {
+      window.removeEventListener('resize', clampDashboardPaneWidths);
+    };
+  }, [showAdminFilebox]);
+
   const fileboxActor = useMemo(() => {
     const name = String(
       user?.name
@@ -822,6 +1049,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     const list = Array.isArray(fileboxMap[activeFileboxFolder.id]) ? fileboxMap[activeFileboxFolder.id] : [];
     return list.slice().sort((a, b) => b.atMs - a.atMs);
   }, [activeFileboxFolder?.id, fileboxMap]);
+  const dashboardTitleLabel = activeFileboxFolder?.name || t('ダッシュボード');
   const fileboxStats = useMemo(() => {
     const stats = {};
     fileboxFolders.forEach((folder) => {
@@ -1197,7 +1425,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             />
             <div className="job-entrance-common-chat-anchor">
               {!showAdminFilebox ? <CommonHeaderChat /> : null}
-              <MisogiSupportOrb />
+              {!showAdminFilebox ? <MisogiSupportOrb /> : null}
             </div>
             <button
               type="button"
@@ -1276,6 +1504,11 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                             </button>
                           );
                         })}
+                        {showAdminFilebox && section.id === 'tools' ? (
+                          <div className="job-entrance-sidebar-misogi">
+                            <MisogiSupportOrb />
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
                   </section>
@@ -1371,210 +1604,265 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
 
           {useSidebarNav ? (
             showAdminFilebox ? (
-              <div className="admin-filebox-layout">
-                <section className="admin-filebox-panel" aria-label={t('ダッシュボード')}>
-                  <div className="admin-filebox-toolbar">
+              <>
+                <div
+                  className={`admin-filebox-layout ${dashboardResizingPane === 'chat' ? 'is-resizing' : ''} ${!dashboardChatVisible ? 'hide-chat' : ''}`.trim()}
+                  ref={fileboxLayoutRef}
+                  style={{ '--dash-chat-width': `${dashboardChatWidth}px` }}
+                >
+                  <section className="admin-filebox-panel" aria-label={t('ダッシュボード')}>
+                  <div className="admin-filebox-toolbar admin-filebox-toolbar-top">
                     <div className="admin-filebox-toolbar-title">
-                      <strong>{t('ダッシュボード')}</strong>
-                      <span>
-                        {activeFileboxFolder
-                          ? (
-                            activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID
-                              ? t('受信した業務依頼をファイル単位で確認できます')
-                              : t('表示方式を選んでファイルを確認できます')
-                          )
-                          : t('フォルダを選択すると関連ファイルを表示します')}
-                      </span>
+                      <strong>{dashboardTitleLabel}</strong>
+                      <span>{t('Cursor風ワークスペース: 左でフォルダ選択 / 中央でファイル閲覧 / 右でチャット')}</span>
                     </div>
-                    <div className="admin-filebox-toolbar-actions">
-                      {activeFileboxFolder ? (
+                  </div>
+                  <div
+                    className={`admin-filebox-shell ${dashboardResizingPane === 'explorer' ? 'is-resizing' : ''} ${!dashboardExplorerVisible ? 'hide-explorer' : ''}`.trim()}
+                    ref={fileboxShellRef}
+                    style={{ '--dash-explorer-width': `${dashboardExplorerWidth}px` }}
+                  >
+                    {dashboardExplorerVisible ? (
+                      <aside className="admin-filebox-explorer" aria-label={t('フォルダ一覧')}>
+                      <div className="admin-filebox-explorer-head">
+                        <strong>{t('フォルダ')}</strong>
                         <button
                           type="button"
-                          onClick={() => setActiveFileboxFolderId(null)}
+                          onClick={onRefreshFilebox}
                           disabled={fileboxBusy}
                         >
-                          {t('戻る')}
+                          {(fileboxLoading || fileboxFoldersLoading) ? t('更新中...') : t('更新')}
                         </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={onRefreshFilebox}
-                        disabled={fileboxBusy}
-                      >
-                        {(fileboxLoading || fileboxFoldersLoading) ? t('更新中...') : t('更新')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onFileboxUploadClick}
-                        disabled={!activeFileboxFolder || fileboxBusy || activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID}
-                      >
-                        {activeFileboxFolder?.id === WORKFLOW_INBOX_FOLDER_ID
-                          ? t('受信専用')
-                          : (fileboxUploading ? t('アップロード中...') : t('アップロード'))}
-                      </button>
-                      <input
-                        ref={fileboxInputRef}
-                        type="file"
-                        className="file-input"
-                        onChange={onFileboxSelect}
-                        multiple
-                        hidden
-                      />
-                    </div>
-                  </div>
-                  {fileboxError ? <p className="admin-filebox-error">{fileboxError}</p> : null}
-                  <div className="admin-filebox-create">
-                    <input
-                      type="text"
-                      value={newFileboxFolderName}
-                      onChange={(e) => setNewFileboxFolderName(e.target.value)}
-                      placeholder={t('新規フォルダ名を入力')}
-                      maxLength={40}
-                      disabled={fileboxBusy}
-                    />
-                    <button
-                      type="button"
-                      onClick={onCreateFileboxFolder}
-                      disabled={fileboxBusy}
-                    >
-                      {fileboxCreatingFolder ? t('作成中...') : t('フォルダ追加')}
-                    </button>
-                  </div>
-                  {!activeFileboxFolder ? (
-                    <div className="admin-filebox-grid">
-                      {fileboxFolders.map((folder) => (
-                        <button
-                          key={folder.id}
-                          type="button"
-                          className="admin-filebox-card"
-                          onClick={() => onOpenFolderCard(folder.id)}
-                        >
-                          <div className="icon" aria-hidden>📁</div>
-                          <div className="name">{folder.name}</div>
-                          <div className="meta">{Number(fileboxStats?.[folder.id]?.count || 0)}件</div>
-                          <div className="at">
-                            {fileboxStats?.[folder.id]?.latestAtMs
-                              ? ymdHmLabel(fileboxStats[folder.id].latestAtMs)
-                              : t('ファイルなし')}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="admin-filebox-focus">
-                      <div className="admin-filebox-focus-card">
-                        <div className="admin-filebox-card active">
-                          <div className="icon" aria-hidden>📁</div>
-                          <div className="name">{activeFileboxFolder.name}</div>
-                          <div className="meta">{Number(fileboxStats?.[activeFileboxFolder.id]?.count || 0)}件</div>
-                          <div className="at">
-                            {fileboxStats?.[activeFileboxFolder.id]?.latestAtMs
-                              ? ymdHmLabel(fileboxStats[activeFileboxFolder.id].latestAtMs)
-                              : t('ファイルなし')}
-                          </div>
-                        </div>
                       </div>
-                      <div className="admin-filebox-view-switch" role="tablist" aria-label={t('表示方式')}>
-                        {FILEBOX_VIEW_MODE_OPTIONS.map((mode) => (
+                      {fileboxError ? <p className="admin-filebox-error">{fileboxError}</p> : null}
+                      <div className="admin-filebox-create">
+                        <input
+                          type="text"
+                          value={newFileboxFolderName}
+                          onChange={(e) => setNewFileboxFolderName(e.target.value)}
+                          placeholder={t('新規フォルダ名を入力')}
+                          maxLength={40}
+                          disabled={fileboxBusy}
+                        />
+                        <button
+                          type="button"
+                          onClick={onCreateFileboxFolder}
+                          disabled={fileboxBusy}
+                        >
+                          {fileboxCreatingFolder ? t('作成中...') : t('フォルダ追加')}
+                        </button>
+                      </div>
+                      <div className="admin-filebox-folder-list">
+                        {fileboxFolders.map((folder) => (
                           <button
-                            key={mode.id}
+                            key={folder.id}
                             type="button"
-                            role="tab"
-                            aria-selected={fileboxViewMode === mode.id}
-                            className={fileboxViewMode === mode.id ? 'active' : ''}
-                            onClick={() => setFileboxViewMode(mode.id)}
-                            title={t(mode.label)}
+                            className={`admin-filebox-folder-row ${activeFileboxFolder?.id === folder.id ? 'active' : ''}`}
+                            onClick={() => onOpenFolderCard(folder.id)}
                           >
-                            <span aria-hidden>{mode.icon}</span>
+                            <span className="name">{folder.name}</span>
+                            <span className="meta">{Number(fileboxStats?.[folder.id]?.count || 0)}件</span>
                           </button>
                         ))}
                       </div>
-                      <section className={`admin-filebox-recents mode-${fileboxViewMode}`}>
-                        <h3>{`${activeFileboxFolder.name}${t(' のファイル')}`}</h3>
-                        {activeFolderItems.length === 0 ? (
-                          <p className="admin-filebox-empty">{t('ファイルがありません')}</p>
-                        ) : fileboxViewMode === 'list' ? (
-                          <ul>
-                            {activeFolderItems.map((item) => {
-                              const kind = detectFileKind(item);
-                              return (
-                                <li key={item.id}>
-                                  <div className="file-main">
-                                    <span className={`file-preview kind-${kind}`} aria-hidden>
-                                      <span className="file-preview-icon">{fileKindIcon(kind)}</span>
-                                      {kind === 'image' ? (
-                                        <img
-                                          className="file-preview-image"
-                                          src={item.url}
-                                          alt=""
-                                          loading="lazy"
-                                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                        />
-                                      ) : null}
-                                    </span>
+                      </aside>
+                    ) : null}
+                    {dashboardExplorerVisible ? (
+                      <div
+                        className={`admin-filebox-resizer admin-filebox-resizer-explorer ${dashboardResizingPane === 'explorer' ? 'active' : ''}`}
+                        role="separator"
+                        aria-orientation="vertical"
+                        aria-label={t('左ペイン幅リサイズ')}
+                        onPointerDown={(event) => beginDashboardResize('explorer', event)}
+                      />
+                    ) : null}
+                    <section className="admin-filebox-workspace" aria-label={t('ファイルワークスペース')}>
+                      <div className="admin-filebox-workspace-head">
+                        <div className="admin-filebox-toolbar-title">
+                          <strong>{activeFileboxFolder ? activeFileboxFolder.name : t('フォルダを選択')}</strong>
+                          <span>
+                            {activeFileboxFolder
+                              ? (
+                                activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID
+                                  ? t('受信した業務依頼をファイル単位で確認できます')
+                                  : t('表示方式を選んでファイルを確認できます')
+                              )
+                              : t('左のフォルダ一覧から選ぶと、ここにファイルが表示されます')}
+                          </span>
+                        </div>
+                        <div className="admin-filebox-toolbar-actions">
+                          {activeFileboxFolder ? (
+                            <button
+                              type="button"
+                              onClick={() => setActiveFileboxFolderId(null)}
+                              disabled={fileboxBusy}
+                            >
+                              {t('戻る')}
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={onFileboxUploadClick}
+                            disabled={!activeFileboxFolder || fileboxBusy || activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID}
+                          >
+                            {activeFileboxFolder?.id === WORKFLOW_INBOX_FOLDER_ID
+                              ? t('受信専用')
+                              : (fileboxUploading ? t('アップロード中...') : t('アップロード'))}
+                          </button>
+                          <input
+                            ref={fileboxInputRef}
+                            type="file"
+                            className="file-input"
+                            onChange={onFileboxSelect}
+                            multiple
+                            hidden
+                          />
+                        </div>
+                      </div>
+                      {!activeFileboxFolder ? (
+                        <div className="admin-filebox-welcome">
+                          <div className="welcome-icon" aria-hidden>🗂️</div>
+                          <div className="welcome-title">{t('フォルダを選択してファイルを表示')}</div>
+                          <p className="welcome-desc">{t('業務依頼PDFや添付資料を、フォルダ単位で管理できます。')}</p>
+                          <div className="welcome-stats">
+                            <span>{t('フォルダ数')}: {fileboxFolders.length}</span>
+                            <span>
+                              {t('総ファイル数')}: {
+                                fileboxFolders.reduce((sum, folder) => sum + Number(fileboxStats?.[folder.id]?.count || 0), 0)
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="admin-filebox-focus">
+                          <div className="admin-filebox-focus-card">
+                            <div className="admin-filebox-card active">
+                              <div className="icon" aria-hidden>📁</div>
+                              <div className="name">{activeFileboxFolder.name}</div>
+                              <div className="meta">{Number(fileboxStats?.[activeFileboxFolder.id]?.count || 0)}件</div>
+                              <div className="at">
+                                {fileboxStats?.[activeFileboxFolder.id]?.latestAtMs
+                                  ? ymdHmLabel(fileboxStats[activeFileboxFolder.id].latestAtMs)
+                                  : t('ファイルなし')}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="admin-filebox-view-switch" role="tablist" aria-label={t('表示方式')}>
+                            {FILEBOX_VIEW_MODE_OPTIONS.map((mode) => (
+                              <button
+                                key={mode.id}
+                                type="button"
+                                role="tab"
+                                aria-selected={fileboxViewMode === mode.id}
+                                className={fileboxViewMode === mode.id ? 'active' : ''}
+                                onClick={() => setFileboxViewMode(mode.id)}
+                                title={t(mode.label)}
+                              >
+                                <span aria-hidden>{mode.icon}</span>
+                              </button>
+                            ))}
+                          </div>
+                          <section className={`admin-filebox-recents mode-${fileboxViewMode}`}>
+                            <h3>{`${activeFileboxFolder.name}${t(' のファイル')}`}</h3>
+                            {activeFolderItems.length === 0 ? (
+                              <p className="admin-filebox-empty">{t('ファイルがありません')}</p>
+                            ) : fileboxViewMode === 'list' ? (
+                              <ul>
+                                {activeFolderItems.map((item) => {
+                                  const kind = detectFileKind(item);
+                                  return (
+                                    <li key={item.id}>
+                                      <div className="file-main">
+                                        <span className={`file-preview kind-${kind}`} aria-hidden>
+                                          <span className="file-preview-icon">{fileKindIcon(kind)}</span>
+                                          {kind === 'image' ? (
+                                            <img
+                                              className="file-preview-image"
+                                              src={item.url}
+                                              alt=""
+                                              loading="lazy"
+                                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                            />
+                                          ) : null}
+                                        </span>
+                                        <a
+                                          className="file"
+                                          href={item.url || '#'}
+                                          target={item.url ? '_blank' : undefined}
+                                          rel={item.url ? 'noopener noreferrer' : undefined}
+                                          onClick={(e) => { if (!item.url) e.preventDefault(); }}
+                                        >
+                                          {item.name}
+                                        </a>
+                                      </div>
+                                      <span className="folder">{item.uploader || t('未設定')}</span>
+                                      <span className="at">{ymdHmLabel(item.atMs)}</span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            ) : (
+                              <div className={`admin-filebox-tiles ${fileboxViewMode === 'slider' ? 'slider' : ''}`}>
+                                {activeFolderItems.map((item) => {
+                                  const kind = detectFileKind(item);
+                                  return (
                                     <a
-                                      className="file"
+                                      key={item.id}
+                                      className="admin-filebox-tile"
                                       href={item.url || '#'}
                                       target={item.url ? '_blank' : undefined}
                                       rel={item.url ? 'noopener noreferrer' : undefined}
                                       onClick={(e) => { if (!item.url) e.preventDefault(); }}
                                     >
-                                      {item.name}
+                                      <span className={`file-preview kind-${kind}`} aria-hidden>
+                                        <span className="file-preview-icon">{fileKindIcon(kind)}</span>
+                                        {kind === 'image' ? (
+                                          <img
+                                            className="file-preview-image"
+                                            src={item.url}
+                                            alt=""
+                                            loading="lazy"
+                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                          />
+                                        ) : null}
+                                      </span>
+                                      <span className="tile-name">{item.name}</span>
+                                      <span className="tile-at">{ymdHmLabel(item.atMs)}</span>
                                     </a>
-                                  </div>
-                                  <span className="folder">{item.uploader || t('未設定')}</span>
-                                  <span className="at">{ymdHmLabel(item.atMs)}</span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        ) : (
-                          <div className={`admin-filebox-tiles ${fileboxViewMode === 'slider' ? 'slider' : ''}`}>
-                            {activeFolderItems.map((item) => {
-                              const kind = detectFileKind(item);
-                              return (
-                                <a
-                                  key={item.id}
-                                  className="admin-filebox-tile"
-                                  href={item.url || '#'}
-                                  target={item.url ? '_blank' : undefined}
-                                  rel={item.url ? 'noopener noreferrer' : undefined}
-                                  onClick={(e) => { if (!item.url) e.preventDefault(); }}
-                                >
-                                  <span className={`file-preview kind-${kind}`} aria-hidden>
-                                    <span className="file-preview-icon">{fileKindIcon(kind)}</span>
-                                    {kind === 'image' ? (
-                                      <img
-                                        className="file-preview-image"
-                                        src={item.url}
-                                        alt=""
-                                        loading="lazy"
-                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                      />
-                                    ) : null}
-                                  </span>
-                                  <span className="tile-name">{item.name}</span>
-                                  <span className="tile-at">{ymdHmLabel(item.atMs)}</span>
-                                </a>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </section>
-                    </div>
-                  )}
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </section>
+                        </div>
+                      )}
+                    </section>
+                  </div>
                 </section>
-                <aside className="admin-filebox-chat-panel" aria-label={t('共通チャット')}>
-                  <CommonHeaderChat
-                    alwaysOpen
-                    hideTrigger
-                    docked
-                    showCloseButton={false}
-                    draggable={false}
-                    ariaLabel={t('ダッシュボード共通チャット')}
+                {dashboardChatVisible ? (
+                  <div
+                    className={`admin-filebox-resizer admin-filebox-resizer-chat ${dashboardResizingPane === 'chat' ? 'active' : ''}`}
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label={t('右ペイン幅リサイズ')}
+                    onPointerDown={(event) => beginDashboardResize('chat', event)}
                   />
-                </aside>
-              </div>
+                ) : null}
+                {dashboardChatVisible ? (
+                  <aside className="admin-filebox-chat-panel" aria-label={t('共通チャット')}>
+                    <CommonHeaderChat
+                      alwaysOpen
+                      hideTrigger
+                      docked
+                      showCloseButton={false}
+                      draggable={false}
+                      ariaLabel={t('ダッシュボード共通チャット')}
+                    />
+                  </aside>
+                ) : null}
+                </div>
+                <div className="admin-dashboard-body-footer" aria-hidden />
+              </>
             ) : (
               <p className="job-entrance-dummy">{t('左のサイドバーから機能を選択してください。')}</p>
             )

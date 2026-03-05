@@ -690,17 +690,47 @@ button:disabled {
 .job-entrance-main.with-sidebar.with-filebox {
   align-items: stretch;
   text-align: left;
+  padding-top: 0;
+  padding-right: 0;
+  padding-bottom: 0;
 }
 
 .admin-filebox-layout {
-  width: min(1440px, 100%);
-  margin-top: var(--space-4);
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: var(--space-4);
+  --dash-resizer-size: 10px;
+  grid-template-columns: minmax(0, 1fr) var(--dash-resizer-size) var(--dash-chat-width, 440px);
+  gap: var(--space-3);
   align-items: start;
+  --dash-panel-bg: linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(2, 6, 23, 0.84));
+  --dash-panel-border: var(--card-border);
+  --dash-panel-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08);
+  --dash-sub-bg: rgba(15, 23, 42, 0.62);
+  --dash-sub-border: var(--card-border);
+  --dash-work-bg: rgba(2, 6, 23, 0.58);
+  --dash-button-bg: rgba(15, 23, 42, 0.84);
+  --dash-row-hover-bg: rgba(59, 130, 246, 0.12);
+  --dash-row-hover-border: rgba(96, 165, 250, 0.35);
+  --dash-row-active-bg: rgba(59, 130, 246, 0.18);
+  --dash-row-active-border: rgba(96, 165, 250, 0.45);
+  --dash-row-active-left: #60a5fa;
+  --dash-welcome-bg: rgba(15, 23, 42, 0.42);
+  --dash-welcome-border: var(--card-border);
+}
+
+.admin-filebox-layout.hide-chat {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-dashboard-body-footer {
+  width: 100%;
+  height: 20px;
+  border-top: 1px solid var(--dash-sub-border);
+  background: var(--dash-sub-bg);
 }
 
 .job-entrance-title {
@@ -718,12 +748,202 @@ button:disabled {
 .admin-filebox-panel {
   width: 100%;
   margin: 0;
+  padding: var(--space-3);
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--dash-panel-border);
+  border-radius: 14px;
+  background: var(--dash-panel-bg);
+  box-shadow: var(--dash-panel-shadow);
+}
+
+.admin-filebox-shell {
+  min-height: calc(100vh - 120px);
+  display: grid;
+  grid-template-columns: var(--dash-explorer-width, 260px) var(--dash-resizer-size) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.admin-filebox-shell.hide-explorer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-filebox-resizer {
+  position: relative;
+  width: var(--dash-resizer-size);
+  min-width: var(--dash-resizer-size);
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+  border-radius: 8px;
+}
+
+.admin-filebox-resizer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--card-border);
+  opacity: 0.92;
+}
+
+.admin-filebox-resizer:hover::before,
+.admin-filebox-resizer.active::before,
+.admin-filebox-layout.is-resizing .admin-filebox-resizer-chat::before,
+.admin-filebox-shell.is-resizing .admin-filebox-resizer-explorer::before {
+  background: var(--accent-color);
+  box-shadow: 0 0 0 1px var(--accent-glow);
+}
+
+.admin-filebox-explorer {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 10px;
+  border: 1px solid var(--dash-sub-border);
+  border-radius: 12px;
+  background: var(--dash-sub-bg);
+  padding: 10px;
+}
+
+.admin-filebox-explorer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-filebox-explorer-head strong {
+  color: var(--fg);
+  font-size: var(--fs-13);
+  letter-spacing: 0.03em;
+}
+
+.admin-filebox-explorer-head button {
+  border: 1px solid var(--border-color);
+  background: var(--dash-button-bg);
+  color: var(--fg);
+  border-radius: 7px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.admin-filebox-folder-list {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.admin-filebox-folder-row {
+  width: 100%;
+  border: 1px solid transparent;
+  border-left: 2px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fg);
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.admin-filebox-folder-row:hover {
+  background: var(--dash-row-hover-bg);
+  border-color: var(--dash-row-hover-border);
+}
+
+.admin-filebox-folder-row.active {
+  background: var(--dash-row-active-bg);
+  border-left-color: var(--dash-row-active-left);
+  border-color: var(--dash-row-active-border);
+}
+
+.admin-filebox-folder-row .name {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-filebox-folder-row .meta {
+  font-size: var(--fs-11);
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+.admin-filebox-workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  border: 1px solid var(--dash-sub-border);
+  border-radius: 12px;
+  background: var(--dash-work-bg);
+  padding: 12px;
+}
+
+.admin-filebox-workspace-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-filebox-welcome {
+  border: 1px dashed var(--dash-welcome-border);
+  border-radius: 12px;
+  background: var(--dash-welcome-bg);
+  min-height: 260px;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 20px;
+}
+
+.admin-filebox-welcome .welcome-icon {
+  font-size: 28px;
+}
+
+.admin-filebox-welcome .welcome-title {
+  color: var(--fg);
+  font-size: var(--fs-16);
+  font-weight: 700;
+}
+
+.admin-filebox-welcome .welcome-desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-13);
+}
+
+.admin-filebox-welcome .welcome-stats {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  color: var(--text-secondary);
+  font-size: var(--fs-12);
 }
 
 .admin-filebox-chat-panel {
   position: sticky;
-  top: calc(18px + env(safe-area-inset-top));
+  top: 0;
   align-self: start;
+  justify-self: end;
+  width: 440px;
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -732,7 +952,11 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  margin-bottom: 0;
+}
+
+.admin-filebox-toolbar-top {
+  padding: 2px 2px 4px;
 }
 
 .admin-filebox-toolbar-title {
@@ -779,10 +1003,10 @@ button:disabled {
 }
 
 .admin-filebox-create {
-  margin-bottom: var(--space-3);
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  margin-bottom: 0;
 }
 
 .admin-filebox-create input {
@@ -819,7 +1043,8 @@ button:disabled {
 
 .admin-filebox-focus {
   display: grid;
-  gap: var(--space-3);
+  gap: 10px;
+  min-height: 0;
 }
 
 .admin-filebox-focus-card {
@@ -872,10 +1097,10 @@ button:disabled {
 }
 
 .admin-filebox-recents {
-  margin-top: var(--space-4);
+  margin-top: 0;
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  background: var(--card-bg);
+  background: rgba(15, 23, 42, 0.52);
   padding: var(--space-3);
   text-align: left;
 }
@@ -1385,8 +1610,9 @@ button:disabled {
 
 .job-entrance-sidebar-section-title:hover:not(:disabled),
 .job-entrance-sidebar-section-title:focus-visible {
-  border-color: var(--border-color);
+  border-color: var(--accent-color);
   background: var(--card-bg);
+  color: var(--accent-color);
 }
 
 .job-entrance-sidebar-section-title.open {
@@ -1434,6 +1660,7 @@ button:disabled {
 .job-entrance-sidebar-link:hover:not(:disabled) {
   background: var(--card-bg);
   color: var(--accent-color);
+  border-left-color: var(--accent-color);
 }
 
 .job-entrance-sidebar-link.active {
@@ -1496,6 +1723,40 @@ button:disabled {
 
 .misogi-support-trigger.open {
   transform: rotate(90deg);
+}
+
+.job-entrance-sidebar-misogi {
+  margin-top: 6px;
+}
+
+.job-entrance-sidebar-misogi .misogi-support-trigger {
+  position: static;
+  top: auto;
+  right: auto;
+  z-index: auto;
+  width: 100%;
+  height: auto;
+  min-height: 36px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  background: transparent;
+  font-size: 12px;
+}
+
+.job-entrance-sidebar-misogi .misogi-support-trigger:hover {
+  background: var(--card-bg);
+  color: var(--accent-color);
+  border-left-color: var(--accent-color);
+}
+
+.job-entrance-sidebar-misogi .misogi-support-trigger.open {
+  transform: none;
+  border-left-color: var(--accent-color);
+  background: var(--card-bg);
+  color: var(--accent-color);
 }
 
 .job-entrance-updates-rail {
@@ -2049,10 +2310,80 @@ button:disabled {
   color: #1d4ed8;
 }
 
+[data-theme="light"] .job-entrance-sidebar-section-title:hover:not(:disabled),
+[data-theme="light"] .job-entrance-sidebar-section-title:focus-visible {
+  background: #e2e8f0;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
 [data-theme="light"] .job-entrance-sidebar-link.active {
   background: #dbeafe;
   color: #1e40af;
   border-left-color: #2563eb;
+}
+
+[data-theme="light"] .job-entrance-page[data-job="admin"][data-entrance-mode="default"] .admin-filebox-layout {
+  --dash-panel-bg: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.96));
+  --dash-panel-border: #cbd5e1;
+  --dash-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --dash-sub-bg: rgba(255, 255, 255, 0.86);
+  --dash-sub-border: #cbd5e1;
+  --dash-work-bg: rgba(255, 255, 255, 0.9);
+  --dash-button-bg: #ffffff;
+  --dash-row-hover-bg: #eff6ff;
+  --dash-row-hover-border: #bfdbfe;
+  --dash-row-active-bg: #dbeafe;
+  --dash-row-active-border: #93c5fd;
+  --dash-row-active-left: #2563eb;
+  --dash-welcome-bg: #f8fafc;
+  --dash-welcome-border: #cbd5e1;
+}
+
+[data-theme="light"] .admin-filebox-resizer::before {
+  background: #cbd5e1;
+}
+
+[data-theme="light"] .job-entrance-page[data-job="admin"][data-entrance-mode="sepia"] .admin-filebox-layout {
+  --dash-panel-bg: linear-gradient(180deg, rgba(250, 244, 233, 0.98), rgba(245, 236, 219, 0.98));
+  --dash-panel-border: rgba(156, 119, 62, 0.34);
+  --dash-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --dash-sub-bg: rgba(255, 250, 241, 0.92);
+  --dash-sub-border: rgba(156, 119, 62, 0.34);
+  --dash-work-bg: rgba(255, 250, 241, 0.9);
+  --dash-button-bg: rgba(255, 250, 241, 0.96);
+  --dash-row-hover-bg: rgba(170, 130, 69, 0.2);
+  --dash-row-hover-border: rgba(143, 107, 58, 0.35);
+  --dash-row-active-bg: rgba(170, 130, 69, 0.28);
+  --dash-row-active-border: rgba(143, 107, 58, 0.45);
+  --dash-row-active-left: #8f6b3a;
+  --dash-welcome-bg: rgba(255, 250, 241, 0.95);
+  --dash-welcome-border: rgba(156, 119, 62, 0.34);
+}
+
+[data-theme="light"] .job-entrance-page[data-job="admin"][data-entrance-mode="sepia"] .admin-filebox-resizer::before {
+  background: rgba(156, 119, 62, 0.34);
+}
+
+[data-theme="dark"] .job-entrance-page[data-job="admin"][data-entrance-mode="sepia"] .admin-filebox-layout {
+  --dash-panel-bg: linear-gradient(180deg, rgba(58, 44, 27, 0.86), rgba(34, 24, 15, 0.9));
+  --dash-panel-border: rgba(156, 119, 62, 0.34);
+  --dash-panel-shadow: inset 0 1px 0 rgba(255, 231, 190, 0.08);
+  --dash-sub-bg: rgba(66, 49, 30, 0.78);
+  --dash-sub-border: rgba(156, 119, 62, 0.34);
+  --dash-work-bg: rgba(44, 32, 20, 0.76);
+  --dash-button-bg: rgba(58, 44, 27, 0.84);
+  --dash-row-hover-bg: rgba(191, 143, 78, 0.18);
+  --dash-row-hover-border: rgba(191, 143, 78, 0.32);
+  --dash-row-active-bg: rgba(191, 143, 78, 0.24);
+  --dash-row-active-border: rgba(191, 143, 78, 0.4);
+  --dash-row-active-left: #c79b57;
+  --dash-welcome-bg: rgba(66, 49, 30, 0.6);
+  --dash-welcome-border: rgba(156, 119, 62, 0.34);
+}
+
+[data-theme="dark"] .job-entrance-page[data-job="admin"][data-entrance-mode="sepia"] .admin-filebox-resizer::before {
+  background: rgba(156, 119, 62, 0.4);
 }
 
 [data-theme="dark"] .job-entrance-sidebar-head {
@@ -2068,8 +2399,15 @@ button:disabled {
 }
 
 [data-theme="dark"] .job-entrance-sidebar-link:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(59, 130, 246, 0.16);
   color: #93c5fd;
+}
+
+[data-theme="dark"] .job-entrance-sidebar-section-title:hover:not(:disabled),
+[data-theme="dark"] .job-entrance-sidebar-section-title:focus-visible {
+  background: rgba(59, 130, 246, 0.16);
+  color: #bfdbfe;
+  border-color: #60a5fa;
 }
 
 [data-theme="dark"] .job-entrance-sidebar-link.active {
@@ -2165,17 +2503,47 @@ button:disabled {
     padding-top: calc(64px + env(safe-area-inset-top));
   }
 
+  .job-entrance-main.with-sidebar.with-filebox {
+    padding-top: calc(64px + env(safe-area-inset-top));
+    padding-right: var(--space-5);
+    padding-bottom: var(--space-5);
+  }
+
   .admin-filebox-layout {
     width: min(100%, 680px);
+    min-height: auto;
     grid-template-columns: 1fr;
   }
 
   .admin-filebox-panel {
     width: 100%;
+    padding: var(--space-3);
+  }
+
+  .admin-filebox-shell {
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-filebox-resizer {
+    display: none;
+  }
+
+  .admin-filebox-explorer {
+    grid-template-rows: auto auto auto;
+  }
+
+  .admin-filebox-folder-list {
+    max-height: 220px;
+  }
+
+  .admin-filebox-workspace {
+    min-height: auto;
   }
 
   .admin-filebox-chat-panel {
     position: static;
+    height: auto;
   }
 
   .admin-filebox-toolbar {

@@ -1,0 +1,600 @@
+.admin-yasumi-page {
+  --bg: #0b0d12;
+  --panel: #121621;
+  --text: #e9eefc;
+  --muted: #9aa6c5;
+  --line: #273049;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  min-height: 100%;
+  color: var(--text);
+}
+
+[data-theme="light"] .admin-yasumi-page {
+  --bg: #f1f5f9;
+  --panel: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.admin-yasumi-page.report-page {
+  background: radial-gradient(1400px 800px at 10% -10%, #1b2450 0%, var(--bg) 55%);
+}
+
+[data-theme="light"] .admin-yasumi-page.report-page {
+  background: radial-gradient(1400px 800px at 10% -10%, #dbeafe 0%, var(--bg) 55%);
+}
+
+.admin-yasumi-content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px 20px 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-yasumi-page.is-week-mode .admin-yasumi-content {
+  padding-top: 8px;
+  gap: 8px;
+}
+
+.yasumi-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.yasumi-head h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.yasumi-head p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.yasumi-head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.yasumi-view-toggle {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.yasumi-view-toggle .btn.is-active {
+  border-color: #2563eb;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.yasumi-month-label {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  font-size: 0.95rem;
+  background: var(--panel);
+}
+
+.yasumi-range-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.yasumi-error {
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+}
+
+.yasumi-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.yasumi-workers-card,
+.yasumi-main-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.yasumi-workers-card {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.yasumi-workers-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.yasumi-workers-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.yasumi-workers-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.yasumi-workers-list {
+  max-height: 58vh;
+  overflow: auto;
+  display: grid;
+  gap: 6px;
+}
+
+.yasumi-worker-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.86rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.yasumi-main-card {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.admin-yasumi-page.is-week-mode .yasumi-main-card {
+  padding-top: 8px;
+  gap: 8px;
+}
+
+.yasumi-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.yasumi-calendar-weekdays span {
+  text-align: center;
+  padding: 6px 0;
+}
+
+.yasumi-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.yasumi-calendar-grid.is-week {
+  grid-template-rows: minmax(0, 1fr);
+  height: calc(100vh - 260px);
+}
+
+.yasumi-calendar-grid.is-week .yasumi-cal-cell {
+  min-height: 0;
+  height: 100%;
+}
+
+.yasumi-cal-cell {
+  min-height: 120px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 7px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.yasumi-cal-cell:hover {
+  border-color: rgba(59, 130, 246, 0.55);
+}
+
+.yasumi-cal-cell.is-disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+}
+
+.yasumi-cal-cell.is-disabled:hover {
+  border-color: var(--line);
+}
+
+.yasumi-cal-cell.empty {
+  background: transparent;
+  border-style: dashed;
+  cursor: default;
+}
+
+.yasumi-cal-cell.is-selected {
+  outline: 2px solid #2563eb;
+}
+
+.yasumi-cal-cell.is-today .yasumi-cal-date {
+  background: #2563eb;
+  color: #fff;
+}
+
+.yasumi-cal-headline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.yasumi-cal-date {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.yasumi-cal-counts {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: 0.68rem;
+}
+
+.yasumi-cal-counts span {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 2px 6px;
+}
+
+.yasumi-cal-counts .is-open {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.yasumi-cal-counts .is-scheduled {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.yasumi-cal-counts .is-closed {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.yasumi-cal-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-content: flex-start;
+  overflow: auto;
+}
+
+.yasumi-cal-name {
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yasumi-cal-name.is-open {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.yasumi-cal-name.is-scheduled {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.yasumi-cal-name.is-closed {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.yasumi-cal-more {
+  border-radius: 6px;
+  border: 1px dashed var(--line);
+  padding: 2px 6px;
+  font-size: 0.66rem;
+  color: var(--muted);
+}
+
+.yasumi-calendar-grid.is-week .yasumi-cal-preview {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-content: stretch;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 430px);
+}
+
+.yasumi-calendar-grid.is-week .yasumi-cal-name,
+.yasumi-calendar-grid.is-week .yasumi-cal-more {
+  width: 100%;
+}
+
+.admin-yasumi-page.is-week-mode .yasumi-main-card {
+  min-height: calc(100vh - 190px);
+}
+
+.yasumi-day-detail {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.yasumi-day-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.yasumi-day-detail-head h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.yasumi-day-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+}
+
+.yasumi-day-summary .is-open { color: #10b981; }
+.yasumi-day-summary .is-scheduled { color: #3b82f6; }
+.yasumi-day-summary .is-closed { color: #ef4444; }
+
+.yasumi-day-list {
+  display: grid;
+  gap: 6px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.yasumi-day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.yasumi-day-row .name {
+  font-size: 0.86rem;
+}
+
+.yasumi-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 3px 8px;
+  font-size: 0.74rem;
+}
+
+.yasumi-status.is-open {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.yasumi-status.is-scheduled {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.yasumi-status.is-closed {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.yasumi-muted {
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 8px;
+}
+
+.yasumi-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.yasumi-overlay {
+  width: min(980px, calc(100vw - 24px));
+  max-height: min(84vh, 920px);
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.yasumi-overlay-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.yasumi-overlay-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.yasumi-overlay-head p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.yasumi-overlay-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+.yasumi-overlay-summary span {
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  padding: 4px 10px;
+}
+
+.yasumi-overlay-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.yasumi-overlay-group {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.yasumi-overlay-group h4 {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.yasumi-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.yasumi-name-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.yasumi-name-tag.is-open,
+.yasumi-overlay-summary .is-open {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.yasumi-name-tag.is-scheduled,
+.yasumi-overlay-summary .is-scheduled {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.yasumi-name-tag.is-closed,
+.yasumi-overlay-summary .is-closed {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+@media (max-width: 1200px) {
+  .yasumi-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .yasumi-workers-list {
+    max-height: 240px;
+  }
+
+  .yasumi-calendar-grid.is-week {
+    height: auto;
+  }
+
+  .yasumi-calendar-grid.is-week .yasumi-cal-cell {
+    min-height: 260px;
+    height: auto;
+  }
+
+  .yasumi-calendar-grid.is-week .yasumi-cal-preview {
+    max-height: 170px;
+  }
+
+  .admin-yasumi-page.is-week-mode .yasumi-main-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-yasumi-content {
+    width: 100%;
+    padding: 12px 8px 16px;
+  }
+
+  .yasumi-head {
+    flex-direction: column;
+  }
+
+  .yasumi-cal-cell {
+    min-height: 92px;
+  }
+
+  .yasumi-cal-counts {
+    font-size: 0.62rem;
+  }
+
+  .yasumi-cal-name {
+    font-size: 0.62rem;
+  }
+
+  .yasumi-day-detail-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .yasumi-overlay {
+    width: calc(100vw - 16px);
+    max-height: 88vh;
+    padding: 10px;
+  }
+
+  .yasumi-overlay-head {
+    flex-direction: column;
+  }
+}

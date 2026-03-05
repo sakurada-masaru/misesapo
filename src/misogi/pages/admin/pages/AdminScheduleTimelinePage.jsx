@@ -2625,6 +2625,7 @@ export default function AdminScheduleTimelinePage() {
               conflictIds={conflictIds}
               onCardClick={setSelectedAppt}
               onCreate={openCreate}
+              apiBase={API_BASE}
             />
           )}
           {view === 'week' && contactMode && (
@@ -4273,7 +4274,7 @@ function DayList({ dateISO, cleaners, appointments, conflictIds, onCardClick, on
   );
 }
 
-function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, conflictIds, onCardClick, onCreate }) {
+function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, conflictIds, onCardClick, onCreate, apiBase }) {
   const byDate = useMemo(() => {
     const map = new Map();
     for (const iso of rollingDays) map.set(iso, []);
@@ -4284,8 +4285,74 @@ function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, co
     return map;
   }, [rollingDays, appointments]);
 
+  const [availabilityMatrixByDay, setAvailabilityMatrixByDay] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const workerIds = cleaners
+        .map((c) => String(c?.id || '').trim())
+        .filter((id) => id && id !== '__unassigned__');
+      if (workerIds.length === 0 || rollingDays.length === 0) {
+        if (!cancelled) setAvailabilityMatrixByDay({});
+        return;
+      }
+
+      try {
+        const from = rollingDays[0];
+        const to = rollingDays[rollingDays.length - 1];
+        const token = localStorage.getItem('cognito_id_token') || (JSON.parse(localStorage.getItem('misesapo_auth') || '{}')).token;
+        const base = String(apiBase || '').replace(/\/$/, '');
+        const url = `${base}/sales/availability-matrix?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&service=cleaning&worker_ids=${encodeURIComponent(workerIds.join(','))}`;
+        const res = await fetch(url, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          cache: 'no-store',
+        });
+        if (!res.ok) {
+          if (!cancelled) setAvailabilityMatrixByDay({});
+          return;
+        }
+        const data = await res.json();
+        const workers = Array.isArray(data?.workers) ? data.workers : [];
+        const map = {};
+        rollingDays.forEach((iso) => {
+          let openCount = 0;
+          let scheduledCount = 0;
+          let closedCount = 0;
+          workers.forEach((w) => {
+            const status = String(w?.days?.[iso] || '').toLowerCase();
+            if (status === 'scheduled') scheduledCount += 1;
+            else if (status === 'open') openCount += 1;
+            else closedCount += 1;
+          });
+          map[iso] = {
+            freeCount: openCount,
+            totalStaff: workerIds.length,
+            isFull: openCount === 0,
+            detailText: `休み ${closedCount}名 / 予定 ${scheduledCount}名`,
+          };
+        });
+        if (!cancelled) setAvailabilityMatrixByDay(map);
+      } catch {
+        if (!cancelled) setAvailabilityMatrixByDay({});
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [apiBase, cleaners, rollingDays]);
+
   // 各日の空き状況（稼働していない清掃員の数 + 最大連続空き時間）を計算
   const availabilityData = useMemo(() => {
+    if (Object.keys(availabilityMatrixByDay).length > 0) {
+      return rollingDays.map((iso) => ({
+        iso,
+        freeCount: availabilityMatrixByDay[iso]?.freeCount ?? 0,
+        totalStaff: availabilityMatrixByDay[iso]?.totalStaff ?? cleaners.length,
+        isFull: !!availabilityMatrixByDay[iso]?.isFull,
+        detailText: availabilityMatrixByDay[iso]?.detailText || '-',
+      }));
+    }
+
     const totalStaff = cleaners.length;
     return rollingDays.map(iso => {
       const dayAppts = byDate.get(iso) ?? [];
@@ -4343,10 +4410,10 @@ function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, co
         freeCount,
         totalStaff,
         isFull: freeCount === 0 && overallMaxContinuousMinutes < 60, // 1時間未満しか空きがないならFULL扱い
-        maxContinuousHours: (overallMaxContinuousMinutes / 60).toFixed(1)
+        detailText: `最長連続 ${(overallMaxContinuousMinutes / 60).toFixed(1)}h`
       };
     });
-  }, [rollingDays, byDate, cleaners]);
+  }, [rollingDays, byDate, cleaners, availabilityMatrixByDay]);
 
   function renderDayColumn(iso, isToday) {
     const dayAppts = byDate.get(iso) ?? [];
@@ -4418,7 +4485,7 @@ function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, co
                   <span className="av-label">名 空き</span>
                 </div>
                 <div className="av-detail">
-                  最長連続 <span className="av-highlight">{availabilityData[0].maxContinuousHours}h</span>
+                  <span className="av-highlight">{availabilityData[0].detailText}</span>
                 </div>
               </div>
             )}
@@ -4427,7 +4494,7 @@ function WeekView({ dateISO, setDateISO, rollingDays, cleaners, appointments, co
             {availabilityData.slice(1).map((stat, i) => (
               <div key={stat.iso} className={`av-cell ${stat.isFull ? 'is-full' : ''}`}>
                 <span className="av-count">{stat.freeCount}名</span>
-                <span className="av-detail">{stat.maxContinuousHours}h</span>
+                <span className="av-detail">{stat.detailText}</span>
               </div>
             ))}
           </div>
@@ -4496,7 +4563,7 @@ function ContactWeekPanel({
                     <ContactCard
                       key={a.id}
                       appt={a}
-                      cleaners={cleanersWithUnit}
+                      cleaners={cleaners}
                       conflictIds={conflictIds}
                       isSelected={selectedAppointmentId === a.id}
                       isLinked={activeScheduleId != null && (a.schedule_id ?? a.id) === activeScheduleId}

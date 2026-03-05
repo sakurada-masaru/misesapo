@@ -4,6 +4,16 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 ---
 
+## Contractor Availability Declaration Tool (2026-03-05)
+
+- [x] `ContractorAvailabilityDeclarationPage.jsx` を追加し、業務委託者向けの月次稼働予定申告UIを実装（1日4択: 稼働可/午前のみ/午後のみ/休み）
+- [x] UIをGoogleカレンダー風の月グリッドへ再構成し、日別予定チップを表示
+- [x] 期間指定（開始日/終了日）で一括休み申請できるフォームを追加
+- [x] 自由記述を廃止し、`reason_note` は `DECL_V1:*` の構造化コードで保存するよう統一
+- [x] `/blocks` 保存前に `detectBlockConflicts` で既存予定重複を検出し、重複時は保存を拒否
+- [x] ルーターに `/jobs/cleaning/availability-declare` を追加し、清掃エントランスの `予定` タブに導線を追加
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
 ## HamburgerMenu Maximum Update Depth Fix (2026-02-26)
 
 - [x] `HamburgerMenu.jsx` の `filteredLinks` を `useMemo` 化し、毎レンダーで新配列が生成されないよう修正
@@ -1877,4 +1887,247 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 部署名/ロール情報からスコープを正規化（`経理/人事/総務` は `事務` として扱う）
 - [x] フォームに残っている担当者IDが候補外になった場合は自動クリア
 - [x] `依頼先担当者` セレクトのプレースホルダ文言を制限内容に合わせて更新
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Sidebar Hover Color Tuning (2026-03-05)
+
+- [x] サイドバー項目（リンク）のホバー時にアクセント色が分かるよう色変化を強調
+- [x] サイドバー大カテゴリ見出し（アコーディオン）にもホバー時の色変化を追加
+- [x] ライト/ダーク両テーマでホバー配色を最適化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard Chat Right Edge Dock (2026-03-05)
+
+- [x] `/admin/filebox`（ダッシュボード）時のメイン右余白を調整し、右チャットカラムを画面右端へ寄せる
+- [x] ダッシュボード2カラムの幅制限を解除して全幅化し、チャットパネルを右端固定配置に最適化
+- [x] モバイル幅では既存余白へ戻すレスポンシブ補正を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard Chat Top/Bottom Flush (2026-03-05)
+
+- [x] `/admin/filebox` 時のメイン上下余白を調整し、右チャットカラムを上端・下端まで密着表示
+- [x] ダッシュボードレイアウトに最小高さを付与し、チャットカラム高をビューポート基準へ固定
+- [x] ドッキングチャット（`CommonHeaderChat`）を高さ100%化し、角丸/影を外してパネル密着表示に調整
+- [x] タブレット/モバイル幅では既存の余白・高さ挙動へ戻す補正を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard-Only Sidebar MISOGI Trigger (2026-03-05)
+
+- [x] 固定ヘッダー側の `MISOGI` 呼び出しボタンは `/admin/filebox` 時のみ非表示化
+- [x] `/admin/filebox` 時に限り、サイドバー `運用ツール` セクション配下へ `MISOGI` 呼び出しボタンを移設
+- [x] サイドバー内表示時は `misogi-support-trigger` を固定配置から解除し、リンク行スタイルで表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Common Chat: Width +80px for Readability (2026-03-05)
+
+- [x] 共通チャットオーバーレイ幅を `360px -> 440px` に拡張（`+80px`）
+- [x] ダッシュボード右側の常設共通チャットカラム幅を `360px -> 440px` に拡張
+- [x] 共通チャットのドラッグ座標制限/初期位置計算を新幅に追従させ、はみ出し挙動を補正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Common Chat: Remove Tools Toggle Button (2026-03-05)
+
+- [x] 共通チャット作成欄の `ツールを表示 / ツールを隠す` ボタンを削除
+- [x] 絵文字・データの開閉は各ボタンで直接トグルする挙動へ整理
+- [x] `activeRoom` 切替時の不要な `showTools` リセット処理と返信起点の `showTools` 有効化処理を削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard Cursor-Like Workspace UI (2026-03-05)
+
+- [x] `/admin/filebox` ダッシュボードを3ペイン構成へ再設計（左: フォルダエクスプローラ / 中央: ファイルワークスペース / 右: 共通チャット）
+- [x] 左エクスプローラに `更新`・`フォルダ追加`・フォルダ一覧（選択ハイライト）を集約
+- [x] 中央ワークスペースにフォルダ状態ヘッダ、アップロード導線、表示切替、ファイル一覧を再配置
+- [x] フォルダ未選択時はウェルカムパネル（総フォルダ数/総ファイル数）を表示
+- [x] ダーク/ライト両テーマで新レイアウト配色を最適化、モバイル幅では1カラムへフォールバック
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard Color Mode Sync (2026-03-05)
+
+- [x] ダッシュボード新UIの配色を CSS 変数化し、固定色依存を削減
+- [x] `標準 × ライト` モード用にダッシュボード配色を調整（面/境界/選択ハイライト）
+- [x] `セピア × ライト` モード用にダッシュボード配色を調整（面/境界/選択ハイライト）
+- [x] `セピア × ダーク` モード用にダッシュボード配色を調整（面/境界/選択ハイライト）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard Pane Resizers (2026-03-05)
+
+- [x] `/admin/filebox` ダッシュボードの左エクスプローラと中央ワークスペースの間に横幅リサイザーを追加
+- [x] `/admin/filebox` ダッシュボードの中央ワークスペースと右チャットの間に横幅リサイザーを追加
+- [x] リサイザーの幅を `localStorage` に保持し、再訪時に復元
+- [x] 画面幅に応じた最小/最大幅制約と、モバイル時のリサイザー非表示フォールバックを追加
+- [x] `標準/セピア × ライト/ダーク` 各モードでリサイザー配色を同期
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard Cursor Header + Panel Toggle + Bottom Tab (2026-03-05)
+
+- [x] `/admin/filebox` ダッシュボード上部に Cursor 風の細いヘッダーバー（現在フォルダパス表示）を追加
+- [x] ヘッダー右上に `⚙`（パネル設定）を追加し、左/右ペインの表示・非表示を切替可能化
+- [x] 左/右ペインの表示状態を `localStorage` に保持し、再訪時に復元
+- [x] `/admin/filebox` ダッシュボード下部に Cursor 風のタブバー（アクティブタブ表示）を追加
+- [x] `標準/セピア × ライト/ダーク` でヘッダー/タブ配色をモード同期
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Dashboard Body Header/Footer Layout Fix (2026-03-05)
+
+- [x] コンテンツ内に置いたヘッダー/タブUIを撤去し、ボディ外側レイアウトへ移設
+- [x] ボディ上部に補助ヘッダーを追加し、左/右ペインの表示ボタンを配置
+- [x] ボディ下部に `20px` 固定のフッター帯を追加
+- [x] ペイン表示状態の永続化（`localStorage`）は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Entrance: Move Pane Toggles to Top Header Band (2026-03-05)
+
+- [x] `/admin/filebox` 時は共通ヘッダー帯（戻る/チャットがある帯）を表示し、ここにペイン表示トグルを配置
+- [x] トグル操作は `CustomEvent(misogi-dashboard-pane-toggle)` でダッシュボード本体へ連携
+- [x] 左/右ペイン表示状態を `localStorage` と同期し、再訪時に復元
+- [x] コンテンツ直上の補助ヘッダーは撤去し、ボディ下部 `20px` フッター帯のみ維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Page + Availability API Unification (2026-03-05)
+
+- [x] 清掃員 `休み申請カレンダー` を旧 `blocks` API 依存から `workers/me/availability`（`GET/PUT`）へ統一
+- [x] 休み申告モードを `稼働可 / 休み` に整理し、月全体を `status=open/closed` で保存
+- [x] 管理 `AdminScheduleTimelinePage` の週表示で `WeekView` に `apiBase` を受け渡し、`sales/availability-matrix` 取得を安定化
+- [x] 管理サイドバー `スケジュール管理` に `yasumi` を新設（`/admin/yasumi`）
+- [x] `yasumi` ページを追加し、担当者選択 + 日別 `open/scheduled/closed` 集計 + マトリクス表示を実装
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Google Calendar-like UI (2026-03-05)
+
+- [x] `yasumi` 画面を月表示カレンダー（6週グリッド）へ再構成し、Googleカレンダー風の視認性に調整
+- [x] 月移動（前月/今月/翌月）と日付選択を追加し、選択日の詳細集計を下段に表示
+- [x] カレンダー各日セルに `稼働可 / 予定 / 休み` 件数と休み担当者プレビュータグを表示
+- [x] 左ペインに担当者フィルタ（個別ON/OFF・全選択・解除）を維持し、月表示集計へ即時反映
+- [x] レスポンシブ時（タブレット/モバイル）に1カラムへフォールバックするスタイルを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Full-Width Layout (2026-03-05)
+
+- [x] `yasumi` 画面に `report-page-content--full` を適用し、共通 `max-width: 560px` 制約を解除
+- [x] `admin-yasumi-content` を `width: 100% / max-width: none` に調整し、管理画面で横幅を広く使用
+- [x] モバイル時の余白を維持しつつ、デスクトップで全幅利用できるようパディングを調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Account: Full Purge from Workers/Jinzai/Cognito (2026-03-05)
+
+- [x] 削除対象5名（`生井剛 / 鳥澤美緒 / 平鋭未 / 若松祥江 / 岡本涼子`）を `workers` から物理削除
+- [x] 人材側レコード（`jinzai`）の該当データを物理削除
+- [x] 認証アカウント（Cognito User Pool: `ap-northeast-1_EDKElIGoC`）を物理削除
+- [x] `workers` API と DynamoDB/Cognito 再照合で対象の残存 0 件を確認
+
+## Account: Additional Full Purge from Workers/Jinzai/Cognito (2026-03-05)
+
+- [x] 削除対象4名（`増田優香 / 吉田 / ソウザ レムエル / 高木直人`）を `workers` から物理削除
+- [x] 人材側レコード（`jinzai`）の該当データを物理削除
+- [x] 認証アカウント（Cognito User Pool: `ap-northeast-1_EDKElIGoC`）を物理削除
+- [x] `workers` API と DynamoDB/Cognito 再照合で対象の残存 0 件を確認
+
+## Schedule: Yasumi Day Overlay Tags (2026-03-06)
+
+- [x] `yasumi` カレンダーの日付クリック時に日別詳細オーバーレイを表示
+- [x] オーバーレイ内で担当者を `休み / 予定 / 稼働可` の項目別に分割表示
+- [x] 各担当者名をタグ表示へ統一し、カテゴリ別の色分けを適用
+- [x] ESCキー / 背景クリック / 閉じるボタンでオーバーレイを閉じる挙動を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Overlay Visibility Fix (2026-03-06)
+
+- [x] 日別オーバーレイを `createPortal(document.body)` 描画へ変更し、親コンテキスト依存を排除
+- [x] オーバーレイ backdrop の `z-index` を引き上げ、管理画面の他固定レイヤーより前面表示に統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Overlay Opaque Background Fix (2026-03-06)
+
+- [x] `admin-yasumi-page` に `--panel/--line/--text` を定義し、オーバーレイ背景の変数未定義を解消
+- [x] `yasumi-overlay` の背景色を `var(--panel, #121621)` へ変更し、不透明表示を保証
+- [x] ライト/ダーク両テーマで `yasumi` 背景と文字色が正しく見えるよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Overlay White Theme Adjustment (2026-03-06)
+
+- [x] ユーザー要望に合わせて `yasumi` オーバーレイ本体を白背景固定（`#fff`）へ変更
+- [x] オーバーレイ内の文字色・補助文色・境界色を白背景向け（濃色テキスト）に調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Weekly View (2026-03-06)
+
+- [x] `yasumi` 画面に `月次 / 週次` 表示切替トグルを追加
+- [x] 週次モードで `選択日` 基準の 1 週間（7日）グリッド表示を実装
+- [x] ナビゲーション（前/今/次）を表示モード連動（週次: ±1週、月次: ±1月）に変更
+- [x] 取得レンジを表示モード連動（週次: 週範囲、月次: 月範囲）へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Weekly Card Focus + Hide Worker ID (2026-03-06)
+
+- [x] 週次モードでは下段の `日別状況` セクションを非表示化し、カレンダーカード中心の表示へ変更
+- [x] 週次カードの高さを拡張して情報閲覧しやすいレイアウトへ調整
+- [x] 担当者一覧のID表示（`small`）を削除し、名前のみ表示へ変更
+- [x] オーバーレイタグの `title` からID露出を削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Weekly Top Spacing + Colored Name Tags (2026-03-06)
+
+- [x] 週次モード時の `admin-yasumi-content` / `yasumi-main-card` 上余白を圧縮し、上に詰めたレイアウトへ調整
+- [x] 日セルの名前タグ表示を `休み` のみから全担当者へ拡張（週次は全件表示、月次は先頭3件+残件数）
+- [x] 名前タグを `稼働可 / 予定 / 休み` の状態ごとに色分け表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Hidden Worker Filter (2026-03-06)
+
+- [x] `yasumi` 対象担当者から `正田 / 太田 / 竹内 / 梅岡 / 沖 / 今野 / 開発アカウント / 櫻田` を非表示化
+- [x] 名前の空白差分を吸収する正規化比較で除外判定を実装
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Weekly Card Height Expansion (2026-03-06)
+
+- [x] 週次グリッド高さを `calc(100vh - 260px)` 基準へ拡張し、画面縦幅をより多く利用
+- [x] 週次セルをグリッド高に追従するよう調整（`height: 100%`）
+- [x] 週次タグ表示領域の最大高さをビューポート連動に変更
+- [x] タブレット/モバイルでは自動高さへ戻すレスポンシブフォールバックを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Availability Timeout Resilience (2026-03-06)
+
+- [x] `sales/availability-matrix` 取得を担当者IDのバッチ分割（12件単位）へ変更し、単発重負荷を回避
+- [x] 504/timeout/AbortError 発生時に該当バッチを1回リトライする処理を追加
+- [x] 全バッチ失敗時は明示エラーメッセージを表示し、部分成功時は取得済みデータで画面表示を継続
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Hidden Worker Filter Additions (2026-03-06)
+
+- [x] `yasumi` 非表示対象へ `Noemi / 吉井 / 中島` を追加
+- [x] 既存の名前正規化比較ロジックにより表記揺れ（空白等）を吸収して除外
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Weekly Tag Vertical List (2026-03-06)
+
+- [x] 週次モードの `yasumi` 日セルタグを横並び・折返しから縦1列表示へ変更
+- [x] 週次タグをセル幅いっぱい（`width: 100%`）で表示し視認性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Month Window Limit (2026-03-06)
+
+- [x] `yasumi` の表示レンジを `先月 / 今月 / 来月` の3か月に制限
+- [x] 月次/週次の前後ナビゲーションを範囲内のみ有効化（範囲外は移動不可）
+- [x] カレンダー範囲外日付セルを `対象外` 表示＋クリック不可へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Month Nav No-Data Dialog (2026-03-06)
+
+- [x] 月次ナビ（前月/次月）押下時に対象月のデータ有無を事前チェックし、データなしなら遷移を抑止
+- [x] 前月/次月が範囲外またはデータなしの場合は `情報がないため表示できません。` ダイアログを表示
+- [x] ナビチェック中は前後ボタンを一時無効化し、連打による状態競合を防止
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Month Nav Arrow Visibility (2026-03-06)
+
+- [x] 月次表示で前月/次月にデータがない場合、該当矢印ボタンを非表示化
+- [x] 前後月のデータ有無を事前評価し、表示可否を自動反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Schedule: Yasumi Calendar Week Row Auto (2026-03-06)
+
+- [x] 月次カレンダーの週行を固定6行から必要週数のみ表示へ変更
+- [x] `buildCalendarWeeks` のセル埋めを 42 固定から 7 の倍数までに変更し、空6段目を除去
+- [x] CSS の `grid-template-rows: repeat(6, ...)` を削除し、余剰行が出ないよう調整
 - [x] `npm -C src/misogi run build` でビルド確認

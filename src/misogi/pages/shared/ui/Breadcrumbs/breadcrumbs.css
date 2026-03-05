@@ -54,6 +54,37 @@
   gap: 8px;
 }
 
+.breadcrumbs-pane-controls{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.breadcrumbs-pane-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  min-width: 54px;
+  padding: 0 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(15, 23, 42, 0.75);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.breadcrumbs-pane-btn:hover{
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.breadcrumbs-pane-btn.is-on{
+  border-color: rgba(96, 165, 250, 0.7);
+  color: #ffffff;
+}
+
 .breadcrumbs-lang-only{
   justify-content: flex-end;
 }
@@ -168,6 +199,21 @@
   border-color: rgba(15, 23, 42, 0.24);
 }
 
+[data-theme="light"] .breadcrumbs-pane-btn{
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.24);
+}
+
+[data-theme="light"] .breadcrumbs-pane-btn:hover{
+  background: #ffffff;
+}
+
+[data-theme="light"] .breadcrumbs-pane-btn.is-on{
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
 @media (max-width: 900px){
   .breadcrumbs-admin{
     gap: 8px;
@@ -220,7 +266,7 @@
 .header-chat-overlay{
   position: fixed;
   z-index: 1600;
-  width: min(360px, calc(100vw - 20px));
+  width: min(440px, calc(100vw - 20px));
   height: min(520px, calc(100vh - 90px));
   min-width: 300px;
   min-height: 300px;
@@ -244,9 +290,11 @@
   top: auto !important;
   width: 100%;
   min-width: 0;
-  height: min(780px, calc(100vh - 120px));
-  min-height: 520px;
+  height: 100%;
+  min-height: 0;
   resize: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .header-chat-overlay.docked.open{

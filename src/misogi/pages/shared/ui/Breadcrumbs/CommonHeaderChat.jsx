@@ -16,6 +16,9 @@ const POLL_MS = 5000;
 const MAX_ITEMS = 120;
 const MAX_UPLOAD_SIZE = 15 * 1024 * 1024;
 const MAX_MESSAGE_LEN = 280;
+const CHAT_OVERLAY_WIDTH = 440;
+const CHAT_OVERLAY_RIGHT_GUTTER = 20;
+const CHAT_OVERLAY_VISIBLE_WIDTH = 40;
 const BASIC_EMOJIS = ['😀', '😊', '😂', '🙏', '👍', '👏', '✅', '⚠️', '❗', '📷', '📎', '📌', '💡', '🔥'];
 const QUICK_TEMPLATES = [
   '承知しました。確認して折り返します。',
@@ -181,7 +184,6 @@ export default function CommonHeaderChat({
   const [showDataEditor, setShowDataEditor] = useState(false);
   const [dataText, setDataText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showTools, setShowTools] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastSeenAt, setLastSeenAt] = useState('');
   const listRef = useRef(null);
@@ -190,7 +192,7 @@ export default function CommonHeaderChat({
   const [boxPos, setBoxPos] = useState(() => {
     if (typeof window === 'undefined') return { x: 24, y: 72 };
     const w = window.innerWidth;
-    return { x: Math.max(12, w - 380), y: 76 };
+    return { x: Math.max(12, w - (CHAT_OVERLAY_WIDTH + CHAT_OVERLAY_RIGHT_GUTTER)), y: 76 };
   });
 
   const senderName = useMemo(() => {
@@ -550,7 +552,6 @@ export default function CommonHeaderChat({
     setAttachments([]);
     setShowEmojiPicker(false);
     setShowDataEditor(false);
-    setShowTools(false);
   }, [activeRoom]);
 
   useEffect(() => {
@@ -624,7 +625,7 @@ export default function CommonHeaderChat({
     const onMove = (e) => {
       const d = dragRef.current;
       if (!d.active) return;
-      const maxX = Math.max(0, window.innerWidth - 320);
+      const maxX = Math.max(0, window.innerWidth - (CHAT_OVERLAY_WIDTH - CHAT_OVERLAY_VISIBLE_WIDTH));
       const maxY = Math.max(0, window.innerHeight - 220);
       const nextX = Math.min(maxX, Math.max(0, d.baseX + (e.clientX - d.startX)));
       const nextY = Math.min(maxY, Math.max(0, d.baseY + (e.clientY - d.startY)));
@@ -754,10 +755,7 @@ export default function CommonHeaderChat({
                         <button
                           type="button"
                           className="msg-reply"
-                          onClick={() => {
-                            setReplyTo(row);
-                            setShowTools(true);
-                          }}
+                          onClick={() => setReplyTo(row)}
                         >
                           返信
                         </button>
@@ -878,11 +876,8 @@ export default function CommonHeaderChat({
                 <option key={tpl} value={tpl}>{tpl}</option>
               ))}
             </select>
-            <button type="button" onClick={() => setShowTools((v) => !v)}>
-              {showTools ? 'ツールを隠す' : 'ツールを表示'}
-            </button>
           </div>
-          {showTools && showEmojiPicker ? (
+          {showEmojiPicker ? (
             <div className="emoji-picker" aria-label="絵文字選択">
               {BASIC_EMOJIS.map((emoji) => (
                 <button key={emoji} type="button" onClick={() => onInsertEmoji(emoji)} aria-label={`絵文字 ${emoji}`}>
@@ -908,7 +903,7 @@ export default function CommonHeaderChat({
               ))}
             </div>
           ) : null}
-          {showTools && showDataEditor ? (
+          {showDataEditor ? (
             <textarea
               className="data-input"
               value={dataText}
@@ -924,31 +919,17 @@ export default function CommonHeaderChat({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  if (!showTools) {
-                    setShowTools(true);
-                    setShowEmojiPicker(true);
-                    return;
-                  }
-                  setShowEmojiPicker((v) => !v);
-                }}
+                onClick={() => setShowEmojiPicker((v) => !v)}
                 disabled={sending || uploading}
               >
-                {showTools ? (showEmojiPicker ? '絵文字閉じる' : '絵文字') : '絵文字表示'}
+                {showEmojiPicker ? '絵文字閉じる' : '絵文字'}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  if (!showTools) {
-                    setShowTools(true);
-                    setShowDataEditor(true);
-                    return;
-                  }
-                  setShowDataEditor((v) => !v);
-                }}
+                onClick={() => setShowDataEditor((v) => !v)}
                 disabled={sending || uploading}
               >
-                {showTools ? (showDataEditor ? 'データ閉じる' : 'データ') : 'データ表示'}
+                {showDataEditor ? 'データ閉じる' : 'データ'}
               </button>
               <button
                 type="button"

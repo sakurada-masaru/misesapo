@@ -8,7 +8,15 @@ export const CLEANING_HOTBAR = [
       { id: 'work-report', label: '業務報告', path: '/jobs/cleaning/houkoku' },
     ],
   },
-  { id: 'plan', role: 'plan', label: '予定', to: '/jobs/cleaning/yotei' },
+  {
+    id: 'plan',
+    role: 'plan',
+    label: '予定',
+    subItems: [
+      { id: 'my-yotei', label: '予定一覧', path: '/jobs/cleaning/yotei' },
+      { id: 'availability-declare', label: '休み申請カレンダー', path: '/jobs/cleaning/availability-declare' },
+    ],
+  },
   {
     id: 'tools',
     role: 'status',

@@ -38,6 +38,7 @@ export const ADMIN_HOTBAR = [
     label: 'スケジュール管理',
     subItems: [
       { id: 'yotei', label: 'yotei', path: '/admin/yotei', group: 'スケジュール管理' },
+      { id: 'yasumi', label: 'yasumi', path: '/admin/yasumi', group: 'スケジュール管理' },
       { id: 'ugoki', label: 'ugoki', path: '/admin/ugoki', group: 'スケジュール管理' },
       { id: 'yakusoku', label: 'yakusoku', path: '/admin/yakusoku', group: 'スケジュール管理' },
     ]

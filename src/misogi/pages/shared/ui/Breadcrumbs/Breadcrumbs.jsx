@@ -1,8 +1,25 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './breadcrumbs.css';
 import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 import CommonHeaderChat from './CommonHeaderChat';
+
+const DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY = 'misogi-v2-admin-dashboard-explorer-visible';
+const DASHBOARD_CHAT_VISIBLE_STORAGE_KEY = 'misogi-v2-admin-dashboard-chat-visible';
+const DASHBOARD_PANE_TOGGLE_EVENT = 'misogi-dashboard-pane-toggle';
+
+function readStoredBoolean(key, fallback = true) {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = String(window.localStorage.getItem(key) || '').trim().toLowerCase();
+    if (!raw) return fallback;
+    if (raw === '1' || raw === 'true') return true;
+    if (raw === '0' || raw === 'false') return false;
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function isEntrancePath(pathname) {
   const p = String(pathname || '/');
@@ -34,6 +51,7 @@ function labelForPath(pathname) {
   if (p === '/admin/houkoku') return '業務報告一覧';
   if (p.startsWith('/admin/houkoku/')) return '業務報告詳細';
   if (p === '/admin/yotei') return '予定';
+  if (p === '/admin/yasumi') return 'yasumi';
   if (p === '/admin/ugoki') return 'UGOKI';
   if (p === '/admin/yakusoku') return 'YAKUSOKU';
   if (p === '/admin/filebox') return 'ダッシュボード';
@@ -114,9 +132,22 @@ export default function Breadcrumbs() {
 
   const hidden = isEntrancePath(pathname) || isWorkerReportPath(pathname);
   const isAdmin = isAdminPath(pathname);
+  const isAdminFilebox = pathname === '/admin/filebox';
   const crumbs = useMemo(() => crumbsForPath(pathname), [pathname]);
+  const [dashboardExplorerVisible, setDashboardExplorerVisible] = useState(() =>
+    readStoredBoolean(DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY, true)
+  );
+  const [dashboardChatVisible, setDashboardChatVisible] = useState(() =>
+    readStoredBoolean(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, true)
+  );
 
-  if (isAdmin && hidden) {
+  useEffect(() => {
+    if (!isAdminFilebox) return;
+    setDashboardExplorerVisible(readStoredBoolean(DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY, true));
+    setDashboardChatVisible(readStoredBoolean(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, true));
+  }, [isAdminFilebox, pathname]);
+
+  if (isAdmin && hidden && !isAdminFilebox) {
     return null;
   }
 
@@ -129,6 +160,19 @@ export default function Breadcrumbs() {
   };
 
   if (isAdmin) {
+    const emitPaneToggle = (pane, visible) => {
+      if (typeof window === 'undefined') return;
+      try {
+        if (pane === 'explorer') {
+          window.localStorage.setItem(DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY, visible ? '1' : '0');
+        } else if (pane === 'chat') {
+          window.localStorage.setItem(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, visible ? '1' : '0');
+        }
+      } catch {
+        // ignore
+      }
+      window.dispatchEvent(new CustomEvent(DASHBOARD_PANE_TOGGLE_EVENT, { detail: { pane, visible } }));
+    };
     return (
       <nav className={`breadcrumbs breadcrumbs-admin ${hidden ? 'breadcrumbs-admin-hidden' : ''}`.trim()} aria-label="パンくず">
         <div className="breadcrumbs-admin-left">
@@ -156,6 +200,32 @@ export default function Breadcrumbs() {
           <div className="breadcrumbs-main breadcrumbs-main-empty" />
         )}
         <div className="breadcrumbs-controls-wrap">
+          {isAdminFilebox ? (
+            <div className="breadcrumbs-pane-controls" aria-label="ペイン表示設定">
+              <button
+                type="button"
+                className={`breadcrumbs-pane-btn ${dashboardExplorerVisible ? 'is-on' : ''}`}
+                onClick={() => {
+                  const next = !dashboardExplorerVisible;
+                  setDashboardExplorerVisible(next);
+                  emitPaneToggle('explorer', next);
+                }}
+              >
+                {dashboardExplorerVisible ? '左ON' : '左OFF'}
+              </button>
+              <button
+                type="button"
+                className={`breadcrumbs-pane-btn ${dashboardChatVisible ? 'is-on' : ''}`}
+                onClick={() => {
+                  const next = !dashboardChatVisible;
+                  setDashboardChatVisible(next);
+                  emitPaneToggle('chat', next);
+                }}
+              >
+                {dashboardChatVisible ? '右ON' : '右OFF'}
+              </button>
+            </div>
+          ) : null}
           <CommonHeaderChat />
         </div>
       </nav>

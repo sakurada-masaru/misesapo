@@ -20,6 +20,7 @@ import AdminScheduleTimelinePage from '../admin/pages/AdminScheduleTimelinePage'
 import AdminUgokiDashboardPage from '../admin/pages/AdminUgokiDashboardPage';
 import AdminYoteiTimelinePage from '../admin/pages/AdminYoteiTimelinePage';
 import AdminYakusokuPage from '../admin/pages/AdminYakusokuPage';
+import AdminYasumiPage from '../admin/pages/AdminYasumiPage';
 import AdminReportNewPage from '../admin/pages/AdminReportNewPage';
 import AdminHoukokuListPage from '../admin/pages/AdminHoukokuListPage';
 import AdminHoukokuDetailPage from '../admin/pages/AdminHoukokuDetailPage';
@@ -58,6 +59,7 @@ import SalesLeadDetailPage from '../shared/ui/Sales/SalesLeadDetailPage';
 import SalesSchedulePage from '../shared/ui/Sales/SalesSchedulePage';
 import SalesFirstResponsePage from '../shared/ui/Sales/SalesFirstResponsePage';
 import CleanerSchedulePage from '../jobs/cleaning/pages/CleanerSchedulePage';
+import ContractorAvailabilityDeclarationPage from '../jobs/cleaning/pages/ContractorAvailabilityDeclarationPage';
 import CleanerClientListPage from '../jobs/cleaning/pages/CleanerClientListPage';
 import CleanerClientKartePage from '../jobs/cleaning/pages/CleanerClientKartePage';
 import MyYoteiListPage from '../shared/ui/Yotei/MyYoteiListPage';
@@ -164,6 +166,7 @@ export default function Router() {
       <Route path="/admin/yotei" element={<AdminYoteiTimelinePage />} />
       <Route path="/admin/yakusoku" element={<AdminYakusokuPage />} />
       <Route path="/admin/ugoki" element={<AdminUgokiDashboardPage />} />
+      <Route path="/admin/yasumi" element={<AdminYasumiPage />} />
       <Route path="/admin/torihikisaki-touroku" element={<AdminTorihikisakiTourokuPage />} />
       <Route path="/admin/torihikisaki-meibo" element={<AdminMasterOnly><AdminTorihikisakiMeiboPage /></AdminMasterOnly>} />
       <Route path="/admin/jinzai-meibo" element={<AdminMasterOnly><AdminJinzaiMeiboPage /></AdminMasterOnly>} />
@@ -205,6 +208,7 @@ export default function Router() {
       <Route path="/sales/leads/:leadId" element={<SalesLeadDetailPage />} />
       <Route path="/sales/schedule" element={<SalesSchedulePage />} />
       <Route path="/jobs/cleaning/schedule" element={<CleanerSchedulePage />} />
+      <Route path="/jobs/cleaning/availability-declare" element={<ContractorAvailabilityDeclarationPage />} />
       <Route path="/jobs/cleaning/clients/list" element={<CleanerClientListPage />} />
       <Route path="/jobs/cleaning/clients/:storeId" element={<CleanerClientKartePage />} />
       <Route path="/registration/onboarding/:storeId" element={<CustomerOnboardingPage />} />
