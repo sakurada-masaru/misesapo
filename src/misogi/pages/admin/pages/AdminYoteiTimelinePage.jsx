@@ -23,9 +23,7 @@ const MASTER_API_BASE = IS_LOCAL
 const JINZAI_API_BASE = IS_LOCAL
     ? '/api-jinzai'
     : normalizeGatewayBase(import.meta.env?.VITE_JINZAI_API_BASE, 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod');
-const YAKUSOKU_FALLBACK_BASE = IS_LOCAL
-    ? '/api2'
-    : normalizeGatewayBase(import.meta.env?.VITE_YAKUSOKU_API_BASE, API_BASE);
+const YAKUSOKU_FALLBACK_BASE = normalizeGatewayBase(import.meta.env?.VITE_YAKUSOKU_API_BASE, API_BASE);
 
 const WORK_TYPES = [
     '定期清掃（1ヶ月）',
@@ -353,7 +351,7 @@ export default function AdminYoteiTimelinePage() {
     const dayHours = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; // 04:00-16:00
     const durationHours = 12;
     // Timeline vertical density (bigger = easier to operate / read at night)
-    const todayLanePx = 64;
+    const todayLanePx = 74;
 
     const getServiceCategoryMeta = useCallback((svc) => {
         const raw = String(svc?.category || svc?.category_concept || '').trim();
@@ -509,7 +507,7 @@ export default function AdminYoteiTimelinePage() {
         if (isDemo) return;
         try {
             setYakusokuError('');
-            const res = await fetchYakusokuWithFallback('/yakusoku', { headers: authHeaders() });
+            const res = await fetchYakusokuWithFallback('/yakusoku?limit=1000', { headers: authHeaders(), cache: 'no-store' });
             if (!res.ok) throw new Error(`Yakusoku HTTP ${res.status}`);
             const data = await res.json();
             setYakusokus(data.items || []);
@@ -1214,6 +1212,37 @@ export default function AdminYoteiTimelinePage() {
         });
     }, [selectedWorkerIds, normalizeWorkerId, workerNameMap]);
 
+    const workerCandidates = useMemo(() => {
+        const q = String(modalData?.worker_query || '').trim().toLowerCase();
+        if (!q) return workers || [];
+        return (workers || []).filter((w) => {
+            const blob = `${String(w?.name || '')} ${String(w?.id || '')}`.toLowerCase();
+            return blob.includes(q);
+        });
+    }, [modalData?.worker_query, workers]);
+
+    const toggleWorkerSelection = useCallback((workerIdRaw, checked) => {
+        const wid = String(workerIdRaw || '').trim();
+        if (!wid) return;
+        setModalData((prev) => {
+            if (!prev) return prev;
+            const current = Array.isArray(prev.worker_ids) ? prev.worker_ids.map((x) => String(x)).filter(Boolean) : [];
+            const set = new Set(current);
+            if (checked) set.add(wid);
+            else set.delete(wid);
+            const nextIds = Array.from(set);
+            const primary = nextIds[0] || '';
+            const primaryName = primary ? (workerNameMap[normalizeWorkerId(primary)] || primary) : '';
+            return {
+                ...prev,
+                worker_ids: nextIds,
+                sagyouin_id: primary,
+                worker_id: primary,
+                sagyouin_name: primaryName,
+            };
+        });
+    }, [normalizeWorkerId, workerNameMap]);
+
     const toggleServiceSelection = useCallback((svc, checked) => {
         const sid = String(svc?.service_id || '').trim();
         if (!sid) return;
@@ -1498,17 +1527,18 @@ export default function AdminYoteiTimelinePage() {
     }, [schedules, detectTroubleEventType, displayTenpoName]);
 
     const openNewModal = useCallback((workerId) => {
-        const defaultWorkerId = selfWorkerDefault.workerId || workerId || (workers[0]?.id || '');
-        const defaultWorkerName =
-            selfWorkerDefault.workerName ||
-            workerNameMap[normalizeWorkerId(defaultWorkerId)] ||
-            defaultWorkerId;
+        const presetWorkerId = String(workerId || '').trim();
+        const presetWorkerName = presetWorkerId
+            ? (workerNameMap[normalizeWorkerId(presetWorkerId)] || presetWorkerId)
+            : '';
         setServicePickerOpen(false);
         setModalData({
             isNew: true,
-            sagyouin_id: defaultWorkerId,
-            sagyouin_name: defaultWorkerName,
-            worker_ids: defaultWorkerId ? [defaultWorkerId] : [],
+            sagyouin_id: presetWorkerId,
+            worker_id: presetWorkerId,
+            sagyouin_name: presetWorkerName,
+            worker_ids: presetWorkerId ? [presetWorkerId] : [],
+            worker_query: '',
             yakusoku_id: '',
             tenpo_id: '',
             service_id: '',
@@ -1537,7 +1567,7 @@ export default function AdminYoteiTimelinePage() {
                 unresolved_checked: false,
             },
         });
-    }, [selfWorkerDefault.workerId, selfWorkerDefault.workerName, workers, workerNameMap, normalizeWorkerId, date]);
+    }, [workerNameMap, normalizeWorkerId, date]);
 
     useEffect(() => {
         if (routeCreateHandledRef.current) return;
@@ -1624,6 +1654,7 @@ export default function AdminYoteiTimelinePage() {
             sagyouin_id: workerIds[0] || '',
             sagyouin_name: s?.sagyouin_name || workerNameMap[normalizeWorkerId(workerIds[0] || '')] || '',
             worker_ids: workerIds,
+            worker_query: '',
             ...multiSvc,
             service_id: multiSvc.service_ids[0] || '',
             service_name: multiSvc.service_names[0] || '',
@@ -2065,6 +2096,7 @@ export default function AdminYoteiTimelinePage() {
                                                     onClick={() => openEditModal(s)}
                                                 >
                                                     <div className="today-rail-time">{formatScheduleTime(s)}</div>
+                                                    <div className="today-rail-id">yotei ID: {resolveYoteiRecordId(s) || '-'}</div>
                                                     <div className="today-rail-tenpo">{displayTenpoName(s)}</div>
                                                     <div className="today-rail-meta">
                                                         <span>{displayWorkerName(s)}</span>
@@ -2098,6 +2130,7 @@ export default function AdminYoteiTimelinePage() {
                                                     onClick={() => openEditModal(s)}
                                                 >
                                                     <div className="today-rail-time">{formatScheduleTime(s)}</div>
+                                                    <div className="today-rail-id">yotei ID: {resolveYoteiRecordId(s) || '-'}</div>
                                                     <div className="today-rail-tenpo">{displayTenpoName(s)}</div>
                                                     <div className="today-rail-meta">
                                                         <span>{displayWorkerName(s)}</span>
@@ -2521,6 +2554,7 @@ export default function AdminYoteiTimelinePage() {
                                                     <div key={`${s.id}-n`} className={`yotei-card status-${status}`} style={style} onClick={() => openEditModal(s)}>
                                                         <div className="yotei-card-tenpo">{displayTenpoName(s)}</div>
                                                         <div className="yotei-card-time">{formatScheduleTime(s)}</div>
+                                                        <div className="yotei-card-id">ID: {resolveYoteiRecordId(s) || '-'}</div>
                                                         <div style={{ fontSize: '9px', opacity: 0.85 }}>UGOKI: {ugokiJotaiLabelFor(s)}</div>
                                                     </div>
                                                 );
@@ -2537,6 +2571,7 @@ export default function AdminYoteiTimelinePage() {
                                                     <div key={`${s.id}-d`} className={`yotei-card status-${status}`} style={style} onClick={() => openEditModal(s)}>
                                                         <div className="yotei-card-tenpo">{displayTenpoName(s)}</div>
                                                         <div className="yotei-card-time">{formatScheduleTime(s)}</div>
+                                                        <div className="yotei-card-id">ID: {resolveYoteiRecordId(s) || '-'}</div>
                                                         <div style={{ fontSize: '9px', opacity: 0.85 }}>UGOKI: {ugokiJotaiLabelFor(s)}</div>
                                                     </div>
                                                 );
@@ -2635,6 +2670,11 @@ export default function AdminYoteiTimelinePage() {
                         <div className="yotei-modal-header">
                             <h2>{modalData.isNew ? '新規予定登録' : '予定編集'}</h2>
                             <button onClick={() => { setModalData(null); setServicePickerOpen(false); }} style={{ background: 'none', border: 'none', color: 'white', fontSize: 24 }}>×</button>
+                        </div>
+                        <div className="yotei-modal-meta">
+                            <span>
+                                予定ID: {modalData.isNew ? '保存後に自動採番' : (resolveYoteiRecordId(modalData) || '未設定')}
+                            </span>
                         </div>
                         <div className="yotei-modal-content">
                             <div className="yotei-modal-main-grid">
@@ -2812,14 +2852,70 @@ export default function AdminYoteiTimelinePage() {
                                 </div>
                             </div>
                             <div className="yotei-form-group">
-                                <label>清掃員（ログインアカウント自動入力）</label>
+                                <label>清掃員（選択必須）</label>
                                 <input
                                     type="text"
-                                    value={selectedWorkerNames[0] || modalData.sagyouin_name || selfWorkerDefault.workerName || '未設定'}
-                                    readOnly
+                                    value={String(modalData?.worker_query || '')}
+                                    onChange={(e) => setModalData({ ...modalData, worker_query: e.target.value })}
+                                    placeholder="名前 / ID で検索"
                                 />
-                                <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                                    検索選択は不要です。ログイン中アカウント名を自動設定しています
+                                <div
+                                    style={{
+                                        marginTop: 8,
+                                        maxHeight: 160,
+                                        overflowY: 'auto',
+                                        border: '1px solid var(--line)',
+                                        borderRadius: 8,
+                                        padding: '6px 8px',
+                                        display: 'grid',
+                                        gap: 6,
+                                    }}
+                                >
+                                    {workerCandidates.map((w) => {
+                                        const wid = String(w?.id || '').trim();
+                                        const checked = selectedWorkerIds.includes(wid);
+                                        return (
+                                            <label key={wid} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={(e) => toggleWorkerSelection(wid, e.target.checked)}
+                                                />
+                                                <span>{w?.name || wid}</span>
+                                                <span style={{ fontSize: 11, color: 'var(--muted)' }}>{wid}</span>
+                                            </label>
+                                        );
+                                    })}
+                                    {!workerCandidates.length ? (
+                                        <div style={{ fontSize: 12, color: 'var(--muted)' }}>一致する清掃員がいません</div>
+                                    ) : null}
+                                </div>
+                                <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                    {selectedWorkerNames.map((nm, idx) => {
+                                        const wid = selectedWorkerIds[idx] || '';
+                                        return (
+                                            <button
+                                                key={`${wid}-${idx}`}
+                                                type="button"
+                                                onClick={() => toggleWorkerSelection(wid, false)}
+                                                style={{
+                                                    border: '1px solid var(--line)',
+                                                    background: 'var(--panel)',
+                                                    color: 'var(--text)',
+                                                    borderRadius: 999,
+                                                    padding: '4px 10px',
+                                                    fontSize: 12,
+                                                    cursor: 'pointer',
+                                                }}
+                                                title="クリックで解除"
+                                            >
+                                                {nm}
+                                            </button>
+                                        );
+                                    })}
+                                    {!selectedWorkerNames.length ? (
+                                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>未選択</span>
+                                    ) : null}
                                 </div>
                             </div>
                             <div className="yotei-form-group">

@@ -4,6 +4,73 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 ---
 
+## Cleaning Entrance: HOTBAR Bottom Padding Tuning (2026-03-07)
+
+- [x] スマホ実機で下端が詰まらないよう、HOTバーの下側余白を拡大
+- [x] `env(safe-area-inset-bottom)` を維持したまま追加パディングを加算
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Cleaning Entrance: HOTBAR LINE-Style Nav (2026-03-07)
+
+- [x] HOTバーを `LINE` の下部メニュー風UIへ調整（アイコン上・ラベル下の縦配置）
+- [x] `報告 / 予定 / ツール / 設定` に対応するアイコンを `Hotbar` コンポーネントへ追加
+- [x] アクティブ状態を `LINE` 風の緑アクセントで表示（`#06c755`）
+- [x] 下部固定バーの高さ・余白を `LINE` 近いサイズ感へ調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Cleaning Entrance: Header Removal + HOTBAR 4 Categories (2026-03-07)
+
+- [x] 清掃エントランス (`/jobs/cleaning/entrance`) では共通ヘッダーを非表示化し、`戻る` / `ハンバーガー` を非表示
+- [x] 清掃HOTバーを `報告 / 予定 / ツール / 設定` の4カテゴリへ変更
+- [x] 清掃エントランスの `設定` タブで `言語` / `表示(テーマ)` を直接変更できるパネルを追加
+- [x] HOTバーの左右パディングを拡大し、画面端に寄りすぎないよう調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Yasumi: Grid Border Visibility Restore (2026-03-07)
+
+- [x] 清掃員 `休み申請カレンダー` のセル枠線色を専用変数 `--gcal-grid-line` に分離し、常時視認できるよう調整
+- [x] 管理 `yasumi` のセル枠線色を専用変数 `--yasumi-grid-line` に分離し、ライト/ダーク双方で見える濃度へ調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Cleaning Yasumi: Subtitle Label Removal (2026-03-07)
+
+- [x] 清掃員 `休み申請カレンダー` のヘッダー補助文言 `清掃員ジョブモード / Googleカレンダー風 月表示` を削除
+- [x] 清掃員向け `yasumi` 画面で不要ラベルが表示されないことをソース上で確認
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Cleaning Entrance: Mobile Header Safe Area Offset (2026-03-07)
+
+- [x] 清掃エントランス（スマホ）で上部の `戻る` / `ハンバーガー` がOSステータスバーと重ならないよう調整
+- [x] `breadcrumbs.css` に `env(safe-area-inset-top/left/right)` を追加し、ヘッダー全体を安全領域分オフセット
+- [x] `@media (max-width: 900px)` でスマホ向け上部余白を追加調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Cleaning Yasumi: Remove Fixed 6-Week Grid (2026-03-07)
+
+- [x] 清掃員 `休み申請カレンダー` の月グリッド生成を 6週固定から可変週へ変更
+- [x] `ContractorAvailabilityDeclarationPage.jsx` の `buildCalendarCells` を `weekCount` 算出方式へ修正
+- [x] `contractor-availability-declaration.css` の `.gcal-grid` を `grid-template-rows: repeat(6,...)` から `grid-auto-rows` へ変更
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Product Demo: Chinese Tablet Menu (2026-03-06)
+
+- [x] `src/misogi/pages/product/ChineseTabletMenuPage.jsx` を追加（タブレット注文UI / PC受信UI）
+- [x] `src/misogi/pages/product/chinese-tablet-menu.css` を追加（タブレット・PC両レイアウト）
+- [x] タブレット注文送信時に PC 側へリアルタイム通知（`BroadcastChannel` + `localStorage` fallback）を実装
+- [x] `master/admin_chat` を利用した端末間同期（タブレット⇄PCの別端末共有）を追加
+- [x] PC 側で注文ステータス更新（`新規/調理中/提供準備完了/提供済み`）を実装
+- [x] ルーターに `/product/chuka-menu` と `/product/chinese-tablet-menu` を追加
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Entrance: Dashboard / Filebox Split (2026-03-06)
+
+- [x] 管理サイドバーの `ダッシュボード` と `ファイルボックス` を独立項目へ分離
+- [x] ルーターに `/admin/dashboard` を追加し、ダッシュボード導線を新設
+- [x] `/admin/dashboard` は `共通チャット + 本日の更新通知（現在アクティビティ）` を表示
+- [x] `/admin/filebox` はファイル管理UI（フォルダ/アップロード/閲覧）のみに整理
+- [x] `Breadcrumbs` のラベル・ペイントグル対象を `dashboard` 基準へ調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
 ## Contractor Availability Declaration Tool (2026-03-05)
 
 - [x] `ContractorAvailabilityDeclarationPage.jsx` を追加し、業務委託者向けの月次稼働予定申告UIを実装（1日4択: 稼働可/午前のみ/午後のみ/休み）
@@ -2130,4 +2197,216 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 月次カレンダーの週行を固定6行から必要週数のみ表示へ変更
 - [x] `buildCalendarWeeks` のセル埋めを 42 固定から 7 の倍数までに変更し、空6段目を除去
 - [x] CSS の `grid-template-rows: repeat(6, ...)` を削除し、余剰行が出ないよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: HOTBAR Icon Assets Extraction (2026-03-07)
+
+- [x] HOTBAR アイコンをコンポーネント内 SVG 直書きから `public/icons/hotbar/*.svg` のアセット参照へ移行
+- [x] `hotbar.css` を `mask-image` ベース表示へ変更し、テーマ色連動（`currentColor`）を維持
+- [x] `report / plan / tools / settings / flow / home / default` のアイコンファイルを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: HOTBAR Icon Material Replace (2026-03-07)
+
+- [x] 指定素材（`アンケートシート / カレンダー / ツールボックス / 設定歯車`）を HOTBAR 用 `report / plan / tools / settings` に差し替え
+- [x] 差し替え後も既存の `mask-image` 表示方式（テーマ色連動）を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: HOTBAR Tools Icon Re-Swap (2026-03-07)
+
+- [x] `tools` アイコンを `ツールボックスのアイコン.svg` へ再差し替え
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: HOTBAR Active Style Icon-Only (2026-03-07)
+
+- [x] HOTBAR アクティブ時の緑背景と下線を削除
+- [x] アクティブ時はアイコン色のみ緑に変更（ラベル色は通常維持）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: HOTBAR Active Label Color (2026-03-07)
+
+- [x] HOTBAR アクティブ時にラベル色も緑へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Sub HOTBAR Position Above Main HOTBAR (2026-03-07)
+
+- [x] サブHOTバー（`EXHotbar`）の固定位置をメインHOTバー直上へ調整
+- [x] メインHOTバーとの間に小さな余白を持つ `bottom` オフセットへ変更（モバイル/デスクトップ別）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Sub HOTBAR (subItems) Anchor to HOTBAR +30px (2026-03-07)
+
+- [x] 清掃エントランスの `sub-hotbar`（`subItems`）を画面中央配置から固定配置へ変更
+- [x] `data-job="cleaning"` 限定で `HOTバー上30px` 相当（`bottom: calc(max(10px, env(safe-area-inset-bottom)) + 98px)`）にアンカー
+- [x] クリック操作維持のため `pointer-events` をサブHOTバー本体にのみ有効化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Report: HOTBAR Add (Preview / PDF / Save / Camera) (2026-03-07)
+
+- [x] 清掃報告ページにエントランス同系の下部HOTバーを追加（`プレビュー / PDF / 保存 / カメラ`）
+- [x] HOTバー操作を既存処理へ連携（`プレビュー=PDFプレビュー` / `PDF=ダウンロード` / `保存=日次下書き保存` / `カメラ=有効店舗タブのファイル追加`）
+- [x] HOTバー固定表示でフォーム末尾が隠れないよう下部余白を拡張
+- [x] 指定アイコン（`虫眼鏡 / PDF / カメラ`）を `public/icons/hotbar` に配置し、`プレビュー / PDF / カメラ` に割り当て
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Report: HOTBAR Apply to Actual `/jobs/cleaning/houkoku` Page (2026-03-07)
+
+- [x] `/jobs/cleaning/houkoku` 実体ページ `AdminCleaningHoukokuBuilderPage` にモバイル下部 HOTBAR を追加
+- [x] HOTBAR 操作を既存処理へ連携（`プレビュー=openPreview` / `PDF=outputPdf` / `保存=submit` / `カメラ=写真入力起動`）
+- [x] 直接アップロードモード時の `カメラ` は選択サービスの対象バケット入力を起動し、未選択時はエラー表示
+- [x] モバイルでは従来フッターのアクションボタン群を非表示にして重複操作を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Report: Mobile HOTBAR Search/Service Shift (2026-03-07)
+
+- [x] モバイル HOTBAR を `検索 / サービス / カメラ / プレビュー` へ再編し、`保存` を `プレビュー` に置換
+- [x] `検索` アクションで現場検索オーバーレイを開き、店舗候補から `tenpo_id` を即時選択できるよう対応
+- [x] `サービス` アクションで既存サービス選択オーバーレイを直接起動
+- [x] モバイルではフッターの `プレビュー/PDF` を非表示化し、`提出` は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku: Yotei Link + Souko Date Storage (2026-03-07)
+
+- [x] `houkoku` 保存 payload に `yotei_id / schedule_id` を追加し、`context` にも同期
+- [x] `houkoku` の PDF 保存を拡張し、撮影アップロード済み写真も全件を店舗 `souko` へ保存
+- [x] `souko` 保存ファイルへ `work_date / date_key / date_month` を付与し、日付基準で管理可能なメタを付与
+- [x] 写真保存時に `service_id / service_name / photo_bucket / photo_no` を記録
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Yakusoku Auto Link Restore (2026-03-07)
+
+- [x] `yakusoku` 選択時の連携を ID型差異（string/number）でも解決できるよう比較処理を正規化
+- [x] `tenpo` 選択時に同一店舗の `yakusoku` を自動補完（既存一致は維持、候補なしはクリア）へ修正
+- [x] 自動補完時に `work_type`（`定期/単発 + plan_name`）も同期
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei Timeline: Yakusoku Fetch Fallback Fix (2026-03-07)
+
+- [x] ローカル時の `yakusoku` フォールバック先を固定 `/api2` から `VITE_YAKUSOKU_API_BASE or API_BASE` へ統一
+- [x] 取得URLを `/yakusoku?limit=1000` に揃え、一覧取得の互換性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Worker Manual Selection Restore (2026-03-07)
+
+- [x] `新規予定登録` で清掃員の自動指定を廃止（`workerId` 明示指定時のみ事前選択）
+- [x] 新規予定モーダルの清掃員UIを read-only から検索 + チェックボックス選択へ復帰
+- [x] 複数選択時は `worker_ids` と主担当（`sagyouin_id / worker_id / sagyouin_name`）を同期
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Flow: Yotei First, Then Houkoku (2026-03-07)
+
+- [x] 清掃エントランス `報告` の遷移先を `houkoku` 直行から `予定から報告（/jobs/cleaning/yotei）` へ変更
+- [x] 清掃員 `yotei` カードに `この予定で報告` ボタンを追加し、`yotei_id` を付与して `houkoku` へ遷移
+- [x] `houkoku` 画面で `yotei_id` 指定時に予定詳細を取得し、`作業日/時間/店舗/清掃員/サービス` を自動反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: No Default HOTBAR Selection + My Yotei Bubble (2026-03-07)
+
+- [x] エントランス初期表示の HOTBAR 選択を `未選択`（`tab = null`）へ変更
+- [x] HOTBAR 押下前はサブHOTバー（`subItems`）が表示されない挙動へ統一
+- [x] 清掃エントランス未選択時に `自分の予定` バブルボタンを表示（30日先までの割当件数 + 次回日付）
+- [x] `自分の予定` バブル押下で `/jobs/cleaning/yotei` へ遷移
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Yotei Activity Tags on Idle Screen (2026-03-07)
+
+- [x] 清掃エントランス未選択時に `アクティビティ` カードを追加し、直近予定をタグ表示
+- [x] 各タグに `状態 + 日付/時刻 + 現場名` を表示し、ホバー/省略表示に対応
+- [x] タグ押下で `予定一覧（/jobs/cleaning/yotei）` へ遷移できる導線を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Sub HOTBAR Back Arrow Only (2026-03-07)
+
+- [x] 清掃エントランスのサブHOTバー表示を `戻る（←）` 1ボタン構成へ簡素化
+- [x] `戻る（←）` 押下で HOTBAR 未選択状態（`tab = null`）へ復帰
+- [x] 清掃エントランスではメインHOTバー押下時に既定サブ項目へ直接遷移（`report/plan/tools`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Replace Idle Widgets with Today's Notice Bubbles (2026-03-07)
+
+- [x] 清掃エントランス未選択時の `自分の予定` / `アクティビティ` / `HOTバー案内ラベル` を削除
+- [x] 清掃エントランスの `Portalへ戻る` 表示を非表示化
+- [x] 画面左・下 1/3 付近に当日予定の通知バブルを追加（`yagou / tenpo / 時刻 / 金額`）
+- [x] 通知バブル押下で `/jobs/cleaning/yotei` へ遷移
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Expand Notice Range to 3 Days (2026-03-07)
+
+- [x] 清掃エントランス通知バブルを `当日` から `前日・当日・明日` の3日分へ拡張
+- [x] 各通知に日別タグ（`前日 / 当日 / 明日`）を追加
+- [x] 取得クエリを `date` 単日から `from=yesterday / to=tomorrow` へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Worker ID Resolution Fix (2026-03-07)
+
+- [x] `useAuth.authz` に `jinzaiId`（`workerId` と同値）を追加し、清掃側 `yotei` 参照キーの互換性を確保
+- [x] 清掃員予定一覧 `MyYoteiListPage` の担当ID解決を `authz.workerId` 優先へ修正
+- [x] 清掃エントランス通知の予定照合を `#` プレフィックス差異（`SAGYOUIN#...` 等）を吸収する比較へ改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Worker Field Match Hardening (2026-03-07)
+
+- [x] 清掃員予定一覧の参加者ID抽出を拡張（`worker_ids / worker_id / sagyouin_id / assigned_to / cleaner_id` も自己判定対象化）
+- [x] ID比較をプレフィックス差異吸収型へ強化（`JINZAI#xxx` と `xxx` を同一視）
+- [x] `yotei` 取得クエリで `jinzai_id` に加えて `worker_id / sagyouin_id / assigned_to` も送信し、API差異を吸収
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Self Fetch Fallback (2026-03-07)
+
+- [x] `assignScope=self` で0件時、担当者条件を外した再取得へフォールバックし、APIフィルタ差異による取りこぼしを回避
+- [x] 参加者ID抽出をさらに拡張（`sagyouin_ids / assignee_id / cleaner_ids / workers / jinzai / worker / sagyouin`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Card ID Always Visible (2026-03-07)
+
+- [x] 清掃員 `yotei` カードの折りたたみ外に `予定ID` を常時表示
+- [x] `my-yotei.css` にID表示の視認性スタイルを追加（小型コード表示）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Card ID Visible on Timeline (2026-03-07)
+
+- [x] 管理側 `yotei` タイムラインカード（昼帯/夜帯）に `ID` 行を追加
+- [x] `admin-yotei-timeline.css` にカードID表示スタイル（小型モノスペース）を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: New Modal ID Visibility (2026-03-07)
+
+- [x] 管理側 `新規予定登録 / 予定編集` モーダルに `予定ID` 行を追加
+- [x] 新規時は `保存後に自動採番`、編集時は実ID（解決不可時は `未設定`）を表示
+- [x] `admin-yotei-timeline.css` にモーダルID表示スタイルを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Today Timeline Card ID Visible (2026-03-07)
+
+- [x] 管理側 `today` 表示のタイムラインカード（昼/夜）にも `yotei ID` 行を追加
+- [x] カード内でIDが読めるよう、`today-rail-card` の高さ/余白とID表示スタイルを調整
+- [x] レーン重なり防止のため `todayLanePx` を拡張
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Notice Fetch Identity Match Fix (2026-03-07)
+
+- [x] 清掃エントランスの `yotei` 取得クエリで小文字化IDを送っていた不整合を修正（生IDを `jinzai_id / worker_id / sagyouin_id / assigned_to` に送信）
+- [x] API側フィルタで0件時、担当者条件なし再取得フォールバックを追加して取りこぼしを防止
+- [x] 担当者照合トークンに `worker_name / jinzai_name / sagyouin_name` とログインユーザー名を含め、ID未保持データにも対応
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Notice API Endpoint Fix (2026-03-07)
+
+- [x] 清掃エントランス通知の `yotei` 取得先を `api-master` から `yotei` API（`YOTEI_API_BASE`）へ切替
+- [x] 初回取得とフォールバック取得の両方を同一 `yotei` API 経路に統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Notice Content + Scope Update (2026-03-07)
+
+- [x] エントランス通知の表示対象を `前日/当日/明日` から `未完了の直近5件` へ変更
+- [x] 通知ラベルを相対表記（前日/当日/明日）から `YYYY/MM/DD` の日付表示へ変更
+- [x] 通知カードに `屋号 + 店舗名` を明示表示する構成へ統一
+- [x] 未完了判定を追加（`完了/取消` 系状態を除外）して抽出精度を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Notice Yagou + Time Range Fix (2026-03-07)
+
+- [x] 通知カードの `屋号` 取得候補を拡張し、`yagou_name` 未保持時は `yagou_id` までフォールバック表示
+- [x] 通知カードの時間表示を `開始` 単体から `開始〜終了` のレンジ表示に変更
+- [x] `end_time / end_at / work_end_at` など複数キーの終端時刻を吸収
 - [x] `npm -C src/misogi run build` でビルド確認

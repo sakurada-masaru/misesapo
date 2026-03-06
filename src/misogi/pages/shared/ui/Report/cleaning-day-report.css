@@ -4,7 +4,7 @@
  */
 
 .cleaning-day-report-page .cleaning-day-content {
-  padding: 0 var(--space-4) var(--space-6);
+  padding: 0 var(--space-4) calc(var(--space-6) + 120px);
 }
 
 .cleaning-day-title {

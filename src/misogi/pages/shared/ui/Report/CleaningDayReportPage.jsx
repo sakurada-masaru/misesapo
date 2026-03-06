@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Visualizer from '../Visualizer/Visualizer';
+import Hotbar from '../Hotbar/Hotbar';
 import { putWorkReport, patchWorkReport, getWorkReport, getUploadUrl } from './cleaningDayReportApi';
 import { getApiBase } from '../../api/client';
 import { getAuthHeaders } from '../../auth/cognitoStorage';
@@ -108,6 +109,7 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
   const [storeUploading, setStoreUploading] = useState({});
   const [attachmentErrors, setAttachmentErrors] = useState({});
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [reportHotbarActive, setReportHotbarActive] = useState('report-preview');
   const [storeList, setStoreList] = useState([]);
   const fileInputRefs = useRef([]);
   const printRef = useRef(null);
@@ -121,34 +123,26 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
       .catch(() => setStoreList([]));
   }, []);
 
-  const handleSavePdf = useCallback(async () => {
-    if (!printRef.current) return;
-    setPdfGenerating(true);
+  const renderPdfDocument = useCallback(async () => {
+    if (!printRef.current) throw new Error('印刷プレビュー要素が見つかりません');
+    const prevDisplay = printRef.current.style.display;
+    printRef.current.style.display = 'block';
     try {
-      // 一時的に表示させる（キャプチャのため）
-      printRef.current.style.display = 'block';
-
       const canvas = await html2canvas(printRef.current, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
       });
-
-      // 隠す
-      printRef.current.style.display = 'none';
-
       const imgData = canvas.toDataURL('image/jpeg', 0.8);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-
       const imgProps = pdf.getImageProperties(imgData);
       const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
       let heightLeft = imgHeight;
       let position = 0;
-
       pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
 
@@ -158,20 +152,41 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
         pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
         heightLeft -= pdfHeight;
       }
+      return pdf;
+    } finally {
+      printRef.current.style.display = prevDisplay || 'none';
+    }
+  }, []);
 
+  const handlePreviewPdf = useCallback(async () => {
+    setPdfGenerating(true);
+    try {
+      const pdf = await renderPdfDocument();
       const pdfBlob = pdf.output('blob');
       const previewUrl = URL.createObjectURL(pdfBlob);
-      window.open(previewUrl, '_blank');
+      window.open(previewUrl, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(previewUrl), 60_000);
+    } catch (e) {
+      console.error(e);
+      setDayError('PDFプレビューに失敗しました: ' + (e.message || 'Error'));
+    } finally {
+      setPdfGenerating(false);
+    }
+  }, [renderPdfDocument]);
 
+  const handleDownloadPdf = useCallback(async () => {
+    setPdfGenerating(true);
+    try {
+      const pdf = await renderPdfDocument();
+      const filename = `cleaning-report-${header.work_date || new Date().toISOString().slice(0, 10)}.pdf`;
+      pdf.save(filename);
     } catch (e) {
       console.error(e);
       setDayError('PDF生成に失敗しました: ' + (e.message || 'Error'));
     } finally {
-      // 念のため隠す
-      if (printRef.current) printRef.current.style.display = 'none';
       setPdfGenerating(false);
     }
-  }, []);
+  }, [header.work_date, renderPdfDocument]);
 
   const enabledStores = stores.filter((s) => s.enabled);
   const storeMinutesSum = enabledStores.reduce((acc, s) => acc + (Number(s.store_minutes) || 0), 0);
@@ -421,6 +436,33 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
     [stores, validateStoreSubmit, updateStore]
   );
 
+  const handleReportHotbar = useCallback(
+    async (id) => {
+      setReportHotbarActive(id);
+      if (id === 'report-preview') {
+        await handlePreviewPdf();
+        return;
+      }
+      if (id === 'report-pdf') {
+        await handleDownloadPdf();
+        return;
+      }
+      if (id === 'tools-save') {
+        await handleDaySave();
+        return;
+      }
+      if (id === 'tools-camera') {
+        const targetIndex = stores[activeTab]?.enabled ? activeTab : stores.findIndex((s) => s.enabled);
+        if (targetIndex >= 0) {
+          fileInputRefs.current[targetIndex]?.click();
+        } else {
+          setDayError('有効な店舗タブを選択してからカメラを開いてください');
+        }
+      }
+    },
+    [activeTab, handleDaySave, handleDownloadPdf, handlePreviewPdf, stores]
+  );
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const date = params.get('date') || header.work_date;
@@ -527,7 +569,7 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={handleSavePdf}
+              onClick={handleDownloadPdf}
               disabled={pdfGenerating}
               style={{ marginLeft: 8 }}
             >
@@ -750,6 +792,18 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
           <Link to={isAdmin ? "/admin/entrance" : "/jobs/cleaning/entrance"}>{isAdmin ? "管理エントランスに戻る" : "入口に戻る"}</Link>
         </p>
       </div>
+
+      <Hotbar
+        actions={[
+          { id: 'report-preview', label: 'プレビュー', icon: 'preview' },
+          { id: 'report-pdf', label: 'PDF', icon: 'pdf' },
+          { id: 'tools-save', label: '保存', icon: 'report' },
+          { id: 'tools-camera', label: 'カメラ', icon: 'camera' },
+        ]}
+        active={reportHotbarActive}
+        onChange={handleReportHotbar}
+        showFlowGuideButton={false}
+      />
 
       {/* 印刷用レイアウト（普段は非表示） */}
       <div ref={printRef} style={{ display: 'none', width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: 'white', boxSizing: 'border-box', color: '#000', fontFamily: 'serif' }}>

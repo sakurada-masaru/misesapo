@@ -4,6 +4,7 @@
   --text: #e9eefc;
   --muted: #9aa6c5;
   --line: #273049;
+  --yasumi-grid-line: #475569;
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
   min-height: 100%;
   color: var(--text);
@@ -15,6 +16,7 @@
   --text: #1e293b;
   --muted: #64748b;
   --line: #e2e8f0;
+  --yasumi-grid-line: #cbd5e1;
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
@@ -199,7 +201,7 @@
 .yasumi-cal-cell {
   min-height: 120px;
   border-radius: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--yasumi-grid-line);
   background: rgba(255, 255, 255, 0.03);
   padding: 7px;
   text-align: left;

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import Visualizer from '../Visualizer/Visualizer';
 import { apiFetch } from '../../api/client';
@@ -40,6 +40,25 @@ function normId(v) {
   return normalizeIdentity(v).toLowerCase();
 }
 
+function normalizeComparableId(v) {
+  return String(v || '').trim().toLowerCase().replace(/\s+/g, '');
+}
+
+function expandComparableIds(v) {
+  const out = [];
+  const push = (raw) => {
+    const normalized = normalizeComparableId(raw);
+    if (!normalized) return;
+    out.push(normalized);
+    const hashPos = normalized.lastIndexOf('#');
+    if (hashPos >= 0 && hashPos < normalized.length - 1) {
+      out.push(normalized.slice(hashPos + 1));
+    }
+  };
+  (Array.isArray(v) ? v : [v]).forEach(push);
+  return Array.from(new Set(out));
+}
+
 function toIdList(v) {
   const normalizeArray = (arr) => (
     (arr || [])
@@ -55,6 +74,12 @@ function toIdList(v) {
         if (typeof x !== 'object') return [x];
         return [
           x?.jinzai_id,
+          x?.worker_id,
+          x?.sagyouin_id,
+          x?.assigned_to,
+          x?.cleaner_id,
+          x?.user_id,
+          x?.id,
           ...(Array.isArray(x?.members) ? x.members.flatMap((m) => [m?.jinzai_id]) : []),
         ].filter(Boolean);
       })
@@ -63,6 +88,12 @@ function toIdList(v) {
   if (v && typeof v === 'object') {
     return normalizeArray([
       v?.jinzai_id,
+      v?.worker_id,
+      v?.sagyouin_id,
+      v?.assigned_to,
+      v?.cleaner_id,
+      v?.user_id,
+      v?.id,
       ...(Array.isArray(v?.members) ? v.members.flatMap((m) => [m?.jinzai_id]) : []),
     ].filter(Boolean));
   }
@@ -76,6 +107,18 @@ function extractParticipantIds(item) {
   return Array.from(new Set([
     ...toIdList(item?.jinzai_id),
     ...toIdList(item?.jinzai_ids),
+    ...toIdList(item?.worker_id),
+    ...toIdList(item?.sagyouin_id),
+    ...toIdList(item?.sagyouin_ids),
+    ...toIdList(item?.assigned_to),
+    ...toIdList(item?.assignee_id),
+    ...toIdList(item?.cleaner_id),
+    ...toIdList(item?.cleaner_ids),
+    ...toIdList(item?.worker_ids),
+    ...toIdList(item?.workers),
+    ...toIdList(item?.jinzai),
+    ...toIdList(item?.worker),
+    ...toIdList(item?.sagyouin),
     ...toIdList(item?.assignees),
     ...toIdList(item?.participants),
   ]));
@@ -98,20 +141,20 @@ function extractParticipantEntries(item) {
         return;
       }
       pushEntry(
-        x?.jinzai_id || '',
-        x?.name || x?.jinzai_name || x?.display_name || ''
+        x?.jinzai_id || x?.worker_id || x?.sagyouin_id || x?.assigned_to || x?.cleaner_id || x?.user_id || x?.id || '',
+        x?.name || x?.jinzai_name || x?.display_name || x?.worker_name || x?.sagyouin_name || ''
       );
       if (Array.isArray(x?.members)) {
         x.members.forEach((m) => pushEntry(
-          m?.jinzai_id || '',
-          m?.name || m?.jinzai_name || m?.display_name || ''
+          m?.jinzai_id || m?.worker_id || m?.sagyouin_id || m?.assigned_to || m?.cleaner_id || m?.user_id || m?.id || '',
+          m?.name || m?.jinzai_name || m?.display_name || m?.worker_name || m?.sagyouin_name || ''
         ));
       }
     });
   };
   fromList(item?.assignees);
   fromList(item?.participants);
-  pushEntry(item?.jinzai_id || '', item?.jinzai_name || '');
+  pushEntry(item?.jinzai_id || item?.worker_id || item?.sagyouin_id || item?.assigned_to || item?.cleaner_id || item?.user_id || '', item?.jinzai_name || item?.worker_name || item?.sagyouin_name || '');
   return out;
 }
 
@@ -384,12 +427,13 @@ function demoItemsForWorker({ jinzaiId, from, to }) {
 
 export default function MyYoteiListPage() {
   const { job: jobKey } = useParams();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const job = (jobKey && JOBS[jobKey]) ? JOBS[jobKey] : null;
   const isDemo = isDemoMode(searchParams);
 
-  const { isAuthenticated, isLoading: authLoading, getToken, authz } = useAuth();
-  const jinzaiId = authz?.jinzaiId || null;
+  const { user, isAuthenticated, isLoading: authLoading, getToken, authz } = useAuth();
+  const jinzaiId = authz?.jinzaiId || authz?.workerId || user?.jinzai_id || user?.worker_id || user?.sagyouin_id || null;
   const activeJinzaiId = jinzaiId || (isDemo ? 'JINZAI#DEMOSELF' : null);
 
   const [dateISO, setDateISO] = useState(fmtDate(new Date()));
@@ -433,6 +477,14 @@ export default function MyYoteiListPage() {
     setSupportOpen(true);
   }, []);
 
+  const openHoukokuFromYotei = useCallback((item) => {
+    const yoteiId = safeStr(item?.yotei_id || item?.schedule_id || item?.id);
+    if (!yoteiId) return;
+    const sp = new URLSearchParams();
+    sp.set('yotei_id', yoteiId);
+    navigate(`/jobs/cleaning/houkoku?${sp.toString()}`);
+  }, [navigate]);
+
   const load = useCallback(async () => {
     if (!activeJinzaiId) return;
     setLoading(true);
@@ -443,8 +495,14 @@ export default function MyYoteiListPage() {
         return;
       }
       const qs = new URLSearchParams();
-      qs.set('limit', mode === 'day' ? '3000' : '5000');
-      if (assignScope === 'self') qs.set('jinzai_id', activeJinzaiId);
+      const baseLimit = mode === 'day' ? '3000' : '5000';
+      qs.set('limit', baseLimit);
+      if (assignScope === 'self') {
+        qs.set('jinzai_id', activeJinzaiId);
+        qs.set('worker_id', activeJinzaiId);
+        qs.set('sagyouin_id', activeJinzaiId);
+        qs.set('assigned_to', activeJinzaiId);
+      }
       if (range.from === range.to) qs.set('date', range.from);
       else {
         qs.set('from', range.from);
@@ -453,6 +511,23 @@ export default function MyYoteiListPage() {
 
       const data = await apiFetch(`/yotei?${qs.toString()}`, { headers: authHeaders(), cache: 'no-store' });
       const list = Array.isArray(data) ? data : (data?.items || []);
+
+      // API 側の担当者フィルタ実装差異で取りこぼす環境があるため、
+      // self かつ空件数時は担当者条件を外して再取得し、画面側で厳密判定する。
+      if (assignScope === 'self' && (!Array.isArray(list) || list.length === 0)) {
+        const fallbackQs = new URLSearchParams();
+        fallbackQs.set('limit', mode === 'day' ? '5000' : '10000');
+        if (range.from === range.to) fallbackQs.set('date', range.from);
+        else {
+          fallbackQs.set('from', range.from);
+          fallbackQs.set('to', range.to);
+        }
+        const fallbackData = await apiFetch(`/yotei?${fallbackQs.toString()}`, { headers: authHeaders(), cache: 'no-store' });
+        const fallbackList = Array.isArray(fallbackData) ? fallbackData : (fallbackData?.items || []);
+        setItems(Array.isArray(fallbackList) ? fallbackList : []);
+        return;
+      }
+
       setItems(list);
     } catch (e) {
       console.error('[MyYoteiListPage] load failed:', e);
@@ -642,15 +717,19 @@ export default function MyYoteiListPage() {
   }, [items, authHeaders]);
 
   const filteredItems = useMemo(() => {
-    const me = normId(activeJinzaiId);
+    const meTokens = expandComparableIds(activeJinzaiId);
+    const meSet = new Set(meTokens);
     const src = Array.isArray(items) ? items : [];
-    if (!me) return src;
-    const isSelf = (it) => {
-      const owners = extractParticipantIds(it).map(normId);
-      return owners.includes(me);
+    if (!meSet.size) return src;
+    const hasMatch = (values) => {
+      const tokens = expandComparableIds(values);
+      return tokens.some((token) => meSet.has(token));
     };
-    const isIncoming = (it) => toIdList(it?.handover_to).map(normId).includes(me);
-    const isOutgoing = (it) => toIdList(it?.handover_from).map(normId).includes(me);
+    const isSelf = (it) => {
+      return hasMatch(extractParticipantIds(it));
+    };
+    const isIncoming = (it) => hasMatch(toIdList(it?.handover_to));
+    const isOutgoing = (it) => hasMatch(toIdList(it?.handover_from));
     if (assignScope === 'incoming') return src.filter((it) => isIncoming(it));
     if (assignScope === 'outgoing') return src.filter((it) => isOutgoing(it));
     return src.filter((it) => isSelf(it));
@@ -900,6 +979,10 @@ export default function MyYoteiListPage() {
                             {jotaiLabel(jotai)}
                           </div>
                         </div>
+                        <div className="my-yotei-idline">
+                          <span className="k">予定ID</span>
+                          <code className="v">{id || '-'}</code>
+                        </div>
                         <div className="my-yotei-main">
                           <div className="my-yotei-tenpo">
                             <div className="name">{dispTenpo}</div>
@@ -996,15 +1079,26 @@ export default function MyYoteiListPage() {
                             </details>
                           ) : null}
                         </div>
-                        {tenpoId ? (
+                        {(id || tenpoId) ? (
                           <div className="my-yotei-card-actions">
-                            <button
-                              type="button"
-                              className="btn btn-secondary"
-                              onClick={() => openSupport(tenpoId, tenpoName)}
-                            >
-                              対応履歴
-                            </button>
+                            {id ? (
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => openHoukokuFromYotei(it)}
+                              >
+                                この予定で報告
+                              </button>
+                            ) : null}
+                            {tenpoId ? (
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => openSupport(tenpoId, tenpoName)}
+                              >
+                                対応履歴
+                              </button>
+                            ) : null}
                           </div>
                         ) : null}
                       </div>

@@ -8,6 +8,23 @@ import { ROLES, ISSUES, FLOW_RULES, ROLE_ALLOWED_ISSUES, BASE_STEPS } from '../.
 import { useAuth } from '../../auth/useAuth';
 import { useI18n } from '../../i18n/I18nProvider';
 
+function resolveIconKind(action) {
+  const explicit = String(action?.icon || '').toLowerCase().trim();
+  if (explicit) return explicit;
+  const id = String(action?.id || '').toLowerCase();
+  const label = String(action?.label || '').toLowerCase();
+  const role = String(action?.role || '').toLowerCase();
+  const key = `${id} ${label} ${role}`;
+  if (/preview|プレビュー|search|虫眼鏡/.test(key)) return 'preview';
+  if (/pdf/.test(key)) return 'pdf';
+  if (/camera|カメラ/.test(key)) return 'camera';
+  if (/report|houkoku|log|報告|日誌/.test(key)) return 'report';
+  if (/plan|yotei|schedule|calendar|予定|休み/.test(key)) return 'plan';
+  if (/tool|flow|utility|status|ツール|業務フロー/.test(key)) return 'tools';
+  if (/setting|config|設定/.test(key)) return 'settings';
+  return 'default';
+}
+
 /**
  * アクションボタン。ジョブごとに内容は変えるが、仕組みは機能呼び出しだけ。
  */
@@ -93,6 +110,7 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
       <div className="hotbar" role={t('navigation')}>
         {actions.map((a) => {
           const isDisabled = a.disabled === true;
+          const iconKind = resolveIconKind(a);
           return (
             <button
               key={a.id}
@@ -101,7 +119,8 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
               disabled={isDisabled}
               onClick={() => !isDisabled && onChange?.(a.id)}
             >
-              {t(a.label)}
+              <span className={`hotbar-btn-icon hotbar-icon-${iconKind}`} aria-hidden="true" />
+              <span className="hotbar-btn-label">{t(a.label)}</span>
             </button>
           );
         })}
@@ -109,10 +128,10 @@ export default function Hotbar({ actions = [], active, onChange, showFlowGuideBu
           <button
             type="button"
             className={`hotbar-btn ${isFlowGuidePage ? 'active' : ''}`}
-            style={{ borderStyle: 'dashed' }}
             onClick={navigateToFlow}
           >
-            {isFlowGuidePage ? t('🏠 ポータルへ') : t('📘 業務フロー')}
+            <span className={`hotbar-btn-icon hotbar-icon-${isFlowGuidePage ? 'home' : 'flow'}`} aria-hidden="true" />
+            <span className="hotbar-btn-label">{isFlowGuidePage ? t('ポータル') : t('業務フロー')}</span>
           </button>
         )}
       </div>

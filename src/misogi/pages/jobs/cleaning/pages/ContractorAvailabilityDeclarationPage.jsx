@@ -74,9 +74,10 @@ function buildCalendarCells(monthISO) {
   for (let d = 1; d <= daysInMonth; d += 1) {
     cells.push(base.date(d).format('YYYY-MM-DD'));
   }
-  while (cells.length < 42) cells.push(null);
+  while (cells.length % 7 !== 0) cells.push(null);
 
-  return Array.from({ length: 6 }, (_, week) => cells.slice(week * 7, week * 7 + 7));
+  const weekCount = Math.ceil(cells.length / 7);
+  return Array.from({ length: weekCount }, (_, week) => cells.slice(week * 7, week * 7 + 7));
 }
 
 function inRange(iso, from, to) {
@@ -374,7 +375,6 @@ export default function ContractorAvailabilityDeclarationPage() {
         <header className="gcal-toolbar">
           <div className="gcal-toolbar-left">
             <h1>休み申請カレンダー</h1>
-            <p>清掃員ジョブモード / Googleカレンダー風 月表示</p>
           </div>
           <div className="gcal-toolbar-actions">
             <button type="button" className="btn" onClick={() => setMonthISO(dayjs(monthISO).subtract(1, 'month').startOf('month').format('YYYY-MM-DD'))}>◀</button>

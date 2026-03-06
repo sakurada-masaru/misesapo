@@ -733,6 +733,51 @@ button:disabled {
   background: var(--dash-sub-bg);
 }
 
+.admin-dashboard-layout.hide-explorer,
+.admin-dashboard-layout.hide-chat {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-dashboard-activity-panel {
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  border: 1px solid var(--dash-sub-border);
+  border-radius: 12px;
+  background: var(--dash-sub-bg);
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+.admin-dashboard-activity-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-dashboard-activity-head button {
+  border: 1px solid var(--border-color);
+  background: var(--dash-button-bg);
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 7px 11px;
+  cursor: pointer;
+}
+
+.admin-dashboard-activity-head button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-dashboard-activity-body {
+  min-height: 0;
+  overflow: auto;
+  text-align: left;
+}
+
 .job-entrance-title {
   font-size: 2rem;
   font-weight: 600;
@@ -743,6 +788,104 @@ button:disabled {
   color: var(--muted);
   font-size: 0.9rem;
   margin: 0;
+}
+
+.job-entrance-cleaning-notices {
+  position: fixed;
+  left: calc(10px + env(safe-area-inset-left));
+  bottom: calc(33vh + env(safe-area-inset-bottom));
+  z-index: 1250;
+  width: min(92vw, 740px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-entrance-cleaning-notice {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card-bg) 90%, transparent);
+  color: var(--fg);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.22);
+  backdrop-filter: blur(8px);
+  padding: 0 14px;
+  display: grid;
+  grid-template-columns: auto minmax(78px, auto) minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.job-entrance-cleaning-notice .notice-day {
+  font-size: var(--fs-11);
+  color: var(--muted);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.job-entrance-cleaning-notice .notice-yagou {
+  font-size: var(--fs-11);
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.job-entrance-cleaning-notice .notice-tenpo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-13);
+}
+
+.job-entrance-cleaning-notice .notice-time,
+.job-entrance-cleaning-notice .notice-amount {
+  font-size: var(--fs-12);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.job-entrance-cleaning-notice .notice-amount {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+button.job-entrance-cleaning-notice:hover:not(:disabled) {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 1px var(--accent-glow), 0 12px 28px rgba(2, 6, 23, 0.28);
+}
+
+button.job-entrance-cleaning-notice:disabled {
+  opacity: 0.62;
+}
+
+.job-entrance-settings-panel {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  display: grid;
+  gap: 12px;
+}
+
+.job-entrance-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.job-entrance-settings-label {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .admin-filebox-panel {
@@ -1289,13 +1432,28 @@ button:disabled {
   color: var(--muted);
 }
 
-/* サブホットバー（メインUIエリアの中央に表示される2次選択肢） */
+/* サブホットバー（清掃エントランスでは HOTバーの30px上に固定） */
 .sub-hotbar-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-3);
   margin-top: var(--space-6);
+}
+
+.job-entrance-page[data-job="cleaning"] .sub-hotbar-wrap {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(max(10px, env(safe-area-inset-bottom)) + 98px);
+  z-index: 1200;
+  width: min(92vw, 760px);
+  margin-top: 0;
+  pointer-events: none;
+}
+
+.job-entrance-page[data-job="cleaning"] .sub-hotbar-wrap > * {
+  pointer-events: auto;
 }
 
 .sub-hotbar-groups {
@@ -1360,6 +1518,34 @@ button:disabled {
 .sub-hotbar-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.sub-hotbar-simple {
+  justify-content: center;
+}
+
+.sub-hotbar-back-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--fg);
+  font-size: 1.2rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.sub-hotbar-back-btn:hover:not(:disabled) {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+
+.sub-hotbar-back-btn:disabled {
+  opacity: 0.5;
 }
 
 .job-entrance-hotbar {

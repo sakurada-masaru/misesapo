@@ -10,6 +10,23 @@ import { HashRouter } from 'react-router-dom';
 import App from './app/App.jsx';
 import { I18nProvider } from './shared/i18n/I18nProvider';
 
+function redirectPathToHashRoute() {
+  if (typeof window === 'undefined') return false;
+  const pathname = String(window.location.pathname || '');
+  const hash = String(window.location.hash || '');
+  if (hash.startsWith('#/')) return false;
+  if (hash) return false;
+  const base = '/misogi';
+  if (!pathname.startsWith(`${base}/`)) return false;
+  if (pathname === `${base}/`) return false;
+  const subPath = pathname.slice(base.length);
+  if (/\.[a-zA-Z0-9]+$/.test(subPath)) return false;
+  const search = String(window.location.search || '');
+  const target = `${base}/#${subPath}${search}`;
+  window.location.replace(target);
+  return true;
+}
+
 function resolveInitialTheme() {
   if (typeof window === 'undefined') return 'dark';
   try {
@@ -21,7 +38,10 @@ function resolveInitialTheme() {
   return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
-if (typeof document !== 'undefined') {
+const redirectedToHashRoute =
+  typeof document !== 'undefined' ? redirectPathToHashRoute() : false;
+
+if (typeof document !== 'undefined' && !redirectedToHashRoute) {
   document.documentElement.setAttribute('data-theme', resolveInitialTheme());
 }
 
@@ -49,13 +69,15 @@ if (!rootEl) {
   document.body.innerHTML = '<p style="padding:1rem;color:red">#root が見つかりません。</p>';
 } else {
   try {
-    ReactDOM.createRoot(rootEl).render(
-      <I18nProvider>
-        <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <App />
-        </HashRouter>
-      </I18nProvider>
-    );
+    if (!redirectedToHashRoute) {
+      ReactDOM.createRoot(rootEl).render(
+        <I18nProvider>
+          <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <App />
+          </HashRouter>
+        </I18nProvider>
+      );
+    }
   } catch (e) {
     rootEl.innerHTML = '<div style="padding:1rem;color:red"><p>起動エラー:</p><pre>' + (e && e.message) + '</pre></div>';
     console.error(e);

@@ -742,16 +742,69 @@ export default function AdminYoteiPage() {
         yakusokuList={yakusokuList}
         value={modalValue}
         onChange={(next) => {
-          const prev = modalValue?.yakusoku_id || '';
-          const curr = next?.yakusoku_id || '';
-          if (curr && curr !== prev) {
-            const hit = yakusokuList.find((y) => y.id === curr);
+          const prevYak = String(modalValue?.yakusoku_id || '').trim();
+          const currYak = String(next?.yakusoku_id || '').trim();
+          const prevTenpo = String(modalValue?.tenpo_id || '').trim();
+          const currTenpo = String(next?.tenpo_id || '').trim();
+
+          const byYakId = (id) => {
+            const key = String(id || '').trim();
+            if (!key) return null;
+            return yakusokuList.find((y) => String(y?.id || '').trim() === key) || null;
+          };
+          const byTenpo = (tenpoId) => {
+            const key = String(tenpoId || '').trim();
+            if (!key) return [];
+            return yakusokuList
+              .filter((y) => String(y?.tenpo_id || '').trim() === key)
+              .sort((a, b) => {
+                const ak = `${a?.status === 'active' ? '0' : '1'}${a?.kubun === 'teiki' ? '0' : '1'}${String(a?.id || '')}`;
+                const bk = `${b?.status === 'active' ? '0' : '1'}${b?.kubun === 'teiki' ? '0' : '1'}${String(b?.id || '')}`;
+                return ak.localeCompare(bk, 'ja');
+              });
+          };
+          const yakToWorkType = (y) => `${y?.kubun === 'teiki' ? '定期' : '単発'} / ${y?.plan_name || 'プラン'}`;
+
+          // 1) yakusoku選択時: tenpo/work_typeを同時連携
+          if (currYak && currYak !== prevYak) {
+            const hit = byYakId(currYak);
             if (hit) {
-              const workType = `${hit.kubun === 'teiki' ? '定期' : '単発'} / ${hit.plan_name}`;
-              setModalValue({ ...next, tenpo_id: hit.tenpo_id || next.tenpo_id, work_type: workType });
+              setModalValue({
+                ...next,
+                yakusoku_id: String(hit.id || ''),
+                tenpo_id: String(hit.tenpo_id || next.tenpo_id || ''),
+                work_type: yakToWorkType(hit),
+              });
               return;
             }
           }
+
+          // 2) tenpo選択時: 同一tenpoのyakusokuを自動補完（既存が同一tenpoなら維持）
+          if (currTenpo && currTenpo !== prevTenpo) {
+            const currentYak = byYakId(currYak);
+            const isCurrentYakMatched = currentYak && String(currentYak.tenpo_id || '').trim() === currTenpo;
+            if (isCurrentYakMatched) {
+              setModalValue(next);
+              return;
+            }
+            const candidates = byTenpo(currTenpo);
+            if (candidates.length > 0) {
+              const picked = candidates[0];
+              setModalValue({
+                ...next,
+                yakusoku_id: String(picked.id || ''),
+                work_type: yakToWorkType(picked),
+              });
+              return;
+            }
+            // 店舗に紐づくyakusokuがない場合は不整合回避のためクリア
+            setModalValue({
+              ...next,
+              yakusoku_id: '',
+            });
+            return;
+          }
+
           setModalValue(next);
         }}
         onClose={() => setModalOpen(false)}

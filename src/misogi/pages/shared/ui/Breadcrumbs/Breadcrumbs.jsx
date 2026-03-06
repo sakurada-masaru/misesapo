@@ -25,9 +25,14 @@ function isEntrancePath(pathname) {
   const p = String(pathname || '/');
   if (p === '/' || p === '/portal' || p === '/entrance') return true;
   if (p === '/admin/entrance') return true;
-  if (p === '/admin/filebox') return true;
+  if (p === '/admin/dashboard') return true;
   if (/^\/jobs\/[^/]+\/entrance$/.test(p)) return true;
   return false;
+}
+
+function isCleaningEntrancePath(pathname) {
+  const p = String(pathname || '/');
+  return p === '/jobs/cleaning/entrance' || p === '/jobs/cleaning/entrance/';
 }
 
 function isAdminPath(pathname) {
@@ -54,7 +59,8 @@ function labelForPath(pathname) {
   if (p === '/admin/yasumi') return 'yasumi';
   if (p === '/admin/ugoki') return 'UGOKI';
   if (p === '/admin/yakusoku') return 'YAKUSOKU';
-  if (p === '/admin/filebox') return 'ダッシュボード';
+  if (p === '/admin/dashboard') return 'ダッシュボード';
+  if (p === '/admin/filebox') return 'ファイルボックス';
   if (p === '/admin/torihikisaki-touroku') return '顧客登録';
   if (p === '/admin/torihikisaki-meibo') return '取引先名簿';
   if (p === '/admin/jinzai-meibo') return '人材名簿';
@@ -131,8 +137,9 @@ export default function Breadcrumbs() {
   const pathname = location?.pathname || '/';
 
   const hidden = isEntrancePath(pathname) || isWorkerReportPath(pathname);
+  const hideCleaningHeader = isCleaningEntrancePath(pathname);
   const isAdmin = isAdminPath(pathname);
-  const isAdminFilebox = pathname === '/admin/filebox';
+  const isAdminDashboard = pathname === '/admin/dashboard';
   const crumbs = useMemo(() => crumbsForPath(pathname), [pathname]);
   const [dashboardExplorerVisible, setDashboardExplorerVisible] = useState(() =>
     readStoredBoolean(DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY, true)
@@ -142,12 +149,16 @@ export default function Breadcrumbs() {
   );
 
   useEffect(() => {
-    if (!isAdminFilebox) return;
+    if (!isAdminDashboard) return;
     setDashboardExplorerVisible(readStoredBoolean(DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY, true));
     setDashboardChatVisible(readStoredBoolean(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, true));
-  }, [isAdminFilebox, pathname]);
+  }, [isAdminDashboard, pathname]);
 
-  if (isAdmin && hidden && !isAdminFilebox) {
+  if (hideCleaningHeader) {
+    return null;
+  }
+
+  if (isAdmin && hidden && !isAdminDashboard) {
     return null;
   }
 
@@ -200,7 +211,7 @@ export default function Breadcrumbs() {
           <div className="breadcrumbs-main breadcrumbs-main-empty" />
         )}
         <div className="breadcrumbs-controls-wrap">
-          {isAdminFilebox ? (
+          {isAdminDashboard ? (
             <div className="breadcrumbs-pane-controls" aria-label="ペイン表示設定">
               <button
                 type="button"

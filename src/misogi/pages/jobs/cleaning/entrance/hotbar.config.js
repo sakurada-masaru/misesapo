@@ -5,7 +5,7 @@ export const CLEANING_HOTBAR = [
     role: 'log',
     label: '報告',
     subItems: [
-      { id: 'work-report', label: '業務報告', path: '/jobs/cleaning/houkoku' },
+      { id: 'work-report-from-yotei', label: '予定から報告', path: '/jobs/cleaning/yotei' },
     ],
   },
   {
@@ -24,5 +24,10 @@ export const CLEANING_HOTBAR = [
     subItems: [
       { id: 'flow-guide', label: '業務フロー', path: '/flow-guide' },
     ],
+  },
+  {
+    id: 'settings',
+    role: 'base',
+    label: '設定',
   },
 ];

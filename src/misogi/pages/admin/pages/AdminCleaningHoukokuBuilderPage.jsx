@@ -2,11 +2,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { useSearchParams } from 'react-router-dom';
 import TemplateRenderer, { getNestedValue, setNestedValue, validateTemplatePayload } from '../../../shared/components/TemplateRenderer';
 import { getTemplateById } from '../../../templates';
-import { apiFetchWorkReport } from '../../shared/api/client';
+import { apiFetch, apiFetchWorkReport } from '../../shared/api/client';
 import { useAuth } from '../../shared/auth/useAuth';
 import { getServiceCategoryLabel } from './serviceCategoryCatalog';
+import Hotbar from '../../shared/ui/Hotbar/Hotbar';
 
 const TEMPLATE_ID = 'CLEANING_SHEETS_3_V1';
 const WORK_TYPE_OPTIONS = ['定期清掃', 'スポット清掃', '追加清掃', '再清掃'];
@@ -213,6 +215,61 @@ function normalizeShokushuList(raw) {
     .filter(Boolean);
 }
 
+function toIdList(raw) {
+  if (Array.isArray(raw)) return raw.map((v) => norm(v)).filter(Boolean);
+  const s = norm(raw);
+  if (!s) return [];
+  return s
+    .replace(/^\[/, '')
+    .replace(/\]$/, '')
+    .replace(/"/g, '')
+    .replace(/'/g, '')
+    .split(/[,\s、/]+/)
+    .map((v) => norm(v))
+    .filter(Boolean);
+}
+
+function buildYoteiWorkerIds(row) {
+  return Array.from(new Set([
+    ...toIdList(row?.worker_ids),
+    ...toIdList(row?.jinzai_ids),
+    norm(row?.sagyouin_id),
+    norm(row?.worker_id),
+    norm(row?.assigned_to),
+  ].filter(Boolean)));
+}
+
+function buildYoteiServiceIds(row) {
+  const fromServices = coerceArray(row?.services).flatMap((s) => {
+    if (!s) return [];
+    if (typeof s === 'object') return [norm(s?.service_id || s?.id)];
+    return [norm(s)];
+  });
+  return Array.from(new Set([
+    ...toIdList(row?.service_ids),
+    ...fromServices,
+    norm(row?.service_id),
+  ].filter(Boolean)));
+}
+
+function guessExtensionFromMimeOrName(contentType, name) {
+  const filename = norm(name).toLowerCase();
+  if (filename.includes('.')) return filename.split('.').pop();
+  const mime = norm(contentType).toLowerCase();
+  if (mime === 'image/jpeg') return 'jpg';
+  if (mime === 'image/png') return 'png';
+  if (mime === 'image/webp') return 'webp';
+  if (mime === 'image/gif') return 'gif';
+  if (mime === 'application/pdf') return 'pdf';
+  return 'bin';
+}
+
+function normalizeYmd(v) {
+  const s = norm(v);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  return '';
+}
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -228,6 +285,7 @@ function fileToBase64(file) {
 
 export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUpload = false }) {
   const { user, isLoading: authLoading, isAuthenticated, login, getToken } = useAuth();
+  const [searchParams] = useSearchParams();
   const template = useMemo(() => getTemplateById(TEMPLATE_ID), []);
   const editorTemplate = useMemo(() => {
     if (!template) return template;
@@ -267,6 +325,11 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
   const [masterQuery, setMasterQuery] = useState('');
   const [serviceQuery, setServiceQuery] = useState('');
   const [servicePickerOpen, setServicePickerOpen] = useState(false);
+  const [masterSearchOverlayOpen, setMasterSearchOverlayOpen] = useState(false);
+  const [yoteiCandidates, setYoteiCandidates] = useState([]);
+  const [linkedYoteiId, setLinkedYoteiId] = useState(() => norm(searchParams?.get('yotei_id')));
+  const routeYoteiHydratedRef = React.useRef('');
+  const [yoteiBusy, setYoteiBusy] = useState(false);
   const [activeServiceTab, setActiveServiceTab] = useState('');
   const [tenpoId, setTenpoId] = useState('');
   const [serviceIds, setServiceIds] = useState([]);
@@ -1039,6 +1102,142 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
     () => cleanerNames[0] || '',
     [cleanerNames]
   );
+  const primaryCleanerId = useMemo(
+    () => norm(cleanerIds?.[0]),
+    [cleanerIds]
+  );
+
+  const linkedYoteiRecord = useMemo(
+    () => (yoteiCandidates || []).find((row) => norm(row?.id) === norm(linkedYoteiId)) || null,
+    [linkedYoteiId, yoteiCandidates]
+  );
+
+  React.useEffect(() => {
+    const routeYoteiId = norm(searchParams?.get('yotei_id'));
+    if (!routeYoteiId) return;
+    setLinkedYoteiId((prev) => (prev ? prev : routeYoteiId));
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    const routeYoteiId = norm(searchParams?.get('yotei_id'));
+    if (!routeYoteiId) return;
+    if (routeYoteiHydratedRef.current === routeYoteiId) return;
+
+    let aborted = false;
+    (async () => {
+      try {
+        const res = await apiFetch(`/yotei/${encodeURIComponent(routeYoteiId)}`, { headers: authHeaders(), cache: 'no-store' });
+        if (aborted) return;
+        const row = (res && typeof res === 'object')
+          ? (res?.item || res?.data || res)
+          : null;
+        if (!row || typeof row !== 'object') {
+          routeYoteiHydratedRef.current = routeYoteiId;
+          return;
+        }
+
+        const yTenpoId = norm(row?.tenpo_id || row?.store_id);
+        const yWorkDate = normalizeYmd(row?.scheduled_date || row?.date || String(row?.start_at || '').slice(0, 10));
+        const startFromIso = String(row?.start_at || '').match(/T(\d{2}:\d{2})/)?.[1] || '';
+        const endFromIso = String(row?.end_at || '').match(/T(\d{2}:\d{2})/)?.[1] || '';
+        const yStart = norm(row?.start_time) || startFromIso;
+        const yEnd = norm(row?.end_time) || endFromIso;
+        const yWorkType = norm(row?.work_type);
+        const yWorkerIds = buildYoteiWorkerIds(row);
+        const yServiceIds = buildYoteiServiceIds(row);
+
+        routeYoteiHydratedRef.current = routeYoteiId;
+        setLinkedYoteiId(routeYoteiId);
+        if (yTenpoId) setTenpoId(yTenpoId);
+        if (yWorkerIds.length) setCleanerIds(yWorkerIds);
+        if (yServiceIds.length) setServiceIds(yServiceIds);
+        if (yWorkDate || yStart || yEnd || yWorkType) {
+          setPayload((prev) => ({
+            ...prev,
+            work_date: yWorkDate || prev.work_date,
+            work_start_time: yStart || prev.work_start_time,
+            work_end_time: yEnd || prev.work_end_time,
+            work_type: yWorkType || prev.work_type,
+          }));
+        }
+      } catch (e) {
+        if (!aborted) {
+          routeYoteiHydratedRef.current = routeYoteiId;
+          console.warn('[AdminCleaningHoukokuBuilder] route yotei hydrate failed', e);
+        }
+      }
+    })();
+    return () => {
+      aborted = true;
+    };
+  }, [apiFetch, authHeaders, searchParams]);
+
+  React.useEffect(() => {
+    let aborted = false;
+    const tenpoIdCurrent = norm(tenpoId);
+    const workDate = norm(payload.work_date || todayYmd());
+    if (!tenpoIdCurrent || !workDate) {
+      setYoteiCandidates([]);
+      return () => {
+        aborted = true;
+      };
+    }
+    (async () => {
+      setYoteiBusy(true);
+      try {
+        const qs = new URLSearchParams();
+        qs.set('limit', '5000');
+        qs.set('date', workDate);
+        if (primaryCleanerId) qs.set('jinzai_id', primaryCleanerId);
+        const res = await apiFetch(`/yotei?${qs.toString()}`, { headers: authHeaders(), cache: 'no-store' });
+        const rows = getItems(res)
+          .map((it) => {
+            const id = norm(it?.yotei_id || it?.schedule_id || it?.id);
+            const yTenpoId = norm(it?.tenpo_id || it?.store_id);
+            const yDate = norm(it?.scheduled_date || it?.date || '');
+            const yStart = norm(it?.start_time || '');
+            const yEnd = norm(it?.end_time || '');
+            const workerIds = buildYoteiWorkerIds(it);
+            return {
+              id,
+              tenpo_id: yTenpoId,
+              scheduled_date: yDate || (norm(it?.start_at) ? String(it.start_at).slice(0, 10) : ''),
+              start_time: yStart,
+              end_time: yEnd,
+              jotai: norm(it?.jotai || it?.status || ''),
+              tenpo_name: norm(it?.tenpo_name || it?.store_name || ''),
+              worker_ids: workerIds,
+            };
+          })
+          .filter((it) => it.id && it.tenpo_id === tenpoIdCurrent)
+          .filter((it) => {
+            if (!cleanerIds?.length) return true;
+            const cleanerSet = new Set(cleanerIds.map((v) => norm(v)).filter(Boolean));
+            return it.worker_ids.some((wid) => cleanerSet.has(norm(wid)));
+          })
+          .sort((a, b) => `${a.start_time}`.localeCompare(`${b.start_time}`));
+
+        if (aborted) return;
+        setYoteiCandidates(rows);
+        setLinkedYoteiId((prev) => {
+          const keep = rows.some((r) => norm(r.id) === norm(prev));
+          if (keep) return prev;
+          if (rows.length === 1) return rows[0].id;
+          return '';
+        });
+      } catch (e) {
+        if (!aborted) {
+          console.warn('[AdminCleaningHoukokuBuilder] yotei candidate load failed', e);
+          setYoteiCandidates([]);
+        }
+      } finally {
+        if (!aborted) setYoteiBusy(false);
+      }
+    })();
+    return () => {
+      aborted = true;
+    };
+  }, [apiFetch, authHeaders, cleanerIds, payload.work_date, primaryCleanerId, tenpoId]);
 
   const toggleService = useCallback((sidRaw) => {
     const sid = norm(sidRaw);
@@ -1255,25 +1454,51 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
     return created;
   }, [apiJson, tenpoById]);
 
-  const savePdfToSouko = useCallback(async ({ reportId = '' } = {}) => {
-    const tid = norm(tenpoId);
-    if (!tid) throw new Error('souko保存先店舗を選択してください');
-    const { blob, fileName } = await buildReportPdfBlob();
-    const souko = await ensureSoukoForTenpo(tid);
+  const readAttachmentBlob = useCallback(async (att) => {
+    const localUrl = resolvePhotoSrc(att);
+    const remoteUrl = String(att?.url || '');
+    const candidates = Array.from(new Set([localUrl, remoteUrl].map((v) => String(v || '').trim()).filter(Boolean)));
+    let lastErr = null;
+    for (const url of candidates) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+          // eslint-disable-next-line no-await-in-loop
+          const txt = await res.text().catch(() => '');
+          throw new Error(`HTTP ${res.status}${txt ? ` ${txt}` : ''}`.trim());
+        }
+        // eslint-disable-next-line no-await-in-loop
+        const blob = await res.blob();
+        if (blob && blob.size > 0) return blob;
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw new Error(`写真取得に失敗しました: ${norm(att?.name || att?.file_name || 'photo')} ${lastErr?.message ? `(${lastErr.message})` : ''}`.trim());
+  }, [resolvePhotoSrc]);
+
+  const putBlobToSouko = useCallback(async ({
+    tenpoId: targetTenpoId,
+    fileName,
+    contentType,
+    blob,
+  }) => {
+    const tid = norm(targetTenpoId);
+    if (!tid) throw new Error('souko保存先店舗IDが未指定です');
     const presign = await apiJson('/master/souko', {
       method: 'POST',
       body: {
         mode: 'presign_upload',
         tenpo_id: tid,
         file_name: fileName,
-        content_type: 'application/pdf',
+        content_type: contentType || 'application/octet-stream',
       },
     });
     if (!presign?.put_url || !presign?.key) throw new Error('soukoアップロードURL取得に失敗しました');
-
     const putRes = await fetch(String(presign.put_url), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/pdf' },
+      headers: { 'Content-Type': contentType || 'application/octet-stream' },
       body: blob,
       redirect: 'follow',
     });
@@ -1281,21 +1506,157 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
       const text = await putRes.text().catch(() => '');
       throw new Error(`S3 upload failed (${putRes.status}) ${text}`.trim());
     }
+    return {
+      key: String(presign.key || ''),
+      preview_url: String(presign?.get_url || ''),
+      content_type: contentType || 'application/octet-stream',
+      size: Number(blob?.size || 0),
+    };
+  }, [apiJson]);
+
+  const saveReportArtifactsToSouko = useCallback(async ({ reportId = '' } = {}) => {
+    const tid = norm(tenpoId);
+    if (!tid) throw new Error('souko保存先店舗を選択してください');
+    const workDate = normalizeYmd(payload.work_date) || todayYmd();
+    const linkedScheduleId = norm(linkedYoteiId || linkedYoteiRecord?.id);
+    const tenpo = tenpoById.get(tid) || {};
+    const tenpoNameSafe = safeFilePart(norm(tenpo?.name) || tid);
+    const { blob, fileName } = await buildReportPdfBlob();
+    const souko = await ensureSoukoForTenpo(tid);
+    const uploadedAt = nowIso();
+
+    const pdfFileName = fileName.startsWith(`${workDate}_`)
+      ? fileName
+      : `${workDate}_${fileName}`;
+    const pdfStored = await putBlobToSouko({
+      tenpoId: tid,
+      fileName: pdfFileName,
+      contentType: 'application/pdf',
+      blob,
+    });
 
     const nextFiles = [
       ...(Array.isArray(souko?.files) ? souko.files : []),
       {
-        key: presign.key,
-        file_name: fileName,
-        content_type: 'application/pdf',
-        size: blob.size || 0,
-        uploaded_at: nowIso(),
+        key: pdfStored.key,
+        file_name: pdfFileName,
+        content_type: pdfStored.content_type,
+        size: pdfStored.size,
+        uploaded_at: uploadedAt,
         kubun: 'teishutsu',
-        doc_category: 'cleaning_houkoku',
-        preview_url: String(presign?.get_url || ''),
+        doc_category: 'cleaning_houkoku_pdf',
+        preview_url: pdfStored.preview_url,
         report_id: norm(reportId),
+        yotei_id: linkedScheduleId,
+        schedule_id: linkedScheduleId,
+        tenpo_id: tid,
+        work_date: workDate,
+        date_key: workDate,
+        date_month: workDate.slice(0, 7),
+        source: 'cleaning_houkoku',
       },
     ];
+
+    let photoCount = 0;
+    for (const sidRaw of serviceIds || []) {
+      const sid = norm(sidRaw);
+      if (!sid) continue;
+      const svc = serviceById.get(sid) || {};
+      const serviceName = getServiceDisplayName(svc || sid) || sid;
+      const buckets = reportPhotoByService[sid] || emptyServicePhotoBuckets();
+      for (const bucket of REPORT_PHOTO_BUCKETS) {
+        const photos = coerceArray(buckets?.[bucket]);
+        for (let idx = 0; idx < photos.length; idx += 1) {
+          const att = photos[idx];
+          const photoNo = getPhotoNo(att) || (idx + 1);
+          // eslint-disable-next-line no-await-in-loop
+          const sourceBlob = await readAttachmentBlob(att);
+          const contentType = norm(att?.mime || att?.content_type || sourceBlob?.type) || 'application/octet-stream';
+          const ext = guessExtensionFromMimeOrName(contentType, norm(att?.name || att?.file_name));
+          const photoFileName = [
+            workDate,
+            tenpoNameSafe,
+            safeFilePart(serviceName),
+            bucket,
+            String(photoNo).padStart(2, '0'),
+          ].join('_') + `.${ext}`;
+          // eslint-disable-next-line no-await-in-loop
+          const stored = await putBlobToSouko({
+            tenpoId: tid,
+            fileName: photoFileName,
+            contentType,
+            blob: sourceBlob,
+          });
+          nextFiles.push({
+            key: stored.key,
+            file_name: photoFileName,
+            content_type: stored.content_type,
+            size: stored.size,
+            uploaded_at: uploadedAt,
+            kubun: 'teishutsu',
+            doc_category: 'cleaning_houkoku_photo',
+            preview_url: stored.preview_url,
+            report_id: norm(reportId),
+            yotei_id: linkedScheduleId,
+            schedule_id: linkedScheduleId,
+            tenpo_id: tid,
+            work_date: workDate,
+            date_key: workDate,
+            date_month: workDate.slice(0, 7),
+            source: 'cleaning_houkoku',
+            service_id: sid,
+            service_name: serviceName,
+            photo_bucket: bucket,
+            photo_no: photoNo,
+          });
+          photoCount += 1;
+        }
+      }
+    }
+    const poolPhotos = coerceArray(reportPhotoPool);
+    for (let idx = 0; idx < poolPhotos.length; idx += 1) {
+      const att = poolPhotos[idx];
+      const photoNo = getPhotoNo(att) || (idx + 1);
+      // eslint-disable-next-line no-await-in-loop
+      const sourceBlob = await readAttachmentBlob(att);
+      const contentType = norm(att?.mime || att?.content_type || sourceBlob?.type) || 'application/octet-stream';
+      const ext = guessExtensionFromMimeOrName(contentType, norm(att?.name || att?.file_name));
+      const photoFileName = [
+        workDate,
+        tenpoNameSafe,
+        'unassigned',
+        'pool',
+        String(photoNo).padStart(2, '0'),
+      ].join('_') + `.${ext}`;
+      // eslint-disable-next-line no-await-in-loop
+      const stored = await putBlobToSouko({
+        tenpoId: tid,
+        fileName: photoFileName,
+        contentType,
+        blob: sourceBlob,
+      });
+      nextFiles.push({
+        key: stored.key,
+        file_name: photoFileName,
+        content_type: stored.content_type,
+        size: stored.size,
+        uploaded_at: uploadedAt,
+        kubun: 'teishutsu',
+        doc_category: 'cleaning_houkoku_photo',
+        preview_url: stored.preview_url,
+        report_id: norm(reportId),
+        yotei_id: linkedScheduleId,
+        schedule_id: linkedScheduleId,
+        tenpo_id: tid,
+        work_date: workDate,
+        date_key: workDate,
+        date_month: workDate.slice(0, 7),
+        source: 'cleaning_houkoku',
+        photo_bucket: 'pool',
+        photo_no: photoNo,
+      });
+      photoCount += 1;
+    }
 
     await apiJson(`/master/souko/${encodeURIComponent(souko.souko_id)}`, {
       method: 'PUT',
@@ -1304,8 +1665,24 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
         files: nextFiles,
       },
     });
-    return { soukoId: souko.souko_id, key: presign.key, fileName };
-  }, [apiJson, buildReportPdfBlob, ensureSoukoForTenpo, tenpoId]);
+    return { soukoId: souko.souko_id, key: pdfStored.key, fileName: pdfFileName, photoCount, workDate };
+  }, [
+    apiJson,
+    buildReportPdfBlob,
+    ensureSoukoForTenpo,
+    getServiceDisplayName,
+    linkedYoteiId,
+    linkedYoteiRecord?.id,
+    payload.work_date,
+    putBlobToSouko,
+    readAttachmentBlob,
+    reportPhotoByService,
+    reportPhotoPool,
+    serviceById,
+    serviceIds,
+    tenpoById,
+    tenpoId,
+  ]);
 
   const submit = useCallback(async () => {
     if (!template) return;
@@ -1325,6 +1702,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
       const userName = String(primaryCleanerName || payload.user_name || user?.name || '').trim() || '不明';
       const selectedServiceIds = (serviceIds || []).map((sid) => norm(sid)).filter(Boolean);
       const selectedCleanerIds = (cleanerIds || []).map((cid) => norm(cid)).filter(Boolean);
+      const linkedScheduleId = norm(linkedYoteiId || linkedYoteiRecord?.id);
       const headers = authHeaders();
       const submitRes = await apiFetchWorkReport('/houkoku', {
         method: 'POST',
@@ -1340,6 +1718,8 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
           service_ids: selectedServiceIds,
           service_names: selectedServiceNames,
           tenpo_id: tid,
+          yotei_id: linkedScheduleId,
+          schedule_id: linkedScheduleId,
           context: {
             tenpo_id: tid,
             tenpo_label: selectedTenpoLabel || norm(tenpoById.get(tid)?.name) || tid,
@@ -1349,17 +1729,19 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
             cleaner_names: cleanerNames,
             service_ids: selectedServiceIds,
             service_names: selectedServiceNames,
+            yotei_id: linkedScheduleId,
+            schedule_id: linkedScheduleId,
           },
           payload,
         }),
       });
       const reportId = norm(submitRes?.report_id || submitRes?.id || submitRes?.houkoku_id || submitRes?.work_report_id);
       setSoukoBusy(true);
-      const saved = await savePdfToSouko({ reportId });
+      const saved = await saveReportArtifactsToSouko({ reportId });
       const tenpoName = norm(tenpoById.get(tid)?.name) || tid;
       setStatus({
         type: 'success',
-        text: `提出してsoukoへ保存しました（${tenpoName} / ${saved.fileName}）`,
+        text: `提出してsoukoへ保存しました（${tenpoName} / ${saved.workDate} / PDF1件・写真${saved.photoCount}件）`,
       });
     } catch (e) {
       console.error(e);
@@ -1368,7 +1750,100 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
       setSoukoBusy(false);
       setSaving(false);
     }
-  }, [authHeaders, cleanerIds, cleanerNames, primaryCleanerName, editorTemplate, payload, reportPhotos.length, savePdfToSouko, selectedServiceNames, selectedTenpoLabel, serviceIds, tenpoById, tenpoId, user?.name]);
+  }, [
+    authHeaders,
+    cleanerIds,
+    cleanerNames,
+    editorTemplate,
+    linkedYoteiId,
+    linkedYoteiRecord?.id,
+    payload,
+    primaryCleanerName,
+    reportPhotos.length,
+    saveReportArtifactsToSouko,
+    selectedServiceNames,
+    selectedTenpoLabel,
+    serviceIds,
+    tenpoById,
+    tenpoId,
+    user?.name,
+  ]);
+
+  const openCameraPicker = useCallback(() => {
+    if (directBucketUploadMode) {
+      const selected = selectedServices.find((svc) => norm(svc?.service_id) === norm(activeServiceTab))
+        || selectedServices[0];
+      const serviceId = norm(selected?.service_id);
+      if (!serviceId) {
+        setStatus({ type: 'error', text: '先にサービスを選択してください' });
+        return;
+      }
+      const bucketKey = isSingleWorkPhotoService(selected) ? 'work' : 'before';
+      const input = bucketPhotoInputRefs.current[`${serviceId}::${bucketKey}`];
+      if (!input) {
+        setStatus({ type: 'error', text: '写真追加欄が見つかりませんでした' });
+        return;
+      }
+      input.click();
+      return;
+    }
+    reportPhotosInputRef.current?.click();
+  }, [activeServiceTab, directBucketUploadMode, selectedServices]);
+
+  const mobileHotbarActions = useMemo(() => ([
+    {
+      id: 'search',
+      label: '検索',
+      icon: 'preview',
+      disabled: saving || soukoBusy,
+    },
+    {
+      id: 'service',
+      label: 'サービス',
+      icon: 'tools',
+      disabled: saving || soukoBusy,
+    },
+    {
+      id: 'camera',
+      label: 'カメラ',
+      icon: 'camera',
+      disabled: photoBusy || saving || soukoBusy,
+    },
+    {
+      id: 'preview',
+      label: 'プレビュー',
+      icon: 'pdf',
+      disabled: previewBusy || pdfBusy || saving || soukoBusy,
+    },
+  ]), [pdfBusy, photoBusy, previewBusy, saving, soukoBusy]);
+
+  const onMobileHotbarChange = useCallback((id) => {
+    if (id === 'search') {
+      setMasterSearchOverlayOpen(true);
+      return;
+    }
+    if (id === 'service') {
+      if (!norm(serviceQuery) && norm(masterQuery)) setServiceQuery(norm(masterQuery));
+      setServicePickerOpen(true);
+      return;
+    }
+    if (id === 'camera') {
+      openCameraPicker();
+      return;
+    }
+    if (id === 'preview') {
+      openPreview();
+      return;
+    }
+    if (id === 'pdf') {
+      outputPdf();
+      return;
+    }
+    if (id === 'save') {
+      submit();
+      return;
+    }
+  }, [masterQuery, openCameraPicker, openPreview, outputPdf, serviceQuery, submit]);
 
   const renderPhotoBucket = useCallback((serviceId, serviceName, bucketKey, bucketLabel, photos) => (
     <PhotoBucket
@@ -1692,6 +2167,24 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
               ))}
             </select>
           </label>
+          <label className="wide">
+            <span>紐づけ予定（yotei）</span>
+            <select
+              value={norm(linkedYoteiId)}
+              onChange={(e) => setLinkedYoteiId(norm(e.target.value))}
+            >
+              <option value="">
+                {yoteiBusy
+                  ? '予定候補を検索中...'
+                  : (yoteiCandidates.length ? '予定を選択してください' : '一致する予定はありません')}
+              </option>
+              {yoteiCandidates.map((it) => (
+                <option key={it.id} value={it.id}>
+                  {`${it.scheduled_date || '-'} ${it.start_time || '--:--'}-${it.end_time || '--:--'} / ${it.tenpo_name || it.tenpo_id || '-'} / ${it.id}`}
+                </option>
+              ))}
+            </select>
+          </label>
         </WorkMetaGrid>
       </MasterPickCard>
 
@@ -1957,10 +2450,10 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
               <span className="v">{supplementFiles.length}件</span>
             </Progress>
             <FooterActions>
-              <SubBtn type="button" disabled={previewBusy || pdfBusy || saving || soukoBusy} onClick={openPreview}>
+              <SubBtn className="mobile-secondary" type="button" disabled={previewBusy || pdfBusy || saving || soukoBusy} onClick={openPreview}>
                 プレビュー
               </SubBtn>
-              <SubBtn type="button" disabled={pdfBusy || saving || soukoBusy} onClick={outputPdf}>
+              <SubBtn className="mobile-secondary" type="button" disabled={pdfBusy || saving || soukoBusy} onClick={outputPdf}>
                 {pdfBusy ? 'PDF生成中...' : 'PDF出力'}
               </SubBtn>
               <SubmitBtn type="button" disabled={!canSubmit} onClick={submit}>
@@ -2249,6 +2742,65 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
           </ServiceOverlayPanel>
         </ServiceOverlay>
       ) : null}
+
+      {masterSearchOverlayOpen ? (
+        <ServiceOverlay role="dialog" aria-modal="true" aria-label="現場検索" onClick={() => setMasterSearchOverlayOpen(false)}>
+          <ServiceOverlayPanel onClick={(e) => e.stopPropagation()}>
+            <ServiceOverlayHead>
+              <strong>現場検索</strong>
+              <button type="button" onClick={() => setMasterSearchOverlayOpen(false)}>閉じる</button>
+            </ServiceOverlayHead>
+            <ServiceOverlaySearch
+              type="text"
+              value={masterQuery}
+              onChange={(e) => setMasterQuery(String(e.target.value || ''))}
+              placeholder="店舗名 / 屋号 / 取引先 / ID で検索"
+            />
+            <ServiceOverlayCount>
+              候補 {visibleTenpoRows.length} 件
+            </ServiceOverlayCount>
+            <ServiceOverlayList>
+              <section className="svc-group">
+                <div className="svc-group-grid">
+                  {visibleTenpoRows.slice(0, 80).map((row) => {
+                    const id = norm(row?.tenpo_id);
+                    const label = [norm(row?.torihikisaki_name), norm(row?.yagou_name), norm(row?.name) || id]
+                      .filter(Boolean)
+                      .join(' / ');
+                    const active = norm(tenpoId) === id;
+                    return (
+                      <label key={`search-tenpo-${id}`} className={active ? 'checked' : ''}>
+                        <input
+                          type="radio"
+                          name="search-tenpo-select"
+                          checked={active}
+                          onChange={() => {
+                            setTenpoId(id);
+                            setMasterSearchOverlayOpen(false);
+                          }}
+                        />
+                        <div className="nm">{label || id}</div>
+                        <div className="meta">{id}</div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </section>
+              {!visibleTenpoRows.length ? (
+                <div className="empty">候補がありません。検索語を変更してください。</div>
+              ) : null}
+            </ServiceOverlayList>
+          </ServiceOverlayPanel>
+        </ServiceOverlay>
+      ) : null}
+
+      <MobileHotbarSlot>
+        <Hotbar
+          actions={mobileHotbarActions}
+          onChange={onMobileHotbarChange}
+          showFlowGuideButton={false}
+        />
+      </MobileHotbarSlot>
     </Wrap>
   );
 }
@@ -2613,6 +3165,17 @@ const FooterActions = styled.div`
   @media (max-width: 640px) {
     width: 100%;
     justify-content: flex-start;
+    button.mobile-secondary {
+      display: none;
+    }
+  }
+`;
+
+const MobileHotbarSlot = styled.div`
+  display: none;
+
+  @media (max-width: 640px) {
+    display: block;
   }
 `;
 

@@ -1,5 +1,10 @@
 .contractor-availability-page {
   min-height: 100dvh;
+  --gcal-grid-line: #475569;
+}
+
+[data-theme="light"] .contractor-availability-page {
+  --gcal-grid-line: #cbd5e1;
 }
 
 .contractor-availability-content {
@@ -104,14 +109,14 @@
 .gcal-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  grid-template-rows: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
   gap: 6px;
 }
 
 .gcal-cell {
   min-height: 118px;
   border-radius: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--gcal-grid-line);
   background: rgba(255, 255, 255, 0.03);
   padding: 7px;
   text-align: left;

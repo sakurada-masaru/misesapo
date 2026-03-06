@@ -95,7 +95,7 @@ export function useAuth() {
   const authz = useMemo(() => {
     if (!user) return { workerId: null, isDev: false, isAdmin: false, dept: null, allowedTemplateIds: [] };
 
-    const workerId = user.sagyouin_id || user.worker_id || user.workerId || user.id || 'unknown';
+    const workerId = user.jinzai_id || user.sagyouin_id || user.worker_id || user.workerId || user.id || 'unknown';
     const roles = (Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []))
       .map((r) => String(r || '').trim().toUpperCase())
       .filter(Boolean);
@@ -130,7 +130,7 @@ export function useAuth() {
       else allowedTemplateIds.push('CLEANING_V1');
     }
 
-    return { workerId, isDev, isAdmin, dept, allowedTemplateIds };
+    return { workerId, jinzaiId: workerId, isDev, isAdmin, dept, allowedTemplateIds };
   }, [user]);
 
   return {

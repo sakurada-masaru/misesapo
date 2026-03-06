@@ -5,10 +5,17 @@
  */
 export const ADMIN_HOTBAR = [
   {
-    id: 'filebox',
+    id: 'dashboard',
     label: 'ダッシュボード',
     subItems: [
-      { id: 'company-filebox', label: 'ダッシュボード', path: '/admin/filebox', group: 'ダッシュボード' },
+      { id: 'admin-dashboard', label: 'ダッシュボード', path: '/admin/dashboard', group: 'ダッシュボード' },
+    ]
+  },
+  {
+    id: 'filebox',
+    label: 'ファイルボックス',
+    subItems: [
+      { id: 'company-filebox', label: 'ファイルボックス', path: '/admin/filebox', group: 'ファイルボックス' },
     ]
   },
   {

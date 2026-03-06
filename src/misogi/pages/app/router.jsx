@@ -62,6 +62,7 @@ import CleanerSchedulePage from '../jobs/cleaning/pages/CleanerSchedulePage';
 import ContractorAvailabilityDeclarationPage from '../jobs/cleaning/pages/ContractorAvailabilityDeclarationPage';
 import CleanerClientListPage from '../jobs/cleaning/pages/CleanerClientListPage';
 import CleanerClientKartePage from '../jobs/cleaning/pages/CleanerClientKartePage';
+import ChineseTabletMenuPage from '../product/ChineseTabletMenuPage';
 import MyYoteiListPage from '../shared/ui/Yotei/MyYoteiListPage';
 import CustomerOnboardingPage from '../registration/CustomerOnboardingPage';
 import FlowGuideScreen from '../FlowGuideScreen';
@@ -158,6 +159,7 @@ export default function Router() {
       <Route path="/jobs/:job/yotei" element={<MyYoteiListPage />} />
       <Route path="/admin" element={<AdminHome />} />
       <Route path="/admin/entrance" element={<AdminEntrancePage />} />
+      <Route path="/admin/dashboard" element={<AdminEntrancePage />} />
       <Route path="/admin/filebox" element={<AdminEntrancePage />} />
       <Route path="/admin/cleaning-reports" element={<AdminCleaningReportsPage />} />
       <Route path="/admin/reports/new" element={<AdminReportNewPage />} />
@@ -211,6 +213,8 @@ export default function Router() {
       <Route path="/jobs/cleaning/availability-declare" element={<ContractorAvailabilityDeclarationPage />} />
       <Route path="/jobs/cleaning/clients/list" element={<CleanerClientListPage />} />
       <Route path="/jobs/cleaning/clients/:storeId" element={<CleanerClientKartePage />} />
+      <Route path="/product/chuka-menu" element={<ChineseTabletMenuPage />} />
+      <Route path="/product/chinese-tablet-menu" element={<ChineseTabletMenuPage />} />
       <Route path="/registration/onboarding/:storeId" element={<CustomerOnboardingPage />} />
       <Route path="/flow-guide" element={<FlowGuideScreen />} />
     </Routes>
