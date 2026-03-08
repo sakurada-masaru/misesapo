@@ -156,6 +156,11 @@
   mask-image: url('/icons/hotbar/settings.svg');
 }
 
+.hotbar-icon-history {
+  -webkit-mask-image: url('/icons/hotbar/history.svg');
+  mask-image: url('/icons/hotbar/history.svg');
+}
+
 .hotbar-icon-preview {
   -webkit-mask-image: url('/icons/hotbar/preview.svg');
   mask-image: url('/icons/hotbar/preview.svg');

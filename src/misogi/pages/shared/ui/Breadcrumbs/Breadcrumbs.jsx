@@ -35,6 +35,11 @@ function isCleaningEntrancePath(pathname) {
   return p === '/jobs/cleaning/entrance' || p === '/jobs/cleaning/entrance/';
 }
 
+function isCleaningWorkerPath(pathname) {
+  const p = String(pathname || '/');
+  return /^\/jobs\/cleaning(?:\/|$)/.test(p);
+}
+
 function isAdminPath(pathname) {
   return String(pathname || '/').startsWith('/admin');
 }
@@ -56,6 +61,7 @@ function labelForPath(pathname) {
   if (p === '/admin/houkoku') return '業務報告一覧';
   if (p.startsWith('/admin/houkoku/')) return '業務報告詳細';
   if (p === '/admin/yotei') return '予定';
+  if (p === '/admin/cleaning-sales') return '清掃売上管理';
   if (p === '/admin/yasumi') return 'yasumi';
   if (p === '/admin/ugoki') return 'UGOKI';
   if (p === '/admin/yakusoku') return 'YAKUSOKU';
@@ -81,6 +87,7 @@ function labelForPath(pathname) {
 
   // Jobs (v2)
   if (/^\/jobs\/[^/]+\/yotei$/.test(p)) return '予定';
+  if (p === '/jobs/cleaning/mypage') return 'マイページ（売上）';
 
   // Sales / Office / Cleaning / Dev (minimal)
   if (p.startsWith('/sales/')) return '営業';
@@ -138,6 +145,7 @@ export default function Breadcrumbs() {
 
   const hidden = isEntrancePath(pathname) || isWorkerReportPath(pathname);
   const hideCleaningHeader = isCleaningEntrancePath(pathname);
+  const hideAllCleaningWorkerHeader = isCleaningWorkerPath(pathname);
   const isAdmin = isAdminPath(pathname);
   const isAdminDashboard = pathname === '/admin/dashboard';
   const crumbs = useMemo(() => crumbsForPath(pathname), [pathname]);
@@ -154,7 +162,7 @@ export default function Breadcrumbs() {
     setDashboardChatVisible(readStoredBoolean(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, true));
   }, [isAdminDashboard, pathname]);
 
-  if (hideCleaningHeader) {
+  if (hideCleaningHeader || hideAllCleaningWorkerHeader) {
     return null;
   }
 

@@ -1,0 +1,163 @@
+.admin-cleaning-sales-page {
+  min-height: 100%;
+}
+
+.admin-cleaning-sales-page.report-page {
+  background: var(--bg);
+}
+
+.admin-cleaning-sales-content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 12px 16px 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-cleaning-sales-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-cleaning-sales-head h1 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.admin-cleaning-sales-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-cleaning-sales-controls label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.admin-cleaning-sales-controls input[type="month"] {
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--fg);
+  padding: 6px 8px;
+}
+
+.admin-cleaning-sales-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.admin-cleaning-sales-summary article {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.admin-cleaning-sales-summary .k {
+  font-size: 11px;
+  opacity: 0.74;
+}
+
+.admin-cleaning-sales-summary .v {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.admin-cleaning-sales-error {
+  margin: 0;
+  color: #f97373;
+}
+
+.admin-cleaning-sales-matrix-wrap {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  overflow: auto;
+}
+
+.admin-cleaning-sales-matrix {
+  width: max(100%, 980px);
+  border-collapse: collapse;
+}
+
+.admin-cleaning-sales-matrix th,
+.admin-cleaning-sales-matrix td {
+  border-right: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border);
+  padding: 8px 6px;
+  text-align: right;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.admin-cleaning-sales-matrix th:last-child,
+.admin-cleaning-sales-matrix td:last-child {
+  border-right: none;
+}
+
+.admin-cleaning-sales-matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--card-bg) 92%, #000 8%);
+  min-width: 98px;
+  text-align: center;
+}
+
+.admin-cleaning-sales-matrix .date-col {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  min-width: 54px;
+  text-align: center;
+  background: color-mix(in srgb, var(--card-bg) 96%, #000 4%);
+}
+
+.admin-cleaning-sales-matrix .worker-head-sub {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.admin-cleaning-sales-matrix .worker-head-name {
+  margin-top: 2px;
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.admin-cleaning-sales-matrix tbody td.has-sales {
+  background: color-mix(in srgb, var(--job-cleaning, #4f9eff) 12%, transparent);
+  font-weight: 700;
+}
+
+.admin-cleaning-sales-matrix .empty {
+  text-align: center;
+  opacity: 0.8;
+}
+
+@media (max-width: 1200px) {
+  .admin-cleaning-sales-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
+  .admin-cleaning-sales-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-cleaning-sales-summary {
+    grid-template-columns: 1fr;
+  }
+}

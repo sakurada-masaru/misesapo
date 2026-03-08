@@ -1,0 +1,126 @@
+.cleaner-my-sales-page {
+  padding-bottom: 108px;
+}
+
+.cleaner-my-sales-content {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 16px 16px 120px;
+  display: grid;
+  gap: 12px;
+}
+
+.cleaner-my-sales-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cleaner-my-sales-header h1 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.cleaner-my-sales-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cleaner-my-sales-controls label {
+  font-size: 12px;
+  opacity: 0.82;
+}
+
+.cleaner-my-sales-controls input[type="month"] {
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--fg);
+  padding: 6px 8px;
+}
+
+.cleaner-my-sales-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cleaner-my-sales-summary article {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.cleaner-my-sales-summary .k {
+  font-size: 11px;
+  opacity: 0.72;
+}
+
+.cleaner-my-sales-summary .v {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.cleaner-my-sales-error {
+  color: #f97373;
+  margin: 0;
+}
+
+.cleaner-my-sales-table-wrap {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  overflow: auto;
+  background: var(--card-bg);
+}
+
+.cleaner-my-sales-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.cleaner-my-sales-table thead th {
+  text-align: left;
+  font-size: 11px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--card-border);
+  white-space: nowrap;
+}
+
+.cleaner-my-sales-table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 12px;
+  vertical-align: top;
+}
+
+.cleaner-my-sales-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cleaner-my-sales-table .yagou {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cleaner-my-sales-table .tenpo {
+  font-size: 11px;
+  opacity: 0.82;
+}
+
+.cleaner-my-sales-table .empty {
+  text-align: center;
+  opacity: 0.8;
+}
+
+@media (max-width: 740px) {
+  .cleaner-my-sales-summary {
+    grid-template-columns: 1fr;
+  }
+}

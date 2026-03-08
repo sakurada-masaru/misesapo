@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import Visualizer from '../Visualizer/Visualizer';
-import { apiFetch } from '../../api/client';
+import { apiFetch, getApiBase } from '../../api/client';
+import { normalizeGatewayBase } from '../../api/gatewayBase';
 import { useAuth } from '../../auth/useAuth';
 import { JOBS } from '../../utils/constants';
 import SupportHistoryDrawer from '../SupportHistoryDrawer';
@@ -14,6 +15,10 @@ function fmtDate(d) {
 
 function safeStr(v) {
   return String(v == null ? '' : v).trim();
+}
+
+function isValidYmd(v) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(safeStr(v));
 }
 
 function isLocalUiHost() {
@@ -30,6 +35,26 @@ function masterApiBase() {
 function jinzaiApiBase() {
   if (isLocalUiHost()) return '/api-jinzai';
   return import.meta.env?.VITE_JINZAI_API_BASE || 'https://ho3cd7ibtl.execute-api.ap-northeast-1.amazonaws.com/prod';
+}
+
+function yakusokuFallbackBase() {
+  return normalizeGatewayBase(import.meta.env?.VITE_YAKUSOKU_API_BASE, getApiBase());
+}
+
+async function fetchYakusokuWithFallback(path, options = {}) {
+  const primaryBase = String(getApiBase() || '').replace(/\/$/, '');
+  const fallbackBase = String(yakusokuFallbackBase() || '').replace(/\/$/, '');
+
+  try {
+    const primaryRes = await fetch(`${primaryBase}${path}`, options);
+    if (primaryRes.ok) return primaryRes;
+    if (![401, 403, 404].includes(primaryRes.status)) return primaryRes;
+    if (!fallbackBase || fallbackBase === primaryBase) return primaryRes;
+    return await fetch(`${fallbackBase}${path}`, options);
+  } catch (e) {
+    if (!fallbackBase || fallbackBase === primaryBase) throw e;
+    return await fetch(`${fallbackBase}${path}`, options);
+  }
 }
 
 function normalizeIdentity(v) {
@@ -158,21 +183,43 @@ function extractParticipantEntries(item) {
   return out;
 }
 
-function serviceDisplayNames(item) {
-  const names = [];
+function containsJapaneseText(v) {
+  return /[ぁ-んァ-ヶー一-龠々]/.test(safeStr(v));
+}
+
+function normalizeWorkTypeLabel(raw, yakusokuType = '') {
+  const src = safeStr(raw);
+  const yType = safeStr(yakusokuType).toLowerCase();
+  if (src.includes('スポット') || src.includes('単発') || yType === 'tanpatsu' || yType === 'spot') {
+    return 'スポット清掃';
+  }
+  if (!src && !yType) return '';
+  return '定期清掃';
+}
+
+function serviceTagNames(item) {
+  const out = [];
   const push = (v) => {
-    const s = safeStr(v);
-    if (s) names.push(s);
+    const s = safeStr(v).replace(/\s*\([^)]*\)\s*$/g, '').trim();
+    if (!s) return;
+    if (!containsJapaneseText(s)) return;
+    out.push(s);
   };
   push(item?.service_name);
   if (Array.isArray(item?.service_names)) item.service_names.forEach(push);
   if (Array.isArray(item?.services)) {
     item.services.forEach((s) => {
-      if (typeof s === 'object') push(s?.name || s?.service_name || '');
-      else push(s);
+      if (!s) return;
+      if (typeof s === 'object') {
+        push(s?.name || s?.service_name || '');
+      } else {
+        push(s);
+      }
     });
   }
-  return Array.from(new Set(names));
+  const entries = extractServiceEntries(item);
+  entries.forEach((e) => push(e?.name));
+  return Array.from(new Set(out));
 }
 
 function extractServiceEntries(item) {
@@ -248,6 +295,49 @@ function serviceContentLines(item) {
   return Array.from(new Set(out));
 }
 
+function parseAmountCandidates(candidates) {
+  for (const v of candidates) {
+    if (v == null || v === '') continue;
+    const n = Number(String(v).replace(/[^\d.-]/g, ''));
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return 0;
+}
+
+function resolveYoteiUnitPrice(item, linkedYakusoku = null) {
+  const y = linkedYakusoku && typeof linkedYakusoku === 'object' ? linkedYakusoku : null;
+  return parseAmountCandidates([
+    item?.unit_price,
+    item?.price,
+    item?.amount,
+    item?.kingaku,
+    item?.total,
+    item?.total_amount,
+    item?.estimate_amount,
+    item?.yotei_amount,
+    item?.service_price,
+    item?.yakusoku_price,
+    item?.uriage_yotei,
+    y?.price,
+    y?.unit_price,
+    y?.amount,
+    y?.service_price,
+    y?.yakusoku_price,
+  ]);
+}
+
+function calcWorkerReward(unitPrice) {
+  const n = Number(unitPrice || 0);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 0.8);
+}
+
+function formatYen(amount) {
+  const n = Number(amount || 0);
+  if (!Number.isFinite(n) || n <= 0) return '-';
+  return `¥${Math.round(n).toLocaleString('ja-JP')}`;
+}
+
 function formatNameId(name, id) {
   const n = safeStr(name);
   const i = safeStr(id);
@@ -263,9 +353,50 @@ function stripMasterIdLabel(value) {
   return s.replace(/\b(?:TENPO|YAGOU|TORI)#[-A-Za-z0-9_]+\b/g, '').trim();
 }
 
+function isRunningStatusValue(value) {
+  const s = safeStr(value).toLowerCase();
+  return s === 'working'
+    || s === 'shinkou'
+    || s === 'in_progress'
+    || s === 'progress'
+    || s === '実行中'
+    || s === '進行中';
+}
+
+function isDoneStatusValue(value) {
+  const s = safeStr(value).toLowerCase();
+  return s === 'done'
+    || s === 'kanryou'
+    || s === 'completed'
+    || s === 'complete'
+    || s === '完了';
+}
+
+function isCancelStatusValue(value) {
+  const s = safeStr(value).toLowerCase();
+  return s === 'torikeshi'
+    || s === 'cancel'
+    || s === 'canceled'
+    || s === 'cancelled'
+    || s === '取消';
+}
+
 function normalizeJotai(it) {
-  const j = safeStr(it?.jotai || it?.status).toLowerCase();
-  return j || 'unknown';
+  const candidates = [
+    it?.jotai,
+    it?.status,
+    it?.state,
+    it?.jokyo,
+    it?.ugoki_jokyo,
+    it?.ugoki_jotai,
+    it?.ugoki_status,
+    it?.progress_status,
+  ];
+  if (candidates.some((v) => isCancelStatusValue(v))) return 'torikeshi';
+  if (candidates.some((v) => isDoneStatusValue(v))) return 'done';
+  if (candidates.some((v) => isRunningStatusValue(v))) return 'working';
+  const first = safeStr(candidates.find((v) => safeStr(v)));
+  return first.toLowerCase() || 'unknown';
 }
 
 function jotaiLabel(j) {
@@ -300,9 +431,82 @@ function pillClass(j) {
 
 const CHAT_TAG_OPTIONS = ['鍵', '入館', '遅延', '再清掃', '注意'];
 
+function normalizeSingleTab(v) {
+  const tab = String(v || '').toLowerCase();
+  if (tab === 'detail' || tab === 'history' || tab === 'report' || tab === 'tools') return tab;
+  return '';
+}
+
 function isDemoMode(searchParams) {
   const v = String(searchParams?.get?.('demo') || '').toLowerCase();
   return v === '1' || v === 'true';
+}
+
+const BRIEFING_CHECK_ITEMS = [
+  { key: 'rule_entry', label: '業務実施場所は確認しましたか？' },
+  { key: 'rule_caution', label: '注意事項は確認しましたか？' },
+  { key: 'rule_scope', label: '作業内容の確認はしましたか？' },
+];
+
+const DETAIL_SUBTAB_OPTIONS = [
+  { id: 'basic', label: '基本情報' },
+  { id: 'caution', label: '注意事項' },
+  { id: 'service', label: '作業内容' },
+  { id: 'reward', label: '報酬' },
+];
+
+const MISOGI_GUARANTEE_DECLARATION = `ミセサポ安心保証 宣誓
+私は、すべての仕事に「ミセサポ安心保証」を付与します。
+私は、単なるサービスの提供は行いません。私が、提案するのはサポートという名の安心です。
+お客様からお預かりした「信頼」を確かな記録と透明な運用、そして責任ある対応によって「安心」へと変えること。それが、私の役目です。
+現場での一つひとつの作業、一枚一枚の写真、一件一件の報告には、すべて理由と責任があります。
+私は、見えないところこそ誠実に、曖昧なままにせず、常に説明できる仕事を行います。
+私は、お客様からお預かりした信頼を守り、安心へと変え続けるために、この仕事に向き合います。
+私は、安心、安全に配慮し、お客様の信頼に誠心誠意お応えし、滞りなく清掃代行業務を全うすることを誓います。`;
+
+const BRIEFING_UNLOCK_STORAGE_KEY = 'misogi-v2-cleaning-briefing-unlocked';
+const BRIEFING_DECLARATION_ACCEPTED_STORAGE_KEY = 'misogi-v2-cleaning-briefing-declaration-accepted';
+
+function loadBriefingUnlockMap() {
+  try {
+    const raw = localStorage.getItem(BRIEFING_UNLOCK_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function saveBriefingUnlockMap(mapObj) {
+  try {
+    localStorage.setItem(BRIEFING_UNLOCK_STORAGE_KEY, JSON.stringify(mapObj || {}));
+  } catch {
+    // noop
+  }
+}
+
+function loadDeclarationAcceptedMap() {
+  try {
+    const raw = localStorage.getItem(BRIEFING_DECLARATION_ACCEPTED_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function saveDeclarationAcceptedMap(mapObj) {
+  try {
+    localStorage.setItem(BRIEFING_DECLARATION_ACCEPTED_STORAGE_KEY, JSON.stringify(mapObj || {}));
+  } catch {
+    // noop
+  }
+}
+
+function emptyBriefingChecks() {
+  return BRIEFING_CHECK_ITEMS.reduce((acc, it) => ({ ...acc, [it.key]: false }), {});
 }
 
 function demoItemsForWorker({ jinzaiId, from, to }) {
@@ -431,19 +635,30 @@ export default function MyYoteiListPage() {
   const [searchParams] = useSearchParams();
   const job = (jobKey && JOBS[jobKey]) ? JOBS[jobKey] : null;
   const isDemo = isDemoMode(searchParams);
+  const isSingleView = safeStr(searchParams.get('view')).toLowerCase() === 'single';
+  const focusYoteiId = safeStr(searchParams.get('yotei_id'));
+  const focusDateParam = isValidYmd(searchParams.get('date')) ? safeStr(searchParams.get('date')) : '';
+  const singleHotbarTab = normalizeSingleTab(searchParams.get('tab'));
+  const briefingCheckedByQuery = String(searchParams.get('briefing_checked') || '') === '1';
 
   const { user, isAuthenticated, isLoading: authLoading, getToken, authz } = useAuth();
   const jinzaiId = authz?.jinzaiId || authz?.workerId || user?.jinzai_id || user?.worker_id || user?.sagyouin_id || null;
   const activeJinzaiId = jinzaiId || (isDemo ? 'JINZAI#DEMOSELF' : null);
 
-  const [dateISO, setDateISO] = useState(fmtDate(new Date()));
-  const [mode, setMode] = useState('week'); // 'day' | 'week'
+  const [dateISO, setDateISO] = useState(focusDateParam || fmtDate(new Date()));
+  const [mode, setMode] = useState(isSingleView ? 'day' : 'week'); // 'day' | 'week'
   const [assignScope, setAssignScope] = useState('self'); // self | incoming | outgoing
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
   const [demoThreads, setDemoThreads] = useState({});
   const [demoDrafts, setDemoDrafts] = useState({});
+  const [openedListCardId, setOpenedListCardId] = useState('');
+  const [briefingChecks, setBriefingChecks] = useState(() => emptyBriefingChecks());
+  const [detailSubTab, setDetailSubTab] = useState('basic');
+  const [briefingUnlockMap, setBriefingUnlockMap] = useState(() => loadBriefingUnlockMap());
+  const [declarationAcceptedMap, setDeclarationAcceptedMap] = useState(() => loadDeclarationAcceptedMap());
+  const [declarationAgreed, setDeclarationAgreed] = useState(false);
 
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportTenpoId, setSupportTenpoId] = useState('');
@@ -452,6 +667,110 @@ export default function MyYoteiListPage() {
   const [tenpoMetaMap, setTenpoMetaMap] = useState(new Map());
   const [yagouNameMap, setYagouNameMap] = useState(new Map());
   const [torihikisakiNameMap, setTorihikisakiNameMap] = useState(new Map());
+  const [yakusokuMap, setYakusokuMap] = useState(new Map());
+
+  useEffect(() => {
+    if (!isSingleView) return;
+    setMode('day');
+    if (focusDateParam) setDateISO(focusDateParam);
+  }, [isSingleView, focusDateParam]);
+
+  const focusUnlockKey = useMemo(() => normId(focusYoteiId), [focusYoteiId]);
+  const declarationAcceptKey = useMemo(() => normId(focusYoteiId || ''), [focusYoteiId]);
+  const declarationAccepted = useMemo(() => {
+    if (!isSingleView) return true;
+    if (!declarationAcceptKey) return false;
+    return declarationAcceptedMap[declarationAcceptKey] === true;
+  }, [isSingleView, declarationAcceptKey, declarationAcceptedMap]);
+  const briefingChecked = useMemo(() => {
+    if (!isSingleView) return false;
+    if (briefingCheckedByQuery) return true;
+    if (!focusUnlockKey) return false;
+    return briefingUnlockMap[focusUnlockKey] === true;
+  }, [isSingleView, briefingCheckedByQuery, focusUnlockKey, briefingUnlockMap]);
+  const effectiveSingleHotbarTab = declarationAccepted
+    ? (singleHotbarTab || (briefingChecked ? 'detail' : ''))
+    : '';
+
+  useEffect(() => {
+    if (!isSingleView || !briefingCheckedByQuery || !focusUnlockKey) return;
+    if (briefingUnlockMap[focusUnlockKey] === true) return;
+    setBriefingUnlockMap((prev) => {
+      const next = { ...(prev || {}), [focusUnlockKey]: true };
+      saveBriefingUnlockMap(next);
+      return next;
+    });
+  }, [isSingleView, briefingCheckedByQuery, focusUnlockKey, briefingUnlockMap]);
+
+  useEffect(() => {
+    if (!isSingleView) return;
+    if (briefingChecked) {
+      const filled = BRIEFING_CHECK_ITEMS.reduce((acc, it) => ({ ...acc, [it.key]: true }), {});
+      setBriefingChecks(filled);
+      return;
+    }
+    setBriefingChecks(emptyBriefingChecks());
+  }, [isSingleView, focusYoteiId, briefingChecked]);
+
+  useEffect(() => {
+    if (!isSingleView) return;
+    setDetailSubTab('basic');
+  }, [isSingleView, focusYoteiId]);
+
+  useEffect(() => {
+    if (!isSingleView) return;
+    if (declarationAccepted) {
+      setDeclarationAgreed(true);
+      return;
+    }
+    setDeclarationAgreed(false);
+  }, [isSingleView, focusYoteiId, declarationAccepted]);
+
+  useEffect(() => {
+    if (!isSingleView || !briefingChecked || !declarationAcceptKey) return;
+    if (declarationAcceptedMap[declarationAcceptKey] === true) return;
+    setDeclarationAcceptedMap((prev) => {
+      const next = { ...(prev || {}), [declarationAcceptKey]: true };
+      saveDeclarationAcceptedMap(next);
+      return next;
+    });
+  }, [isSingleView, briefingChecked, declarationAcceptKey, declarationAcceptedMap]);
+
+  const allBriefingChecksDone = useMemo(
+    () => BRIEFING_CHECK_ITEMS.every((it) => briefingChecks[it.key] === true),
+    [briefingChecks]
+  );
+
+  const acceptDeclaration = useCallback(() => {
+    if (!isSingleView || !declarationAcceptKey || declarationAccepted) return;
+    setDeclarationAcceptedMap((prev) => {
+      const next = { ...(prev || {}), [declarationAcceptKey]: true };
+      saveDeclarationAcceptedMap(next);
+      return next;
+    });
+  }, [isSingleView, declarationAcceptKey, declarationAccepted]);
+
+  const markBriefingChecked = useCallback(() => {
+    if (!isSingleView || !allBriefingChecksDone) return;
+    if (declarationAcceptKey) {
+      setDeclarationAcceptedMap((prev) => {
+        const next = { ...(prev || {}), [declarationAcceptKey]: true };
+        saveDeclarationAcceptedMap(next);
+        return next;
+      });
+    }
+    if (focusUnlockKey) {
+      setBriefingUnlockMap((prev) => {
+        const next = { ...(prev || {}), [focusUnlockKey]: true };
+        saveBriefingUnlockMap(next);
+        return next;
+      });
+    }
+    const next = new URLSearchParams(searchParams);
+    next.set('briefing_checked', '1');
+    if (!next.get('tab')) next.set('tab', 'detail');
+    navigate({ search: `?${next.toString()}` }, { replace: false });
+  }, [allBriefingChecksDone, isSingleView, navigate, searchParams, focusUnlockKey, declarationAcceptKey]);
 
   const range = useMemo(() => {
     const base = dayjs(dateISO);
@@ -477,13 +796,43 @@ export default function MyYoteiListPage() {
     setSupportOpen(true);
   }, []);
 
-  const openHoukokuFromYotei = useCallback((item) => {
+  const openHoukokuFromYotei = useCallback(async (item) => {
+    const key = normId(item?.yotei_id || item?.schedule_id || item?.id);
+    let isWorking = normalizeJotai(item) === 'working';
     const yoteiId = safeStr(item?.yotei_id || item?.schedule_id || item?.id);
+    // 入口で実行中に切り替えた直後は一覧データが古いことがあるため、報告開始時に最新を再判定する。
+    if (!isWorking && yoteiId) {
+      try {
+        const latest = await apiFetch(`/yotei/${encodeURIComponent(yoteiId)}`, {
+          headers: authHeaders(),
+          cache: 'no-store',
+        });
+        const latestRow = (latest && typeof latest === 'object')
+          ? (latest?.item || latest?.data || latest)
+          : null;
+        if (latestRow && typeof latestRow === 'object') {
+          isWorking = normalizeJotai(latestRow) === 'working';
+        }
+      } catch {
+        // 再取得失敗時は手元データで判定継続
+      }
+    }
+    const oathAccepted = Boolean(key && declarationAcceptedMap[key] === true);
+    const briefingUnlocked = Boolean(key && briefingUnlockMap[key] === true);
+    const canStart = Boolean(key && isWorking && oathAccepted && briefingUnlocked);
+    if (!canStart) {
+      let reason = '報告はまだ開始できません。';
+      if (!oathAccepted) reason = '宣誓への同意後に報告が可能です。';
+      else if (!briefingUnlocked) reason = '作業前確認の完了後に報告が可能です。';
+      else if (!isWorking) reason = '予定が実行中になってから報告を開始してください。';
+      setError(reason);
+      return;
+    }
     if (!yoteiId) return;
     const sp = new URLSearchParams();
     sp.set('yotei_id', yoteiId);
     navigate(`/jobs/cleaning/houkoku?${sp.toString()}`);
-  }, [navigate]);
+  }, [navigate, declarationAcceptedMap, briefingUnlockMap, authHeaders]);
 
   const load = useCallback(async () => {
     if (!activeJinzaiId) return;
@@ -716,6 +1065,53 @@ export default function MyYoteiListPage() {
     return () => { alive = false; };
   }, [items, authHeaders]);
 
+  useEffect(() => {
+    let alive = true;
+    const loadYakusokuRefs = async () => {
+      const yidSet = new Set();
+      const embedded = new Map();
+      (items || []).forEach((it) => {
+        const yid = safeStr(it?.yakusoku_id || it?.yakusoku?.yakusoku_id || it?.yakusoku?.id);
+        if (!yid) return;
+        yidSet.add(yid);
+        if (it?.yakusoku && typeof it.yakusoku === 'object' && !embedded.has(yid)) {
+          embedded.set(yid, it.yakusoku);
+        }
+      });
+
+      if (!yidSet.size) {
+        if (alive) setYakusokuMap(new Map());
+        return;
+      }
+      if (isDemo) {
+        if (alive) setYakusokuMap(new Map(embedded));
+        return;
+      }
+
+      try {
+        const res = await fetchYakusokuWithFallback('/yakusoku?limit=2000', {
+          headers: authHeaders(),
+          cache: 'no-store',
+        });
+        const next = new Map(embedded);
+        if (res.ok) {
+          const data = await res.json();
+          const rows = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
+          (rows || []).forEach((row) => {
+            const yid = safeStr(row?.yakusoku_id || row?.id);
+            if (!yid || !yidSet.has(yid)) return;
+            next.set(yid, row);
+          });
+        }
+        if (alive) setYakusokuMap(next);
+      } catch {
+        if (alive) setYakusokuMap(new Map(embedded));
+      }
+    };
+    loadYakusokuRefs();
+    return () => { alive = false; };
+  }, [items, authHeaders, isDemo]);
+
   const filteredItems = useMemo(() => {
     const meTokens = expandComparableIds(activeJinzaiId);
     const meSet = new Set(meTokens);
@@ -735,6 +1131,15 @@ export default function MyYoteiListPage() {
     return src.filter((it) => isSelf(it));
   }, [items, activeJinzaiId, assignScope]);
 
+  const displayItems = useMemo(() => {
+    if (!isSingleView || !focusYoteiId) return filteredItems;
+    const target = normId(focusYoteiId);
+    return (filteredItems || []).filter((it) => {
+      const id = safeStr(it?.yotei_id || it?.schedule_id || it?.id);
+      return normId(id) === target;
+    });
+  }, [filteredItems, isSingleView, focusYoteiId]);
+
   const jinzaiNameMap = useMemo(() => {
     const map = new Map();
     (items || []).forEach((it) => {
@@ -749,7 +1154,7 @@ export default function MyYoteiListPage() {
   }, [items]);
 
   const grouped = useMemo(() => {
-    const list = filteredItems;
+    const list = displayItems;
     const map = new Map();
     list.forEach((it) => {
       const date = safeStr(it?.date || it?.scheduled_date) || (it?.start_at ? dayjs(it.start_at).format('YYYY-MM-DD') : '');
@@ -773,15 +1178,17 @@ export default function MyYoteiListPage() {
       return a.localeCompare(b);
     });
     return { keys, map };
-  }, [filteredItems]);
+  }, [displayItems]);
+  const isBriefingView = isSingleView && !effectiveSingleHotbarTab;
 
-  const totalCount = filteredItems?.length || 0;
+  const totalCount = displayItems?.length || 0;
   const yukoCount = useMemo(() => {
-    return (filteredItems || []).filter((it) => normalizeJotai(it) !== 'torikeshi').length;
-  }, [filteredItems]);
+    return (displayItems || []).filter((it) => normalizeJotai(it) !== 'torikeshi').length;
+  }, [displayItems]);
+  const pageClassName = `report-page my-yotei-page${isSingleView ? ' my-yotei-page-single' : ''}`;
   if (authLoading) {
     return (
-      <div className="report-page" data-job={jobKey || 'unknown'}>
+      <div className={pageClassName} data-job={jobKey || 'unknown'}>
         <div className="report-page-viz"><Visualizer mode="base" /></div>
         <div className="report-page-main">
           <h1 className="report-page-title">YOTEI</h1>
@@ -793,7 +1200,7 @@ export default function MyYoteiListPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="report-page" data-job={jobKey || 'unknown'}>
+      <div className={pageClassName} data-job={jobKey || 'unknown'}>
         <div className="report-page-viz"><Visualizer mode="base" /></div>
         <div className="report-page-main">
           <h1 className="report-page-title">YOTEI（タスク）</h1>
@@ -805,66 +1212,101 @@ export default function MyYoteiListPage() {
   }
 
   return (
-    <div className="report-page my-yotei-page" data-job={jobKey || 'unknown'}>
+    <div className={pageClassName} data-job={jobKey || 'unknown'}>
       <div className="report-page-viz"><Visualizer mode="base" /></div>
 
-      <div className="report-page-main">
-        <div className="my-yotei-head">
-          <div className="my-yotei-title">
+        <div className="report-page-main">
+          {isSingleView ? (
+            <section className="my-yotei-top-briefing" aria-label="MISOGIナビ">
+              <div className="my-yotei-top-briefing-head">MISOGI</div>
+              {briefingChecked ? (
+                <div className="my-yotei-briefing-comment-lines">
+                  <p className="my-yotei-briefing-comment line">業務内容の確認ご苦労様です。</p>
+                  <p className="my-yotei-briefing-comment line">以降はメニューの履歴・報告が選択可能です。</p>
+                </div>
+              ) : (
+                <p className="my-yotei-briefing-comment">
+                  {declarationAccepted
+                    ? '宣誓への同意を確認しました。「詳細」を押して、作業条件の確認へ進んでください。'
+                    : 'ご苦労様です。ミセサポ安心保証宣誓に同意して、詳細確認へとお進みください。'}
+                </p>
+              )}
+            </section>
+          ) : null}
+
+          <div className="my-yotei-head">
+            {!isSingleView ? <div className="my-yotei-view-head"><strong>予定一覧</strong></div> : null}
             <div className="my-yotei-sub">
               <span className="my-yotei-sub-hidden-id">担当: {activeJinzaiId || '-'}</span>
               {isDemo ? <span className="my-yotei-sub-demo">DEMOモード</span> : null}
-            </div>
           </div>
         </div>
 
         <div className="my-yotei-toolbar">
           <div className="my-yotei-toolbar-right">
-            <button type="button" className="btn btn-secondary" onClick={() => setDateISO(fmtDate(new Date()))} disabled={loading}>今日</button>
-            <button
-              type="button"
-              className={`btn btn-secondary ${mode === 'week' ? 'active' : ''}`}
-              onClick={() => setMode('week')}
-              disabled={loading}
-            >
-              週次
-            </button>
-            <button type="button" className="btn btn-primary my-yotei-refresh" onClick={load} disabled={loading}>更新</button>
+            {!isSingleView ? (
+              <button type="button" className="btn btn-secondary" onClick={() => setDateISO(fmtDate(new Date()))} disabled={loading}>今日</button>
+            ) : null}
+            {!isSingleView ? (
+              <button
+                type="button"
+                className={`btn btn-secondary ${mode === 'week' ? 'active' : ''}`}
+                onClick={() => setMode('week')}
+                disabled={loading}
+              >
+                週次
+              </button>
+            ) : null}
+            {!isSingleView ? (
+              <button type="button" className="btn btn-primary my-yotei-refresh" onClick={load} disabled={loading}>更新</button>
+            ) : null}
           </div>
 
-          <div className="my-yotei-toolbar-left">
-            <button type="button" className="btn btn-secondary" onClick={() => setDateISO(fmtDate(dayjs(dateISO).subtract(1, 'day')))} disabled={loading}>←</button>
-            <input
-              type="date"
-              value={dateISO}
-              onChange={(e) => setDateISO(e.target.value)}
-              className="my-yotei-date"
-              disabled={loading}
-            />
-            <button type="button" className="btn btn-secondary" onClick={() => setDateISO(fmtDate(dayjs(dateISO).add(1, 'day')))} disabled={loading}>→</button>
-          </div>
-          <div className="my-yotei-toolbar-scope">
-            <div className="my-yotei-seg">
-              <button type="button" className={assignScope === 'self' ? 'active' : ''} onClick={() => setAssignScope('self')} disabled={loading}>自分担当</button>
-              <button type="button" className={assignScope === 'incoming' ? 'active' : ''} onClick={() => setAssignScope('incoming')} disabled={loading}>引き継ぎ待ち</button>
-              <button type="button" className={assignScope === 'outgoing' ? 'active' : ''} onClick={() => setAssignScope('outgoing')} disabled={loading}>引き継ぎ中</button>
+          {!isSingleView ? (
+            <div className="my-yotei-toolbar-left">
+              <button type="button" className="btn btn-secondary" onClick={() => setDateISO(fmtDate(dayjs(dateISO).subtract(1, 'day')))} disabled={loading}>←</button>
+              <input
+                type="date"
+                value={dateISO}
+                onChange={(e) => setDateISO(e.target.value)}
+                className="my-yotei-date"
+                disabled={loading}
+              />
+              <button type="button" className="btn btn-secondary" onClick={() => setDateISO(fmtDate(dayjs(dateISO).add(1, 'day')))} disabled={loading}>→</button>
             </div>
-          </div>
+          ) : null}
+          {!isSingleView ? (
+            <div className="my-yotei-toolbar-scope">
+              <div className="my-yotei-seg">
+                <button type="button" className={assignScope === 'self' ? 'active' : ''} onClick={() => setAssignScope('self')} disabled={loading}>自分担当</button>
+                <button type="button" className={assignScope === 'incoming' ? 'active' : ''} onClick={() => setAssignScope('incoming')} disabled={loading}>引き継ぎ待ち</button>
+                <button type="button" className={assignScope === 'outgoing' ? 'active' : ''} onClick={() => setAssignScope('outgoing')} disabled={loading}>引き継ぎ中</button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
-        <div className="my-yotei-summary">
-          <div className="my-yotei-summary-item"><span className="k">件数</span><span className="v">{totalCount}</span></div>
-          <div className="my-yotei-summary-item"><span className="k">有効</span><span className="v">{yukoCount}</span></div>
-        </div>
+        {!isSingleView ? (
+          <div className="my-yotei-summary">
+            <div className="my-yotei-summary-item"><span className="k">件数</span><span className="v">{totalCount}</span></div>
+            <div className="my-yotei-summary-item"><span className="k">有効</span><span className="v">{yukoCount}</span></div>
+          </div>
+        ) : null}
 
         {error ? <div className="my-yotei-error">{error}</div> : null}
         {loading ? <div className="my-yotei-loading">読み込み中...</div> : null}
 
         {!loading && !error && totalCount === 0 ? (
           <div className="my-yotei-empty">
-            {assignScope === 'self' && 'この期間に、あなたに割り当てられた予定はありません。'}
-            {assignScope === 'incoming' && 'この期間に、あなた宛ての引き継ぎ予定はありません。'}
-            {assignScope === 'outgoing' && 'この期間に、あなたから引き継ぐ予定はありません。'}
+            {isSingleView ? (
+              '指定された予定は見つかりません。'
+            ) : (
+              <>
+                {assignScope === 'self' && 'この期間に、あなたに割り当てられた予定はありません。'}
+                {assignScope === 'incoming' && 'この期間に、あなた宛ての引き継ぎ予定はありません。'}
+                {assignScope === 'outgoing' && 'この期間に、あなたから引き継ぐ予定はありません。'}
+              </>
+            )}
           </div>
         ) : null}
 
@@ -874,10 +1316,12 @@ export default function MyYoteiListPage() {
             const label = k === 'unknown' ? '日付未設定' : dayjs(k).format('M/D(ddd)');
             return (
               <section key={k} className="my-yotei-day">
-                <div className="my-yotei-day-head">
-                  <div className="my-yotei-day-label">{label}</div>
-                  <div className="my-yotei-day-count">{arr.length}件</div>
-                </div>
+                {!isSingleView ? (
+                  <div className="my-yotei-day-head">
+                    <div className="my-yotei-day-label">{label}</div>
+                    <div className="my-yotei-day-count">{arr.length}件</div>
+                  </div>
+                ) : null}
                 <div className="my-yotei-cards">
                   {arr.map((it) => {
                     const jotai = normalizeJotai(it);
@@ -899,10 +1343,12 @@ export default function MyYoteiListPage() {
                     const dispYagou = stripMasterIdLabel(yagouName) || '-';
                     const dispTenpo = stripMasterIdLabel(tenpoName) || '(現場未設定)';
                     const memo = safeStr(it?.memo || it?.notes || it?.description);
-                    const workType = safeStr(it?.work_type || it?.type || '');
                     const start = fmtTime(it?.start_at);
                     const end = fmtTime(it?.end_at);
                     const id = safeStr(it?.yotei_id || it?.schedule_id || it?.id);
+                    const yakusokuId = safeStr(it?.yakusoku_id || it?.yakusoku?.yakusoku_id || it?.yakusoku?.id);
+                    const linkedYakusoku = (yakusokuId && yakusokuMap.get(yakusokuId)) || (it?.yakusoku && typeof it.yakusoku === 'object' ? it.yakusoku : null);
+                    const workType = normalizeWorkTypeLabel(it?.work_type || it?.type || '', linkedYakusoku?.type || it?.yakusoku?.type || '');
                     const participantIds = extractParticipantIds(it);
                     const participantEntries = extractParticipantEntries(it);
                     const participantNames = Array.from(new Set(
@@ -920,21 +1366,15 @@ export default function MyYoteiListPage() {
                         .map((pid) => safeStr(jinzaiMasterNameMap.get(normId(pid)) || jinzaiNameMap.get(normId(pid))))
                         .filter(Boolean)
                     ));
-                    const serviceIds = [
-                      ...toIdList(it?.service_id),
-                      ...toIdList(it?.service_ids),
-                    ];
-                    const serviceNames = serviceDisplayNames(it);
-                    const serviceEntries = extractServiceEntries(it);
-                    const serviceDisplay = Array.from(new Set(
-                      serviceEntries
-                        .map((s) => formatNameId(s?.name || '', s?.id || ''))
-                        .filter(Boolean)
-                    ));
+                    const serviceNames = serviceTagNames(it);
                     const serviceContents = serviceContentLines(it);
-                    const serviceListForCard = serviceDisplay.length
-                      ? serviceDisplay
-                      : (serviceNames.length ? serviceNames : serviceIds);
+                    const yakServiceNames = linkedYakusoku ? serviceTagNames(linkedYakusoku) : [];
+                    const yakServiceContents = linkedYakusoku ? serviceContentLines(linkedYakusoku) : [];
+                    const resolvedServiceDisplay = serviceNames.length
+                      ? serviceNames
+                      : yakServiceNames;
+                    const resolvedServiceContents = serviceContents.length ? serviceContents : yakServiceContents;
+                    const serviceListForCard = resolvedServiceDisplay;
                     const handoverToIds = toIdList(it?.handover_to);
                     const handoverFromIds = toIdList(it?.handover_from);
                     const handoverToDisplay = Array.from(new Set(
@@ -966,126 +1406,352 @@ export default function MyYoteiListPage() {
                     const handoffPrev = it?.handoff_prev_summary || null;
                     const thread = demoThreads[id] || [];
                     const draft = demoDrafts[id] || { scope: 'yotei', tag: CHAT_TAG_OPTIONS[0], text: '' };
+                    const cardId = id || `${tenpoId}-${start}-${end}`;
+                    const isExpanded = isSingleView || openedListCardId === cardId;
+                    const listTitle = dispYagou && dispYagou !== '-' ? `${dispYagou} / ${dispTenpo}` : dispTenpo;
+                    const isDetailTab = isSingleView && effectiveSingleHotbarTab === 'detail';
+                    const isHistoryTab = isSingleView && effectiveSingleHotbarTab === 'history';
+                    const isReportTab = isSingleView && effectiveSingleHotbarTab === 'report';
+                    const isToolsTab = isSingleView && effectiveSingleHotbarTab === 'tools';
+                    const isDetailBasicTab = detailSubTab === 'basic';
+                    const isDetailCautionTab = detailSubTab === 'caution';
+                    const isDetailServiceTab = detailSubTab === 'service';
+                    const isDetailRewardTab = detailSubTab === 'reward';
+                    const dateLabel = safeStr(it?.date || it?.scheduled_date) || (it?.start_at ? dayjs(it.start_at).format('YYYY-MM-DD') : '-');
+                    const timeLabel = `${start || '--:--'} - ${end || '--:--'}`;
+                    const unitPrice = resolveYoteiUnitPrice(it, linkedYakusoku);
+                    const subtotalLabel = formatYen(unitPrice);
+                    const rewardAmount = calcWorkerReward(unitPrice);
+                    const rewardLabel = formatYen(rewardAmount);
+                    const cautionPrevLabel = handoffPrev
+                      ? `${safeStr(handoffPrev?.date) || '-'} / ${safeStr(handoffPrev?.handled_by) || '-'} / ${safeStr(handoffPrev?.topic) || '-'} / ${safeStr(handoffPrev?.outcome) || '-'}`
+                      : '前回サマリなし';
+                    const isWorkingYotei = jotai === 'working';
+                    const itemOathAccepted = Boolean(id && declarationAcceptedMap[normId(id)] === true);
+                    const itemBriefingUnlocked = Boolean(id && briefingUnlockMap[normId(id)] === true);
+                    const canStartReport = Boolean(id && itemOathAccepted && itemBriefingUnlocked && isWorkingYotei);
+                    let reportGuideText = 'この予定に紐づけて報告を作成します。';
+                    if (!itemOathAccepted) reportGuideText = '先に宣誓へ同意してください。';
+                    else if (!itemBriefingUnlocked) reportGuideText = '先に「詳細」で作業前確認を完了してください。';
+                    else if (!isWorkingYotei) reportGuideText = '予定が実行中になってから報告を開始できます。';
 
                     return (
-                      <div key={id || `${tenpoId}-${start}-${end}`} className="my-yotei-card">
-                        <div className="my-yotei-card-top">
-                          <div className="my-yotei-time">
-                            <span className="t">{start || '--:--'}</span>
-                            <span className="sep">-</span>
-                            <span className="t">{end || '--:--'}</span>
-                          </div>
-                          <div className={pillClass(jotai)} title={jotai}>
-                            {jotaiLabel(jotai)}
-                          </div>
-                        </div>
-                        <div className="my-yotei-idline">
-                          <span className="k">予定ID</span>
-                          <code className="v">{id || '-'}</code>
-                        </div>
+                      <div key={cardId} className={`my-yotei-card ${!isSingleView ? 'as-list' : ''}`}>
+                        {!isSingleView ? (
+                          <>
+                            <div className="my-yotei-card-top">
+                              <div className="my-yotei-time">
+                                <span className="t">{start || '--:--'}</span>
+                                <span className="sep">-</span>
+                                <span className="t">{end || '--:--'}</span>
+                              </div>
+                              <div className={pillClass(jotai)} title={jotai}>
+                                {jotaiLabel(jotai)}
+                              </div>
+                            </div>
+                            <div className="my-yotei-idline">
+                              <span className="k">予定ID</span>
+                              <code className="v">{id || '-'}</code>
+                            </div>
+                          </>
+                        ) : null}
                         <div className="my-yotei-main">
-                          <div className="my-yotei-tenpo">
-                            <div className="name">{dispTenpo}</div>
-                            <div className="meta">
-                              {workType ? <span className="tag">{workType}</span> : null}
-                            </div>
-                          </div>
-                          {memo ? <div className="my-yotei-memo">{memo}</div> : null}
-                          {serviceListForCard.length ? (
-                            <div className="my-yotei-services">
-                              <div className="my-yotei-services-head">サービス {serviceListForCard.length}件</div>
-                              <div className="my-yotei-services-tags">
-                                {serviceListForCard.map((s) => (
-                                  <span key={`${id}-svc-${s}`} className="svc-tag">{s}</span>
-                                ))}
+                          {!isSingleView ? (
+                            <div className="my-yotei-tenpo">
+                              <button
+                                type="button"
+                                className="my-yotei-list-name-btn"
+                                onClick={() => {
+                                  setOpenedListCardId((prev) => (prev === cardId ? '' : cardId));
+                                }}
+                              >
+                                {listTitle}
+                              </button>
+                              <div className="meta">
+                                {workType ? <span className="tag">{workType}</span> : null}
+                                <span className="code">{isExpanded ? '詳細を閉じる' : '詳細・引き継ぎを開く'}</span>
                               </div>
                             </div>
                           ) : null}
-                          <div className="my-yotei-handoff">
-                            <div className="my-yotei-handoff-top">
-                              <strong>引き継ぎ</strong>
-                              <span className="my-yotei-handoff-score">{handoffDone}/5 確認</span>
-                            </div>
-                            {handoffPrev ? (
-                              <div className="my-yotei-handoff-prev">
-                                <span>前回: {safeStr(handoffPrev?.date) || '-'}</span>
-                                <span>担当: {safeStr(handoffPrev?.handled_by) || '-'}</span>
-                                <span>要点: {safeStr(handoffPrev?.topic) || '-'}</span>
-                                <span>結果: {safeStr(handoffPrev?.outcome) || '-'}</span>
-                              </div>
-                            ) : (
-                              <div className="my-yotei-handoff-prev">前回サマリなし</div>
-                            )}
-                          </div>
-                          <details className="my-yotei-detail">
-                            <summary>詳細を開く</summary>
-                            <div className="my-yotei-detail-grid">
-                              <div><span className="k">予定ID</span><span className="v">{id || '-'}</span></div>
-                              <div><span className="k">案件ID</span><span className="v">{safeStr(it?.yakusoku_id) || '-'}</span></div>
-                              <div><span className="k">取引先</span><span className="v">{dispTorihikisaki}</span></div>
-                              <div><span className="k">屋号</span><span className="v">{dispYagou}</span></div>
-                              <div><span className="k">店舗</span><span className="v">{dispTenpo}</span></div>
-                              <div><span className="k">住所</span><span className="v">{tenpoAddress || '-'}</span></div>
-                              <div><span className="k">電話番号</span><span className="v">{tenpoPhone || '-'}</span></div>
-                              <div><span className="k">連絡手段</span><span className="v">{contactMethod || '-'}</span></div>
-                              <div><span className="k">担当者</span><span className="v">{participantNameDisplay.length ? participantNameDisplay.join(', ') : (participantDisplay.length ? participantDisplay.join(', ') : (participantNames.length ? participantNames.join(', ') : (participantIds.length ? participantIds.join(', ') : '-')))}</span></div>
-                              <div><span className="k">サービス</span><span className="v">{serviceDisplay.length ? serviceDisplay.join(', ') : (serviceNames.length ? serviceNames.join(', ') : (serviceIds.length ? serviceIds.join(', ') : '-'))}</span></div>
-                              <div><span className="k">サービス内容</span><span className="v">{serviceContents.length ? serviceContents.join(' / ') : '-'}</span></div>
-                              <div><span className="k">引き継ぎ先</span><span className="v">{handoverToDisplay.length ? handoverToDisplay.join(', ') : (handoverToIds.join(', ') || '-')}</span></div>
-                              <div><span className="k">引き継ぎ元</span><span className="v">{handoverFromDisplay.length ? handoverFromDisplay.join(', ') : (handoverFromIds.join(', ') || '-')}</span></div>
-                              <div><span className="k">状態</span><span className="v">{jotaiLabel(safeStr(it?.jotai || it?.status)) || '-'}</span></div>
-                            </div>
-                          </details>
-                          {isDemo ? (
-                            <details className="my-yotei-chat">
-                              <summary>連絡ログ（デモ）</summary>
-                              <div className="my-yotei-chat-note">短文のみ（最大140字） / タグ付き / 店舗 or 予定スレッド</div>
-                              <div className="my-yotei-chat-list">
-                                {thread.length === 0 ? (
-                                  <div className="my-yotei-chat-empty">まだ連絡ログはありません</div>
-                                ) : thread.map((m) => (
-                                  <div key={m.id} className="my-yotei-chat-row">
-                                    <span className="meta">{m.at} / {m.who}</span>
-                                    <span className={`scope ${m.scope}`}>{m.scope === 'tenpo' ? '店舗' : '予定'}</span>
-                                    <span className="tag">{m.tag}</span>
-                                    <span className="txt">{m.text}</span>
+                          {isExpanded ? (
+                            <>
+                              {!isSingleView ? (
+                                <>
+                                  {memo ? <div className="my-yotei-memo">{memo}</div> : null}
+                                  {serviceListForCard.length ? (
+                                    <div className="my-yotei-services">
+                                      <div className="my-yotei-services-head">サービス {serviceListForCard.length}件</div>
+                                      <div className="my-yotei-services-tags">
+                                        {serviceListForCard.map((s) => (
+                                          <span key={`${id}-svc-${s}`} className="svc-tag">{s}</span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                  <div className="my-yotei-handoff">
+                                    <div className="my-yotei-handoff-top">
+                                      <strong>引き継ぎ</strong>
+                                      <span className="my-yotei-handoff-score">{handoffDone}/5 確認</span>
+                                    </div>
+                                    {handoffPrev ? (
+                                      <div className="my-yotei-handoff-prev">
+                                        <span>前回: {safeStr(handoffPrev?.date) || '-'}</span>
+                                        <span>担当: {safeStr(handoffPrev?.handled_by) || '-'}</span>
+                                        <span>要点: {safeStr(handoffPrev?.topic) || '-'}</span>
+                                        <span>結果: {safeStr(handoffPrev?.outcome) || '-'}</span>
+                                      </div>
+                                    ) : (
+                                      <div className="my-yotei-handoff-prev">前回サマリなし</div>
+                                    )}
                                   </div>
-                                ))}
-                              </div>
-                              <div className="my-yotei-chat-compose">
-                                <select
-                                  value={draft.scope || 'yotei'}
-                                  onChange={(e) => setDemoDrafts((prev) => ({ ...prev, [id]: { ...draft, scope: e.target.value } }))}
-                                >
-                                  <option value="yotei">予定スレッド</option>
-                                  <option value="tenpo">店舗スレッド</option>
-                                </select>
-                                <select
-                                  value={draft.tag || CHAT_TAG_OPTIONS[0]}
-                                  onChange={(e) => setDemoDrafts((prev) => ({ ...prev, [id]: { ...draft, tag: e.target.value } }))}
-                                >
-                                  {CHAT_TAG_OPTIONS.map((t) => <option key={`${id}-${t}`} value={t}>{t}</option>)}
-                                </select>
-                                <input
-                                  value={draft.text || ''}
-                                  maxLength={140}
-                                  placeholder="例: 鍵BOX番号変更。現地着後に管理へ連絡"
-                                  onChange={(e) => setDemoDrafts((prev) => ({ ...prev, [id]: { ...draft, text: e.target.value } }))}
-                                />
-                                <button type="button" className="btn btn-secondary" onClick={() => appendDemoThread(id)}>
-                                  追加
-                                </button>
-                              </div>
-                            </details>
+                                </>
+                              ) : null}
+                              {isSingleView ? (
+                                <>
+                                  {isBriefingView && !declarationAccepted ? (
+                                    <section className="my-yotei-briefing-declaration" aria-label="ミセサポ安心保証 宣誓">
+                                      <div className="my-yotei-briefing-declaration-text">{MISOGI_GUARANTEE_DECLARATION}</div>
+                                      <div className="my-yotei-briefing-gate-list">
+                                        <label className="my-yotei-briefing-gate-item">
+                                          <input
+                                            type="checkbox"
+                                            checked={declarationAgreed}
+                                            onChange={(e) => {
+                                              const checked = e.target.checked;
+                                              setDeclarationAgreed(checked);
+                                              if (checked) acceptDeclaration();
+                                            }}
+                                            disabled={declarationAccepted}
+                                          />
+                                          <span>上記宣誓に同意して、詳細確認へ進む</span>
+                                        </label>
+                                      </div>
+                                    </section>
+                                  ) : null}
+                                  <section
+                                    className={`my-yotei-detail-sheet my-yotei-detail-static ${isDetailTab ? 'open' : ''}`}
+                                    aria-hidden={!isDetailTab}
+                                  >
+                                    <div className="my-yotei-detail-sheet-head">詳細</div>
+                                    <div className="my-yotei-detail-subtabs" role="tablist" aria-label="詳細分類">
+                                      {DETAIL_SUBTAB_OPTIONS.map((opt) => (
+                                        <button
+                                          key={`${cardId}-detail-subtab-${opt.id}`}
+                                          type="button"
+                                          role="tab"
+                                          aria-selected={detailSubTab === opt.id}
+                                          className={`my-yotei-detail-subtab-btn ${detailSubTab === opt.id ? 'active' : ''}`}
+                                          onClick={() => setDetailSubTab(opt.id)}
+                                        >
+                                          {opt.label}
+                                        </button>
+                                      ))}
+                                    </div>
+
+                                    {isDetailBasicTab ? (
+                                      <div className="my-yotei-detail-grid">
+                                        <div><span className="k">予定ID</span><span className="v">{id || '-'}</span></div>
+                                        <div><span className="k">案件ID</span><span className="v">{yakusokuId || '-'}</span></div>
+                                        <div><span className="k">日付</span><span className="v">{dateLabel}</span></div>
+                                        <div><span className="k">時間</span><span className="v">{timeLabel}</span></div>
+                                        <div><span className="k">取引先</span><span className="v">{dispTorihikisaki}</span></div>
+                                        <div><span className="k">屋号</span><span className="v">{dispYagou}</span></div>
+                                        <div><span className="k">店舗</span><span className="v">{dispTenpo}</span></div>
+                                        <div><span className="k">住所</span><span className="v">{tenpoAddress || '-'}</span></div>
+                                        <div><span className="k">電話番号</span><span className="v">{tenpoPhone || '-'}</span></div>
+                                        <div><span className="k">連絡手段</span><span className="v">{contactMethod || '-'}</span></div>
+                                        <div><span className="k">担当者</span><span className="v">{participantNameDisplay.length ? participantNameDisplay.join(', ') : (participantDisplay.length ? participantDisplay.join(', ') : (participantNames.length ? participantNames.join(', ') : (participantIds.length ? participantIds.join(', ') : '-')))}</span></div>
+                                        <div><span className="k">小計売り上げ</span><span className="v">{subtotalLabel}</span></div>
+                                        <div><span className="k">状態</span><span className="v">{jotaiLabel(jotai) || '-'}</span></div>
+                                      </div>
+                                    ) : null}
+
+                                    {isDetailCautionTab ? (
+                                      <div className="my-yotei-detail-grid">
+                                        <div><span className="k">注意メモ</span><span className="v">{memo || '-'}</span></div>
+                                        <div><span className="k">引き継ぎ先</span><span className="v">{handoverToDisplay.length ? handoverToDisplay.join(', ') : (handoverToIds.join(', ') || '-')}</span></div>
+                                        <div><span className="k">引き継ぎ元</span><span className="v">{handoverFromDisplay.length ? handoverFromDisplay.join(', ') : (handoverFromIds.join(', ') || '-')}</span></div>
+                                        <div><span className="k">前回サマリ</span><span className="v">{cautionPrevLabel}</span></div>
+                                      </div>
+                                    ) : null}
+
+                                    {isDetailServiceTab ? (
+                                      <div className="my-yotei-detail-grid">
+                                        <div><span className="k">作業種別</span><span className="v">{workType || '-'}</span></div>
+                                        <div className="my-yotei-detail-service-row">
+                                          <span className="k">サービス</span>
+                                          {resolvedServiceDisplay.length ? (
+                                            <span className="my-yotei-service-tags">
+                                              {resolvedServiceDisplay.map((s) => (
+                                                <span key={`${cardId}-service-tag-${s}`} className="svc-tag">{s}</span>
+                                              ))}
+                                            </span>
+                                          ) : (
+                                            <span className="v">-</span>
+                                          )}
+                                        </div>
+                                        <div><span className="k">サービス内容</span><span className="v">{resolvedServiceContents.length ? resolvedServiceContents.join(' / ') : '-'}</span></div>
+                                      </div>
+                                    ) : null}
+
+                                    {isDetailRewardTab ? (
+                                      <div className="my-yotei-detail-grid">
+                                        <div><span className="k">小計売り上げ</span><span className="v">{subtotalLabel}</span></div>
+                                        <div><span className="k">報酬</span><span className="v">{rewardLabel}</span></div>
+                                        <div><span className="k">報酬率</span><span className="v">80%</span></div>
+                                        <div><span className="k">算出式</span><span className="v">小計売り上げ × 0.8</span></div>
+                                      </div>
+                                    ) : null}
+
+                                    {!briefingChecked ? (
+                                      <div className="my-yotei-briefing-gate">
+                                        <div className="my-yotei-briefing-gate-head">作業前確認</div>
+                                        <div className="my-yotei-briefing-gate-list">
+                                          {BRIEFING_CHECK_ITEMS.map((rule) => (
+                                            <label key={`${cardId}-gate-${rule.key}`} className="my-yotei-briefing-gate-item">
+                                              <input
+                                                type="checkbox"
+                                                checked={briefingChecks[rule.key] === true}
+                                                onChange={(e) => {
+                                                  const checked = e.target.checked;
+                                                  setBriefingChecks((prev) => ({ ...prev, [rule.key]: checked }));
+                                                }}
+                                              />
+                                              <span>{rule.label}</span>
+                                            </label>
+                                          ))}
+                                        </div>
+                                        <div className="my-yotei-briefing-gate-actions">
+                                          <button
+                                            type="button"
+                                            className="btn btn-primary"
+                                            onClick={markBriefingChecked}
+                                            disabled={!allBriefingChecksDone}
+                                          >
+                                            確認完了して報告を解放
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : null}
+                                  </section>
+
+                                  {isHistoryTab ? (
+                                    <section className="my-yotei-single-panel">
+                                      <div className="my-yotei-single-panel-head">対応履歴</div>
+                                      <p className="my-yotei-single-panel-text">店舗に紐づく過去対応を確認します。</p>
+                                      <button type="button" className="btn btn-secondary" onClick={() => openSupport(tenpoId, tenpoName)} disabled={!tenpoId}>
+                                        対応履歴を開く
+                                      </button>
+                                    </section>
+                                  ) : null}
+
+                                  {isReportTab ? (
+                                    <section className="my-yotei-single-panel">
+                                      <div className="my-yotei-single-panel-head">業務報告</div>
+                                      <p className="my-yotei-single-panel-text">{reportGuideText}</p>
+                                      <button type="button" className="btn btn-primary" onClick={() => openHoukokuFromYotei(it)} disabled={!canStartReport}>
+                                        この予定で報告を開始
+                                      </button>
+                                      {!itemBriefingUnlocked ? (
+                                        <button
+                                          type="button"
+                                          className="btn btn-secondary"
+                                          onClick={() => {
+                                            const next = new URLSearchParams(searchParams);
+                                            next.set('tab', 'detail');
+                                            navigate({ search: `?${next.toString()}` }, { replace: false });
+                                          }}
+                                        >
+                                          詳細へ移動
+                                        </button>
+                                      ) : null}
+                                    </section>
+                                  ) : null}
+
+                                  {isToolsTab ? (
+                                    <section className="my-yotei-single-panel">
+                                      <div className="my-yotei-single-panel-head">ツール</div>
+                                      <div className="my-yotei-tools-grid">
+                                        <button type="button" className="btn btn-secondary" onClick={load} disabled={loading}>予定を再取得</button>
+                                        <button type="button" className="btn btn-secondary" onClick={() => openSupport(tenpoId, tenpoName)} disabled={!tenpoId}>店舗履歴</button>
+                                      </div>
+                                    </section>
+                                  ) : null}
+                                </>
+                              ) : (
+                                <details className="my-yotei-detail">
+                                  <summary>詳細を開く</summary>
+                                  <div className="my-yotei-detail-grid">
+                                    <div><span className="k">予定ID</span><span className="v">{id || '-'}</span></div>
+                                    <div><span className="k">案件ID</span><span className="v">{safeStr(it?.yakusoku_id) || '-'}</span></div>
+                                    <div><span className="k">取引先</span><span className="v">{dispTorihikisaki}</span></div>
+                                    <div><span className="k">屋号</span><span className="v">{dispYagou}</span></div>
+                                    <div><span className="k">店舗</span><span className="v">{dispTenpo}</span></div>
+                                    <div><span className="k">住所</span><span className="v">{tenpoAddress || '-'}</span></div>
+                                    <div><span className="k">電話番号</span><span className="v">{tenpoPhone || '-'}</span></div>
+                                    <div><span className="k">連絡手段</span><span className="v">{contactMethod || '-'}</span></div>
+                                    <div><span className="k">担当者</span><span className="v">{participantNameDisplay.length ? participantNameDisplay.join(', ') : (participantDisplay.length ? participantDisplay.join(', ') : (participantNames.length ? participantNames.join(', ') : (participantIds.length ? participantIds.join(', ') : '-')))}</span></div>
+                                    <div><span className="k">サービス</span><span className="v">{resolvedServiceDisplay.length ? resolvedServiceDisplay.join(', ') : '-'}</span></div>
+                                    <div><span className="k">サービス内容</span><span className="v">{serviceContents.length ? serviceContents.join(' / ') : '-'}</span></div>
+                                    <div><span className="k">引き継ぎ先</span><span className="v">{handoverToDisplay.length ? handoverToDisplay.join(', ') : (handoverToIds.join(', ') || '-')}</span></div>
+                                    <div><span className="k">引き継ぎ元</span><span className="v">{handoverFromDisplay.length ? handoverFromDisplay.join(', ') : (handoverFromIds.join(', ') || '-')}</span></div>
+                                    <div><span className="k">状態</span><span className="v">{jotaiLabel(jotai) || '-'}</span></div>
+                                  </div>
+                                </details>
+                              )}
+                              {isDemo ? (
+                                <details className="my-yotei-chat">
+                                  <summary>連絡ログ（デモ）</summary>
+                                  <div className="my-yotei-chat-note">短文のみ（最大140字） / タグ付き / 店舗 or 予定スレッド</div>
+                                  <div className="my-yotei-chat-list">
+                                    {thread.length === 0 ? (
+                                      <div className="my-yotei-chat-empty">まだ連絡ログはありません</div>
+                                    ) : thread.map((m) => (
+                                      <div key={m.id} className="my-yotei-chat-row">
+                                        <span className="meta">{m.at} / {m.who}</span>
+                                        <span className={`scope ${m.scope}`}>{m.scope === 'tenpo' ? '店舗' : '予定'}</span>
+                                        <span className="tag">{m.tag}</span>
+                                        <span className="txt">{m.text}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="my-yotei-chat-compose">
+                                    <select
+                                      value={draft.scope || 'yotei'}
+                                      onChange={(e) => setDemoDrafts((prev) => ({ ...prev, [id]: { ...draft, scope: e.target.value } }))}
+                                    >
+                                      <option value="yotei">予定スレッド</option>
+                                      <option value="tenpo">店舗スレッド</option>
+                                    </select>
+                                    <select
+                                      value={draft.tag || CHAT_TAG_OPTIONS[0]}
+                                      onChange={(e) => setDemoDrafts((prev) => ({ ...prev, [id]: { ...draft, tag: e.target.value } }))}
+                                    >
+                                      {CHAT_TAG_OPTIONS.map((t) => <option key={`${id}-${t}`} value={t}>{t}</option>)}
+                                    </select>
+                                    <input
+                                      value={draft.text || ''}
+                                      maxLength={140}
+                                      placeholder="例: 鍵BOX番号変更。現地着後に管理へ連絡"
+                                      onChange={(e) => setDemoDrafts((prev) => ({ ...prev, [id]: { ...draft, text: e.target.value } }))}
+                                    />
+                                    <button type="button" className="btn btn-secondary" onClick={() => appendDemoThread(id)}>
+                                      追加
+                                    </button>
+                                  </div>
+                                </details>
+                              ) : null}
+                            </>
                           ) : null}
                         </div>
-                        {(id || tenpoId) ? (
+                        {isExpanded && !isSingleView && (id || tenpoId) ? (
                           <div className="my-yotei-card-actions">
                             {id ? (
                               <button
                                 type="button"
                                 className="btn btn-primary"
                                 onClick={() => openHoukokuFromYotei(it)}
+                                disabled={!canStartReport}
                               >
                                 この予定で報告
                               </button>

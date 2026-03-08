@@ -611,7 +611,7 @@
 .today-rail-card.status-mikanryo { background: rgba(107, 114, 128, 0.92); }
 .today-rail-card.status-chousei { background: rgba(217, 119, 6, 0.92); }
 .today-rail-card.status-kakunin { background: rgba(124, 58, 237, 0.92); }
-.today-rail-card.status-shinkou { background: rgba(37, 99, 235, 0.92); }
+.today-rail-card.status-shinkou { background: linear-gradient(135deg, rgba(29, 78, 216, 0.96), rgba(14, 116, 144, 0.96)); border-color: rgba(191, 219, 254, 0.9); }
 .today-rail-card.status-kanryou { background: rgba(22, 163, 74, 0.92); }
 .today-rail-card.status-torikeshi { background: rgba(71, 85, 105, 0.9); }
 
@@ -651,6 +651,20 @@
     gap: 8px;
     font-size: 10px;
     opacity: 0.9;
+}
+
+.today-rail-running {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.82);
+    color: #fef08a;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    z-index: 2;
 }
 
 .today-item {
@@ -1242,8 +1256,9 @@
 }
 
 .yotei-card.status-shinkou {
-    background: #1d4ed8;
-    border-left-color: #93c5fd;
+    background: linear-gradient(135deg, #1d4ed8, #0e7490);
+    border-left-color: #bfdbfe;
+    box-shadow: 0 0 0 1px rgba(191, 219, 254, 0.5), 0 10px 20px rgba(8, 47, 73, 0.35);
 }
 
 .yotei-card.status-kanryou {
@@ -1273,6 +1288,29 @@
     font-size: 9px;
     opacity: 0.85;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.yotei-card-amount {
+    font-size: 9px;
+    opacity: 0.92;
+}
+
+.yotei-card-ugoki {
+    font-size: 9px;
+    opacity: 0.9;
+}
+
+.yotei-card-running {
+    align-self: flex-end;
+    margin-bottom: 2px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.78);
+    color: #fef08a;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
 }
 
 .yotei-legend-footer {

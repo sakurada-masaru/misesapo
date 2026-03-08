@@ -1,0 +1,99 @@
+.cleaning-worker-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1280;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: calc(8px + env(safe-area-inset-top));
+  padding-right: calc(10px + env(safe-area-inset-right));
+  padding-left: calc(10px + env(safe-area-inset-left));
+  padding-bottom: 6px;
+  pointer-events: none;
+}
+
+.cleaning-worker-topbar-btn {
+  pointer-events: auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card-bg) 92%, transparent);
+  color: var(--fg);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+.cleaning-worker-topbar-btn:hover:not(:disabled) {
+  border-color: var(--accent-color);
+}
+
+.cleaning-worker-topbar-btn:disabled {
+  opacity: 0.62;
+}
+
+.app-fullscreen.cleaning-worker-app {
+  padding-top: calc(52px + env(safe-area-inset-top));
+}
+
+.app-fullscreen.cleaning-worker-app.with-cleaning-nav-hotbar {
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+}
+
+.cleaning-worker-hotbar-hint {
+  position: fixed;
+  left: calc(
+    max(18px, env(safe-area-inset-left))
+    + (
+      (100vw - max(18px, env(safe-area-inset-left)) - max(18px, env(safe-area-inset-right)))
+      / 8
+    )
+  );
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  z-index: 1010;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  transform: translateX(-5px);
+  color: #334155;
+  pointer-events: none;
+  animation: cleaning-hotbar-hint-bounce 1.4s ease-in-out infinite;
+}
+
+.cleaning-worker-hotbar-hint .hint-arrow {
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.cleaning-worker-hotbar-hint .hint-text {
+  font-size: 12px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+[data-theme="dark"] .cleaning-worker-hotbar-hint {
+  color: #e2e8f0;
+}
+
+@keyframes cleaning-hotbar-hint-bounce {
+  0%, 100% {
+    transform: translateX(-5px) translateY(0);
+  }
+  35% {
+    transform: translateX(-5px) translateY(-6px);
+  }
+  55% {
+    transform: translateX(-5px) translateY(0);
+  }
+  72% {
+    transform: translateX(-5px) translateY(-2px);
+  }
+}

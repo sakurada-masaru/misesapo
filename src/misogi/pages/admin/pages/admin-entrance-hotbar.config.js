@@ -66,6 +66,7 @@ export const ADMIN_HOTBAR = [
     label: '人材管理',
     subItems: [
       { id: 'smarthr-link', label: 'スマートHR', path: 'https://misesapo.smarthr.jp/home', group: '人材管理' },
+      { id: 'cleaning-sales', label: '清掃売上管理', path: '/admin/cleaning-sales', group: '人材管理' },
     ]
   },
   {

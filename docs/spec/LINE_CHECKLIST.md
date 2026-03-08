@@ -2410,3 +2410,465 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 通知カードの時間表示を `開始` 単体から `開始〜終了` のレンジ表示に変更
 - [x] `end_time / end_at / work_end_at` など複数キーの終端時刻を吸収
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Top-Left Login/Logout Tag (2026-03-07)
+
+- [x] 清掃エントランス左上に `ログイン / ログアウト` タグボタンを追加
+- [x] 未ログイン時は `ログイン` 表示で `/` へ遷移、ログイン済み時は `ログアウト` 実行
+- [x] safe-area（ノッチ）を考慮した固定配置スタイルを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Entrance Single View + Hotbar List View Split (2026-03-07)
+
+- [x] 清掃エントランス予定バブル押下時は `yotei_id` をクエリで渡し、`単体表示` で開くよう変更
+- [x] 一覧表示はリスト名（屋号/店舗）を押すと、詳細と引き継ぎを展開するUIへ変更
+- [x] 単体表示時は `一覧表示へ` ボタンを追加し、通常一覧へ戻れる導線を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Single View Density Up (2026-03-07)
+
+- [x] 単体表示から `予定（単体）` ラベル、`一覧表示へ` ボタンを除去
+- [x] 単体表示では `件数 / 有効` サマリーを非表示化
+- [x] 単体表示では日別ヘッダー（日付・件数）を非表示化
+- [x] 単体表示では `詳細` を折りたたみではなく常時表示に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Worker UI: Always Hotbar + No Breadcrumb Header (2026-03-07)
+
+- [x] 清掃員ルート（`/jobs/cleaning/*`）では共通 `Breadcrumbs` を完全非表示化
+- [x] 清掃員ルート共通のトップバーを追加（左上 `戻る` / 右上 `ログイン・ログアウト`）
+- [x] 清掃エントランス内の旧ログインタグを削除し、共通トップバーへ統一
+- [x] 清掃員ページ（`entrance` / `houkoku` 以外）にナビ用HOTバーを常設表示
+- [x] safe-areaと重なり回避のため、清掃員ルートに上部/下部余白を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Notice Bubble Narrow + Running Slide Switch (2026-03-07)
+
+- [x] 清掃エントランスの直近予定バブル幅を調整（`min(84vw, 620px)`）し、表示をコンパクト化
+- [x] 各予定バブルにスライド式スイッチを追加（右ONで `実行中`）
+- [x] スイッチON時はバブルを赤系スタイルへ変更し、状態タグを `実行中` 表示
+- [x] スイッチ状態を `localStorage(misogi-v2-cleaning-notice-running)` に保存
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Cleaning Running Sync + Card Status Emphasis (2026-03-07)
+
+- [x] 清掃エントランスの `実行中` スイッチを `localStorage` のみではなく `yotei` API（`PUT /yotei/{id}`）へ保存するよう変更
+- [x] `実行中` 保存時に `jokyo / ugoki_jokyo / ugoki_jotai` を更新し、管理側タイムラインへ状態連携
+- [x] 管理 `yotei` タイムラインの状態判定を `yotei` 側 `jokyo` 優先へ調整（清掃側実行状態を即反映）
+- [x] 管理タイムラインカード（todayレール/作業員レーン）に `実行中` の大きめラベルを追加
+- [x] 管理タイムラインの `status-shinkou` カード配色を強調し、実行中の視認性を向上
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Bubble Swipe Switch + 30min Gate (2026-03-07)
+
+- [x] 直近予定バブルを「内部スイッチ」方式から「バブル本体スライド」方式へ変更
+- [x] 予定開始30分前までは `待機中`、30分前以降は `実行可`、実行中は `実行中` を表示
+- [x] `実行可` の予定のみ `実行中` に遷移できるようガードを追加（早すぎる操作はアラートで抑止）
+- [x] バブルの `詳細` ボタンを廃止し、`タップで詳細画面 / スライドでugoki変更` に統一
+- [x] 予定バブルの表示幅を画面いっぱい（左右safe-area考慮）に拡張
+- [x] スワイプUI専用スタイルを追加（白基調、待機/実行可/実行中の背景色分離）
+- [x] 実行中スライド距離を短縮（`82px`）し、発火閾値も調整（`46px`）
+- [x] `実行中` ステータスラベルの左右余白を縮小（`padding 2px 6px`）
+- [x] 時刻表示確保のため、内部グリッドの `gap` と各タグ余白を追加で圧縮（`gap 8→5`, `day/yagou/status` のpadding縮小）
+- [x] さらに実行中側の空き量を減らすため、スライド距離を再短縮（`68px`）し、発火閾値を再調整（`38px`）
+- [x] 背面ステータスを左右配置へ再設計（左: `実行中` / 右: `待機中・実行可`）、バブル本体は日付・屋号・店舗・時間のみ表示
+- [x] バブルを左右スライドで状態変更できるよう更新（右寄せ=実行中 / 左寄せ=待機・実行可）
+- [x] 店舗と時間の間隔を圧縮し、時間を左寄せ表示へ調整（見切れ防止）
+- [x] 背面ステータスの色を高彩度化（実行中: 赤 / 実行可: 緑 / 待機中: グレー）
+- [x] ステータス片側表示に統一（待機/実行可では左ステータス非表示、実行中では右ステータス非表示）
+- [x] 背面/前面の不透明化を実施（透過背景を廃止）
+- [x] ステータス表示を楕円チップから全面色ブロック＋白文字ラベルへ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Foreground/Background Bubble Refinement (2026-03-07)
+
+- [x] 直近予定バブルを前面詳細バブル（`日付/屋号/店舗/時間`）+ 背面ステータスバブルの2層構造に統一
+- [x] 背面ステータスを中央分割のベタ塗りへ変更（左半分: 赤 `実行中` / 右半分: グレー `待機中`）
+- [x] 前面詳細バブルを左右スライド可能にし、左右どちらか一方の背面ラベルのみ表示される挙動へ調整
+- [x] スワイプ判定を双方向化（`-MAX..+MAX`）し、保存スナップ位置も左右固定へ変更
+- [x] 前面/背面バブル間の余白（マージン/パディング由来の隙間）を除去し、不要表示を解消
+- [x] `実行中 / 待機中` ラベルを白文字で常時視認できる位置（左/右端寄せ）へ調整
+- [x] 前面詳細バブルの左右スナップを背面端に一致させ、反対色の背面露出を解消
+- [x] 予定バブルのボーダーを削除（ダークモードで白縁が目立つ問題を解消）
+- [x] 詳細バブル内に売上表示（`¥...`）を追加し、予定単価の視認を強化
+- [x] 詳細バブル内部の左右パディングを `5px` に調整（バブル本体サイズは維持）
+- [x] 左側情報を `日付 → 時間(2行: 開始/終了) → 屋号/店舗` の順に再配置
+- [x] 時間表示を2行化しつつ、フォント/間隔を最適化してバブル高さを固定維持
+- [x] 詳細バブル内部の左右パディングを追加拡張（`9px`）して余白を確保
+- [x] `屋号 / 店舗` フォントサイズを拡大し、視認優先に再調整
+- [x] バブル内テキスト全体を一段拡大し、縦方向の余白を活用するよう最適化
+- [x] 詳細バブル内部の左右パディングを `16px` へ再調整
+- [x] `屋号 / 店舗` をさらに拡大（特に店舗名を強調）
+- [x] 開始/終了時間をタグ化（2行ともチップ表示）し視認性を向上
+- [x] `屋号 / 店舗` を追加拡大（`屋号 13px / 店舗 15px`）へ再調整
+- [x] `屋号 / 店舗` サイズを最終調整（`屋号 16px / 店舗 14px`）
+- [x] エントランス予定の並び順を時系列固定（古い予定を上、新しい予定を下）へ変更
+- [x] 予定バブル表示位置を `HOTバー上 + 50px` へ固定し、下端を動かさず上方向へ積み上がる配置へ変更
+- [x] 5件上限時は新しい側5件を採用し、追加予定が下端に出る挙動へ調整（表示順は古い→新しい）
+- [x] 右スライド（待機→実行）時に開始確認オーバーレイを追加（MISOGI文言 + `はい/いいえ`）
+- [x] 確認文言をログイン名差し込み形式へ変更（`〜様。作業開始いたしますか？`）
+- [x] `はい` 選択時は実行状態を保存して当該予定の詳細画面へ遷移、`いいえ` で待機側へ復帰
+- [x] 開始確認オーバーレイのメタ情報を拡張（`日付 / 屋号・店舗 / 時間` を表示）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Briefing-First Detail UX + Local Hotbar (2026-03-07)
+
+- [x] `/jobs/cleaning/yotei?view=single` の初期表示を「詳細未表示」に変更（デフォルトで詳細を展開しない）
+- [x] 単体予定画面に `MISOGI ブリーフィング` 初期パネルを追加（現場開始前の説明を先に表示）
+- [x] 単体予定画面専用のローカルHOTバーを追加（左から `詳細 / 履歴 / 報告 / ツール`）
+- [x] `詳細` 選択時のみ、詳細グリッドを下からフェードイン表示するボトムシート挙動を実装
+- [x] `履歴` タブから既存 `対応履歴`（SupportHistoryDrawer）を開ける導線を追加
+- [x] `報告` タブから当該予定IDで `houkoku` へ遷移する導線を追加
+- [x] `ツール` タブに補助操作（再取得/店舗履歴）を追加
+- [x] 一覧画面（非single）側のカード動作・既存導線は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Global Hotbar Switch on Single Detail (2026-03-07)
+
+- [x] 清掃共通HOTバーを `view=single` 時のみ `詳細 / 履歴 / 報告 / ツール` に切替
+- [x] `view=single` では共通HOTバー操作をクエリ `tab` 同期に変更（`tab=detail|history|report|tools`）
+- [x] 単体予定画面の表示内容を `tab` クエリ駆動へ統一（ローカル重複HOTバーを撤去）
+- [x] 通常画面（`view=single` 以外）は従来の共通HOTバー（`報告 / 予定 / ツール / 設定`）を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Visualizer Top Fix on Single Detail (2026-03-07)
+
+- [x] `view=single` の予定詳細画面のみ、ビジュアライザーを画面上部へ固定表示
+- [x] 固定表示に伴い本文開始位置をオフセット調整し、コンテンツ被りを防止
+- [x] 一覧画面（非single）のビジュアライザー挙動は変更しない
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Single Detail Visual Tuning (2026-03-07)
+
+- [x] `.app-fullscreen` 背景を `rgba(255, 255, 255, 0.06)` に変更
+- [x] `view=single` の `.report-page-viz` 上端を `top: calc(env(safe-area-inset-top))` へ変更
+- [x] `view=single` のビジュアライザー光彩を無効化（`core-circle` の `box-shadow` / `filter` をオフ）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Worker Header: Back Button to Entrance (2026-03-07)
+
+- [x] 清掃ヘッダー左上ボタン文言を `戻る` から `エントランス` へ変更
+- [x] 左上ボタン押下時の遷移を履歴戻りから `/jobs/cleaning/entrance` 固定へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Briefing Reset Button on Toolbar (2026-03-07)
+
+- [x] `view=single` のツールバー右列に `ブリーフィング` ボタンを追加（`更新` と同じ行）
+- [x] `ブリーフィング` 押下で `tab` クエリを解除し、HOTバー選択解除状態（ブリーフィング表示）へ復帰
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Briefing Content Reorder (2026-03-07)
+
+- [x] ブリーフィング表示を指定順へ変更（`MISOGIコメント → ID/日付/時間/屋号店舗 → プラン`）
+- [x] ブリーフィング情報ブロックを追加（`ID / 日付 / 時間 / 屋号・店舗`）
+- [x] ブリーフィングの `プラン` セクションを追加（サービス/作業種別をタグ表示）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Single View Duplicate Removal (2026-03-07)
+
+- [x] `view=single` で上段の重複表示（時間/ID/店舗名/引き継ぎ）を非表示化
+- [x] 単体画面は `ブリーフィング + HOTバー切替パネル` 中心の表示へ整理
+- [x] 一覧画面（非single）の既存表示は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Briefing Section Flatten (2026-03-07)
+
+- [x] ブリーフィングDOMを簡素化（見出し階層を削減し `コメント / 情報行 / プラン` のフラット構成へ）
+- [x] ブリーフィングCSSを簡素化（過剰な区切り・入れ子スタイルを削減）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Single View DOM Depth Reduction (2026-03-07)
+
+- [x] `view=single` ヘッダーの不要ラッパーを削減（`my-yotei-title` 層を除去）
+- [x] ブリーフィング内の中間ラッパー（`facts` / `row-plan`）を撤去し、行要素を直下へフラット化
+- [x] 詳細シートの中間ラッパー（`my-yotei-detail`）を撤去し、`detail-sheet` 直下に `detail-grid` を配置
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Single Briefing Hint Above Hotbar (2026-03-07)
+
+- [x] `view=single` かつ `tab未選択`（ブリーフィング状態）のときだけ、HOTバー直上に誘導ヒントを表示
+- [x] ヒント文言を `↓ 詳細を押して確認を開始` とし、下向き矢印で操作誘導を追加
+- [x] ライト/ダーク両モードで視認性を維持する専用スタイルを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Briefing as Navigation Only (2026-03-07)
+
+- [x] `view=single` のブリーフィングセクションから詳細情報（ID/日付/時間/屋号店舗/プラン）を撤去
+- [x] ブリーフィングは `詳細` タブ操作を促す MISOGI ナビ文のみ表示に変更
+- [x] 使わなくなったブリーフィング用変数を削除し、描画ロジックを簡素化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Briefing Navigation Always Visible (2026-03-07)
+
+- [x] `view=single` のMISOGIナビ（ブリーフィング文）を `tab` 状態に依存せず常時表示へ変更
+- [x] `tab未選択` 専用判定を削除し、単体予定画面内でナビ表示を固定化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Move MISOGI Nav Under Visualizer (2026-03-07)
+
+- [x] MISOGIナビを予定カード内から分離し、`report-page-main` 先頭（ビジュアライザー直下）へ移設
+- [x] `view=single` 時のみ上部ナビセクションを描画する構成へ変更
+- [x] 上部ナビ専用スタイル（`my-yotei-top-briefing`）を追加し、既存トーンを維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: MISOGI Speaker Label + Briefing Button Removal (2026-03-07)
+
+- [x] 上部MISOGIナビに左右パディングを追加し、safe-area考慮の余白で見栄えを調整
+- [x] ナビ文先頭に `MISOGI` 話者ラベルを追加し、誰のコメントか視覚的に識別可能化
+- [x] `view=single` ツールバーの `ブリーフィング` ボタンを削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Day Section Border Removal (2026-03-07)
+
+- [x] `.my-yotei-day` の外枠ボーダー（`border: 1px solid var(--card-border)`）を削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Top Nav Header Layout + Toolbar Cleanup (2026-03-07)
+
+- [x] MISOGIナビを「ヘッダー（`MISOGI`）+ 下段コメント」構成へ変更
+- [x] 上部MISOGIナビを中央寄せ（見出し・本文とも中央配置）へ調整
+- [x] `view=single` の `更新` ボタンを削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Detail Sheet Hidden by Default in Briefing (2026-03-07)
+
+- [x] `view=single` の詳細シートから通常詳細クラス（`my-yotei-detail`）を分離し、非表示状態で箱が出ないよう修正
+- [x] ブリーフィング初期表示時は `my-yotei-detail-sheet` が完全非表示（`open` 時のみ表示）となる構成へ整理
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Hint Arrow Alignment to Detail Icon (2026-03-07)
+
+- [x] ブリーフィング時ヒントを「テキストバッジ + 矢印ピン留め」構成へ変更
+- [x] `↓` 矢印をHOTバー1つ目（`詳細`）アイコン中心に一致するよう位置計算で固定
+- [x] ライト/ダーク両テーマで矢印・ヒントの視認性を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Hint Label Start Alignment (2026-03-07)
+
+- [x] ヒント表示を「矢印単体固定」から「矢印+文言ラベル全体の先頭固定」へ変更
+- [x] ラベルの開始X座標を `詳細` アイコン中心と一致するよう調整
+- [x] ラベル全体を1つのバッジとして表示し、テーマ別配色は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Hint Text-Only Style (2026-03-07)
+
+- [x] ヒントラベルの背景・ボーダー・シャドウを削除し、テキストのみ表示へ変更
+- [x] 矢印+文言の位置合わせロジックは維持（先頭X座標は`詳細`アイコン基準）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Hint Arrow Center Fine Tuning (2026-03-07)
+
+- [x] ヒント全体を左へ `5px` 微調整し、矢印中心を `詳細` アイコン中心へ合わせ込み
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Hint Lift + Bounce Animation (2026-03-07)
+
+- [x] ヒント表示位置を上方向へ `約10px` オフセット
+- [x] ヒント全体にバウンスアニメーションを追加（軽い上下リズム）
+- [x] 既存の横位置補正（`-5px`）は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Guided Order Lock (2026-03-07)
+
+- [x] `view=single` で `briefing_checked` クエリが未完了時、HOTバーの `詳細` 以外（`履歴/報告/ツール`）を disabled 化
+- [x] 未確認状態で `履歴/報告/ツール` を押しても遷移しないガードを追加
+- [x] `詳細` タブ上部に作業前確認チェック（3項目）を追加
+- [x] 3項目完了後の `確認完了して報告を解放` で `briefing_checked=1` を付与
+- [x] `報告` タブは未確認時に開始不可 + `詳細へ移動` 導線を表示
+- [x] `詳細` 内チェックUIのスタイルを追加
+- [x] `作業前確認` ブロックを `詳細情報グリッドの下` へ移動（表示順を下段化）
+- [x] `詳細` タブ表示中は `詳細を押して確認を開始` ヒントを非表示化
+- [x] `詳細` タブ表示中のパネル先頭に `詳細` ヘッダーラベルを表示
+- [x] `詳細` パネルを `基本情報 / 注意事項 / 作業内容` の3サブタブ切替に変更
+- [x] `作業前確認` を詳細情報タブとは別ブロックとして下段に独立配置
+- [x] `作業前確認` チェック文言を指定3項目へ更新（実施場所/注意事項/作業内容）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Yakusoku Reflection Consistency (2026-03-07)
+
+- [x] `yakusoku` API取得失敗時のフォールバック（`yotei`抽出）に `service_ids/service_names/work_type` を含めるよう補強
+- [x] 編集モーダルで `yakusoku` 連携が未反映の既存予定（サービス未設定）に限り、`yakusoku` からサービス情報を自動補完
+- [x] 既に `yotei` スナップショット（サービス情報）がある既存予定は上書きしないガードを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Work Type Two-Option Unification (2026-03-07)
+
+- [x] `作業種別` 選択肢を `定期清掃 / スポット清掃` の2択に統一
+- [x] 既存データの旧表記（例: `定期清掃（○ヶ月）` / `単発`）を編集時に2択へ正規化
+- [x] `yakusoku` フォールバック抽出・保存ペイロードでも `work_type` を2択正規化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Briefing Service Display Unified (2026-03-07)
+
+- [x] 清掃側 `作業内容` タブの `作業種別` を `定期清掃 / スポット清掃` 表示へ統一
+- [x] `サービス` はIDフォールバックを廃止し、日本語サービス名のみタグ表示に変更
+- [x] 一覧詳細の `サービス` 表示も同ルールへ統一（ID非表示）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Service Tag Two-Line Layout (2026-03-07)
+
+- [x] 清掃側 `作業内容` タブの `サービス` を2行レイアウトへ変更（1行目タイトル / 2行目タグ）
+- [x] タグ行を全幅折り返し表示へ調整（画面幅に応じて羅列）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Keep Briefing Unlock State (2026-03-07)
+
+- [x] `予定ID` 単位で `作業前確認→報告解放` 状態を `localStorage` へ永続化
+- [x] 単体予定画面の判定を `query(briefing_checked) or localStorage` の統合判定へ変更
+- [x] 清掃側HOTバーの `詳細以外ロック` 判定も同じ永続化状態に連動
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Hide Gate After Unlock + Briefing Message/Declaration (2026-03-07)
+
+- [x] 報告解放済み（`briefing_checked`）の予定では `作業前確認` セクションを非表示化
+- [x] MISOGIナビ文言を解放済み時に指定2行へ差し替え（業務内容確認への労い + 履歴/報告の利用案内）
+- [x] ナビ文言判定を永続化状態（`localStorage`）に連動させ、再訪時も維持
+- [x] ブリーフィング表示（`view=single` かつ `tab未選択`）時に「ミセサポ安心保証 宣言」テキストを表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Move Declaration Into Yotei Card (2026-03-07)
+
+- [x] 「ミセサポ安心保証 宣言」の描画位置を上部MISOGIナビから `yotei` カード内（ブリーフィング時）へ移設
+- [x] 上部ナビ側の宣言コンテナ描画を削除し、不要な空枠表示を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: One-Time Declaration Agree + Detail Guidance (2026-03-07)
+
+- [x] 宣言表示を `view=single` 初回のみ表示（アカウント単位の `localStorage` 永続化）
+- [x] 宣言に同意チェックを追加し、チェック時に `詳細` タブへ自動誘導
+- [x] 同意済みアカウントでは以後のブリーフィングで宣言を非表示化
+- [x] MISOGIナビ文言を同意状態に応じて切替（未同意: 宣言同意を案内 / 同意済: 詳細確認を案内）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Lock Detail Until Declaration Consent (2026-03-07)
+
+- [x] 宣誓未同意時は予定詳細HOTバーの `詳細/履歴/報告/ツール` を全てロック
+- [x] 宣誓未同意時はURLクエリで `tab=detail` を指定しても詳細パネルを開かないガードを追加
+- [x] 宣誓同意後のみ `詳細` 解放（従来どおり `履歴/報告/ツール` は作業前確認完了までロック）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Declaration-State Nav Message Update (2026-03-07)
+
+- [x] 宣誓表示中（未同意時）のMISOGIナビ文言を指定文へ変更
+- [x] 文言: `ご苦労様です。ミセサポ安心保証宣言に同意して、詳細確認へとお進みください。`
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Declaration Wording Unified to Oath (2026-03-07)
+
+- [x] UI文言を `宣言` から `宣誓` へ統一（タイトル/ナビ文/同意チェック文）
+- [x] 宣誓セクションのARIAラベルも `宣誓` 表記へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Show Oath on Initial Briefing Per Yotei (2026-03-07)
+
+- [x] 宣誓同意状態の保存キーをアカウント単位から `予定ID` 単位へ変更
+- [x] 予定ごとのブリーフィング初期画面で宣誓が表示される挙動へ調整
+- [x] 同一予定で同意済みの場合のみ宣誓を非表示化し、詳細へ進行可能
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Oath Agree Flow Without Auto Transition (2026-03-07)
+
+- [x] 宣誓同意チェック時の `詳細` 自動遷移を廃止（手動で詳細ボタンを押す導線へ変更）
+- [x] 宣誓同意後もブリーフィング初期画面では宣誓カードを即時非表示にしない挙動へ変更
+- [x] 同意後のMISOGIナビ文言を「同意確認済み + 詳細へ進行案内」に切替
+- [x] 同意後にHOTバーの `詳細` が解放され、詳細ヒントが表示される導線を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Report Start Guard by Oath/Briefing/Working (2026-03-07)
+
+- [x] 報告開始条件を `宣誓同意 + 作業前確認完了 + 予定状態=実行中(working)` に厳格化
+- [x] 単体 `報告` タブの開始ボタンを条件連動でdisabled化し、不足条件に応じた案内文へ切替
+- [x] 一覧カードの `この予定で報告` ボタンも同条件でdisabled化
+- [x] `openHoukokuFromYotei` 側でも同条件の実行ガードを追加（条件未達時は遷移しない）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Keep Oath Hidden After Return (2026-03-07)
+
+- [x] 同一予定で `作業前確認完了/報告解放` 済みの再訪時、宣誓同意フラグを自動補完
+- [x] これによりエントランスへ戻って再入場しても宣誓を再表示しない挙動へ統一
+- [x] MISOGIナビ文言と宣誓表示条件の状態ズレを解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Default Detail View After Report Unlock (2026-03-07)
+
+- [x] `報告解放済み` かつ `tab未指定` の単体予定画面で、表示タブを `詳細` に既定化
+- [x] ページ本体（`MyYoteiListPage`）とHOTバー選択状態（`CleaningWorkerChrome`）の既定タブ解決を統一
+- [x] 宣誓未同意時のタブロック仕様は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Fix Briefing Checked Init Order Error (2026-03-07)
+
+- [x] `effectiveSingleHotbarTab` が `briefingChecked` を初期化前参照していた順序不整合を修正
+- [x] `MyYoteiListPage.jsx:601` の `ReferenceError` を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Detail Hotbar Icon to Search (2026-03-07)
+
+- [x] 予定詳細HOTバーの `詳細` アイコンを `plan` から `preview`（虫眼鏡）へ変更
+- [x] `履歴/報告/ツール` の既存アイコンは維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: History Hotbar Icon to Teleop (2026-03-07)
+
+- [x] 予定詳細HOTバーの `履歴` アイコンを `テレオペアイコン.svg` ベースへ差し替え
+- [x] `public/icons/hotbar/history.svg` を追加し、`hotbar.css` に `hotbar-icon-history` を追加
+- [x] `CleaningWorkerChrome.jsx` の `履歴` アイコン指定を `settings` から `history` に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Yotei: Yakusoku Unit Price + Cleaning Reward Tab (2026-03-07)
+
+- [x] 管理 `yotei` カードに `小計売り上げ`（yakusoku単価優先）を表示（本日タイムライン/予約表）
+- [x] `yotei` 保存時に `unit_price` スナップショットを保持し、yakusoku取得不可時でも金額共有できるよう補強
+- [x] 清掃側 `詳細` サブタブに `報酬` を追加し、`報酬 = 小計売り上げ × 80%` を表示
+- [x] 清掃側 `基本情報` に `小計売り上げ` 項目を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Sales: Worker MyPage + Admin Management (2026-03-07)
+
+- [x] 清掃員向け `マイページ（売上）` を追加（`/jobs/cleaning/mypage`）
+- [x] 清掃員マイページで月次の `対象件数 / 小計売り上げ / 報酬見込(80%)` を表示
+- [x] 清掃員マイページで予定単位の売上明細（屋号/店舗/時間/状態/小計売り上げ/報酬）を表示
+- [x] 管理向け `清掃売上管理` ページを追加（`/admin/cleaning-sales`）
+- [x] 管理ページで清掃員別の月次集計（件数/小計売り上げ/報酬見込/状態内訳）を表示
+- [x] 管理サイドバー `スケジュール管理` 配下に `清掃売上管理` 導線を追加
+- [x] 清掃エントランスHOTBAR `予定` 配下に `マイページ（売上）` 導線を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Sidebar: Move Cleaning Sales To Staff Section (2026-03-07)
+
+- [x] `清掃売上管理` 導線を `スケジュール管理` から削除
+- [x] `清掃売上管理` 導線を `人材管理` 配下へ移動
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Cleaning Sales: Contractor Calendar + Top 5 Cards (2026-03-07)
+
+- [x] `清掃売上管理` を業務委託者ごとの月次カレンダー管理UIへ変更
+- [x] 画面左に業務委託者（清掃員）名のリストを追加し、選択者を切替可能化
+- [x] 画面上部に売上上位者の統計カードを追加（1位〜5位）
+- [x] 選択清掃員のカレンダーセルに日次の `小計売り上げ` と `件数` を表示
+- [x] 月次総計サマリ（対象清掃員/件数/小計売り上げ/報酬見込）を維持
+- [x] 月次総計サマリに `総売り上げ（予定ベース）` を追加（予定ID単位で重複排除）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Cleaning Sales: Worker Horizontal + Date Vertical Matrix (2026-03-07)
+
+- [x] 集計対象を清掃員へ限定（人材マスタの部署/職種/役割に `清掃/cleaning` を含む対象）
+- [x] 表示をマトリクス化（横軸: 清掃員名 / 縦軸: 月の日付1〜末日）
+- [x] ヘッダーは `上段=該当者の小計売上合計`、`下段=名前` の順で表示
+- [x] 日付行セルはその日の `小計売上` のみ表示（余計な補助情報を非表示）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Cleaning Sales: Remove Ranking Block (2026-03-07)
+
+- [x] 画面上部の `売上上位5名`（順位）セクションを削除
+- [x] 順位セクションに紐づくフロントロジック（`topFive`）を削除
+- [x] 順位用CSS（`admin-cleaning-sales-top5` 系）を削除し、未使用スタイルを整理
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Report Unlock Running-Status Rule Fix (2026-03-07)
+
+- [x] 清掃 `yotei` の実行中判定を `jotai/status` だけでなく `jokyo/ugoki_jokyo/ugoki_jotai/ugoki_status/progress_status` まで統合
+- [x] 実行中判定の別名 (`working/shinkou/in_progress/progress/実行中/進行中`) を同一ルールで解釈
+- [x] 報告開始直前に `GET /yotei/{id}` で最新状態を再取得して再判定（状態反映遅延の吸収）
+- [x] 詳細内 `状態` 表示も同じ統一判定を参照するように修正
+- [x] `npm -C src/misogi run build` でビルド確認

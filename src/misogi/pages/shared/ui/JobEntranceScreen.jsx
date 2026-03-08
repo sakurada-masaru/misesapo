@@ -65,6 +65,9 @@ const DASHBOARD_RESIZER_BAR_WIDTH = 10;
 const DASHBOARD_WORKSPACE_MIN_WIDTH = 420;
 const DASHBOARD_PANEL_MIN_WIDTH = 700;
 const DASHBOARD_PANE_TOGGLE_EVENT = 'misogi-dashboard-pane-toggle';
+const CLEANING_NOTICE_RUNNING_STORAGE_KEY = 'misogi-v2-cleaning-notice-running';
+const CLEANING_NOTICE_SWIPE_MAX = 44;
+const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -521,6 +524,23 @@ function readStoredBoolean(key, fallback = true) {
   }
 }
 
+function readStoredBooleanMap(key) {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = JSON.parse(localStorage.getItem(key) || '{}');
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    const out = {};
+    Object.entries(raw).forEach(([k, v]) => {
+      const id = String(k || '').trim();
+      if (!id) return;
+      out[id] = !!v;
+    });
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 function normalizeYoteiIdentityToken(value) {
   return String(value || '').trim().toLowerCase().replace(/[\s\u3000]+/g, '');
 }
@@ -619,6 +639,18 @@ function toYoteiTimeRangeLabel(row) {
   return '';
 }
 
+function toYoteiStartTimeMs(row) {
+  const direct = toEpochMs(row?.start_at || row?.start || row?.work_start_at);
+  if (direct > 0) return direct;
+  const dateStr = String(row?.date || row?.scheduled_date || '').trim();
+  const hhmm = toYoteiSingleTimeLabel(row?.start_time);
+  if (dateStr && hhmm) {
+    const t = Date.parse(`${dateStr}T${hhmm}:00+09:00`);
+    if (!Number.isNaN(t)) return t;
+  }
+  return toYoteiSortTimeMs(row);
+}
+
 function toYoteiYagouLabel(row) {
   const candidates = [
     row?.yagou_name,
@@ -665,6 +697,11 @@ function isYoteiCanceledLike(value) {
 function isYoteiCompletedLike(value) {
   const s = String(value || '').trim().toLowerCase();
   return s === 'kanryou' || s === 'complete' || s === 'completed' || s === 'done' || s === '完了';
+}
+
+function isYoteiRunningLike(value) {
+  const s = String(value || '').trim().toLowerCase();
+  return s === 'shinkou' || s === 'working' || s === 'in_progress' || s === 'progress' || s === '実行中' || s === '進行中';
 }
 
 function isYoteiUnfinished(row) {
@@ -766,9 +803,24 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   );
   const [cleaningTodayNoticesLoading, setCleaningTodayNoticesLoading] = useState(false);
   const [cleaningTodayNotices, setCleaningTodayNotices] = useState([]);
+  const [cleaningNoticeRunningMap, setCleaningNoticeRunningMap] = useState(() =>
+    readStoredBooleanMap(CLEANING_NOTICE_RUNNING_STORAGE_KEY)
+  );
+  const [cleaningNoticeSavingMap, setCleaningNoticeSavingMap] = useState({});
+  const [cleaningNoticeSlideMap, setCleaningNoticeSlideMap] = useState({});
+  const [cleaningNoticeNowMs, setCleaningNoticeNowMs] = useState(() => Date.now());
+  const [cleaningStartConfirm, setCleaningStartConfirm] = useState(null);
+  const [cleaningStartConfirmSaving, setCleaningStartConfirmSaving] = useState(false);
   const fileboxInputRef = useRef(null);
   const fileboxLayoutRef = useRef(null);
   const fileboxShellRef = useRef(null);
+  const cleaningNoticeSwipeRef = useRef({
+    id: '',
+    pointerId: null,
+    startX: 0,
+    startOffset: 0,
+    moved: false,
+  });
   const dashboardResizeRef = useRef({
     startX: 0,
     explorerWidth: DASHBOARD_EXPLORER_WIDTH_DEFAULT,
@@ -802,6 +854,189 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     }
   };
 
+  const toggleCleaningNoticeRunning = useCallback(async (notice, checked) => {
+    const id = String(notice?.id || '').trim();
+    if (!id) return false;
+    const previous = !!cleaningNoticeRunningMap[id];
+    const idCandidates = Array.from(new Set(
+      (Array.isArray(notice?.idCandidates) ? notice.idCandidates : [id])
+        .map((v) => String(v || '').trim())
+        .filter(Boolean)
+    ));
+    const nextJokyo = checked ? 'working' : 'mikanryo';
+
+    setCleaningNoticeRunningMap((prev) => ({ ...prev, [id]: !!checked }));
+    setCleaningNoticeSavingMap((prev) => ({ ...prev, [id]: true }));
+    let saved = false;
+    try {
+      const base = YOTEI_API_BASE.replace(/\/$/, '');
+      let lastErr = '';
+      for (const candidateId of idCandidates) {
+        const res = await fetch(`${base}/yotei/${encodeURIComponent(candidateId)}`, {
+          method: 'PUT',
+          headers: {
+            ...authHeaders(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jokyo: nextJokyo,
+            ugoki_jokyo: nextJokyo,
+            ugoki_jotai: nextJokyo,
+          }),
+        });
+        if (res.ok) {
+          saved = true;
+          break;
+        }
+        const text = await res.text().catch(() => '');
+        lastErr = `HTTP ${res.status}${text ? ` ${text}` : ''}`;
+      }
+      if (!saved) throw new Error(lastErr || 'yotei更新に失敗しました');
+      setCleaningTodayNotices((prev) =>
+        (Array.isArray(prev) ? prev : []).map((row) => (
+          row?.id === id
+            ? { ...row, runStatus: checked ? 'shinkou' : 'mikanryo' }
+            : row
+        ))
+      );
+      setCleaningNoticeSlideMap((prev) => ({ ...prev, [id]: checked ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX }));
+    } catch (error) {
+      setCleaningNoticeRunningMap((prev) => ({ ...prev, [id]: previous }));
+      setCleaningNoticeSlideMap((prev) => ({ ...prev, [id]: previous ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX }));
+      window.alert(`実行状態の保存に失敗しました: ${String(error?.message || error || 'unknown error')}`);
+    } finally {
+      setCleaningNoticeSavingMap((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+    return saved;
+  }, [cleaningNoticeRunningMap]);
+
+  const beginCleaningNoticeSwipe = useCallback((item, e) => {
+    if (e.button != null && e.button !== 0) return;
+    const id = String(item?.id || '').trim();
+    if (!id || cleaningNoticeSavingMap[id]) return;
+    const currentOffset = Number(
+      cleaningNoticeSlideMap[id] ?? (cleaningNoticeRunningMap[id] ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX)
+    );
+    cleaningNoticeSwipeRef.current = {
+      id,
+      pointerId: e.pointerId,
+      startX: Number(e.clientX || 0),
+      startOffset: Number.isFinite(currentOffset) ? currentOffset : -CLEANING_NOTICE_SWIPE_MAX,
+      moved: false,
+    };
+    if (typeof e.currentTarget?.setPointerCapture === 'function') {
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* noop */ }
+    }
+  }, [cleaningNoticeRunningMap, cleaningNoticeSavingMap, cleaningNoticeSlideMap]);
+
+  const moveCleaningNoticeSwipe = useCallback((item, e) => {
+    const id = String(item?.id || '').trim();
+    const st = cleaningNoticeSwipeRef.current;
+    if (!id || st.id !== id || st.pointerId !== e.pointerId) return;
+    const dx = Number(e.clientX || 0) - st.startX;
+    if (Math.abs(dx) >= 4) st.moved = true;
+    const nextOffset = Math.max(-CLEANING_NOTICE_SWIPE_MAX, Math.min(CLEANING_NOTICE_SWIPE_MAX, st.startOffset + dx));
+    setCleaningNoticeSlideMap((prev) => ({ ...prev, [id]: nextOffset }));
+  }, []);
+
+  const openCleaningNoticeDetail = useCallback((item) => {
+    const qs = new URLSearchParams();
+    qs.set('view', 'single');
+    qs.set('yotei_id', String(item?.id || ''));
+    if (item?.dateISO) qs.set('date', item.dateISO);
+    startTransition(`/jobs/cleaning/yotei?${qs.toString()}`);
+  }, [startTransition]);
+
+  const closeCleaningStartConfirm = useCallback(() => {
+    const notice = cleaningStartConfirm?.notice;
+    const id = String(notice?.id || '').trim();
+    if (id) {
+      setCleaningNoticeSlideMap((prev) => ({
+        ...prev,
+        [id]: CLEANING_NOTICE_SWIPE_MAX * -1,
+      }));
+    }
+    setCleaningStartConfirm(null);
+    setCleaningStartConfirmSaving(false);
+  }, [cleaningStartConfirm]);
+
+  const confirmCleaningStart = useCallback(async () => {
+    const notice = cleaningStartConfirm?.notice;
+    if (!notice) return;
+    setCleaningStartConfirmSaving(true);
+    const ok = await toggleCleaningNoticeRunning(notice, true);
+    setCleaningStartConfirmSaving(false);
+    if (!ok) {
+      closeCleaningStartConfirm();
+      return;
+    }
+    setCleaningStartConfirm(null);
+    openCleaningNoticeDetail(notice);
+  }, [cleaningStartConfirm, closeCleaningStartConfirm, openCleaningNoticeDetail, toggleCleaningNoticeRunning]);
+
+  const endCleaningNoticeSwipe = useCallback(async (item, e, options = {}) => {
+    const { openDetailOnTap = false } = options || {};
+    const id = String(item?.id || '').trim();
+    const st = cleaningNoticeSwipeRef.current;
+    if (!id || st.id !== id || st.pointerId !== e.pointerId) return;
+    const deltaX = Math.abs(Number(e.clientX || 0) - Number(st.startX || 0));
+    const isTap = !st.moved && deltaX < 6;
+    const nowOffset = Number(
+      cleaningNoticeSlideMap[id] ?? (cleaningNoticeRunningMap[id] ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX)
+    );
+    const shouldRun = nowOffset >= CLEANING_NOTICE_SWIPE_THRESHOLD;
+    const shouldWait = nowOffset <= -CLEANING_NOTICE_SWIPE_THRESHOLD;
+    const wasRunning = !!cleaningNoticeRunningMap[id];
+
+    if (isTap && openDetailOnTap) {
+      setCleaningNoticeSlideMap((prev) => ({ ...prev, [id]: wasRunning ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX }));
+      cleaningNoticeSwipeRef.current = { id: '', pointerId: null, startX: 0, startOffset: 0, moved: false };
+      if (typeof e.currentTarget?.releasePointerCapture === 'function') {
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+      }
+      openCleaningNoticeDetail(item);
+      return;
+    }
+
+    const canStart = Number(item?.readyAtMs || 0) > 0 ? cleaningNoticeNowMs >= Number(item.readyAtMs) : true;
+    if (shouldRun && !wasRunning && !canStart) {
+      setCleaningNoticeSlideMap((prev) => ({ ...prev, [id]: wasRunning ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX }));
+      if (typeof e.currentTarget?.releasePointerCapture === 'function') {
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+      }
+      window.alert('開始30分前になるまで実行中にできません');
+      cleaningNoticeSwipeRef.current = { id: '', pointerId: null, startX: 0, startOffset: 0, moved: false };
+      return;
+    }
+
+    if (shouldRun && !wasRunning) {
+      setCleaningNoticeSlideMap((prev) => ({ ...prev, [id]: CLEANING_NOTICE_SWIPE_MAX }));
+      setCleaningStartConfirm({ notice: item });
+      cleaningNoticeSwipeRef.current = { id: '', pointerId: null, startX: 0, startOffset: 0, moved: false };
+      if (typeof e.currentTarget?.releasePointerCapture === 'function') {
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+      }
+      return;
+    }
+
+    const nextRunning = shouldRun ? true : (shouldWait ? false : wasRunning);
+    setCleaningNoticeSlideMap((prev) => ({
+      ...prev,
+      [id]: nextRunning ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX,
+    }));
+    if (nextRunning !== wasRunning) {
+      await toggleCleaningNoticeRunning(item, nextRunning);
+    }
+    cleaningNoticeSwipeRef.current = { id: '', pointerId: null, startX: 0, startOffset: 0, moved: false };
+    if (typeof e.currentTarget?.releasePointerCapture === 'function') {
+      try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+    }
+  }, [cleaningNoticeNowMs, cleaningNoticeRunningMap, cleaningNoticeSlideMap, openCleaningNoticeDetail, toggleCleaningNoticeRunning]);
+
   if (!valid) {
     return (
       <div style={{ padding: 24, textAlign: 'center' }}>
@@ -813,6 +1048,9 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
 
   const currentAction = actions?.find((a) => a.id === tab);
   const showCleaningEntranceNotices = !useSidebarNav && jobKey === 'cleaning' && !tab;
+  const cleaningLoginName = String(
+    user?.display_name || user?.name || user?.username || user?.user_name || user?.email || '担当者'
+  ).trim() || '担当者';
   const showLocalSettingsPanel = !useSidebarNav && currentAction?.id === 'settings';
   const useSimpleCleaningSubHotbar = !useSidebarNav && jobKey === 'cleaning';
   // 遷移時の「MODE CHANGE」演出は無効化したいので、Visualizer の log モードは使わない。
@@ -886,8 +1124,6 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     const toYmd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const rangeFromYmd = toYmd(rangeFromDate);
     const rangeToYmd = toYmd(rangeToDate);
-    const nowMs = Date.now();
-
     const loadTodayNotices = async () => {
       setCleaningTodayNoticesLoading(true);
       try {
@@ -940,20 +1176,24 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
         const unfinishedRows = filtered.filter((row) => isYoteiUnfinished(row));
         const notices = unfinishedRows
           .slice()
-          .sort((a, b) => {
-            const aMs = toYoteiSortTimeMs(a);
-            const bMs = toYoteiSortTimeMs(b);
-            const aFuture = aMs >= nowMs;
-            const bFuture = bMs >= nowMs;
-            if (aFuture !== bFuture) return aFuture ? -1 : 1;
-            if (aFuture) return aMs - bMs;
-            return bMs - aMs;
-          })
-          .slice(0, 5)
+          .sort((a, b) => toYoteiSortTimeMs(a) - toYoteiSortTimeMs(b))
+          .slice(-5)
           .map((row, idx) => {
-            const id = String(row?.yotei_id || row?.schedule_id || row?.id || `yotei-${idx}`).trim();
+            const idCandidates = Array.from(new Set(
+              [
+                row?.id,
+                row?.yotei_id,
+                row?.schedule_id,
+              ].map((v) => String(v || '').trim()).filter(Boolean)
+            ));
+            const id = String(idCandidates[0] || `yotei-${idx}`).trim();
             const ymd = toYmdLabelFromRow(row);
-            const time = toYoteiTimeRangeLabel(row) || toYoteiTimeLabel(row);
+            const rangeTime = toYoteiTimeRangeLabel(row) || toYoteiTimeLabel(row);
+            const startTime = toYoteiSingleTimeLabel(row?.start_time || row?.start_at || row?.start || row?.work_start_at);
+            const endTime = toYoteiSingleTimeLabel(row?.end_time || row?.end_at || row?.end || row?.work_end_at);
+            const rangeParts = String(rangeTime || '').split('〜').map((s) => String(s || '').trim());
+            const startTimeLabel = startTime || rangeParts[0] || '--:--';
+            const endTimeLabel = endTime || (rangeParts.length > 1 ? rangeParts[1] : '') || '--:--';
             const yagou = toYoteiYagouLabel(row);
             const tenpo = String(
               row?.tenpo_name
@@ -962,18 +1202,36 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
               || '-'
             ).trim();
             const amount = parseYoteiAmountValue(row);
+            const runStatus = isYoteiRunningLike(
+              row?.jokyo || row?.ugoki_jokyo || row?.ugoki_jotai || row?.ugoki_status || row?.status
+            ) ? 'shinkou' : 'mikanryo';
+            const startAtMs = toYoteiStartTimeMs(row);
             return {
               id,
+              idCandidates,
+              dateISO: ymd || '',
               dateLabel: ymd ? ymd.replace(/-/g, '/') : '----/--/--',
               yagou: yagou || '-',
               tenpo: tenpo || '-',
-              time: time || '--:--',
+              time: `${startTimeLabel}〜${endTimeLabel}`,
+              startTimeLabel,
+              endTimeLabel,
               amountLabel: amount > 0 ? `¥${amount.toLocaleString('ja-JP')}` : '-',
+              runStatus,
+              startAtMs,
+              readyAtMs: startAtMs > 0 ? (startAtMs - 30 * 60 * 1000) : 0,
             };
           });
 
         if (cancelled) return;
         setCleaningTodayNotices(notices);
+        setCleaningNoticeRunningMap((prev) => {
+          const next = { ...(prev || {}) };
+          notices.forEach((item) => {
+            next[item.id] = item.runStatus === 'shinkou';
+          });
+          return next;
+        });
       } catch (error) {
         if (!cancelled) {
           setCleaningTodayNotices([]);
@@ -988,6 +1246,52 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       cancelled = true;
     };
   }, [showCleaningEntranceNotices, isAuthenticated, user, authz?.workerId, authz?.jinzaiId]);
+
+  useEffect(() => {
+    if (!showCleaningEntranceNotices) return undefined;
+    const timer = window.setInterval(() => {
+      setCleaningNoticeNowMs(Date.now());
+    }, 30000);
+    return () => window.clearInterval(timer);
+  }, [showCleaningEntranceNotices]);
+
+  useEffect(() => {
+    if (!showCleaningEntranceNotices && cleaningStartConfirm) {
+      setCleaningStartConfirm(null);
+      setCleaningStartConfirmSaving(false);
+    }
+  }, [showCleaningEntranceNotices, cleaningStartConfirm]);
+
+  useEffect(() => {
+    setCleaningNoticeSlideMap((prev) => {
+      const next = { ...(prev || {}) };
+      const alive = new Set();
+      (Array.isArray(cleaningTodayNotices) ? cleaningTodayNotices : []).forEach((item) => {
+        const id = String(item?.id || '').trim();
+        if (!id) return;
+        alive.add(id);
+        const activeDrag = cleaningNoticeSwipeRef.current?.id === id;
+        if (activeDrag) return;
+        next[id] = cleaningNoticeRunningMap[id] ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX;
+      });
+      Object.keys(next).forEach((id) => {
+        if (!alive.has(id)) delete next[id];
+      });
+      return next;
+    });
+  }, [cleaningTodayNotices, cleaningNoticeRunningMap]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(
+        CLEANING_NOTICE_RUNNING_STORAGE_KEY,
+        JSON.stringify(cleaningNoticeRunningMap || {})
+      );
+    } catch {
+      // noop
+    }
+  }, [cleaningNoticeRunningMap]);
 
   useEffect(() => {
     if (!useSidebarNav) return;
@@ -2293,23 +2597,91 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                 <div className="job-entrance-cleaning-notice">{t('未完了の予定はありません')}</div>
               ) : (
                 cleaningTodayNotices.map((item) => (
-                  <button
+                  <div
                     key={item.id}
-                    type="button"
-                    className="job-entrance-cleaning-notice"
-                    onClick={() => startTransition('/jobs/cleaning/yotei')}
-                    disabled={isTransitioning}
+                    className={`job-entrance-cleaning-notice is-interactive ${cleaningNoticeRunningMap[item.id] ? 'is-running' : ''}`}
                     title={`${item.dateLabel} ${item.time} / ${item.yagou} / ${item.tenpo} / ${item.amountLabel}`}
                   >
-                    <span className="notice-day">{item.dateLabel}</span>
-                    <span className="notice-yagou">{item.yagou}</span>
-                    <span className="notice-tenpo">{item.tenpo}</span>
-                    <span className="notice-time">{item.time}</span>
-                    <span className="notice-amount">{item.amountLabel}</span>
-                  </button>
+                    {(() => {
+                      const isRunning = !!cleaningNoticeRunningMap[item.id];
+                      const gateClass = isRunning ? 'is-running' : 'is-waiting';
+                      const slideOffset = Math.max(
+                        -CLEANING_NOTICE_SWIPE_MAX,
+                        Math.min(
+                          CLEANING_NOTICE_SWIPE_MAX,
+                          Number(cleaningNoticeSlideMap[item.id] ?? (isRunning ? CLEANING_NOTICE_SWIPE_MAX : -CLEANING_NOTICE_SWIPE_MAX))
+                        )
+                      );
+                      const backStateClass = slideOffset > 0
+                        ? 'show-left'
+                        : (slideOffset < 0 ? 'show-right' : (isRunning ? 'show-left' : 'show-right'));
+                      return (
+                        <>
+                          <div className="notice-swipe-bg" aria-hidden="true" />
+                          <div className={`notice-swipe-back notice-swipe-back-left is-running ${backStateClass}`} aria-hidden="true">
+                            実行中
+                          </div>
+                          <div className={`notice-swipe-back notice-swipe-back-right is-waiting ${backStateClass}`} aria-hidden="true">
+                            待機中
+                          </div>
+                          <div
+                            className={`notice-swipe-body ${gateClass}`}
+                            style={{ transform: `translateX(${slideOffset}px)` }}
+                            onPointerDown={(e) => beginCleaningNoticeSwipe(item, e)}
+                            onPointerMove={(e) => moveCleaningNoticeSwipe(item, e)}
+                            onPointerUp={(e) => { endCleaningNoticeSwipe(item, e, { openDetailOnTap: true }); }}
+                            onPointerCancel={(e) => { endCleaningNoticeSwipe(item, e); }}
+                          >
+                            <span className="notice-day">{item.dateLabel}</span>
+                            <span className="notice-time-stack">
+                              <span className="notice-time-line">{item.startTimeLabel}</span>
+                              <span className="notice-time-line">{item.endTimeLabel}</span>
+                            </span>
+                            <span className="notice-shop">
+                              <span className="notice-yagou">{item.yagou}</span>
+                              <span className="notice-tenpo">{item.tenpo}</span>
+                            </span>
+                            <span className="notice-amount">{item.amountLabel}</span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 ))
               )}
             </section>
+          ) : null}
+
+          {showCleaningEntranceNotices && cleaningStartConfirm ? (
+            <div className="cleaning-start-confirm-overlay" role="dialog" aria-modal="true" aria-label="作業開始確認">
+              <div className="cleaning-start-confirm-card">
+                <div className="cleaning-start-confirm-head">MISOGI</div>
+                <p className="cleaning-start-confirm-message">{`${cleaningLoginName}様。作業開始いたしますか？`}</p>
+                <div className="cleaning-start-confirm-meta">
+                  <span>{cleaningStartConfirm.notice?.dateLabel || '-'}</span>
+                  <span>{`${cleaningStartConfirm.notice?.yagou || '-'} / ${cleaningStartConfirm.notice?.tenpo || '-'}`}</span>
+                  <span>{cleaningStartConfirm.notice?.time || '-'}</span>
+                </div>
+                <div className="cleaning-start-confirm-actions">
+                  <button
+                    type="button"
+                    className="cleaning-start-confirm-btn yes"
+                    onClick={confirmCleaningStart}
+                    disabled={cleaningStartConfirmSaving}
+                  >
+                    はい
+                  </button>
+                  <button
+                    type="button"
+                    className="cleaning-start-confirm-btn no"
+                    onClick={closeCleaningStartConfirm}
+                    disabled={cleaningStartConfirmSaving}
+                  >
+                    いいえ
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : null}
 
           {!useSidebarNav && jobKey !== 'cleaning' ? (

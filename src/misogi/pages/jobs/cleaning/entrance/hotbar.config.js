@@ -14,6 +14,7 @@ export const CLEANING_HOTBAR = [
     label: '予定',
     subItems: [
       { id: 'my-yotei', label: '予定一覧', path: '/jobs/cleaning/yotei' },
+      { id: 'my-sales', label: 'マイページ（売上）', path: '/jobs/cleaning/mypage' },
       { id: 'availability-declare', label: '休み申請カレンダー', path: '/jobs/cleaning/availability-declare' },
     ],
   },

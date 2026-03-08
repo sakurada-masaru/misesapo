@@ -26,13 +26,8 @@ const JINZAI_API_BASE = IS_LOCAL
 const YAKUSOKU_FALLBACK_BASE = normalizeGatewayBase(import.meta.env?.VITE_YAKUSOKU_API_BASE, API_BASE);
 
 const WORK_TYPES = [
-    '定期清掃（1ヶ月）',
-    '定期清掃（2ヶ月）',
-    '定期清掃（3ヶ月）',
-    '定期清掃（6ヶ月）',
-    '定期清掃（12ヶ月）',
+    '定期清掃',
     'スポット清掃',
-    'その他'
 ];
 
 const AKI_MARKS = {
@@ -142,6 +137,15 @@ function parseTimeRangeText(raw) {
     return { start: m[1], end: m[2] };
 }
 
+function normalizeWorkType(raw, yakusokuType = '') {
+    const src = String(raw || '').trim();
+    const yType = String(yakusokuType || '').trim().toLowerCase();
+    if (src.includes('スポット') || src.includes('単発') || yType === 'tanpatsu' || yType === 'spot') {
+        return 'スポット清掃';
+    }
+    return '定期清掃';
+}
+
 function minutesToTimeText(v) {
     const n = Number(v);
     if (!Number.isFinite(n)) return '';
@@ -174,6 +178,43 @@ function normalizeYoteiRow(row) {
         jotai: canceled ? 'torikeshi' : (jotaiRaw || 'yuko'),
         status: canceled ? 'torikeshi' : (statusRaw || jotaiRaw || 'yuko'),
     };
+}
+
+function parseAmountCandidates(candidates) {
+    for (const v of candidates) {
+        if (v == null || v === '') continue;
+        const n = Number(String(v).replace(/[^\d.-]/g, ''));
+        if (Number.isFinite(n) && n > 0) return n;
+    }
+    return 0;
+}
+
+function resolveYoteiUnitPrice(row, linkedYakusoku = null) {
+    const y = linkedYakusoku && typeof linkedYakusoku === 'object' ? linkedYakusoku : null;
+    return parseAmountCandidates([
+        row?.unit_price,
+        row?.price,
+        row?.amount,
+        row?.kingaku,
+        row?.total,
+        row?.total_amount,
+        row?.estimate_amount,
+        row?.yotei_amount,
+        row?.service_price,
+        row?.yakusoku_price,
+        row?.uriage_yotei,
+        y?.price,
+        y?.unit_price,
+        y?.amount,
+        y?.service_price,
+        y?.yakusoku_price,
+    ]);
+}
+
+function formatYen(amount) {
+    const n = Number(amount || 0);
+    if (!Number.isFinite(n) || n <= 0) return '-';
+    return `¥${Math.round(n).toLocaleString('ja-JP')}`;
 }
 
 function resolveYoteiRecordId(item) {
@@ -256,7 +297,7 @@ function demoDataFor({ date, view }) {
         yakusoku: yakusokus[yakIdx] || null,
         service_id: services[serviceIdx]?.service_id,
         service_name: services[serviceIdx]?.name,
-        work_type: services[serviceIdx]?.name || 'その他',
+        work_type: normalizeWorkType(services[serviceIdx]?.name, yakusokus[yakIdx]?.type),
         memo: 'デモ予定',
         jotai,
     });
@@ -525,11 +566,26 @@ export default function AdminYoteiTimelinePage() {
                         const y = it.yakusoku || null;
                         const yid = it.yakusoku_id || y?.yakusoku_id || y?.id;
                         if (!yid || map.has(yid)) return;
+                        const svcIds = Array.isArray(it?.service_ids)
+                            ? it.service_ids.map((x) => String(x || '').trim()).filter(Boolean)
+                            : [];
+                        if (!svcIds.length && it?.service_id) svcIds.push(String(it.service_id).trim());
+                        const svcNames = Array.isArray(it?.service_names)
+                            ? it.service_names.map((x) => String(x || '').trim()).filter(Boolean)
+                            : [];
+                        if (!svcNames.length && it?.service_name) svcNames.push(String(it.service_name).trim());
+                        if (!svcNames.length && it?.work_type) svcNames.push(String(it.work_type).trim());
                         map.set(yid, {
                             yakusoku_id: yid,
                             tenpo_id: it.tenpo_id || y?.tenpo_id || '',
                             tenpo_name: it.tenpo_name || y?.tenpo_name || '',
                             type: y?.type || 'teiki',
+                            price: resolveYoteiUnitPrice(it, y),
+                            service_ids: svcIds,
+                            service_names: svcNames,
+                            service_id: svcIds[0] || '',
+                            service_name: svcNames[0] || '',
+                            work_type: normalizeWorkType(it?.work_type || svcNames[0] || '', y?.type),
                         });
                     });
                     setYakusokus(Array.from(map.values()));
@@ -544,6 +600,16 @@ export default function AdminYoteiTimelinePage() {
         const start = dayjs(`2000-01-01T${startTime}:00`);
         return start.add(Number(durationMin || 0), 'minute').format('HH:mm');
     }, []);
+
+    const yakusokuById = useMemo(() => {
+        const map = new Map();
+        (yakusokus || []).forEach((y) => {
+            const id = String(y?.yakusoku_id || y?.id || '').trim();
+            if (!id) return;
+            map.set(id, y);
+        });
+        return map;
+    }, [yakusokus]);
 
     const fetchServices = useCallback(async () => {
         if (isDemo) return;
@@ -766,8 +832,9 @@ export default function AdminYoteiTimelinePage() {
     const statusFor = useCallback((s) => {
         if (isTorikeshiYoteiRow(s)) return 'torikeshi';
         const u = ugokiByYoteiId.get(itemYoteiId(s));
+        // 清掃員側で yotei に保存された実行状態（jokyo）を最優先。
         return normalizeTimelineStatus(
-            u?.jokyo || u?.jotai || s?.ugoki_jokyo || s?.ugoki_jotai || s?.jokyo
+            s?.jokyo || s?.ugoki_jokyo || s?.ugoki_jotai || u?.jokyo || u?.jotai
         );
     }, [ugokiByYoteiId]);
 
@@ -1077,14 +1144,16 @@ export default function AdminYoteiTimelinePage() {
     const applyYakusokuServicesToModal = useCallback((prev, yakusoku) => {
         if (!prev) return prev;
         const nextSvc = resolveServicesFromYakusoku(yakusoku);
-        if (!nextSvc.service_ids.length && !nextSvc.service_names.length) return prev;
-
         const prevSvc = normalizeServiceSelection(prev);
-        const sameIds = prevSvc.service_ids.join('|') === nextSvc.service_ids.join('|');
-        const sameNames = prevSvc.service_names.join('|') === nextSvc.service_names.join('|');
-        const nextPrimaryId = nextSvc.service_ids[0] || '';
-        const nextPrimaryName = nextSvc.service_names[0] || '';
-        const nextWorkType = nextPrimaryName || prev.work_type || '';
+        const usePrevServiceSnapshot = !nextSvc.service_ids.length && !nextSvc.service_names.length;
+        const effectiveSvc = usePrevServiceSnapshot ? prevSvc : nextSvc;
+
+        const sameIds = prevSvc.service_ids.join('|') === effectiveSvc.service_ids.join('|');
+        const sameNames = prevSvc.service_names.join('|') === effectiveSvc.service_names.join('|');
+        const nextPrimaryId = effectiveSvc.service_ids[0] || '';
+        const nextPrimaryName = effectiveSvc.service_names[0] || '';
+        const nextWorkType = normalizeWorkType(prev.work_type, yakusoku?.type);
+        const nextUnitPrice = resolveYoteiUnitPrice(prev, yakusoku);
         let nextEndTime = prev.end_time;
 
         if (prev.isNew && nextPrimaryId) {
@@ -1103,6 +1172,7 @@ export default function AdminYoteiTimelinePage() {
             String(prev.service_id || '') === nextPrimaryId &&
             String(prev.service_name || '') === nextPrimaryName &&
             String(prev.work_type || '') === nextWorkType &&
+            Number(prev.unit_price || 0) === Number(nextUnitPrice || 0) &&
             String(prev.end_time || '') === String(nextEndTime || '')
         ) {
             return prev;
@@ -1110,11 +1180,12 @@ export default function AdminYoteiTimelinePage() {
 
         return {
             ...prev,
-            service_ids: nextSvc.service_ids,
-            service_names: nextSvc.service_names,
+            service_ids: effectiveSvc.service_ids,
+            service_names: effectiveSvc.service_names,
             service_id: nextPrimaryId,
             service_name: nextPrimaryName,
             work_type: nextWorkType,
+            unit_price: Number(nextUnitPrice || 0) || 0,
             end_time: nextEndTime,
         };
     }, [resolveServicesFromYakusoku, normalizeServiceSelection, services, calcEndTimeByDuration]);
@@ -1267,7 +1338,7 @@ export default function AdminYoteiTimelinePage() {
                 service_names: names,
                 service_id: ids[0] || '',
                 service_name: names[0] || '',
-                work_type: ids.length ? (names[0] || prev.work_type) : prev.work_type,
+                work_type: normalizeWorkType(prev.work_type),
                 end_time:
                     prev.isNew && checked && Number(svc?.default_duration_min || 0) > 0 && ids.length === 1
                         ? calcEndTimeByDuration(prev.start_time, svc.default_duration_min)
@@ -1556,7 +1627,8 @@ export default function AdminYoteiTimelinePage() {
             yagou_id: '',
             torihikisaki_name: '',
             yagou_name: '',
-            work_type: '定期清掃（1ヶ月）',
+            work_type: '定期清掃',
+            unit_price: 0,
             memo: '',
             jotai: 'yuko',
             handoff_checks: {
@@ -1620,17 +1692,20 @@ export default function AdminYoteiTimelinePage() {
 
     useEffect(() => {
         const yid = String(modalData?.yakusoku_id || '').trim();
-        if (!modalData?.isNew || !yid) return;
+        if (!modalData || !yid) return;
         const selectedYakusoku = (yakusokus || []).find(
             (y) => String(y?.yakusoku_id || '').trim() === yid
         );
         if (!selectedYakusoku) return;
         setModalData((prev) => {
-            if (!prev || !prev.isNew) return prev;
+            if (!prev) return prev;
             if (String(prev?.yakusoku_id || '').trim() !== yid) return prev;
+            const prevSvc = normalizeServiceSelection(prev);
+            const hasSnapshot = prevSvc.service_ids.length > 0 || prevSvc.service_names.length > 0;
+            if (!prev.isNew && hasSnapshot) return prev;
             return applyYakusokuServicesToModal(prev, selectedYakusoku);
         });
-    }, [modalData?.isNew, modalData?.yakusoku_id, yakusokus, applyYakusokuServicesToModal]);
+    }, [modalData, yakusokus, normalizeServiceSelection, applyYakusokuServicesToModal]);
 
     const openEditModal = (s) => {
         const { start, end } = resolveScheduleRange(s);
@@ -1665,6 +1740,8 @@ export default function AdminYoteiTimelinePage() {
             yagou_id: s?.yagou_id || tenpoMeta?.yagou_id || '',
             torihikisaki_name: s?.torihikisaki_name || tenpoMeta?.torihikisaki_name || '',
             yagou_name: s?.yagou_name || tenpoMeta?.yagou_name || '',
+            work_type: normalizeWorkType(s?.work_type, s?.yakusoku?.type),
+            unit_price: resolveYoteiUnitPrice(s, s?.yakusoku),
             start_time: start.isValid() ? start.format('HH:mm') : (s.start_time || '20:00'),
             end_time: end.isValid() ? end.format('HH:mm') : (s.end_time || '22:00'),
             handoff_checks: {
@@ -1786,7 +1863,8 @@ export default function AdminYoteiTimelinePage() {
                 service_names: serviceSelection.service_names,
                 service_id: serviceSelection.service_ids[0] || '',
                 service_name: serviceSelection.service_names[0] || '',
-                work_type: String(modalData?.work_type || '').trim(),
+                work_type: normalizeWorkType(modalData?.work_type || ''),
+                unit_price: Number(modalData?.unit_price || 0) || 0,
                 memo: String(modalData?.memo || '').trim(),
                 notes: String(modalData?.memo || modalData?.notes || '').trim(),
                 description: String(modalData?.memo || modalData?.description || '').trim(),
@@ -2084,6 +2162,8 @@ export default function AdminYoteiTimelinePage() {
                                         {todaySegments.night.items.map((s) => {
                                             const warn = warningLevelFor(s);
                                             const status = statusFor(s);
+                                            const linkedYakusoku = yakusokuById.get(String(s?.yakusoku_id || '').trim()) || s?.yakusoku || null;
+                                            const subtotalLabel = formatYen(resolveYoteiUnitPrice(s, linkedYakusoku));
                                             return (
                                                 <button
                                                     key={`${s.id}-n`}
@@ -2095,8 +2175,11 @@ export default function AdminYoteiTimelinePage() {
                                                     }}
                                                     onClick={() => openEditModal(s)}
                                                 >
+                                                    {status === 'shinkou' ? (
+                                                        <div className="today-rail-running">実行中</div>
+                                                    ) : null}
                                                     <div className="today-rail-time">{formatScheduleTime(s)}</div>
-                                                    <div className="today-rail-id">yotei ID: {resolveYoteiRecordId(s) || '-'}</div>
+                                                    <div className="today-rail-id">yotei ID: {resolveYoteiRecordId(s) || '-'} / 小計売り上げ: {subtotalLabel}</div>
                                                     <div className="today-rail-tenpo">{displayTenpoName(s)}</div>
                                                     <div className="today-rail-meta">
                                                         <span>{displayWorkerName(s)}</span>
@@ -2118,6 +2201,8 @@ export default function AdminYoteiTimelinePage() {
                                         {todaySegments.day.items.map((s) => {
                                             const warn = warningLevelFor(s);
                                             const status = statusFor(s);
+                                            const linkedYakusoku = yakusokuById.get(String(s?.yakusoku_id || '').trim()) || s?.yakusoku || null;
+                                            const subtotalLabel = formatYen(resolveYoteiUnitPrice(s, linkedYakusoku));
                                             return (
                                                 <button
                                                     key={`${s.id}-d`}
@@ -2129,8 +2214,11 @@ export default function AdminYoteiTimelinePage() {
                                                     }}
                                                     onClick={() => openEditModal(s)}
                                                 >
+                                                    {status === 'shinkou' ? (
+                                                        <div className="today-rail-running">実行中</div>
+                                                    ) : null}
                                                     <div className="today-rail-time">{formatScheduleTime(s)}</div>
-                                                    <div className="today-rail-id">yotei ID: {resolveYoteiRecordId(s) || '-'}</div>
+                                                    <div className="today-rail-id">yotei ID: {resolveYoteiRecordId(s) || '-'} / 小計売り上げ: {subtotalLabel}</div>
                                                     <div className="today-rail-tenpo">{displayTenpoName(s)}</div>
                                                     <div className="today-rail-meta">
                                                         <span>{displayWorkerName(s)}</span>
@@ -2550,12 +2638,16 @@ export default function AdminYoteiTimelinePage() {
                                                 const style = getPositionForSegment(s, 'night');
                                                 if (style.display === 'none') return null;
                                                 const status = statusFor(s);
+                                                const linkedYakusoku = yakusokuById.get(String(s?.yakusoku_id || '').trim()) || s?.yakusoku || null;
+                                                const subtotalLabel = formatYen(resolveYoteiUnitPrice(s, linkedYakusoku));
                                                 return (
                                                     <div key={`${s.id}-n`} className={`yotei-card status-${status}`} style={style} onClick={() => openEditModal(s)}>
+                                                        {status === 'shinkou' ? <div className="yotei-card-running">実行中</div> : null}
                                                         <div className="yotei-card-tenpo">{displayTenpoName(s)}</div>
                                                         <div className="yotei-card-time">{formatScheduleTime(s)}</div>
                                                         <div className="yotei-card-id">ID: {resolveYoteiRecordId(s) || '-'}</div>
-                                                        <div style={{ fontSize: '9px', opacity: 0.85 }}>UGOKI: {ugokiJotaiLabelFor(s)}</div>
+                                                        <div className="yotei-card-amount">小計売り上げ: {subtotalLabel}</div>
+                                                        <div className="yotei-card-ugoki">UGOKI: {ugokiJotaiLabelFor(s)}</div>
                                                     </div>
                                                 );
                                             })}
@@ -2567,12 +2659,16 @@ export default function AdminYoteiTimelinePage() {
                                                 const style = getPositionForSegment(s, 'day');
                                                 if (style.display === 'none') return null;
                                                 const status = statusFor(s);
+                                                const linkedYakusoku = yakusokuById.get(String(s?.yakusoku_id || '').trim()) || s?.yakusoku || null;
+                                                const subtotalLabel = formatYen(resolveYoteiUnitPrice(s, linkedYakusoku));
                                                 return (
                                                     <div key={`${s.id}-d`} className={`yotei-card status-${status}`} style={style} onClick={() => openEditModal(s)}>
+                                                        {status === 'shinkou' ? <div className="yotei-card-running">実行中</div> : null}
                                                         <div className="yotei-card-tenpo">{displayTenpoName(s)}</div>
                                                         <div className="yotei-card-time">{formatScheduleTime(s)}</div>
                                                         <div className="yotei-card-id">ID: {resolveYoteiRecordId(s) || '-'}</div>
-                                                        <div style={{ fontSize: '9px', opacity: 0.85 }}>UGOKI: {ugokiJotaiLabelFor(s)}</div>
+                                                        <div className="yotei-card-amount">小計売り上げ: {subtotalLabel}</div>
+                                                        <div className="yotei-card-ugoki">UGOKI: {ugokiJotaiLabelFor(s)}</div>
                                                     </div>
                                                 );
                                             })}
