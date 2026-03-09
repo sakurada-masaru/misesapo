@@ -51,6 +51,11 @@ function isWorkerReportPath(pathname) {
   return false;
 }
 
+function isStandaloneCustomerMyPagePath(pathname) {
+  const p = String(pathname || '/');
+  return p === '/customer/mypage' || p === '/customer/mypage/';
+}
+
 function labelForPath(pathname) {
   const p = String(pathname || '/');
 
@@ -88,6 +93,7 @@ function labelForPath(pathname) {
   // Jobs (v2)
   if (/^\/jobs\/[^/]+\/yotei$/.test(p)) return '予定';
   if (p === '/jobs/cleaning/mypage') return 'マイページ（売上）';
+  if (p === '/customer/mypage') return 'お客様マイページ';
 
   // Sales / Office / Cleaning / Dev (minimal)
   if (p.startsWith('/sales/')) return '営業';
@@ -120,6 +126,8 @@ function crumbsForPath(pathname) {
     crumbs.push({ to: '/jobs/cleaning/entrance', label: '清掃' });
   } else if (p.startsWith('/jobs/dev')) {
     crumbs.push({ to: '/jobs/dev/entrance', label: '開発' });
+  } else if (p.startsWith('/customer')) {
+    crumbs.push({ to: '/customer/mypage', label: 'お客様' });
   }
 
   const currentLabel = labelForPath(p);
@@ -142,6 +150,7 @@ export default function Breadcrumbs() {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location?.pathname || '/';
+  const hideStandaloneCustomerUi = isStandaloneCustomerMyPagePath(pathname);
 
   const hidden = isEntrancePath(pathname) || isWorkerReportPath(pathname);
   const hideCleaningHeader = isCleaningEntrancePath(pathname);
@@ -162,7 +171,7 @@ export default function Breadcrumbs() {
     setDashboardChatVisible(readStoredBoolean(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, true));
   }, [isAdminDashboard, pathname]);
 
-  if (hideCleaningHeader || hideAllCleaningWorkerHeader) {
+  if (hideStandaloneCustomerUi || hideCleaningHeader || hideAllCleaningWorkerHeader) {
     return null;
   }
 

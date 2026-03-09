@@ -17,6 +17,18 @@ function safeStr(v) {
   return String(v == null ? '' : v).trim();
 }
 
+function buildDummyStoreUrl(tenpoId = '') {
+  const id = encodeURIComponent(safeStr(tenpoId) || 'store');
+  return `https://store.misesapo.local/${id}`;
+}
+
+function resolveStoreUrl(rawUrl, tenpoId = '') {
+  const v = safeStr(rawUrl);
+  if (!v) return buildDummyStoreUrl(tenpoId);
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+}
+
 function isValidYmd(v) {
   return /^\d{4}-\d{2}-\d{2}$/.test(safeStr(v));
 }
@@ -996,6 +1008,13 @@ export default function MyYoteiListPage() {
                 yagou_name: safeStr(it?.yagou_name),
                 torihikisaki_name: safeStr(it?.torihikisaki_name),
                 address: safeStr(it?.address),
+                url: safeStr(
+                  it?.url
+                  || it?.site_url
+                  || it?.website
+                  || it?.google_map_url
+                  || it?.map_url
+                ),
                 phone: safeStr(it?.phone || it?.tel || it?.phone_number),
                 contact_method: safeStr(
                   it?.contact_method
@@ -1333,6 +1352,15 @@ export default function MyYoteiListPage() {
                     const yagouName = safeStr(it?.yagou_name || tenpoMeta?.yagou_name || yagouNameMap.get(yagouId));
                     const torihikisakiName = safeStr(it?.torihikisaki_name || tenpoMeta?.torihikisaki_name || torihikisakiNameMap.get(toriId));
                     const tenpoAddress = safeStr(it?.address || tenpoMeta?.address);
+                    const tenpoUrl = resolveStoreUrl(
+                      it?.url
+                      || it?.site_url
+                      || it?.website
+                      || it?.google_map_url
+                      || it?.map_url
+                      || tenpoMeta?.url,
+                      tenpoId
+                    );
                     const tenpoPhone = safeStr(it?.phone || it?.tel || it?.phone_number || tenpoMeta?.phone);
                     const contactMethod = safeStr(
                       it?.contact_method
@@ -1558,6 +1586,7 @@ export default function MyYoteiListPage() {
                                         <div><span className="k">屋号</span><span className="v">{dispYagou}</span></div>
                                         <div><span className="k">店舗</span><span className="v">{dispTenpo}</span></div>
                                         <div><span className="k">住所</span><span className="v">{tenpoAddress || '-'}</span></div>
+                                        <div><span className="k">URL</span><span className="v">{tenpoUrl || '-'}</span></div>
                                         <div><span className="k">電話番号</span><span className="v">{tenpoPhone || '-'}</span></div>
                                         <div><span className="k">連絡手段</span><span className="v">{contactMethod || '-'}</span></div>
                                         <div><span className="k">担当者</span><span className="v">{participantNameDisplay.length ? participantNameDisplay.join(', ') : (participantDisplay.length ? participantDisplay.join(', ') : (participantNames.length ? participantNames.join(', ') : (participantIds.length ? participantIds.join(', ') : '-')))}</span></div>
@@ -1688,6 +1717,7 @@ export default function MyYoteiListPage() {
                                     <div><span className="k">屋号</span><span className="v">{dispYagou}</span></div>
                                     <div><span className="k">店舗</span><span className="v">{dispTenpo}</span></div>
                                     <div><span className="k">住所</span><span className="v">{tenpoAddress || '-'}</span></div>
+                                    <div><span className="k">URL</span><span className="v">{tenpoUrl || '-'}</span></div>
                                     <div><span className="k">電話番号</span><span className="v">{tenpoPhone || '-'}</span></div>
                                     <div><span className="k">連絡手段</span><span className="v">{contactMethod || '-'}</span></div>
                                     <div><span className="k">担当者</span><span className="v">{participantNameDisplay.length ? participantNameDisplay.join(', ') : (participantDisplay.length ? participantDisplay.join(', ') : (participantNames.length ? participantNames.join(', ') : (participantIds.length ? participantIds.join(', ') : '-')))}</span></div>

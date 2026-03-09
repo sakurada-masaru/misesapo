@@ -36,6 +36,11 @@ const ACTIVITY_TYPES = [
   { value: 'other', label: 'その他' },
 ];
 
+function buildDummyStoreUrl(storeKey = '') {
+  const id = encodeURIComponent(String(storeKey || '').trim() || 'store');
+  return `https://store.misesapo.local/${id}`;
+}
+
 function emptyEntity(storeKey = '') {
   return {
     store: {
@@ -44,6 +49,7 @@ function emptyEntity(storeKey = '') {
       brand_name: '',
       store_name: '',
       address: '',
+      url: buildDummyStoreUrl(storeKey),
       tel: '',
       contact_person: '',
       email: '',
@@ -92,7 +98,7 @@ function serializeEntity(entity) {
 }
 
 function deserializeEntity(descriptionJson, workReportItem) {
-  let store = { key: '', company_name: '', brand_name: '', store_name: '', address: '', tel: '', contact_person: '', email: '' };
+  let store = { key: '', company_name: '', brand_name: '', store_name: '', address: '', url: '', tel: '', contact_person: '', email: '' };
   let pipeline = 'new';
   let note = '';
   let attachments = [];
@@ -103,6 +109,9 @@ function deserializeEntity(descriptionJson, workReportItem) {
     note = d.note || '';
     attachments = Array.isArray(d.attachments) ? d.attachments : [];
   } catch (_) { }
+  if (!String(store?.url || '').trim()) {
+    store.url = buildDummyStoreUrl(store?.key || workReportItem?.target_id || workReportItem?.target_label || '');
+  }
   return {
     store,
     pipeline,
@@ -530,6 +539,7 @@ export default function SalesStoreKartePage() {
               brand_name: storeData.brand_name || '',
               store_name: storeData.name || '',
               address: [storeData.address1, storeData.address2].filter(Boolean).join(' '),
+              url: storeData.url || storeData.website || storeData.site_url || buildDummyStoreUrl(decodedKey),
               tel: storeData.phone || '',
               contact_person: storeData.contact_person || '',
               email: storeData.email || '',
@@ -665,6 +675,15 @@ export default function SalesStoreKartePage() {
                 type="text"
                 value={entity.store?.address || ''}
                 onChange={(e) => updateEntity((e2) => ({ ...e2, store: { ...e2.store, address: e.target.value } }))}
+              />
+            </div>
+            <div className="sales-karte-field">
+              <label>URL</label>
+              <input
+                type="url"
+                value={entity.store?.url || ''}
+                onChange={(e) => updateEntity((e2) => ({ ...e2, store: { ...e2.store, url: e.target.value } }))}
+                placeholder="https://..."
               />
             </div>
             <div className="sales-karte-field">

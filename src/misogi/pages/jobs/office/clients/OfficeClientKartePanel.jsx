@@ -11,6 +11,11 @@ const STAFF_ROOM_OPTIONS = ['あり', 'なし', '不明'];
 const PLAN_SELECT_OPTIONS = ['毎月', '隔月', '3ヶ月', '6ヶ月', '年1', 'スポット', '未定'];
 const SELF_RATING_OPTIONS = ['良い', '普通', '要改善', '未評価'];
 
+function buildDummyStoreUrl(storeKey = '') {
+  const id = encodeURIComponent(String(storeKey || '').trim() || 'store');
+  return `https://store.misesapo.local/${id}`;
+}
+
 const FALLBACK_SERVICE_ITEMS = [
   { id: 1, title: 'グリストラップ', category: '厨房設備' },
   { id: 2, title: 'U字溝・グレーチング清掃', category: '厨房設備' },
@@ -40,6 +45,13 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
   const brandName = (safeStore && getBrandName) ? getBrandName(safeStore) : (safeStore.brand_name ?? ((brands.find(b => String(b.id) === String(safeStore.brand_id))?.name) ?? ''));
   const clientName = (safeStore && getClientName) ? getClientName(safeStore) : (safeStore.client_name ?? ((clients.find(c => String(c.id) === String(safeStore.client_id))?.name) ?? safeStore.company_name ?? ''));
   const address = (safeStore.address ?? [safeStore.postcode, safeStore.pref, safeStore.city, safeStore.address1, safeStore.address2].filter(Boolean).join(' ')) || '';
+  const storeUrl =
+    safeStore.url
+    || safeStore.website
+    || safeStore.site_url
+    || safeStore.map_url
+    || safeStore.google_map_url
+    || buildDummyStoreUrl(storeId || safeStore.id || safeStore.store_id || safeStore.tenpo_id || safeStore.name);
 
   const loadKarte = useCallback(() => {
     try {
@@ -207,6 +219,7 @@ const OfficeClientKartePanel = forwardRef(function OfficeClientKartePanel({ stor
             {field('店舗名', brandName ? `[${brandName}] ${safeStore.name}` : safeStore.name)}
             {field('担当者', safeStore.contact_person || safeStore.contact_name)}
             {field('住所', address)}
+            {field('URL', storeUrl)}
             {field('電話', safeStore.phone || safeStore.tel)}
             {field('メール', safeStore.email || safeStore.email_address)}
           </div>

@@ -68,6 +68,7 @@ import ChineseTabletMenuPage from '../product/ChineseTabletMenuPage';
 import MyYoteiListPage from '../shared/ui/Yotei/MyYoteiListPage';
 import CustomerOnboardingPage from '../registration/CustomerOnboardingPage';
 import FlowGuideScreen from '../FlowGuideScreen';
+import CustomerMyPage from '../customer/pages/CustomerMyPage';
 
 function readCurrentTokenClaims() {
   try {
@@ -220,6 +221,7 @@ export default function Router() {
       <Route path="/product/chuka-menu" element={<ChineseTabletMenuPage />} />
       <Route path="/product/chinese-tablet-menu" element={<ChineseTabletMenuPage />} />
       <Route path="/registration/onboarding/:storeId" element={<CustomerOnboardingPage />} />
+      <Route path="/customer/mypage" element={<CustomerMyPage />} />
       <Route path="/flow-guide" element={<FlowGuideScreen />} />
     </Routes>
   );

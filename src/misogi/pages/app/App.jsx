@@ -18,21 +18,28 @@ function shouldShowCleaningNavHotbar(pathname) {
   return true;
 }
 
+function isStandaloneCustomerMyPagePath(pathname) {
+  const p = String(pathname || '/');
+  return /^\/customer\/mypage(?:\/|$)/.test(p);
+}
+
 export default function App() {
   const location = useLocation();
   const pathname = location?.pathname || '/';
   const onCleaningWorkerPath = isCleaningWorkerPath(pathname);
   const showCleaningNavHotbar = shouldShowCleaningNavHotbar(pathname);
+  const hideSharedHeader = isStandaloneCustomerMyPagePath(pathname);
   return (
     <div
       className={[
         'app-fullscreen',
         onCleaningWorkerPath ? 'cleaning-worker-app' : '',
         showCleaningNavHotbar ? 'with-cleaning-nav-hotbar' : '',
+        hideSharedHeader ? 'standalone-page' : '',
       ].filter(Boolean).join(' ')}
     >
       <AppErrorBoundary>
-        <Breadcrumbs />
+        {!hideSharedHeader ? <Breadcrumbs /> : null}
         <Router />
         {onCleaningWorkerPath ? <CleaningWorkerChrome showNavHotbar={showCleaningNavHotbar} /> : null}
       </AppErrorBoundary>

@@ -92,6 +92,10 @@ button:disabled {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.app-fullscreen.standalone-page {
+  background: #ffffff;
+}
+
 .app-fullscreen .entrance-page,
 .app-fullscreen .job-entrance-page,
 .app-fullscreen .report-page {

@@ -150,6 +150,31 @@ const BASIC_INFO_PROFILE_KEYS = [
   'sales_owner',
 ];
 
+function normalizeHttpUrl(rawUrl) {
+  const v = String(rawUrl || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+}
+
+const MISOGI_CUSTOMER_MYPAGE_BASE = String(
+  import.meta.env?.VITE_MISOGI_CUSTOMER_MYPAGE_URL || 'https://misesapo.co.jp/misogi/#/customer/mypage'
+).trim();
+
+function buildCustomerMyPageUrl(tenpoId = '') {
+  const id = encodeURIComponent(String(tenpoId || '').trim() || 'store');
+  const base = MISOGI_CUSTOMER_MYPAGE_BASE || 'https://misesapo.co.jp/misogi/#/customer/mypage';
+  const sep = base.includes('?') ? '&' : '?';
+  return `${base}${sep}tenpo_id=${id}`;
+}
+
+function resolveTenpoUrl(tp) {
+  const tenpoId = tp?.tenpo_id || tp?.id || tp?.store_id || tp?.name || '';
+  const explicit = normalizeHttpUrl(tp?.url || '');
+  if (/customer\/mypage/i.test(explicit)) return explicit;
+  return buildCustomerMyPageUrl(tenpoId);
+}
+
 function normalizeBasicInfoProfile(raw) {
   const src = raw && typeof raw === 'object' ? raw : {};
   const attendance = String(src.customer_attendance || '').trim();
@@ -157,7 +182,7 @@ function normalizeBasicInfoProfile(raw) {
     name: clampStr(src.name || '', 120),
     address: clampStr(src.address || '', 200),
     phone: clampStr(src.phone || '', 40),
-    url: clampStr(src.url || '', 200),
+    url: clampStr(normalizeHttpUrl(src.url || ''), 200),
     business_hours: clampStr(src.business_hours || '', 80),
     customer_attendance: CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance) ? attendance : '',
     key_handling: clampStr(src.key_handling || '', 120),
@@ -175,7 +200,7 @@ function extractBasicInfoProfileFromTenpoRecord(tp) {
     name: tp?.name || '',
     address: tp?.address || '',
     phone: tp?.phone || '',
-    url: tp?.url || '',
+    url: resolveTenpoUrl(tp),
     business_hours: spec?.business_hours || tp?.business_hours || tp?.eigyou_jikan || '',
     customer_attendance: spec?.customer_attendance || '',
     key_handling: spec?.key_handling || tp?.key_handling || '',
