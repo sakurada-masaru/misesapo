@@ -86,6 +86,7 @@ export default function AdminMasterTenpoPage() {
           sourceKey: 'yagou',
           valueKey: 'yagou_id',
           labelKey: 'name',
+          emptyAsBlank: true,
           onChange: ({ value, prev }) => {
             const kind = normalizeBillingOwnerKind(prev?.billing_owner_kind);
             if (kind !== 'yagou') return null;

@@ -142,7 +142,8 @@ function getCurrentAccountName() {
   }
 }
 
-export default function AdminTorihikisakiTourokuPage() {
+export default function AdminTorihikisakiTourokuPage({ mode = 'register' }) {
+  const isMasterMode = String(mode || '') === 'master';
   const nav = useNavigate();
   const contractPrintRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -227,7 +228,12 @@ export default function AdminTorihikisakiTourokuPage() {
       const data = await apiJson(`/master/torihikisaki?limit=500&jotai=yuko`);
       const items = getItems(data).sort((a, b) => norm(a?.name).localeCompare(norm(b?.name), 'ja'));
       setTorihikisakiList(items);
-      setSelectedTorihikisakiId((cur) => cur || items?.[0]?.torihikisaki_id || '');
+      setSelectedTorihikisakiId((cur) => {
+        const current = String(cur || '').trim();
+        if (!current) return '';
+        const exists = items.some((it) => String(it?.torihikisaki_id || '').trim() === current);
+        return exists ? current : '';
+      });
     } catch (e) {
       setErr(e?.message || '取引先の読み込みに失敗しました');
     } finally {
@@ -236,11 +242,6 @@ export default function AdminTorihikisakiTourokuPage() {
   }, []);
 
   const reloadYagou = useCallback(async (torihikisakiId) => {
-    if (!torihikisakiId) {
-      setYagouList([]);
-      setSelectedYagouId('');
-      return;
-    }
     setErr('');
     setOkMsg('');
     setLoading(true);
@@ -248,8 +249,8 @@ export default function AdminTorihikisakiTourokuPage() {
       const qs = new URLSearchParams({
         limit: '5000',
         jotai: 'yuko',
-        torihikisaki_id: torihikisakiId,
       });
+      if (torihikisakiId) qs.set('torihikisaki_id', torihikisakiId);
       const data = await apiJson(`/master/yagou?${qs.toString()}`);
       const items = getItems(data).sort((a, b) => norm(a?.name).localeCompare(norm(b?.name), 'ja'));
       setYagouList(items);
@@ -317,11 +318,11 @@ export default function AdminTorihikisakiTourokuPage() {
         });
       });
 
-      // 屋号単位
+      // 屋号単位（取引先未紐付けも対象）
       yagouItems.forEach((y) => {
         const yagou_id = norm(y?.yagou_id);
         const torihikisaki_id = norm(y?.torihikisaki_id);
-        if (!yagou_id || !torihikisaki_id) return;
+        if (!yagou_id) return;
         const torihikisaki_name = norm(toriNameById.get(torihikisaki_id));
         const yagou_name = norm(y?.name);
         next.push({
@@ -342,15 +343,15 @@ export default function AdminTorihikisakiTourokuPage() {
         });
       });
 
-      // 店舗単位
+      // 店舗単位（取引先/屋号の片方未設定も対象）
       tenpoItems.forEach((tp) => {
         const tenpo_id = norm(tp?.tenpo_id);
         const torihikisaki_id = norm(tp?.torihikisaki_id);
         const yagou_id = norm(tp?.yagou_id);
-        if (!tenpo_id || !torihikisaki_id) return;
+        if (!tenpo_id) return;
         const torihikisaki_name = norm(toriNameById.get(torihikisaki_id));
         const y = yagouById.get(yagou_id) || {};
-        const yagou_name = norm(y?.yagou_name);
+        const yagou_name = norm(y?.yagou_name) || norm(tp?.yagou_name);
         const tenpo_name = norm(tp?.name);
         next.push({
           key: `tenpo:${tenpo_id}`,
@@ -978,10 +979,6 @@ export default function AdminTorihikisakiTourokuPage() {
   const onAddYagou = useCallback(async () => {
     const torihikisakiId = selectedTorihikisakiId;
     const name = norm(addYagouName);
-    if (!torihikisakiId) {
-      window.alert('取引先を選択してください');
-      return;
-    }
     if (!name) {
       window.alert('屋号名は必須です');
       return;
@@ -994,7 +991,7 @@ export default function AdminTorihikisakiTourokuPage() {
         method: 'POST',
         body: {
           name,
-          torihikisaki_id: torihikisakiId,
+          ...(torihikisakiId ? { torihikisaki_id: torihikisakiId } : {}),
           touroku_date: todayYmd(),
           jotai: 'yuko',
         },
@@ -1022,10 +1019,6 @@ export default function AdminTorihikisakiTourokuPage() {
     const address = norm(addAddress);
     const url = norm(addUrl);
     const jouhouTourokuShaName = norm(addJouhouTourokuShaName);
-    if (!torihikisakiId || !yagouId) {
-      window.alert('取引先・屋号を選択してください');
-      return;
-    }
     if (!name) {
       window.alert('店舗名は必須です');
       return;
@@ -1034,29 +1027,31 @@ export default function AdminTorihikisakiTourokuPage() {
     setOkMsg('');
     setLoading(true);
     try {
-      const dupQs = new URLSearchParams({
-        limit: '20000',
-        jotai: 'yuko',
-        torihikisaki_id: torihikisakiId,
-        yagou_id: yagouId,
-      });
-      const dupData = await apiJson(`/master/tenpo?${dupQs.toString()}`);
-      const dupItems = getItems(dupData);
-      const hit = dupItems.find((it) => normalizeKeyPart(it?.name) === normalizeKeyPart(name));
-      if (hit?.tenpo_id) {
-        const go = window.confirm(
-          `同名の既存店舗が見つかりました: ${hit.name}\n既存問診票を開きますか？`
-        );
-        if (go) nav(`/admin/tenpo/${encodeURIComponent(hit.tenpo_id)}?mode=monshin`);
-        return;
+      if (torihikisakiId || yagouId) {
+        const dupQs = new URLSearchParams({
+          limit: '20000',
+          jotai: 'yuko',
+        });
+        if (torihikisakiId) dupQs.set('torihikisaki_id', torihikisakiId);
+        if (yagouId) dupQs.set('yagou_id', yagouId);
+        const dupData = await apiJson(`/master/tenpo?${dupQs.toString()}`);
+        const dupItems = getItems(dupData);
+        const hit = dupItems.find((it) => normalizeKeyPart(it?.name) === normalizeKeyPart(name));
+        if (hit?.tenpo_id) {
+          const go = window.confirm(
+            `同名の既存店舗が見つかりました: ${hit.name}\n既存問診票を開きますか？`
+          );
+          if (go) nav(`/admin/tenpo/${encodeURIComponent(hit.tenpo_id)}?mode=monshin`);
+          return;
+        }
       }
 
       const tenpo = await apiJson('/master/tenpo', {
         method: 'POST',
         body: {
           name,
-          torihikisaki_id: torihikisakiId,
-          yagou_id: yagouId,
+          ...(torihikisakiId ? { torihikisaki_id: torihikisakiId } : {}),
+          ...(yagouId ? { yagou_id: yagouId } : {}),
           touroku_date: todayYmd(),
           ...(phone ? { phone } : {}),
           ...(email ? { email } : {}),
@@ -1107,8 +1102,12 @@ export default function AdminTorihikisakiTourokuPage() {
             {/* GlobalNav handles navigation */}
           </div>
           <div className="admin-touroku-headline">
-            <h1>顧客登録（新）</h1>
-            <div className="sub">torihikisaki → yagou → tenpo → souko（自動作成）</div>
+            <h1>{isMasterMode ? '顧客マスタ' : '顧客登録（新）'}</h1>
+            <div className="sub">
+              {isMasterMode
+                ? '取引先 / 屋号 / 店舗 を一括管理・修正'
+                : 'torihikisaki → yagou → tenpo → souko（自動作成）'}
+            </div>
           </div>
           <div className="admin-touroku-actions">
             <button onClick={reloadTorihikisaki} disabled={loading}>更新</button>
@@ -1268,7 +1267,7 @@ export default function AdminTorihikisakiTourokuPage() {
 
               <label>
                 <span>屋号（既存）</span>
-                <select value={selectedYagouId} onChange={(e) => setSelectedYagouId(e.target.value)} disabled={!selectedTorihikisakiId}>
+                <select value={selectedYagouId} onChange={(e) => setSelectedYagouId(e.target.value)}>
                   <option value="">未選択</option>
                   {yagouList.map((y) => (
                     <option key={y.yagou_id} value={y.yagou_id}>
@@ -1284,7 +1283,7 @@ export default function AdminTorihikisakiTourokuPage() {
                   <input value={addYagouName} onChange={(e) => setAddYagouName(e.target.value)} placeholder="例: ○○ダイニング" />
                 </label>
                 <div className="row">
-                  <button onClick={onAddYagou} disabled={loading || !selectedTorihikisakiId}>屋号を追加</button>
+                  <button onClick={onAddYagou} disabled={loading}>屋号を追加</button>
                 </div>
               </div>
 
@@ -1294,7 +1293,7 @@ export default function AdminTorihikisakiTourokuPage() {
                   <input value={addTenpoName} onChange={(e) => setAddTenpoName(e.target.value)} placeholder="例: 池袋店" />
                 </label>
                 <div className="row">
-                  <button className="primary" onClick={onAddTenpo} disabled={loading || !selectedTorihikisakiId || !selectedYagouId}>店舗を追加</button>
+                  <button className="primary" onClick={onAddTenpo} disabled={loading}>店舗を追加</button>
                 </div>
               </div>
 

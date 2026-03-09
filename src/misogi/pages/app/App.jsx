@@ -23,18 +23,38 @@ function isStandaloneCustomerMyPagePath(pathname) {
   return /^\/customer\/mypage(?:\/|$)/.test(p);
 }
 
+function isAdminPath(pathname) {
+  const p = String(pathname || '/');
+  return /^\/admin(?:\/|$)/.test(p);
+}
+
 export default function App() {
   const location = useLocation();
   const pathname = location?.pathname || '/';
   const onCleaningWorkerPath = isCleaningWorkerPath(pathname);
   const showCleaningNavHotbar = shouldShowCleaningNavHotbar(pathname);
   const hideSharedHeader = isStandaloneCustomerMyPagePath(pathname);
+  const onAdminPath = isAdminPath(pathname);
+
+  React.useEffect(() => {
+    if (!onAdminPath || typeof document === 'undefined') return undefined;
+    const prevBodyBg = document.body.style.backgroundColor;
+    const prevHtmlBg = document.documentElement.style.backgroundColor;
+    document.body.style.backgroundColor = '#FCF9EA';
+    document.documentElement.style.backgroundColor = '#FCF9EA';
+    return () => {
+      document.body.style.backgroundColor = prevBodyBg;
+      document.documentElement.style.backgroundColor = prevHtmlBg;
+    };
+  }, [onAdminPath]);
+
   return (
     <div
       className={[
         'app-fullscreen',
         onCleaningWorkerPath ? 'cleaning-worker-app' : '',
         showCleaningNavHotbar ? 'with-cleaning-nav-hotbar' : '',
+        onAdminPath ? 'admin-management-app' : '',
         hideSharedHeader ? 'standalone-page' : '',
       ].filter(Boolean).join(' ')}
     >

@@ -15,13 +15,13 @@
 }
 
 [data-theme="light"] .admin-ugoki-dashboard-page {
-  --bg: #ffffff;
+  --bg: #fcf9ea;
   --panel: #ffffff;
   --line: #d1d5db;
   --text: #111111;
   --muted: #374151;
   --white: #ffffff;
-  background: #ffffff;
+  background: #fcf9ea;
   color: #111111;
 }
 

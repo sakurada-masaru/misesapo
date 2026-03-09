@@ -72,13 +72,14 @@ function labelForPath(pathname) {
   if (p === '/admin/yakusoku') return 'YAKUSOKU';
   if (p === '/admin/dashboard') return 'ダッシュボード';
   if (p === '/admin/filebox') return 'ファイルボックス';
-  if (p === '/admin/torihikisaki-touroku') return '顧客登録';
+  if (p === '/admin/torihikisaki-touroku') return '顧客マスタ';
   if (p === '/admin/torihikisaki-meibo') return '取引先名簿';
   if (p === '/admin/jinzai-meibo') return '人材名簿';
   if (p.startsWith('/admin/tenpo/')) return '店舗カルテ';
   if (p === '/admin/master/torihikisaki') return '取引先マスタ';
   if (p === '/admin/master/yagou') return '屋号マスタ';
   if (p === '/admin/master/tenpo') return '店舗マスタ';
+  if (p === '/admin/master/customer') return '顧客マスタ';
   if (p === '/admin/master/souko') return '顧客ストレージ';
   if (p === '/admin/master/jinzai') return '人材マスタ';
   if (p === '/admin/master/jinzai-busho') return '人材部署';

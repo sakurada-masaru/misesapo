@@ -229,11 +229,85 @@
   margin-bottom: 12px;
 }
 
+.admin-master-count {
+  color: #9aa6c5;
+  font-size: 12px;
+  align-self: end;
+}
+
 .admin-master-toolbar label {
   display: grid;
   gap: 4px;
   color: #9aa6c5;
   font-size: 12px;
+}
+
+.admin-customer-master-toolbar {
+  justify-content: center;
+  align-items: end;
+  gap: 14px;
+}
+
+.admin-customer-master-toolbar .admin-customer-master-search {
+  flex: 1 1 860px;
+  max-width: 960px;
+}
+
+.admin-customer-master-toolbar .admin-customer-master-search span {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-customer-master-toolbar .admin-customer-master-search input {
+  height: 46px;
+  border-radius: 12px;
+  font-size: 16px;
+  padding: 0 14px;
+}
+
+.admin-customer-master-toolbar .admin-master-header-actions {
+  align-self: end;
+}
+
+.admin-customer-master-id-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: 1px solid #334155;
+  background: rgba(148, 163, 184, 0.18);
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.admin-customer-master-id-tag.kind-kokyaku {
+  border-color: rgba(56, 189, 248, 0.75);
+  background: rgba(56, 189, 248, 0.2);
+  color: #e0f2fe;
+}
+
+.admin-customer-master-id-tag.kind-torihikisaki {
+  border-color: rgba(16, 185, 129, 0.75);
+  background: rgba(16, 185, 129, 0.2);
+  color: #dcfce7;
+}
+
+.admin-customer-master-id-tag.kind-yagou {
+  border-color: rgba(168, 85, 247, 0.75);
+  background: rgba(168, 85, 247, 0.2);
+  color: #f3e8ff;
+}
+
+.admin-customer-master-id-tag.kind-tenpo {
+  border-color: rgba(245, 158, 11, 0.75);
+  background: rgba(245, 158, 11, 0.2);
+  color: #fef3c7;
 }
 
 .admin-master-page[data-resource="kadai"] .admin-master-toolbar label:first-child input {
@@ -1632,7 +1706,7 @@
 
 /* ===== Light mode ===== */
 [data-theme="light"] .admin-master-page {
-  background: #ffffff;
+  background: #fcf9ea;
   color: #000000;
 }
 
@@ -1705,6 +1779,53 @@
 [data-theme="light"] .admin-master-toolbar label,
 [data-theme="light"] .admin-master-modal-grid label {
   color: #000000;
+}
+
+[data-theme="light"] .admin-master-count {
+  color: #1f2937;
+}
+
+[data-theme="light"] .admin-customer-master-id-tag {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+}
+
+[data-theme="light"] .admin-customer-master-id-tag.kind-kokyaku {
+  border-color: #38bdf8;
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+[data-theme="light"] .admin-customer-master-id-tag.kind-torihikisaki {
+  border-color: #10b981;
+  background: #dcfce7;
+  color: #14532d;
+}
+
+[data-theme="light"] .admin-customer-master-id-tag.kind-yagou {
+  border-color: #a855f7;
+  background: #f3e8ff;
+  color: #581c87;
+}
+
+[data-theme="light"] .admin-customer-master-id-tag.kind-tenpo {
+  border-color: #f59e0b;
+  background: #fef3c7;
+  color: #78350f;
+}
+
+@media (max-width: 900px) {
+  .admin-customer-master-toolbar {
+    justify-content: stretch;
+  }
+  .admin-customer-master-toolbar .admin-customer-master-search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .admin-customer-master-toolbar .admin-customer-master-search span {
+    text-align: left;
+  }
 }
 
 [data-theme="light"] .admin-master-search-select-meta {
@@ -1842,7 +1963,7 @@
 
 /* Kadai: keep high readability in light mode (white base, black text) */
 [data-theme="light"] .admin-master-page[data-resource="kadai"] {
-  background: #ffffff;
+  background: #fcf9ea;
   color: #0f172a;
 }
 

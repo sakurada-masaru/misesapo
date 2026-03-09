@@ -16,50 +16,26 @@
 }
 
 [data-theme="light"] .admin-yotei-timeline-page {
-    --bg: #ffffff;
+    --bg: #fcf9ea;
     --panel: #ffffff;
     --line: #000000;
     --text: #111111;
     --muted: #374151;
     --white: #ffffff;
-    background: #ffffff;
+    background: #fcf9ea;
     color: #111111;
 }
 
 [data-theme="light"] .admin-yotei-timeline-page.capacity-safe {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(34, 197, 94, 0.12) 0%,
-            rgba(34, 197, 94, 0.05) 18%,
-            rgba(34, 197, 94, 0.02) 34%,
-            rgba(34, 197, 94, 0) 56%
-        ),
-        #ffffff;
+    background: #fcf9ea;
 }
 
 [data-theme="light"] .admin-yotei-timeline-page.capacity-warn {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(245, 158, 11, 0.14) 0%,
-            rgba(245, 158, 11, 0.06) 18%,
-            rgba(245, 158, 11, 0.02) 34%,
-            rgba(245, 158, 11, 0) 56%
-        ),
-        #ffffff;
+    background: #fcf9ea;
 }
 
 [data-theme="light"] .admin-yotei-timeline-page.capacity-danger {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(239, 68, 68, 0.14) 0%,
-            rgba(239, 68, 68, 0.06) 18%,
-            rgba(239, 68, 68, 0.02) 34%,
-            rgba(239, 68, 68, 0) 56%
-        ),
-        #ffffff;
+    background: #fcf9ea;
 }
 
 [data-theme="light"] .admin-yotei-timeline-page .yotei-head h1 {
@@ -69,39 +45,15 @@
 }
 
 .admin-yotei-timeline-page.capacity-safe {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(34, 197, 94, 0.18) 0%,
-            rgba(34, 197, 94, 0.08) 18%,
-            rgba(34, 197, 94, 0.03) 34%,
-            rgba(34, 197, 94, 0) 56%
-        ),
-        var(--bg);
+    background: var(--bg);
 }
 
 .admin-yotei-timeline-page.capacity-warn {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(245, 158, 11, 0.2) 0%,
-            rgba(245, 158, 11, 0.09) 18%,
-            rgba(245, 158, 11, 0.03) 34%,
-            rgba(245, 158, 11, 0) 56%
-        ),
-        var(--bg);
+    background: var(--bg);
 }
 
 .admin-yotei-timeline-page.capacity-danger {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(239, 68, 68, 0.2) 0%,
-            rgba(239, 68, 68, 0.09) 18%,
-            rgba(239, 68, 68, 0.03) 34%,
-            rgba(239, 68, 68, 0) 56%
-        ),
-        var(--bg);
+    background: var(--bg);
 }
 
 .admin-yotei-timeline-content {
@@ -122,10 +74,11 @@
 .yotei-head h1 {
     font-size: 1.5rem;
     margin: 0;
-    background: linear-gradient(to right, #fff, var(--muted));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    -webkit-text-fill-color: initial;
+    color: var(--text);
 }
 
 .yotei-head-actions {

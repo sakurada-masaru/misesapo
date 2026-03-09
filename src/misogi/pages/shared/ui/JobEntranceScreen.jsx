@@ -7,7 +7,6 @@ import { JOBS } from '../utils/constants';
 import { useI18n } from '../i18n/I18nProvider';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../api/gatewayBase';
 import ThemeToggle from './ThemeToggle/ThemeToggle';
-import EntranceModeToggle from './EntranceModeToggle/EntranceModeToggle';
 import LanguageSwitcher from './LanguageSwitcher/LanguageSwitcher';
 import CommonHeaderChat from './Breadcrumbs/CommonHeaderChat';
 import MisogiSupportOrb from './MisogiSupport/MisogiSupportOrb';
@@ -15,10 +14,7 @@ import { useAuth } from '../auth/useAuth';
 import { getAdminWorkReports } from '../api/adminWorkReportsApi';
 
 const JOB_KEYS = ['sales', 'cleaning', 'office', 'dev', 'admin'];
-const ADMIN_ENTRANCE_MODE_STORAGE_KEY = 'misogi-v2-admin-entrance-mode';
 const ADMIN_ENTRANCE_MODE_DEFAULT = 'default';
-const ADMIN_ENTRANCE_MODE_SEPIA = 'sepia';
-const ADMIN_ENTRANCE_MODE_LEGACY_NIER = 'nier';
 const ADMIN_UPDATES_POLL_MS = 30000;
 const FILEBOX_MAX_UPLOAD_SIZE = 15 * 1024 * 1024;
 const FILEBOX_SOUKO_SOURCE = 'admin_filebox';
@@ -286,19 +282,6 @@ function reportActionLabel(item) {
   if (state === 'archived') return '業務報告を保管しました';
   if (state === 'draft') return '業務報告を保存しました';
   return '業務報告を更新しました';
-}
-
-function resolveInitialAdminEntranceMode() {
-  if (typeof window === 'undefined') return ADMIN_ENTRANCE_MODE_DEFAULT;
-  try {
-    const stored = localStorage.getItem(ADMIN_ENTRANCE_MODE_STORAGE_KEY);
-    if (stored === ADMIN_ENTRANCE_MODE_SEPIA) return ADMIN_ENTRANCE_MODE_SEPIA;
-    if (stored === ADMIN_ENTRANCE_MODE_LEGACY_NIER) return ADMIN_ENTRANCE_MODE_SEPIA;
-    if (stored === ADMIN_ENTRANCE_MODE_DEFAULT) return ADMIN_ENTRANCE_MODE_DEFAULT;
-  } catch {
-    // ignore
-  }
-  return ADMIN_ENTRANCE_MODE_DEFAULT;
 }
 
 function readLocalUserName() {
@@ -754,9 +737,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const [tab, setTab] = useState(null);
   const [subGroupByTab, setSubGroupByTab] = useState({});
   const useSidebarNav = jobKey === 'admin';
-  const [adminEntranceMode, setAdminEntranceMode] = useState(() =>
-    useSidebarNav ? resolveInitialAdminEntranceMode() : ADMIN_ENTRANCE_MODE_DEFAULT
-  );
+  const adminEntranceMode = ADMIN_ENTRANCE_MODE_DEFAULT;
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === 'undefined') return false;
     return jobKey === 'admin' ? window.innerWidth >= 1024 : false;
@@ -1452,17 +1433,23 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   }, [location.pathname, sidebarSections, useSidebarNav]);
 
   useEffect(() => {
-    if (!useSidebarNav) return;
-    if (adminEntranceMode !== ADMIN_ENTRANCE_MODE_SEPIA && adminEntranceMode !== ADMIN_ENTRANCE_MODE_DEFAULT) {
-      setAdminEntranceMode(ADMIN_ENTRANCE_MODE_DEFAULT);
-      return;
-    }
+    if (!useSidebarNav || typeof document === 'undefined') return undefined;
+    const root = document.documentElement;
+    const prevTheme = root.getAttribute('data-theme');
+    root.setAttribute('data-theme', 'light');
     try {
-      localStorage.setItem(ADMIN_ENTRANCE_MODE_STORAGE_KEY, adminEntranceMode);
+      localStorage.setItem('theme', 'light');
     } catch {
       // ignore
     }
-  }, [adminEntranceMode, useSidebarNav]);
+    return () => {
+      if (prevTheme === 'dark' || prevTheme === 'light') {
+        root.setAttribute('data-theme', prevTheme);
+      } else {
+        root.removeAttribute('data-theme');
+      }
+    };
+  }, [useSidebarNav]);
 
   useEffect(() => {
     if (!useSidebarNav) return;
@@ -2171,17 +2158,18 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                 </button>
                 {settingsOpen ? (
                   <div className="job-entrance-sidebar-footer-content">
-                    {useSidebarNav && (
-                      <EntranceModeToggle
-                        mode={adminEntranceMode}
-                        onChange={setAdminEntranceMode}
-                      />
-                    )}
                     <LanguageSwitcher />
-                    <div className="job-entrance-sidebar-theme-block">
-                      <span className="job-entrance-sidebar-theme-label">{t('ライトモード切り替え')}</span>
-                      <ThemeToggle />
-                    </div>
+                    {useSidebarNav ? (
+                      <div className="job-entrance-sidebar-theme-block">
+                        <span className="job-entrance-sidebar-theme-label">{t('表示')}</span>
+                        <span className="job-entrance-sidebar-theme-fixed">{t('ライトモード（固定）')}</span>
+                      </div>
+                    ) : (
+                      <div className="job-entrance-sidebar-theme-block">
+                        <span className="job-entrance-sidebar-theme-label">{t('ライトモード切り替え')}</span>
+                        <ThemeToggle />
+                      </div>
+                    )}
                   </div>
                 ) : null}
                 <div className="job-entrance-sidebar-account">

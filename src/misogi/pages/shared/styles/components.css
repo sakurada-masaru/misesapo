@@ -92,6 +92,10 @@ button:disabled {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.app-fullscreen.admin-management-app {
+  background: #fcf9ea;
+}
+
 .app-fullscreen.standalone-page {
   background: #fcf9ea;
 }
@@ -143,6 +147,7 @@ button:disabled {
 [data-theme="light"] .report-page[data-job="admin"] {
   --accent-color: #000;
   --accent-glow: transparent;
+  background: #fcf9ea;
 }
 
 [data-theme="light"] .report-page[data-job="admin"] .visualizer-container .core-circle,
@@ -366,9 +371,7 @@ button:disabled {
 [data-theme="light"] .job-entrance-page[data-job="admin"] {
   --accent-color: #000;
   --accent-glow: transparent;
-  background:
-    radial-gradient(800px 500px at 50% 40%, rgba(0, 0, 0, 0.08), transparent 55%),
-    var(--bg-gradient);
+  background: #fcf9ea;
 }
 
 [data-theme="light"] .job-entrance-page[data-job="admin"][data-entrance-mode="sepia"],
@@ -3257,4 +3260,219 @@ button:disabled {
 .login-submit-btn:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 15px var(--accent-glow);
+}
+
+/* ---- Admin palette sync (match Customer MyPage tone) ---- */
+.report-page[data-job="admin"],
+[data-theme="light"] .report-page[data-job="admin"],
+[data-theme="dark"] .report-page[data-job="admin"],
+.job-entrance-page[data-job="admin"],
+[data-theme="light"] .job-entrance-page[data-job="admin"],
+[data-theme="dark"] .job-entrance-page[data-job="admin"] {
+  --admin-bg: #fcf9ea;
+  --admin-main: #ffa4a4;
+  --admin-sub: #ffbdbd;
+  --admin-accent: #badfdb;
+  --admin-text: #493628;
+  --admin-heading: #3b3b1a;
+  --admin-muted: #6b5a5a;
+
+  --bg: var(--admin-bg);
+  --bg-gradient: linear-gradient(180deg, #fcf9ea 0%, #fff8ee 100%);
+  --fg: var(--admin-text);
+  --text: var(--admin-text);
+  --muted: var(--admin-muted);
+  --surface: var(--admin-bg);
+  --border: #ffbdbd;
+  --border-color: rgba(73, 54, 40, 0.24);
+  --panel-bg: var(--admin-bg);
+  --text-primary: var(--admin-text);
+  --text-secondary: rgba(73, 54, 40, 0.82);
+  --card-bg: var(--admin-bg);
+  --card-border: rgba(255, 164, 164, 0.45);
+  --accent-color: var(--admin-main);
+  --accent-glow: rgba(255, 164, 164, 0.35);
+  --accent-fg: #ffffff;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-title,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-head,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-footer-title,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-head strong,
+.job-entrance-page[data-job="admin"] .admin-dashboard-activity-head strong,
+.report-page[data-job="admin"] h1,
+.report-page[data-job="admin"] h2,
+.report-page[data-job="admin"] h3,
+.report-page[data-job="admin"] h4 {
+  color: var(--admin-heading) !important;
+}
+
+.job-entrance-page[data-job="admin"],
+[data-theme="light"] .job-entrance-page[data-job="admin"],
+[data-theme="dark"] .job-entrance-page[data-job="admin"] {
+  background:
+    radial-gradient(1200px 720px at 100% 0, rgba(255, 189, 189, 0.2), transparent 58%),
+    radial-gradient(900px 620px at 0 100%, rgba(186, 223, 219, 0.28), transparent 58%),
+    #fcf9ea;
+}
+
+.job-entrance-page[data-job="admin"][data-entrance-mode="sepia"],
+[data-theme="light"] .job-entrance-page[data-job="admin"][data-entrance-mode="sepia"],
+[data-theme="dark"] .job-entrance-page[data-job="admin"][data-entrance-mode="sepia"] {
+  font-family: var(--font-family-base);
+  --accent-color: #ffa4a4;
+  --accent-glow: rgba(255, 164, 164, 0.35);
+  background:
+    radial-gradient(1200px 720px at 100% 0, rgba(255, 189, 189, 0.2), transparent 58%),
+    radial-gradient(900px 620px at 0 100%, rgba(186, 223, 219, 0.28), transparent 58%),
+    #fcf9ea;
+}
+
+.job-entrance-page[data-job="admin"][data-entrance-mode="sepia"]::before,
+.job-entrance-page[data-job="admin"][data-entrance-mode="sepia"]::after {
+  display: none;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-sidebar,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-rail {
+  background: rgba(255, 252, 247, 0.97) !important;
+  border-color: rgba(255, 189, 189, 0.9) !important;
+  color: #493628;
+  box-shadow: 8px 0 24px rgba(73, 54, 40, 0.12);
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-updates-backdrop,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-backdrop {
+  background: rgba(73, 54, 40, 0.2) !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-head,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-footer,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-head {
+  border-color: rgba(255, 189, 189, 0.9) !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-head,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-footer-title,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-theme-label,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-theme-fixed,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-head strong,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-empty {
+  color: #6b5a5a !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-theme-fixed {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 164, 164, 0.55);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-link,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-section-title,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-settings-toggle,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-auth-btn,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-footer .lang-switcher > select,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-head button {
+  color: #493628 !important;
+  border-color: rgba(255, 164, 164, 0.55) !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-auth-btn,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-footer .lang-switcher > select,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-head button {
+  background: rgba(255, 255, 255, 0.96) !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-link:hover:not(:disabled),
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-section-title:hover:not(:disabled),
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-section-title:focus-visible,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-settings-toggle:hover:not(:disabled),
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-settings-toggle:focus-visible {
+  background: rgba(255, 189, 189, 0.24) !important;
+  color: #493628 !important;
+  border-color: rgba(255, 164, 164, 0.72) !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-link.active,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-section-title.open,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-settings-toggle.open,
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-misogi .misogi-support-trigger.open {
+  background: rgba(255, 189, 189, 0.32) !important;
+  color: #493628 !important;
+  border-left-color: #ffa4a4 !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-sidebar-misogi .misogi-support-trigger:hover {
+  background: rgba(255, 189, 189, 0.24) !important;
+  color: #493628 !important;
+  border-left-color: #ffa4a4 !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-updates-list li {
+  border-color: rgba(255, 189, 189, 0.8) !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-updates-list .time {
+  color: #6b5a5a !important;
+}
+
+.job-entrance-page[data-job="admin"] .job-entrance-updates-list .who,
+.job-entrance-page[data-job="admin"] .job-entrance-updates-list .what {
+  color: #493628 !important;
+}
+
+.job-entrance-page[data-job="admin"] .admin-filebox-layout,
+[data-theme="light"] .job-entrance-page[data-job="admin"] .admin-filebox-layout,
+[data-theme="dark"] .job-entrance-page[data-job="admin"] .admin-filebox-layout {
+  --dash-panel-bg: var(--admin-bg);
+  --dash-panel-border: rgba(255, 164, 164, 0.45);
+  --dash-panel-shadow: none;
+  --dash-sub-bg: var(--admin-bg);
+  --dash-sub-border: rgba(255, 189, 189, 0.8);
+  --dash-work-bg: var(--admin-bg);
+  --dash-button-bg: var(--admin-bg);
+  --dash-row-hover-bg: rgba(255, 189, 189, 0.26);
+  --dash-row-hover-border: rgba(255, 164, 164, 0.62);
+  --dash-row-active-bg: rgba(186, 223, 219, 0.36);
+  --dash-row-active-border: rgba(110, 177, 166, 0.58);
+  --dash-row-active-left: #74bfb4;
+  --dash-welcome-bg: var(--admin-bg);
+  --dash-welcome-border: rgba(255, 189, 189, 0.8);
+}
+
+.job-entrance-page[data-job="admin"] .card,
+.job-entrance-page[data-job="admin"] .admin-dashboard-activity-panel,
+.job-entrance-page[data-job="admin"] .admin-dashboard-body-footer,
+.job-entrance-page[data-job="admin"] .admin-filebox-workspace,
+.job-entrance-page[data-job="admin"] .admin-filebox-content {
+  background: var(--admin-bg) !important;
+}
+
+.job-entrance-page[data-job="admin"] .admin-filebox-resizer::before,
+[data-theme="light"] .job-entrance-page[data-job="admin"] .admin-filebox-resizer::before,
+[data-theme="dark"] .job-entrance-page[data-job="admin"] .admin-filebox-resizer::before {
+  background: rgba(255, 164, 164, 0.65) !important;
+}
+
+.report-page[data-job="admin"] input:not([type="checkbox"]):not([type="radio"]),
+.report-page[data-job="admin"] select,
+.report-page[data-job="admin"] textarea {
+  background: #ffffff;
+  color: #493628;
+  border: 1px solid rgba(255, 164, 164, 0.72);
+}
+
+.report-page[data-job="admin"] input:focus,
+.report-page[data-job="admin"] select:focus,
+.report-page[data-job="admin"] textarea:focus {
+  outline: none;
+  border-color: #ffa4a4;
+  box-shadow: 0 0 0 2px rgba(255, 164, 164, 0.24);
 }

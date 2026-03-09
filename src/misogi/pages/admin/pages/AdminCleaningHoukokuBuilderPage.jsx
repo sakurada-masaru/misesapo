@@ -2827,9 +2827,10 @@ const Wrap = styled.div`
   --ch-preview-panel-bg: rgba(11, 13, 18, 0.96);
   --ch-overlay-bg: rgba(0, 0, 0, 0.55);
   --ch-toast-text: #e9eefc;
+  --ch-master-pick-bg: var(--ch-card-bg);
 
   [data-theme="light"] & {
-    --ch-bg: #f3f7ff;
+    --ch-bg: #fcf9ea;
     --ch-text: #10233f;
     --ch-sub: rgba(16, 35, 63, 0.68);
     --ch-border: rgba(15, 40, 80, 0.18);
@@ -2850,6 +2851,7 @@ const Wrap = styled.div`
     --ch-preview-panel-bg: #f7fbff;
     --ch-overlay-bg: rgba(10, 23, 42, 0.28);
     --ch-toast-text: #10233f;
+    --ch-master-pick-bg: var(--ch-card-bg);
   }
 
   min-height: 100vh;
@@ -2890,7 +2892,7 @@ const MasterPickCard = styled.section`
   padding: 14px;
   border: 1px solid var(--ch-border);
   border-radius: 14px;
-  background: var(--ch-card-bg);
+  background: var(--ch-master-pick-bg);
 
   @media (max-width: 640px) {
     margin: 6px auto 10px;

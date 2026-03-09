@@ -43,6 +43,7 @@ import AdminTorihikisakiMeiboPage from '../admin/pages/AdminTorihikisakiMeiboPag
 import AdminJinzaiMeiboPage from '../admin/pages/AdminJinzaiMeiboPage';
 import AdminTenpoKartePage from '../admin/pages/AdminTenpoKartePage';
 import AdminTorihikisakiTourokuPage from '../admin/pages/AdminTorihikisakiTourokuPage';
+import AdminCustomerMasterPage from '../admin/pages/AdminCustomerMasterPage';
 import AdminCleaningHoukokuToolPage from '../admin/pages/AdminCleaningHoukokuToolPage';
 import AdminCleaningHoukokuListPage from '../admin/pages/AdminCleaningHoukokuListPage';
 import HrAttendance from '../admin/pages/hr/Attendance';
@@ -180,6 +181,7 @@ export default function Router() {
       <Route path="/admin/master/torihikisaki" element={<AdminMasterOnly><AdminMasterTorihikisakiPage /></AdminMasterOnly>} />
       <Route path="/admin/master/yagou" element={<AdminMasterOnly><AdminMasterYagouPage /></AdminMasterOnly>} />
       <Route path="/admin/master/tenpo" element={<AdminMasterOnly><AdminMasterTenpoPage /></AdminMasterOnly>} />
+      <Route path="/admin/master/customer" element={<AdminMasterOnly><AdminCustomerMasterPage /></AdminMasterOnly>} />
       <Route path="/admin/master/souko" element={<AdminMasterOnly><AdminMasterSoukoPage /></AdminMasterOnly>} />
       <Route path="/admin/master/jinzai" element={<AdminMasterOnly><AdminMasterJinzaiPage /></AdminMasterOnly>} />
       <Route path="/admin/master/jinzai-busho" element={<AdminMasterOnly><AdminMasterJinzaiBushoPage /></AdminMasterOnly>} />

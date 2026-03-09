@@ -55,7 +55,7 @@ export const ADMIN_HOTBAR = [
     role: 'target',
     label: '顧客管理',
     subItems: [
-      { id: 'torihikisaki-touroku', label: '顧客登録', path: '/admin/torihikisaki-touroku', group: '顧客管理' },
+      { id: 'customer-master', label: '顧客マスタ', path: '/admin/master/customer', group: '顧客管理' },
       { id: 'torihikisaki-meibo', label: '顧客情報一覧(取引先名簿)', path: '/admin/torihikisaki-meibo', group: '顧客管理' },
       { id: 'master-souko', label: '顧客ストレージ', path: '/admin/master/souko', group: '顧客管理' },
     ]
@@ -74,9 +74,7 @@ export const ADMIN_HOTBAR = [
     role: 'target',
     label: 'マスタ情報',
     subItems: [
-      { id: 'master-torihikisaki', label: '取引先マスタ', path: '/admin/master/torihikisaki', group: 'マスタ(顧客)' },
-      { id: 'master-yagou', label: '屋号マスタ', path: '/admin/master/yagou', group: 'マスタ(顧客)' },
-      { id: 'master-tenpo', label: '店舗マスタ', path: '/admin/master/tenpo', group: 'マスタ(顧客)' },
+      { id: 'master-customer', label: '顧客マスタ', path: '/admin/master/customer', group: 'マスタ(顧客)' },
       { id: 'master-jinzai', label: '人材マスタ', path: '/admin/master/jinzai', group: 'マスタ(人材)' },
       { id: 'master-jinzai-busho', label: '人材部署', path: '/admin/master/jinzai-busho', group: 'マスタ(人材)' },
       { id: 'master-jinzai-shokushu', label: '人材職種', path: '/admin/master/jinzai-shokushu', group: 'マスタ(人材)' },

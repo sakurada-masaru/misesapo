@@ -176,6 +176,13 @@ function toSearchText(value) {
   return String(value);
 }
 
+function isBlankValue(value) {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'string') return value.trim() === '';
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+}
+
 function normalizeSortDirection(dir) {
   return String(dir || '').toLowerCase() === 'desc' ? 'desc' : 'asc';
 }
@@ -1036,14 +1043,15 @@ export default function AdminMasterBase({
               <td colSpan={columns.length + 1 + (enableBulkDelete ? 1 : 0)} className="empty">データがありません</td>
             </tr>
           )}
-          {sortedVisibleItems.map((row) => {
+          {sortedVisibleItems.map((row, rowIndex) => {
             const rid = pickId(row, operationalIdKey);
+            const rowKey = rid ? String(rid) : `row-${rowIndex}`;
             const isExpanded = !!rid && expandedRowId === rid;
             const rowEditable = typeof canEditRow !== 'function' || canEditRow(row);
             const rowDeletable = typeof canDeleteRow !== 'function' || canDeleteRow(row);
             const customRowClass = typeof rowClassName === 'function' ? String(rowClassName(row) || '').trim() : '';
             return (
-              <React.Fragment key={rid || Math.random()}>
+              <React.Fragment key={rowKey}>
                 <tr
                   className={`${(enableRowDetail || typeof onRowClick === 'function') ? 'row-clickable' : ''} ${isExpanded ? 'is-expanded' : ''} ${customRowClass}`.trim()}
                   onClick={() => {
@@ -1080,7 +1088,7 @@ export default function AdminMasterBase({
                       const saveKey = `${rowId}:${String(f.key)}`;
                       const busy = !!inlineSaving[saveKey];
                       return (
-                        <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>
+                        <td key={`${rowKey}-${c.key}`} data-col={c.label} data-key={c.key}>
                           <select
                             className="admin-master-inline-select"
                             value={raw ?? ''}
@@ -1103,10 +1111,13 @@ export default function AdminMasterBase({
                     }
                     const rendered = typeof f?.render === 'function' ? f.render(raw, row) : null;
                     if (rendered !== null && rendered !== undefined) {
-                      return <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>{rendered}</td>;
+                      return <td key={`${rowKey}-${c.key}`} data-col={c.label} data-key={c.key}>{rendered}</td>;
                     }
                     const v = formatFieldValue(f, raw, row);
-                    return <td key={`${rid}-${c.key}`} data-col={c.label} data-key={c.key}>{formatCellValue(v)}</td>;
+                    if (f?.emptyAsBlank === true && isBlankValue(v)) {
+                      return <td key={`${rowKey}-${c.key}`} data-col={c.label} data-key={c.key} />;
+                    }
+                    return <td key={`${rowKey}-${c.key}`} data-col={c.label} data-key={c.key}>{formatCellValue(v)}</td>;
                   })}
                   <td className="actions" data-col="操作" data-key="actions">
                     {typeof onPreviewRow === 'function' ? (
