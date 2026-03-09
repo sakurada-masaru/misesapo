@@ -20,6 +20,7 @@ const ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'pdf', 'xlsx', 'docx', 'heic'];
 
 const emptyStore = (enabled = false) => ({
   enabled,
+  tenpo_id: '',
   store_name: '',
   address: '',
   witness: '',
@@ -36,6 +37,7 @@ const emptyStore = (enabled = false) => ({
 function serializeStoreReport(store) {
   return {
     store: {
+      tenpo_id: store.tenpo_id || '',
       name: store.store_name || '',
       address: store.address || '',
       witness: store.witness || '',
@@ -61,6 +63,7 @@ function deserializeStoreReport(descriptionJson, workReportItem) {
   } catch (_) { }
   return {
     enabled: true,
+    tenpo_id: store.tenpo_id || workReportItem?.target_id || workReportItem?.tenpo_id || '',
     store_name: store.name || workReportItem?.target_label || '',
     address: store.address || '',
     witness: store.witness || '',
@@ -389,6 +392,9 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
           target_label: s.store_name || `店舗${index + 1}`,
           description: JSON.stringify(serializeStoreReport(s)),
         };
+        if (s.tenpo_id) {
+          body.target_id = s.tenpo_id;
+        }
         if (s.saved?.log_id) {
           body.log_id = s.saved.log_id;
           body.version = s.saved.version;
@@ -627,8 +633,8 @@ export default function CleaningDayReportPage({ isAdmin = false }) {
                     <StoreSearchField
                       stores={storeList}
                       value={store.store_name}
-                      storeKey=""
-                      onChange={(o) => updateStore(index, { store_name: o.store_name })}
+                      storeKey={store.tenpo_id || ''}
+                      onChange={(o) => updateStore(index, { store_name: o.store_name, tenpo_id: o.store_key || '' })}
                       placeholder="法人名・ブランド名・店舗名で検索"
                     />
                   </div>

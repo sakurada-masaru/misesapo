@@ -1,0 +1,21 @@
+{
+  "name": "ミセサポ",
+  "short_name": "ミセサポ",
+  "start_url": "/misogi/#/customer/mypage",
+  "scope": "/misogi/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FFA4A4",
+  "icons": [
+    {
+      "src": "/misogi/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/misogi/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
