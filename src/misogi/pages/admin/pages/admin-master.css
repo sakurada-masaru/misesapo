@@ -270,6 +270,95 @@
   align-self: end;
 }
 
+.admin-customer-master-create {
+  border: 1px solid #273049;
+  border-radius: 12px;
+  background: rgba(18, 22, 33, 0.84);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.admin-customer-master-create h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.admin-customer-master-create-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+}
+
+.admin-customer-master-create-card {
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.68);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-customer-master-create-card h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: #dbeafe;
+}
+
+.admin-master-field {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-master-field > span {
+  font-size: 12px;
+  color: #9aa6c5;
+}
+
+.admin-master-field input,
+.admin-master-field select {
+  width: 100%;
+  min-height: 34px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: rgba(15, 23, 42, 0.95);
+  color: #e5e7eb;
+  padding: 6px 10px;
+}
+
+.admin-customer-master-create-card button.primary {
+  margin-top: auto;
+  width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid #f472b6;
+  background: linear-gradient(135deg, #ffa4a4 0%, #ffbdbd 100%);
+  color: #493628;
+  box-shadow: 0 6px 14px rgba(249, 115, 22, 0.2);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+}
+
+.admin-customer-master-create-card button.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(249, 115, 22, 0.24);
+}
+
+.admin-customer-master-create-card button.primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.18);
+}
+
+.admin-customer-master-create-card button.primary:disabled {
+  opacity: 0.68;
+  filter: saturate(0.75);
+  box-shadow: none;
+}
+
 .admin-customer-master-id-tag {
   display: inline-flex;
   align-items: center;
@@ -1584,6 +1673,66 @@
   margin: 0 0 12px;
 }
 
+.admin-master-input-mode {
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.62);
+  padding: 10px;
+  margin-bottom: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-master-input-mode-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.admin-master-input-mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.admin-master-input-mode-switch button {
+  min-height: 36px;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.admin-master-input-mode-switch button:hover {
+  transform: translateY(-1px);
+  border-color: #64748b;
+}
+
+.admin-master-input-mode-switch button.is-active {
+  border-color: #ffa4a4;
+  background: linear-gradient(135deg, #ffa4a4 0%, #ffbdbd 100%);
+  color: #493628;
+}
+
+.admin-master-input-mode-switch button.warning.is-active {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #422006;
+}
+
+.admin-master-input-mode-note {
+  font-size: 12px;
+  color: #a5b4cc;
+}
+
+.admin-master-input-mode-note.is-warning {
+  color: #fcd34d;
+}
+
 .admin-master-modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1781,6 +1930,33 @@
   color: #000000;
 }
 
+[data-theme="light"] .admin-master-input-mode {
+  border-color: #dbe3ef;
+  background: #fff7ed;
+}
+
+[data-theme="light"] .admin-master-input-mode-head {
+  color: #334155;
+}
+
+[data-theme="light"] .admin-master-input-mode-switch button {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+[data-theme="light"] .admin-master-input-mode-switch button:hover {
+  border-color: #94a3b8;
+}
+
+[data-theme="light"] .admin-master-input-mode-note {
+  color: #64748b;
+}
+
+[data-theme="light"] .admin-master-input-mode-note.is-warning {
+  color: #92400e;
+}
+
 [data-theme="light"] .admin-master-count {
   color: #1f2937;
 }
@@ -1815,6 +1991,36 @@
   color: #78350f;
 }
 
+[data-theme="light"] .admin-customer-master-create {
+  border-color: #dbe3ef;
+  background: #ffffff;
+}
+
+[data-theme="light"] .admin-customer-master-create-card {
+  border-color: #dbe3ef;
+  background: #f8fafc;
+}
+
+[data-theme="light"] .admin-customer-master-create-card h3 {
+  color: #111827;
+}
+
+[data-theme="light"] .admin-master-field > span {
+  color: #000000;
+}
+
+[data-theme="light"] .admin-master-field input,
+[data-theme="light"] .admin-master-field select {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #000000;
+}
+
+[data-theme="light"] .admin-customer-master-create-card button.primary {
+  border-color: #f472b6;
+  color: #493628;
+}
+
 @media (max-width: 900px) {
   .admin-customer-master-toolbar {
     justify-content: stretch;
@@ -1825,6 +2031,9 @@
   }
   .admin-customer-master-toolbar .admin-customer-master-search span {
     text-align: left;
+  }
+  .admin-customer-master-create-grid {
+    grid-template-columns: 1fr;
   }
 }
 

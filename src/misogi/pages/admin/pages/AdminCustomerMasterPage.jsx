@@ -37,6 +37,22 @@ function norm(v) {
   return String(v || '').trim();
 }
 
+function normalizeKokyakuIdInput(value) {
+  const raw = norm(value);
+  if (!raw) return '';
+  if (/^kokyaku#/i.test(raw)) return raw.replace(/^kokyaku#/i, 'KOKYAKU#');
+  return `KOKYAKU#${raw}`;
+}
+
+function readActorName() {
+  try {
+    const auth = JSON.parse(localStorage.getItem('misesapo_auth') || '{}');
+    return norm(auth?.name || auth?.email || 'unknown');
+  } catch {
+    return 'unknown';
+  }
+}
+
 function getItems(data) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.items)) return data.items;
@@ -119,6 +135,17 @@ export default function AdminCustomerMasterPage() {
   const [rows, setRows] = useState([]);
   const [selectedKeys, setSelectedKeys] = useState(() => new Set());
   const [editing, setEditing] = useState(null);
+  const [creatingKind, setCreatingKind] = useState('');
+  const [createDraft, setCreateDraft] = useState({
+    kokyaku_id: '',
+    kokyaku_name: '',
+    torihikisaki_name: '',
+    yagou_name: '',
+    yagou_torihikisaki_id: '',
+    tenpo_name: '',
+    tenpo_torihikisaki_id: '',
+    tenpo_yagou_id: '',
+  });
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -640,6 +667,105 @@ export default function AdminCustomerMasterPage() {
     });
   }, [torihikisakiById, yagouById]);
 
+  const createTorihikisaki = useCallback(async () => {
+    const kokyakuId = normalizeKokyakuIdInput(createDraft.kokyaku_id);
+    const kokyakuName = norm(createDraft.kokyaku_name);
+    const torihikisakiName = norm(createDraft.torihikisaki_name || kokyakuName);
+    if (!torihikisakiName) {
+      setError('顧客名または取引先名を入力してください');
+      return;
+    }
+    setCreatingKind('torihikisaki');
+    setError('');
+    setOk('');
+    try {
+      const body = {
+        name: torihikisakiName,
+        kokyaku_name: kokyakuName || torihikisakiName,
+        jotai: 'yuko',
+        updated_by: readActorName(),
+      };
+      if (kokyakuId) body.kokyaku_id = kokyakuId;
+      await apiJson('/master/torihikisaki', {
+        method: 'POST',
+        body,
+      });
+      setCreateDraft((prev) => ({
+        ...prev,
+        kokyaku_id: '',
+        kokyaku_name: '',
+        torihikisaki_name: '',
+      }));
+      setOk(`顧客/取引先を追加しました: ${torihikisakiName}`);
+      await loadAll();
+    } catch (e) {
+      setError(e?.message || '取引先の追加に失敗しました');
+    } finally {
+      setCreatingKind('');
+    }
+  }, [createDraft.kokyaku_id, createDraft.kokyaku_name, createDraft.torihikisaki_name, loadAll]);
+
+  const createYagou = useCallback(async () => {
+    const name = norm(createDraft.yagou_name);
+    const torihikisakiId = norm(createDraft.yagou_torihikisaki_id);
+    if (!name) {
+      setError('屋号名を入力してください');
+      return;
+    }
+    setCreatingKind('yagou');
+    setError('');
+    setOk('');
+    try {
+      const body = {
+        name,
+        jotai: 'yuko',
+        updated_by: readActorName(),
+      };
+      if (torihikisakiId) body.torihikisaki_id = torihikisakiId;
+      await apiJson('/master/yagou', { method: 'POST', body });
+      setCreateDraft((prev) => ({ ...prev, yagou_name: '' }));
+      setOk(`屋号を追加しました: ${name}`);
+      await loadAll();
+    } catch (e) {
+      setError(e?.message || '屋号の追加に失敗しました');
+    } finally {
+      setCreatingKind('');
+    }
+  }, [createDraft.yagou_name, createDraft.yagou_torihikisaki_id, loadAll]);
+
+  const createTenpo = useCallback(async () => {
+    const name = norm(createDraft.tenpo_name);
+    let torihikisakiId = norm(createDraft.tenpo_torihikisaki_id);
+    const yagouId = norm(createDraft.tenpo_yagou_id);
+    if (!name) {
+      setError('店舗名を入力してください');
+      return;
+    }
+    if (!torihikisakiId && yagouId) {
+      torihikisakiId = norm(yagouById.get(yagouId)?.torihikisaki_id);
+    }
+    setCreatingKind('tenpo');
+    setError('');
+    setOk('');
+    try {
+      const body = {
+        name,
+        jotai: 'yuko',
+        updated_by: readActorName(),
+      };
+      if (torihikisakiId) body.torihikisaki_id = torihikisakiId;
+      if (yagouId) body.yagou_id = yagouId;
+      await apiJson('/master/tenpo', { method: 'POST', body });
+      setCreateDraft((prev) => ({ ...prev, tenpo_name: '' }));
+      setOk(`店舗を追加しました: ${name}`);
+      await loadAll();
+    } catch (e) {
+      setError(e?.message || '店舗の追加に失敗しました');
+    } finally {
+      setCreatingKind('');
+    }
+  }, [createDraft.tenpo_name, createDraft.tenpo_torihikisaki_id, createDraft.tenpo_yagou_id, loadAll, yagouById]);
+
   return (
     <div className="admin-master-page admin-customer-master-page">
       <div className="admin-master-content">
@@ -649,13 +775,137 @@ export default function AdminCustomerMasterPage() {
             <p className="admin-master-subtitle">kokyaku / torihikisaki / yagou / tenpo を1画面で修正・保存</p>
           </div>
           <div className="admin-master-header-actions">
-            <Link to="/admin/torihikisaki-touroku" className="admin-master-header-tab">新規追加</Link>
             <button type="button" onClick={loadAll} disabled={loading}>{loading ? '更新中...' : '更新'}</button>
           </div>
         </header>
 
         {error ? <div className="admin-master-error">{error}</div> : null}
         {ok ? <div className="admin-master-success">{ok}</div> : null}
+
+        <section className="admin-customer-master-create">
+          <h2>同画面で新規追加</h2>
+          <div className="admin-customer-master-create-grid">
+            <div className="admin-customer-master-create-card">
+              <h3>顧客 / 取引先を追加</h3>
+              <label className="admin-master-field">
+                <span>顧客ID(kokyaku)（任意）</span>
+                <input
+                  value={createDraft.kokyaku_id}
+                  onChange={(e) => setCreateDraft((p) => ({ ...p, kokyaku_id: e.target.value }))}
+                  placeholder="例）KOKYAKU#0001"
+                />
+              </label>
+              <label className="admin-master-field">
+                <span>顧客名(kokyaku)</span>
+                <input
+                  value={createDraft.kokyaku_name}
+                  onChange={(e) => setCreateDraft((p) => ({ ...p, kokyaku_name: e.target.value }))}
+                  placeholder="例）株式会社〇〇"
+                />
+              </label>
+              <label className="admin-master-field">
+                <span>取引先名</span>
+                <input
+                  value={createDraft.torihikisaki_name}
+                  onChange={(e) => setCreateDraft((p) => ({ ...p, torihikisaki_name: e.target.value }))}
+                  placeholder="例）株式会社〇〇"
+                />
+              </label>
+              <button
+                type="button"
+                className="primary"
+                onClick={createTorihikisaki}
+                disabled={creatingKind === 'torihikisaki'}
+              >
+                {creatingKind === 'torihikisaki' ? '追加中...' : '顧客/取引先追加'}
+              </button>
+            </div>
+
+            <div className="admin-customer-master-create-card">
+              <h3>屋号を追加</h3>
+              <label className="admin-master-field">
+                <span>取引先ID（任意）</span>
+                <select
+                  value={createDraft.yagou_torihikisaki_id}
+                  onChange={(e) => setCreateDraft((p) => ({ ...p, yagou_torihikisaki_id: e.target.value }))}
+                >
+                  <option value="">未選択</option>
+                  {torihikisakiOptions.map((it) => (
+                    <option key={it.id} value={it.id}>
+                      {it.id} / {it.name || '(名称未設定)'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="admin-master-field">
+                <span>屋号名</span>
+                <input
+                  value={createDraft.yagou_name}
+                  onChange={(e) => setCreateDraft((p) => ({ ...p, yagou_name: e.target.value }))}
+                  placeholder="例）〇〇ブランド"
+                />
+              </label>
+              <button
+                type="button"
+                className="primary"
+                onClick={createYagou}
+                disabled={creatingKind === 'yagou'}
+              >
+                {creatingKind === 'yagou' ? '追加中...' : '屋号追加'}
+              </button>
+            </div>
+
+            <div className="admin-customer-master-create-card">
+              <h3>店舗を追加</h3>
+              <label className="admin-master-field">
+                <span>取引先ID（任意）</span>
+                <select
+                  value={createDraft.tenpo_torihikisaki_id}
+                  onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_torihikisaki_id: e.target.value }))}
+                >
+                  <option value="">未選択</option>
+                  {torihikisakiOptions.map((it) => (
+                    <option key={it.id} value={it.id}>
+                      {it.id} / {it.name || '(名称未設定)'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="admin-master-field">
+                <span>屋号ID（任意）</span>
+                <select
+                  value={createDraft.tenpo_yagou_id}
+                  onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_yagou_id: e.target.value }))}
+                >
+                  <option value="">未選択</option>
+                  {yagouOptions
+                    .filter((it) => !norm(createDraft.tenpo_torihikisaki_id) || norm(it.torihikisaki_id) === norm(createDraft.tenpo_torihikisaki_id))
+                    .map((it) => (
+                      <option key={it.id} value={it.id}>
+                        {it.id} / {it.name || '(名称未設定)'}
+                      </option>
+                    ))}
+                </select>
+              </label>
+              <label className="admin-master-field">
+                <span>店舗名</span>
+                <input
+                  value={createDraft.tenpo_name}
+                  onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_name: e.target.value }))}
+                  placeholder="例）渋谷店"
+                />
+              </label>
+              <button
+                type="button"
+                className="primary"
+                onClick={createTenpo}
+                disabled={creatingKind === 'tenpo'}
+              >
+                {creatingKind === 'tenpo' ? '追加中...' : '店舗追加'}
+              </button>
+            </div>
+          </div>
+        </section>
 
         <section className="admin-master-toolbar admin-customer-master-toolbar">
           <label className="admin-customer-master-search">
@@ -795,17 +1045,34 @@ export default function AdminCustomerMasterPage() {
           <div className="admin-master-modal-backdrop" onClick={closeEdit} />
           <section className="admin-master-modal" onClick={(e) => e.stopPropagation()}>
             <h2 className="admin-master-inline-editor-title">顧客マスタ編集</h2>
-            <label className="admin-master-field" style={{ marginBottom: 10 }}>
-              <span>入力モード</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={Boolean(editing._manualInput)}
-                  onChange={(e) => setEditing((p) => ({ ...p, _manualInput: e.target.checked }))}
-                />
-                <small>自由入力を許可（通常はOFF推奨）</small>
+            <div className="admin-master-input-mode">
+              <div className="admin-master-input-mode-head">入力モード</div>
+              <div className="admin-master-input-mode-switch" role="tablist" aria-label="入力モード切替">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={!editing._manualInput}
+                  className={!editing._manualInput ? 'is-active' : ''}
+                  onClick={() => setEditing((p) => ({ ...p, _manualInput: false }))}
+                >
+                  構造化入力（推奨）
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={Boolean(editing._manualInput)}
+                  className={editing._manualInput ? 'is-active warning' : 'warning'}
+                  onClick={() => setEditing((p) => ({ ...p, _manualInput: true }))}
+                >
+                  自由入力
+                </button>
               </div>
-            </label>
+              <div className={`admin-master-input-mode-note${editing._manualInput ? ' is-warning' : ''}`}>
+                {editing._manualInput
+                  ? '自由入力中: IDや紐付けを手動変更できます。誤入力に注意してください。'
+                  : '構造化入力中: 候補選択ベースで安全に編集できます。'}
+              </div>
+            </div>
             <div className="admin-master-modal-grid">
               <label className="admin-master-field">
                 <span>顧客ID(kokyaku)</span>
