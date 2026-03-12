@@ -496,6 +496,9 @@ export default function AdminCustomerMasterPage() {
   const saveEdit = useCallback(async () => {
     if (!editing) return;
     const origin = editing._origin || {};
+    const originTorihikisakiId = norm(origin.torihikisaki_id);
+    const originYagouId = norm(origin.yagou_id);
+    const originTenpoId = norm(origin.tenpo_id);
     const actor = norm(
       JSON.parse(localStorage.getItem('misesapo_auth') || '{}')?.name ||
       JSON.parse(localStorage.getItem('misesapo_auth') || '{}')?.email ||
@@ -507,42 +510,46 @@ export default function AdminCustomerMasterPage() {
     setError('');
     setOk('');
     try {
-      if (norm(editing.torihikisaki_id)) {
+      if (originTorihikisakiId) {
         const patch = {};
         if (changed('kokyaku_id')) patch.kokyaku_id = norm(editing.kokyaku_id);
         if (changed('kokyaku_name')) patch.kokyaku_name = norm(editing.kokyaku_name);
         if (changed('torihikisaki_name')) patch.name = norm(editing.torihikisaki_name);
         if (Object.keys(patch).length) {
-          await apiJson(`/master/torihikisaki/${encodeURIComponent(editing.torihikisaki_id)}`, {
+          await apiJson(`/master/torihikisaki/${encodeURIComponent(originTorihikisakiId)}`, {
             method: 'PUT',
             body: { ...patch, updated_by: actor },
           });
         }
       }
 
-      if (norm(editing.yagou_id)) {
+      if (originYagouId) {
         const patch = {};
         if (changed('yagou_name')) patch.name = norm(editing.yagou_name);
         if (norm(editing.torihikisaki_id) && changed('torihikisaki_id')) patch.torihikisaki_id = norm(editing.torihikisaki_id);
         if (Object.keys(patch).length) {
-          await apiJson(`/master/yagou/${encodeURIComponent(editing.yagou_id)}`, {
+          await apiJson(`/master/yagou/${encodeURIComponent(originYagouId)}`, {
             method: 'PUT',
             body: { ...patch, updated_by: actor },
           });
         }
       }
 
-      if (norm(editing.tenpo_id)) {
+      if (originTenpoId) {
         const patch = {};
         if (changed('tenpo_name')) patch.name = norm(editing.tenpo_name);
         if (changed('tenpo_address')) patch.address = norm(editing.tenpo_address);
         if (changed('tenpo_phone')) patch.phone = norm(editing.tenpo_phone);
         if (changed('tenpo_tantou_name')) patch.tantou_name = norm(editing.tenpo_tantou_name);
         if (changed('tenpo_email')) patch.email = norm(editing.tenpo_email);
+        if (changed('kokyaku_id')) patch.kokyaku_id = norm(editing.kokyaku_id);
+        if (changed('kokyaku_name')) patch.kokyaku_name = norm(editing.kokyaku_name);
         if (changed('torihikisaki_id')) patch.torihikisaki_id = norm(editing.torihikisaki_id);
+        if (changed('torihikisaki_name')) patch.torihikisaki_name = norm(editing.torihikisaki_name);
         if (changed('yagou_id')) patch.yagou_id = norm(editing.yagou_id);
+        if (changed('yagou_name')) patch.yagou_name = norm(editing.yagou_name);
         if (Object.keys(patch).length) {
-          await apiJson(`/master/tenpo/${encodeURIComponent(editing.tenpo_id)}`, {
+          await apiJson(`/master/tenpo/${encodeURIComponent(originTenpoId)}`, {
             method: 'PUT',
             body: { ...patch, updated_by: actor },
           });
