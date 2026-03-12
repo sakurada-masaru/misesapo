@@ -64,6 +64,7 @@ const DASHBOARD_PANE_TOGGLE_EVENT = 'misogi-dashboard-pane-toggle';
 const CLEANING_NOTICE_RUNNING_STORAGE_KEY = 'misogi-v2-cleaning-notice-running';
 const CLEANING_NOTICE_SWIPE_MAX = 44;
 const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
+const ADMIN_DIRECT_SIDEBAR_SECTION_IDS = new Set(['dashboard', 'filebox']);
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -1291,10 +1292,16 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       .map((section) => {
         const subItems = Array.isArray(section?.subItems) ? section.subItems : [];
         if (!subItems.length) return null;
+        const directPath = String(subItems[0]?.path || subItems[0]?.to || '').trim();
+        const isDirect = subItems.length === 1
+          && !!directPath
+          && (section?.direct === true || ADMIN_DIRECT_SIDEBAR_SECTION_IDS.has(String(section?.id || '')));
         return {
           id: section.id,
           label: section.label,
           items: subItems,
+          isDirect,
+          directPath: isDirect ? directPath : '',
         };
       })
       .filter(Boolean);
@@ -1419,7 +1426,8 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     if (!useSidebarNav || !sidebarSections.length) return;
     setOpenSidebarSectionId((prev) => {
       if (prev && sidebarSections.some((section) => section.id === prev)) return prev;
-      return sidebarSections[0].id;
+      const firstExpandable = sidebarSections.find((section) => !section.isDirect);
+      return firstExpandable?.id || null;
     });
   }, [sidebarSections, useSidebarNav]);
 
@@ -1429,6 +1437,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       section.items.some((item) => isPathActive(item.path || item.to))
     );
     if (!activeSection) return;
+    if (activeSection.isDirect) return;
     setOpenSidebarSectionId(activeSection.id);
   }, [location.pathname, sidebarSections, useSidebarNav]);
 
@@ -2110,40 +2119,53 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
               <div className="job-entrance-sidebar-scroll">
                 {sidebarSections.map((section) => (
                   <section key={section.id} className="job-entrance-sidebar-section">
-                    <button
-                      type="button"
-                      className={`job-entrance-sidebar-section-title ${openSidebarSectionId === section.id ? 'open' : ''}`}
-                      onClick={() => setOpenSidebarSectionId((prev) => (prev === section.id ? null : section.id))}
-                    >
-                      <span>{t(section.label)}</span>
-                      <span className="job-entrance-sidebar-section-icon">
-                        {openSidebarSectionId === section.id ? '▾' : '▸'}
-                      </span>
-                    </button>
-                    {openSidebarSectionId === section.id ? (
-                      <div className="job-entrance-sidebar-links">
-                        {section.items.map((item) => {
-                          const path = item.path || item.to;
-                          const active = isPathActive(path);
-                          return (
-                            <button
-                              key={item.id}
-                              type="button"
-                              className={`job-entrance-sidebar-link ${active ? 'active' : ''}`}
-                              onClick={() => onSidebarNavigate(path)}
-                              disabled={isTransitioning}
-                            >
-                              {t(item.label)}
-                            </button>
-                          );
-                        })}
-                        {showAdminDashboard && section.id === 'tools' ? (
-                          <div className="job-entrance-sidebar-misogi">
-                            <MisogiSupportOrb />
+                    {section.isDirect ? (
+                      <button
+                        type="button"
+                        className={`job-entrance-sidebar-link ${isPathActive(section.directPath) ? 'active' : ''}`}
+                        onClick={() => onSidebarNavigate(section.directPath)}
+                        disabled={isTransitioning}
+                      >
+                        {t(section.label)}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className={`job-entrance-sidebar-section-title ${openSidebarSectionId === section.id ? 'open' : ''}`}
+                          onClick={() => setOpenSidebarSectionId((prev) => (prev === section.id ? null : section.id))}
+                        >
+                          <span>{t(section.label)}</span>
+                          <span className="job-entrance-sidebar-section-icon">
+                            {openSidebarSectionId === section.id ? '▾' : '▸'}
+                          </span>
+                        </button>
+                        {openSidebarSectionId === section.id ? (
+                          <div className="job-entrance-sidebar-links">
+                            {section.items.map((item) => {
+                              const path = item.path || item.to;
+                              const active = isPathActive(path);
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  className={`job-entrance-sidebar-link ${active ? 'active' : ''}`}
+                                  onClick={() => onSidebarNavigate(path)}
+                                  disabled={isTransitioning}
+                                >
+                                  {t(item.label)}
+                                </button>
+                              );
+                            })}
+                            {showAdminDashboard && section.id === 'tools' ? (
+                              <div className="job-entrance-sidebar-misogi">
+                                <MisogiSupportOrb />
+                              </div>
+                            ) : null}
                           </div>
                         ) : null}
-                      </div>
-                    ) : null}
+                      </>
+                    )}
                   </section>
                 ))}
               </div>

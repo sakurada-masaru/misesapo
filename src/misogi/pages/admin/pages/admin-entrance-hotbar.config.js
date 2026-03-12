@@ -7,6 +7,7 @@ export const ADMIN_HOTBAR = [
   {
     id: 'dashboard',
     label: 'ダッシュボード',
+    direct: true,
     subItems: [
       { id: 'admin-dashboard', label: 'ダッシュボード', path: '/admin/dashboard', group: 'ダッシュボード' },
     ]
@@ -14,6 +15,7 @@ export const ADMIN_HOTBAR = [
   {
     id: 'filebox',
     label: 'ファイルボックス',
+    direct: true,
     subItems: [
       { id: 'company-filebox', label: 'ファイルボックス', path: '/admin/filebox', group: 'ファイルボックス' },
     ]
