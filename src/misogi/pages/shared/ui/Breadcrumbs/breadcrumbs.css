@@ -13,8 +13,8 @@
   justify-content: space-between;
   color: rgba(73, 54, 40, 0.86);
   font-size: 12px;
-  background: #ffdbdb;
-  border-bottom: 1px solid rgba(255, 164, 164, 0.9);
+  background: #badfdb;
+  border-bottom: 1px solid rgba(255, 189, 189, 0.9);
 }
 
 .breadcrumbs-main{
@@ -135,7 +135,7 @@
 }
 
 .breadcrumbs-link:hover{
-  color: #3b3b1a;
+  color: #493628;
   border-bottom-color: rgba(73, 54, 40, 0.45);
 }
 
@@ -179,8 +179,8 @@
 
 [data-theme="light"] .breadcrumbs{
   color: rgba(73, 54, 40, 0.86);
-  background: #ffdbdb;
-  border-bottom: 1px solid rgba(255, 164, 164, 0.9);
+  background: #badfdb;
+  border-bottom: 1px solid rgba(255, 189, 189, 0.9);
 }
 
 [data-theme="light"] .breadcrumbs-link{
@@ -188,7 +188,7 @@
 }
 
 [data-theme="light"] .breadcrumbs-link:hover{
-  color: #3b3b1a;
+  color: #493628;
   border-bottom-color: rgba(73, 54, 40, 0.45);
 }
 
@@ -213,8 +213,9 @@
 }
 
 [data-theme="light"] .breadcrumbs-pane-btn.is-on{
-  border-color: #3b82f6;
-  color: #1d4ed8;
+  border-color: #ffa4a4;
+  color: #493628;
+  background: rgba(255, 189, 189, 0.4);
 }
 
 @media (max-width: 900px){
@@ -926,18 +927,18 @@
 
 .breadcrumbs.breadcrumbs-admin{
   color: #493628;
-  background: #ffdbdb;
+  background: #badfdb;
   border-bottom: 1px solid rgba(255, 189, 189, 0.9);
 }
 
 .breadcrumbs.breadcrumbs-admin .breadcrumbs-link{
   color: #6b5a5a;
-  border-bottom-color: rgba(255, 164, 164, 0.58);
+  border-bottom-color: rgba(73, 54, 40, 0.3);
 }
 
 .breadcrumbs.breadcrumbs-admin .breadcrumbs-link:hover{
   color: #493628;
-  border-bottom-color: rgba(255, 164, 164, 0.88);
+  border-bottom-color: rgba(73, 54, 40, 0.52);
 }
 
 .breadcrumbs.breadcrumbs-admin .breadcrumbs-current{
@@ -948,14 +949,14 @@
 .breadcrumbs.breadcrumbs-admin .breadcrumbs-pane-btn,
 .breadcrumbs.breadcrumbs-admin .breadcrumbs-chat-trigger,
 .breadcrumbs.breadcrumbs-admin .hamburger-menu-trigger{
-  border-color: rgba(255, 164, 164, 0.62);
+  border-color: rgba(255, 189, 189, 0.9);
   background: rgba(255, 255, 255, 0.96);
   color: #493628;
 }
 
 .breadcrumbs.breadcrumbs-admin .breadcrumbs-pane-btn.is-on{
   border-color: #ffa4a4;
-  background: rgba(255, 189, 189, 0.28);
+  background: rgba(255, 189, 189, 0.45);
   color: #493628;
 }
 

@@ -8,12 +8,12 @@
 }
 
 [data-theme="light"] .meibo-page {
-  --meibo-bg: #ffffff;
+  --meibo-bg: #fcf9ea;
   --meibo-panel: #ffffff;
-  --meibo-border: #d1d5db;
-  --meibo-text: #111827;
-  --meibo-muted: #475569;
-  --meibo-accent: #2563eb;
+  --meibo-border: #f5d4d4;
+  --meibo-text: #493628;
+  --meibo-muted: #6b5a5a;
+  --meibo-accent: #ffa4a4;
 }
 
 .meibo-page {
@@ -40,15 +40,12 @@
 }
 
 [data-theme="light"] .meibo-page {
-  background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(59, 130, 246, 0.09), transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, rgba(16, 185, 129, 0.08), transparent 55%),
-    radial-gradient(800px 600px at 60% 120%, rgba(245, 158, 11, 0.06), transparent 60%),
-    #ffffff;
+  background: #fcf9ea;
 }
 
 [data-theme="light"] .meibo-head {
-  background: rgba(255, 255, 255, 0.88);
+  background: #ffbdbd;
+  border-bottom-color: #ffa4a4;
 }
 
 .meibo-back {
@@ -87,8 +84,8 @@
 
 [data-theme="light"] .meibo-head-right input {
   background: #ffffff;
-  border-color: #cbd5e1;
-  color: #111827;
+  border-color: #f5d4d4;
+  color: #493628;
 }
 
 .meibo-head-right button {
@@ -101,9 +98,15 @@
 }
 
 [data-theme="light"] .meibo-head-right button {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  color: #111827;
+  border-color: #f5d4d4;
+  background: #ffffff;
+  color: #493628;
+}
+
+[data-theme="light"] .meibo-err {
+  border-color: #ef4444;
+  color: #b91c1c;
+  background: #fee2e2;
 }
 
 .meibo-head-right button:disabled {
@@ -224,7 +227,7 @@
 
 [data-theme="light"] .hit-row:hover,
 [data-theme="light"] .meibo-row:hover {
-  background: #f8fafc;
+  background: #fff0f0;
 }
 
 .hit-main {
@@ -369,8 +372,8 @@
 }
 
 [data-theme="light"] .meibo-row.active {
-  background: #dbeafe;
-  outline-color: #93c5fd;
+  background: #ffe4e6;
+  outline-color: #fda4af;
 }
 
 .meibo-row .name {
@@ -477,9 +480,9 @@
 [data-theme="light"] .hit-actions .link,
 [data-theme="light"] .tenpo-actions button,
 [data-theme="light"] .tenpo-actions .link {
-  border-color: #cbd5e1;
+  border-color: #f5d4d4;
   background: #ffffff;
-  color: #111827;
+  color: #493628;
 }
 
 .meibo-yagou {
@@ -522,7 +525,7 @@
 [data-theme="light"] .meibo-page .tname,
 [data-theme="light"] .meibo-page .tenpo-name,
 [data-theme="light"] .meibo-page .tenpo-address .txt {
-  color: #111827;
+  color: #493628;
 }
 
 .yagou-block summary::-webkit-details-marker {

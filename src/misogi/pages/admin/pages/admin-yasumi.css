@@ -11,12 +11,12 @@
 }
 
 [data-theme="light"] .admin-yasumi-page {
-  --bg: #f1f5f9;
+  --bg: #fcf9ea;
   --panel: #ffffff;
-  --text: #1e293b;
-  --muted: #64748b;
-  --line: #e2e8f0;
-  --yasumi-grid-line: #cbd5e1;
+  --text: #493628;
+  --muted: #6b5a5a;
+  --line: #ffbdbd;
+  --yasumi-grid-line: #ffbdbd;
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
@@ -25,7 +25,7 @@
 }
 
 [data-theme="light"] .admin-yasumi-page.report-page {
-  background: radial-gradient(1400px 800px at 10% -10%, #dbeafe 0%, var(--bg) 55%);
+  background: radial-gradient(1400px 800px at 10% -10%, #badfdb 0%, var(--bg) 55%);
 }
 
 .admin-yasumi-content {

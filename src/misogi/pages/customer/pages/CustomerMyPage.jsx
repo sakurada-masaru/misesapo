@@ -41,11 +41,26 @@ const MISOGI_CUSTOMER_MYPAGE_BASE = String(
   import.meta.env?.VITE_MISOGI_CUSTOMER_MYPAGE_URL || 'https://misesapo.co.jp/misogi/#/customer/mypage'
 ).trim();
 
+function withQueryParam(url, key, value) {
+  const raw = norm(url);
+  const paramKey = norm(key);
+  const paramValue = encodeURIComponent(norm(value));
+  if (!raw || !paramKey || !paramValue) return raw;
+  const re = new RegExp(`([?&])${paramKey}=[^&#]*`);
+  if (re.test(raw)) return raw.replace(re, `$1${paramKey}=${paramValue}`);
+  const hashIndex = raw.indexOf('#');
+  if (hashIndex >= 0) {
+    const left = raw.slice(0, hashIndex);
+    const hash = raw.slice(hashIndex);
+    return `${left}${hash}${hash.includes('?') ? '&' : '?'}${paramKey}=${paramValue}`;
+  }
+  return `${raw}${raw.includes('?') ? '&' : '?'}${paramKey}=${paramValue}`;
+}
+
 function buildCustomerMyPageUrl(tenpoId) {
-  const id = encodeURIComponent(norm(tenpoId) || 'store');
+  const id = norm(tenpoId) || 'store';
   const base = MISOGI_CUSTOMER_MYPAGE_BASE || 'https://misesapo.co.jp/misogi/#/customer/mypage';
-  const sep = base.includes('?') ? '&' : '?';
-  return `${base}${sep}tenpo_id=${id}`;
+  return withQueryParam(base, 'tenpo_id', id);
 }
 
 function normalizeStoreRow(row) {
@@ -55,7 +70,9 @@ function normalizeStoreRow(row) {
   const yagou = norm(row?.yagou_name);
   const sourceUrl = row?.customer_mypage_url || row?.mypage_url || row?.url;
   const explicitUrl = ensureHttpUrl(sourceUrl);
-  const url = /customer\/mypage/i.test(explicitUrl) ? explicitUrl : buildCustomerMyPageUrl(id);
+  const url = /customer\/mypage/i.test(explicitUrl)
+    ? withQueryParam(explicitUrl, 'tenpo_id', id || 'store')
+    : buildCustomerMyPageUrl(id);
   return {
     id: id || name,
     name,
@@ -378,7 +395,11 @@ export default function CustomerMyPage() {
       );
       if (listRes.ok) {
         const listData = await listRes.json();
-        tenpoRow = asItems(listData)?.[0] || null;
+        const hit = asItems(listData).find((it) => {
+          const id = norm(it?.tenpo_id || it?.id || it?.store_id);
+          return id === scopedTenpoId;
+        });
+        tenpoRow = hit || null;
       }
 
       if (!tenpoRow) {

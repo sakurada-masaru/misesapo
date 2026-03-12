@@ -122,19 +122,24 @@
 
 /* ライトモード（色のみ上書き） */
 [data-theme="light"] {
-  --bg: #eef2f7;
-  --bg-light: #ffffff;
-  --fg: #000000;
-  --text: #000000;
-  --muted: #1f2937;
-  --border: #cbd5e1;
+  --bg: #fcf9ea;
+  --bg-light: #fcf9ea;
+  --fg: #493628;
+  --text: #493628;
+  --muted: #6b5a5a;
+  --border: #ffbdbd;
   --surface: #ffffff;
-  --panel-bg: rgba(255, 255, 255, 0.96);
-  --text-primary: #000000;
-  --text-secondary: rgba(0, 0, 0, 0.82);
-  --border-color: rgba(15, 23, 42, 0.16);
+  --panel-bg: rgba(252, 249, 234, 0.96);
+  --text-primary: #493628;
+  --text-secondary: rgba(73, 54, 40, 0.82);
+  --border-color: rgba(255, 189, 189, 0.9);
   --card-bg: rgba(255, 255, 255, 0.92);
-  --card-border: rgba(15, 23, 42, 0.14);
-  --bg-gradient: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
+  --card-border: rgba(255, 189, 189, 0.9);
+  --accent: #badfdb;
+  --accent-color: #ffa4a4;
+  --accent-glow: rgba(255, 164, 164, 0.35);
+  --primary: #ffa4a4;
+  --primary-600: #ffbdbd;
+  --bg-gradient: radial-gradient(circle at center, #fcf9ea 0%, #ffefef 100%);
   --accent-fg: #fff;
 }

@@ -161,17 +161,32 @@ const MISOGI_CUSTOMER_MYPAGE_BASE = String(
   import.meta.env?.VITE_MISOGI_CUSTOMER_MYPAGE_URL || 'https://misesapo.co.jp/misogi/#/customer/mypage'
 ).trim();
 
+function withQueryParam(url, key, value) {
+  const raw = String(url || '').trim();
+  const paramKey = String(key || '').trim();
+  const paramValue = encodeURIComponent(String(value || '').trim());
+  if (!raw || !paramKey || !paramValue) return raw;
+  const re = new RegExp(`([?&])${paramKey}=[^&#]*`);
+  if (re.test(raw)) return raw.replace(re, `$1${paramKey}=${paramValue}`);
+  const hashIndex = raw.indexOf('#');
+  if (hashIndex >= 0) {
+    const left = raw.slice(0, hashIndex);
+    const hash = raw.slice(hashIndex);
+    return `${left}${hash}${hash.includes('?') ? '&' : '?'}${paramKey}=${paramValue}`;
+  }
+  return `${raw}${raw.includes('?') ? '&' : '?'}${paramKey}=${paramValue}`;
+}
+
 function buildCustomerMyPageUrl(tenpoId = '') {
-  const id = encodeURIComponent(String(tenpoId || '').trim() || 'store');
+  const id = String(tenpoId || '').trim() || 'store';
   const base = MISOGI_CUSTOMER_MYPAGE_BASE || 'https://misesapo.co.jp/misogi/#/customer/mypage';
-  const sep = base.includes('?') ? '&' : '?';
-  return `${base}${sep}tenpo_id=${id}`;
+  return withQueryParam(base, 'tenpo_id', id);
 }
 
 function resolveTenpoUrl(tp) {
   const tenpoId = tp?.tenpo_id || tp?.id || tp?.store_id || tp?.name || '';
   const explicit = normalizeHttpUrl(tp?.url || '');
-  if (/customer\/mypage/i.test(explicit)) return explicit;
+  if (/customer\/mypage/i.test(explicit)) return withQueryParam(explicit, 'tenpo_id', tenpoId || 'store');
   return buildCustomerMyPageUrl(tenpoId);
 }
 

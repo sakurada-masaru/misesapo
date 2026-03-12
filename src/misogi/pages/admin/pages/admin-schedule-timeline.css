@@ -183,12 +183,12 @@
 
 /* ライトモード */
 [data-theme="light"] .admin-schedule-timeline-page {
-  --bg: #f1f5f9;
+  --bg: #fcf9ea;
   --panel: #ffffff;
-  --panel2: #f8fafc;
-  --text: #1e293b;
-  --muted: #64748b;
-  --line: #e2e8f0;
+  --panel2: #fcf9ea;
+  --text: #493628;
+  --muted: #6b5a5a;
+  --line: #ffbdbd;
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
@@ -207,7 +207,7 @@
 
 /* ライトモード用背景 */
 [data-theme="light"] .admin-schedule-timeline-page.report-page {
-  background: radial-gradient(1400px 800px at 10% -10%, #dbeafe 0%, var(--bg) 55%);
+  background: radial-gradient(1400px 800px at 10% -10%, #badfdb 0%, var(--bg) 55%);
 }
 
 /* components.css の .report-page-content { max-width: 560px; margin: auto } を上書き */
@@ -3122,30 +3122,30 @@
 [data-theme="light"] .admin-schedule-timeline-page .field select,
 [data-theme="light"] .admin-schedule-timeline-page .field textarea {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
+  border: 1px solid #ffbdbd;
+  color: #493628;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .field input:focus,
 [data-theme="light"] .admin-schedule-timeline-page .field select:focus,
 [data-theme="light"] .admin-schedule-timeline-page .field textarea:focus {
-  border-color: #3b82f6;
+  border-color: #ffa4a4;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 164, 164, 0.24);
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .field span {
-  color: #475569;
+  color: #6b5a5a;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .pill {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: #fcf9ea;
+  border-color: #ffbdbd;
+  color: #493628;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .pill.subtle {
-  color: #64748b;
+  color: #6b5a5a;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .timelinePC,
@@ -3182,8 +3182,8 @@
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .daytimeChip {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.2);
+  background: rgba(186, 223, 219, 0.42);
+  border-color: #badfdb;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .nameListCell {
@@ -3191,16 +3191,16 @@
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .nameListCell .name {
-  color: #0f172a;
+  color: #493628;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .nameListUnitHeader {
-  background: #f1f5f9;
-  color: #475569;
+  background: #fcf9ea;
+  color: #6b5a5a;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .nameListHeaderCell {
-  color: #475569;
+  color: #6b5a5a;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .slotCellHorizontal {
@@ -3526,7 +3526,7 @@
 
 [data-theme="light"] .admin-schedule-timeline-page .karteDockResizer:hover,
 [data-theme="light"] .admin-schedule-timeline-page .karteDockResizer.resizing {
-  background: rgba(59, 130, 246, 0.3);
+  background: rgba(255, 164, 164, 0.35);
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .karteDockResizerHandle {
@@ -3544,40 +3544,40 @@
 
 /* カルテDock内の文字色 */
 [data-theme="light"] .admin-schedule-timeline-page .kdTitle {
-  color: #0f172a;
+  color: #493628;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .kdMeta {
-  color: #475569;
+  color: #6b5a5a;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .kdSectionTitle {
-  color: #0f172a;
+  color: #493628;
   font-weight: 700;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .kdChip {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: #fcf9ea;
+  border-color: #ffbdbd;
+  color: #493628;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .kdInfoRow {
-  color: #1e293b;
+  color: #493628;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .kdInfoLabel {
-  color: #475569;
+  color: #6b5a5a;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .kdReminderCheckbox {
-  color: #1e293b;
+  color: #493628;
 }
 
 [data-theme="light"] .admin-schedule-timeline-page .kdEmpty {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #64748b;
+  background: #fcf9ea;
+  border-color: #ffbdbd;
+  color: #6b5a5a;
 }
 
 /* カルテDockスクロールバー */
