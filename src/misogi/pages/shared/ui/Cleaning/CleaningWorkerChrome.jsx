@@ -25,7 +25,7 @@ function activeByPath(pathname) {
   const p = String(pathname || '/');
   if (/^\/jobs\/cleaning\/(?:houkoku|report)(?:\/|$)/.test(p)) return 'report';
   if (/^\/jobs\/cleaning\/(?:yotei|schedule|clients)(?:\/|$)/.test(p)) return 'plan';
-  if (/^\/jobs\/cleaning\/availability-declare(?:\/|$)/.test(p)) return 'tools';
+  if (/^\/jobs\/cleaning\/(?:availability-declare|manual)(?:\/|$)/.test(p)) return 'tools';
   if (/^\/jobs\/cleaning\/mypage(?:\/|$)/.test(p)) return 'settings';
   if (/^\/jobs\/cleaning\/entrance(?:\/|$)/.test(p)) return 'settings';
   return '';

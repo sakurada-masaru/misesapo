@@ -91,6 +91,7 @@ export const ADMIN_HOTBAR = [
     label: '運用ツール',
     subItems: [
       { id: 'flow-guide', label: '業務フロー', path: '/flow-guide', group: '基本' },
+      { id: 'cleaning-manual-admin', label: '清掃マニュアル', path: '/jobs/cleaning/manual', group: '基本' },
       { id: 'kadai', label: '課題リスト', path: '/admin/kadai', group: '基本' },
       { id: 'cleaning-houkoku-tool', label: '清掃レポート作成', path: '/admin/tools/cleaning-houkoku', group: '報告書' },
       { id: 'cleaning-houkoku-list', label: 'レポート一覧', path: '/admin/tools/cleaning-houkoku/list', group: '報告書' },

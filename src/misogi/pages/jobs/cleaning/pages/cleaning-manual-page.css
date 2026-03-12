@@ -1,0 +1,213 @@
+.cleaning-manual-react-app {
+  background: #fcf9ea;
+}
+
+.cleaning-manual-react-page {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: calc(70px + env(safe-area-inset-top)) 12px calc(116px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  color: #493628;
+}
+
+.cleaning-manual-react-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cleaning-manual-react-header h1 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  color: #3b3b1a;
+}
+
+.cleaning-manual-react-kicker {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  color: #705a4d;
+}
+
+.cleaning-manual-react-lang {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #ffbdbd;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.cleaning-manual-react-lang button {
+  border: 0;
+  background: transparent;
+  color: #6f574d;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  min-width: 74px;
+}
+
+.cleaning-manual-react-lang button.active {
+  background: #ffa4a4;
+  color: #fff;
+}
+
+.cleaning-manual-react-tabs {
+  position: sticky;
+  top: calc(52px + env(safe-area-inset-top));
+  z-index: 20;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -4px 12px;
+  padding: 8px 4px;
+  background: #fcf9ea;
+}
+
+.cleaning-manual-react-tabs button {
+  flex: 0 0 auto;
+  min-width: 128px;
+  border: 1px solid #ffbdbd;
+  background: #fff;
+  color: #5d4a41;
+  border-radius: 12px;
+  padding: 8px 12px;
+  line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.cleaning-manual-react-tabs button small {
+  opacity: 0.72;
+  font-weight: 600;
+}
+
+.cleaning-manual-react-tabs button.active {
+  background: #badfdb;
+  border-color: #89c9c2;
+  color: #2f3d3a;
+}
+
+.cleaning-manual-react-list {
+  display: grid;
+  gap: 14px;
+}
+
+.cleaning-manual-react-card {
+  border: 1px solid #ffbdbd;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.cleaning-manual-react-card .card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cleaning-manual-react-card .card-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #3b3b1a;
+}
+
+.cleaning-manual-react-card .category-tag {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #334155;
+  background: #fdf2f8;
+}
+
+.cleaning-manual-react-card h3 {
+  margin: 0 0 6px;
+  font-size: 0.86rem;
+  color: #3b3b1a;
+}
+
+.cleaning-manual-react-card p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #493628;
+}
+
+.cleaning-manual-react-card .risk-block {
+  margin-bottom: 10px;
+  background: #fff7f7;
+  border: 1px solid #ffd8d8;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.comparison-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.state-block {
+  border: 1px solid #f1d1d1;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.state-block.bad {
+  background: #fff5f5;
+}
+
+.state-block.good {
+  background: #f6fffe;
+  border-color: #b7e0dc;
+}
+
+.image-row {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.image-row img {
+  width: 180px;
+  max-width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #ead1d1;
+  background: #fff;
+}
+
+.qa-block {
+  border-top: 1px dashed #f2d9d9;
+  padding-top: 10px;
+}
+
+.qa-block .qa-item + .qa-item {
+  margin-top: 8px;
+}
+
+.qa-block .q {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.qa-block .a {
+  color: #5c4a41;
+}
+
+@media (min-width: 900px) {
+  .comparison-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

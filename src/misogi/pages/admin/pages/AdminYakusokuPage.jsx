@@ -58,6 +58,7 @@ const PLAN_BUCKETS = [
   ...WEEKLY_BUCKETS,
   ...BIWEEKLY_BUCKETS,
 ];
+const ICS_CLEANING_PATTERN = /(清掃|ゴミ|グリスト|ダクト|エアコン|ワックス|害虫|厨房|haccp|ラグ交換|換気扇|トイレ|床|メンテ|衛生)/i;
 
 const DEFAULT_ONSITE_FLAGS = {
   has_spare_key: false,
@@ -141,6 +142,521 @@ async function fetchYakusokuWithFallback(path, options = {}) {
   return fetch(`${fallbackBase}${path}`, options);
 }
 
+function unfoldIcsLines(input) {
+  const rawLines = String(input || '').split(/\r?\n/);
+  const lines = [];
+  for (const ln of rawLines) {
+    if ((ln.startsWith(' ') || ln.startsWith('\t')) && lines.length > 0) {
+      lines[lines.length - 1] += ln.slice(1);
+    } else {
+      lines.push(ln);
+    }
+  }
+  return lines;
+}
+
+function decodeIcsText(v) {
+  return String(v || '')
+    .replace(/\\n/g, '\n')
+    .replace(/\\N/g, '\n')
+    .replace(/\\,/g, ',')
+    .replace(/\\;/g, ';')
+    .replace(/\\\\/g, '\\');
+}
+
+function parseIcsDateOnly(raw) {
+  const s = String(raw || '').trim();
+  const m = s.match(/^(\d{4})(\d{2})(\d{2})/);
+  if (!m) return '';
+  return `${m[1]}-${m[2]}-${m[3]}`;
+}
+
+function parseIcsEvents(icsText) {
+  const lines = unfoldIcsLines(icsText);
+  const events = [];
+  let current = null;
+  for (const line of lines) {
+    const ln = String(line || '').trimEnd();
+    if (ln === 'BEGIN:VEVENT') {
+      current = {};
+      continue;
+    }
+    if (ln === 'END:VEVENT') {
+      if (current) events.push(current);
+      current = null;
+      continue;
+    }
+    if (!current) continue;
+    const idx = ln.indexOf(':');
+    if (idx <= 0) continue;
+    const left = ln.slice(0, idx);
+    const value = ln.slice(idx + 1);
+    const name = left.split(';')[0].toUpperCase();
+    if (!(name in current)) current[name] = value;
+  }
+
+  return events.map((ev) => ({
+    uid: String(ev.UID || '').trim(),
+    recurrenceId: String(ev['RECURRENCE-ID'] || '').trim(),
+    summary: decodeIcsText(ev.SUMMARY || ''),
+    description: decodeIcsText(ev.DESCRIPTION || ''),
+    location: decodeIcsText(ev.LOCATION || ''),
+    dtstart: String(ev.DTSTART || '').trim(),
+    dtend: String(ev.DTEND || '').trim(),
+    rrule: String(ev.RRULE || '').trim(),
+  }));
+}
+
+function parseRRuleObject(rrule) {
+  const out = {};
+  const src = String(rrule || '').trim();
+  if (!src) return out;
+  src.split(';').forEach((seg) => {
+    const [k, v] = seg.split('=');
+    const key = String(k || '').trim().toUpperCase();
+    if (!key) return;
+    out[key] = String(v || '').trim();
+  });
+  return out;
+}
+
+function normalizeIcsWeekday(code) {
+  const c = String(code || '').trim().toUpperCase();
+  if (c === 'MO') return 'mon';
+  if (c === 'TU') return 'tue';
+  if (c === 'WE') return 'wed';
+  if (c === 'TH') return 'thu';
+  if (c === 'FR') return 'fri';
+  if (c === 'SA') return 'sat';
+  if (c === 'SU') return 'sun';
+  return '';
+}
+
+function buildTaskMatrixFromIcs(serviceId, rruleObj) {
+  const sid = String(serviceId || '').trim();
+  const matrix = createEmptyTaskMatrix();
+  if (!sid) return matrix;
+  const freq = String(rruleObj?.FREQ || '').toUpperCase();
+  const intervalRaw = Number(rruleObj?.INTERVAL || 1);
+  const interval = Number.isFinite(intervalRaw) && intervalRaw > 0 ? Math.floor(intervalRaw) : 1;
+  const byday = String(rruleObj?.BYDAY || '')
+    .split(',')
+    .map((x) => normalizeIcsWeekday(x))
+    .filter(Boolean);
+
+  if (freq === 'DAILY') {
+    matrix[DAILY_BUCKET.key] = [sid];
+    return matrix;
+  }
+  if (freq === 'WEEKLY') {
+    const target = interval >= 2 ? 'biweekly_' : 'weekly_';
+    const days = byday.length ? byday : ['mon'];
+    days.forEach((d) => {
+      matrix[`${target}${d}`] = [sid];
+    });
+    return matrix;
+  }
+  if (freq === 'YEARLY') {
+    matrix[YEARLY_BUCKET.key] = [sid];
+    return matrix;
+  }
+  matrix[MONTHLY_BUCKET.key] = [sid];
+  return matrix;
+}
+
+function estimateMonthlyQuotaFromIcs(rruleObj) {
+  const freq = String(rruleObj?.FREQ || '').toUpperCase();
+  const intervalRaw = Number(rruleObj?.INTERVAL || 1);
+  const interval = Number.isFinite(intervalRaw) && intervalRaw > 0 ? Math.floor(intervalRaw) : 1;
+  if (freq === 'DAILY') return 30;
+  if (freq === 'WEEKLY') return Math.max(1, Math.floor(4 / interval));
+  return 1;
+}
+
+function normalizeMatchText(raw) {
+  return String(raw || '')
+    .toLowerCase()
+    .replace(/[\u3000\s]+/g, ' ')
+    .replace(/[()（）【】\[\]「」『』"'`]/g, ' ')
+    .replace(/[\/\\|・,，、.:：;；\-＿_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function tokenizeMatchText(raw) {
+  return normalizeMatchText(raw)
+    .split(' ')
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .filter((x) => x.length >= 2);
+}
+
+function computeServiceMatchScore(service, textNorm) {
+  const name = normalizeMatchText(service?.name || '');
+  const category = normalizeMatchText(service?.category || service?.category_concept || '');
+  if (!name) return 0;
+  let score = 0;
+  if (textNorm.includes(name)) score += Math.min(120, name.length * 4);
+  const tokens = tokenizeMatchText(service?.name || '').filter((t) => t.length >= 3);
+  tokens.forEach((tk) => {
+    if (textNorm.includes(tk)) score += Math.min(30, tk.length * 2);
+  });
+
+  const keywordByCategory = [
+    { category: 'aircon', keywords: ['エアコン', '空調'] },
+    { category: 'kitchen', keywords: ['厨房', 'グリスト', 'ダクト', '換気扇', 'フード', 'haccp'] },
+    { category: 'floor', keywords: ['床', 'ワックス'] },
+    { category: 'window', keywords: ['窓', 'ガラス', '壁面'] },
+    { category: 'pest', keywords: ['害虫', 'ゴキブリ', 'ネズミ', '虫'] },
+    { category: 'maintenance', keywords: ['メンテ', '点検', '保守'] },
+    { category: 'cleaning', keywords: ['清掃', '定期', 'スポット'] },
+  ];
+  keywordByCategory.forEach((row) => {
+    if (!category.includes(row.category)) return;
+    row.keywords.forEach((kw) => {
+      if (textNorm.includes(normalizeMatchText(kw))) score += 12;
+    });
+  });
+  return score;
+}
+
+function pickBestServiceByText(services, text, fallbackService = null) {
+  const list = Array.isArray(services) ? services : [];
+  if (!list.length) return fallbackService || null;
+  const norm = normalizeMatchText(text);
+  let best = null;
+  let bestScore = 0;
+  list.forEach((svc) => {
+    const score = computeServiceMatchScore(svc, norm);
+    if (score > bestScore) {
+      bestScore = score;
+      best = svc;
+    }
+  });
+  return bestScore > 0 ? best : (fallbackService || null);
+}
+
+function buildTenpoNeedles(tp) {
+  const arr = [];
+  const push = (v) => {
+    const s = String(v || '').trim();
+    if (s) arr.push(s);
+  };
+  push(tp?.name);
+  push(tp?.yagou_name);
+  push(tp?.torihikisaki_name);
+  push(`${String(tp?.yagou_name || '').trim()} ${String(tp?.name || '').trim()}`.trim());
+  tokenizeMatchText(tp?.name || '').forEach(push);
+  tokenizeMatchText(tp?.yagou_name || '').forEach(push);
+  return Array.from(new Set(arr.map((x) => normalizeMatchText(x)).filter(Boolean)));
+}
+
+function pickBestTenpoByText(tenpos, text) {
+  const list = Array.isArray(tenpos) ? tenpos : [];
+  const norm = normalizeMatchText(text);
+  let best = null;
+  let bestScore = 0;
+  list.forEach((tp) => {
+    const needles = buildTenpoNeedles(tp);
+    let score = 0;
+    needles.forEach((nd) => {
+      if (!nd) return;
+      if (norm.includes(nd)) score = Math.max(score, Math.min(180, nd.length * 5));
+    });
+    if (score > bestScore) {
+      bestScore = score;
+      best = tp;
+    }
+  });
+  return { tenpo: best, score: bestScore };
+}
+
+function pickLocationHead(raw) {
+  const src = String(raw || '').trim();
+  if (!src) return '';
+  const cutByComma = src.split(/[,\n]/)[0] || '';
+  const cutByAddress = cutByComma.split(/日本、|〒/)[0] || cutByComma;
+  return String(cutByAddress || '').trim();
+}
+
+function guessStoreLabelFromEvent(summaryRaw, locationRaw) {
+  const locationHead = pickLocationHead(locationRaw);
+  if (locationHead) return locationHead;
+  const summary = String(summaryRaw || '').trim();
+  if (!summary) return '';
+  const hint = extractSummaryHints(summary);
+  return String(hint?.tenpoHint || summary).trim();
+}
+
+function bigramDiceSimilarity(aRaw, bRaw) {
+  const a = normalizeMatchText(aRaw).replace(/\s+/g, '');
+  const b = normalizeMatchText(bRaw).replace(/\s+/g, '');
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
+  const toBigrams = (s) => {
+    const arr = [];
+    for (let i = 0; i < s.length - 1; i += 1) arr.push(s.slice(i, i + 2));
+    return arr;
+  };
+  const aGrams = toBigrams(a);
+  const bGrams = toBigrams(b);
+  if (!aGrams.length || !bGrams.length) return 0;
+  const freq = new Map();
+  aGrams.forEach((g) => freq.set(g, (freq.get(g) || 0) + 1));
+  let hit = 0;
+  bGrams.forEach((g) => {
+    const c = freq.get(g) || 0;
+    if (c > 0) {
+      hit += 1;
+      freq.set(g, c - 1);
+    }
+  });
+  return (2 * hit) / (aGrams.length + bGrams.length);
+}
+
+function pickBestTenpoByEvent(tenpos, { summary, location, description, tenpoHint }) {
+  const list = Array.isArray(tenpos) ? tenpos : [];
+  if (!list.length) return { tenpo: null, score: 0 };
+  const summaryNorm = normalizeMatchText(summary);
+  const locationNorm = normalizeMatchText(location);
+  const descriptionNorm = normalizeMatchText(description);
+  const hintNorm = normalizeMatchText(tenpoHint);
+  const locationHead = pickLocationHead(location);
+  const summaryHead = String(summary || '').split(/[\u3000]{2,}|\s{2,}|\/|／|\||｜/)[0] || '';
+  const mergedNorm = [summaryNorm, locationNorm, descriptionNorm].filter(Boolean).join(' ');
+
+  let best = null;
+  let bestScore = 0;
+  let secondScore = 0;
+  list.forEach((tp) => {
+    const nameNorm = normalizeMatchText(tp?.name || '');
+    const yagouNorm = normalizeMatchText(tp?.yagou_name || '');
+    const toriNorm = normalizeMatchText(tp?.torihikisaki_name || '');
+    const joinedNorm = normalizeMatchText(`${tp?.yagou_name || ''} ${tp?.name || ''}`);
+    let score = 0;
+
+    if (nameNorm) {
+      if (locationNorm.includes(nameNorm)) score += 520 + Math.min(220, nameNorm.length * 5);
+      if (summaryNorm.includes(nameNorm)) score += 360 + Math.min(180, nameNorm.length * 4);
+      if (descriptionNorm.includes(nameNorm)) score += 180 + Math.min(120, nameNorm.length * 3);
+    }
+    if (yagouNorm) {
+      if (locationNorm.includes(yagouNorm)) score += 280 + Math.min(150, yagouNorm.length * 4);
+      if (summaryNorm.includes(yagouNorm)) score += 260 + Math.min(140, yagouNorm.length * 4);
+      if (descriptionNorm.includes(yagouNorm)) score += 120 + Math.min(100, yagouNorm.length * 3);
+    }
+    if (joinedNorm && (summaryNorm.includes(joinedNorm) || locationNorm.includes(joinedNorm))) {
+      score += 420;
+    }
+    if (hintNorm) {
+      if (nameNorm && (hintNorm.includes(nameNorm) || nameNorm.includes(hintNorm))) score += 320;
+      if (yagouNorm && (hintNorm.includes(yagouNorm) || yagouNorm.includes(hintNorm))) score += 260;
+      if (joinedNorm && (hintNorm.includes(joinedNorm) || joinedNorm.includes(hintNorm))) score += 400;
+    }
+    if (nameNorm && yagouNorm) {
+      const bothMatched = (
+        (summaryNorm.includes(nameNorm) || locationNorm.includes(nameNorm)) &&
+        (summaryNorm.includes(yagouNorm) || locationNorm.includes(yagouNorm))
+      );
+      if (bothMatched) score += 260;
+    }
+    if (toriNorm && (summaryNorm.includes(toriNorm) || locationNorm.includes(toriNorm))) {
+      score += 90;
+    }
+
+    const fallback = pickBestTenpoByText([tp], mergedNorm)?.score || 0;
+    score += Math.floor(fallback * 0.6);
+
+    // 表記ゆれ吸収: LOCATION先頭やSUMMARY先頭との近似一致を補助点にする
+    const approxTarget = `${tp?.yagou_name || ''} ${tp?.name || ''}`.trim();
+    const simLoc = bigramDiceSimilarity(locationHead, approxTarget);
+    const simSum = bigramDiceSimilarity(summaryHead, approxTarget);
+    const sim = Math.max(simLoc, simSum);
+    if (sim >= 0.5) score += Math.floor(sim * 240);
+
+    if (score > bestScore) {
+      secondScore = bestScore;
+      bestScore = score;
+      best = tp;
+    } else if (score > secondScore) {
+      secondScore = score;
+    }
+  });
+  // 近似一致が競っている場合は誤マッチ回避のため未一致扱い
+  if (bestScore > 0 && secondScore > 0 && (bestScore - secondScore) < 18) {
+    return { tenpo: null, score: 0 };
+  }
+  return { tenpo: best, score: bestScore };
+}
+
+function extractSummaryHints(summaryRaw) {
+  const summary = String(summaryRaw || '').trim();
+  const parts = summary
+    .split(/[\/／|｜]/)
+    .map((x) => String(x || '').trim())
+    .filter(Boolean);
+  const partsBySpace = summary
+    .split(/[\u3000]{1,}|[\s]{2,}/)
+    .map((x) => String(x || '').trim())
+    .filter(Boolean);
+  const useParts = parts.length >= 2 ? parts : (partsBySpace.length >= 2 ? partsBySpace : parts);
+  if (useParts.length >= 3) {
+    return {
+      tenpoHint: `${useParts[0]} ${useParts[1]}`.trim(),
+      planHint: useParts.slice(2).join(' '),
+    };
+  }
+  if (useParts.length === 2) {
+    return {
+      tenpoHint: useParts[0],
+      planHint: useParts[1],
+    };
+  }
+  return {
+    tenpoHint: summary,
+    planHint: summary,
+  };
+}
+
+function stripHtmlTags(raw) {
+  return String(raw || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractServiceContentFromEvent(summaryRaw, descriptionRaw, fallbackServiceName = '', locationRaw = '') {
+  const summary = String(summaryRaw || '').trim();
+  const description = stripHtmlTags(descriptionRaw || '');
+  const location = String(locationRaw || '').trim();
+  const src = [summary, description, location].filter(Boolean).join('\n');
+  if (!src) {
+    const fallback = String(fallbackServiceName || '').trim();
+    return { text: fallback, tags: fallback ? [fallback] : [] };
+  }
+  const cleaningHints = /(清掃|洗浄|駆除|点検|交換|修理|回収|高圧|グリスト|エアコン|床|フィルター|換気扇|レンジフード|ラグ|マット|害虫|ネズミ|ダクト|ワックス)/i;
+  const normalized = src
+    .replace(/\r/g, '\n')
+    .replace(/[【\[]/g, '\n【')
+    .replace(/[】\]]/g, '】\n')
+    .replace(/[\t　]{2,}/g, '\n')
+    .replace(/\s{2,}/g, '\n');
+  const roughTokens = normalized
+    .split(/[\n、,，;；\/／|｜・]+/)
+    .map((x) => String(x || '').trim())
+    .filter(Boolean)
+    .map((x) => x.replace(/\s+/g, ' ').trim());
+  const tokens = roughTokens
+    .filter((tk) => cleaningHints.test(tk))
+    .map((tk) => tk.replace(/^(毎月|毎週|隔月|半月|四半期|半年|年次|都度|スポット)\s*/g, '').trim())
+    .filter(Boolean);
+  const dedup = Array.from(new Set(tokens)).slice(0, 10);
+  if (!dedup.length) {
+    const fallback = String(fallbackServiceName || summary || '').trim();
+    return { text: fallback, tags: fallback ? [fallback] : [] };
+  }
+  return {
+    text: dedup.join(' / ').slice(0, 300),
+    tags: dedup,
+  };
+}
+
+function splitServiceContentTags(raw) {
+  return Array.from(
+    new Set(
+      String(raw || '')
+        .split(/[\/／|｜,，、;\n]+/)
+        .map((x) => String(x || '').trim())
+        .filter(Boolean)
+        .slice(0, 20)
+    )
+  );
+}
+
+function extractPriceCandidatesFromEvent(summaryRaw, descriptionRaw, locationRaw = '') {
+  const text = [summaryRaw, descriptionRaw, locationRaw]
+    .map((v) => stripHtmlTags(v || ''))
+    .filter(Boolean)
+    .join('\n');
+  if (!text) return [];
+  const values = [];
+  const patterns = [
+    /[¥￥]\s*([0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)/g,
+    /([0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)\s*円/g,
+  ];
+  patterns.forEach((p) => {
+    let m = p.exec(text);
+    while (m) {
+      const n = Number(String(m[1] || '').replace(/,/g, ''));
+      if (Number.isFinite(n) && n >= 1000 && n <= 1000000) values.push(Math.trunc(n));
+      m = p.exec(text);
+    }
+  });
+  return Array.from(new Set(values)).sort((a, b) => a - b);
+}
+
+function buildSiteMergeKey(src) {
+  const tenpoId = String(src?.tenpo_id || '').trim();
+  if (tenpoId) return `id:${tenpoId}`;
+  const yagou = normalizeMatchText(src?.yagou_name || '');
+  const tenpo = normalizeMatchText(src?.tenpo_name || '');
+  const key = `${yagou}|${tenpo}`;
+  return key === '|' ? '' : `name:${key}`;
+}
+
+function buildIcsDedupKey(row) {
+  const uid = String(row?.uid || '').trim();
+  if (uid) return `uid:${uid}`;
+  const summary = normalizeMatchText(row?.summary || '');
+  const location = normalizeMatchText(row?.location || '');
+  const type = String(row?.type || '').trim();
+  const rule = normalizeMatchText(JSON.stringify(row?.rruleObj || {}));
+  return `fallback:${summary}|${location}|${type}|${rule}`;
+}
+
+function pickBetterIcsRow(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  const aRec = String(a?.recurrenceId || '').trim();
+  const bRec = String(b?.recurrenceId || '').trim();
+  if (!aRec && bRec) return a;
+  if (aRec && !bRec) return b;
+
+  const aCan = Boolean(a?.canCreate);
+  const bCan = Boolean(b?.canCreate);
+  if (aCan && !bCan) return a;
+  if (!aCan && bCan) return b;
+
+  const aScore = Number(a?.matchedScore || 0);
+  const bScore = Number(b?.matchedScore || 0);
+  if (aScore !== bScore) return aScore > bScore ? a : b;
+
+  const aStart = String(a?.startDate || '');
+  const bStart = String(b?.startDate || '');
+  if (aStart && bStart && aStart !== bStart) return aStart < bStart ? a : b;
+
+  const aLen = String(a?.summary || '').length;
+  const bLen = String(b?.summary || '').length;
+  if (aLen !== bLen) return aLen > bLen ? a : b;
+  return a;
+}
+
+function dedupeIcsPreviewRows(rows) {
+  const src = Array.isArray(rows) ? rows : [];
+  const byKey = new Map();
+  src.forEach((row) => {
+    const key = buildIcsDedupKey(row);
+    const prev = byKey.get(key);
+    byKey.set(key, pickBetterIcsRow(prev, row));
+  });
+  return Array.from(byKey.values());
+}
+
 export default function AdminYakusokuPage() {
   const [items, setItems] = useState([]);
   const [services, setServices] = useState([]);
@@ -151,6 +667,20 @@ export default function AdminYakusokuPage() {
   const [modalData, setModalData] = useState(null);
   const [servicePickerOpen, setServicePickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [icsModalOpen, setIcsModalOpen] = useState(false);
+  const [icsText, setIcsText] = useState('');
+  const [icsFileName, setIcsFileName] = useState('');
+  const [icsOnlyCleaning, setIcsOnlyCleaning] = useState(true);
+  const [icsPreview, setIcsPreview] = useState([]);
+  const [icsParseError, setIcsParseError] = useState('');
+  const [icsImporting, setIcsImporting] = useState(false);
+  const [icsImportSummary, setIcsImportSummary] = useState(null);
+  const [icsContentSyncing, setIcsContentSyncing] = useState(false);
+  const [icsContentSyncSummary, setIcsContentSyncSummary] = useState(null);
+  const [icsPriceSyncing, setIcsPriceSyncing] = useState(false);
+  const [icsPriceSyncSummary, setIcsPriceSyncSummary] = useState(null);
+  const [siteNameBackfilling, setSiteNameBackfilling] = useState(false);
+  const [siteNameBackfillSummary, setSiteNameBackfillSummary] = useState(null);
 
   const getServiceCategoryMeta = useCallback((svc) => {
     const raw = String(svc?.category || svc?.category_concept || '').trim();
@@ -837,11 +1367,958 @@ export default function AdminYakusokuPage() {
     return m;
   }, [services, modalData?.service_ids, modalData?.service_names]);
 
+  const serviceMasterNameById = useMemo(() => {
+    const m = new Map();
+    (services || []).forEach((s) => {
+      const sid = String(s?.service_id || '').trim();
+      if (!sid) return;
+      m.set(sid, String(s?.name || sid).trim());
+    });
+    return m;
+  }, [services]);
+
+  const serviceMasterIdSet = useMemo(() => new Set(Array.from(serviceMasterNameById.keys())), [serviceMasterNameById]);
+
   const toServiceTagLabel = useCallback((rawTag) => {
     const key = String(rawTag || '').trim();
     if (!key) return '';
     return serviceDisplayNameById.get(key) || key;
   }, [serviceDisplayNameById]);
+
+  const defaultTeikiService = useMemo(() => {
+    const list = Array.isArray(services) ? services : [];
+    return (
+      list.find((s) => /定期清掃/.test(String(s?.name || ''))) ||
+      list.find((s) => /清掃/.test(String(s?.name || ''))) ||
+      list[0] ||
+      null
+    );
+  }, [services]);
+
+  const defaultTanpatsuService = useMemo(() => {
+    const list = Array.isArray(services) ? services : [];
+    return (
+      list.find((s) => /スポット清掃|単発|追加清掃/.test(String(s?.name || ''))) ||
+      list.find((s) => /清掃/.test(String(s?.name || ''))) ||
+      list[0] ||
+      null
+    );
+  }, [services]);
+
+  const existingIcsSourceKeys = useMemo(() => {
+    const set = new Set();
+    (items || []).forEach((it) => {
+      const memo = String(it?.memo || '');
+      const m = memo.match(/ics_source=([^;\s]+)/i);
+      if (m?.[1]) set.add(String(m[1]).trim());
+    });
+    return set;
+  }, [items]);
+
+  const existingIcsUidKeys = useMemo(() => {
+    const set = new Set();
+    (items || []).forEach((it) => {
+      const memo = String(it?.memo || '');
+      const mk = memo.match(/ics_uid_keys=([^;\s]+)/i);
+      if (mk?.[1]) {
+        String(mk[1])
+          .split(',')
+          .map((x) => String(x || '').trim())
+          .filter(Boolean)
+          .forEach((uid) => set.add(uid));
+      }
+      const m = memo.match(/ics_source=([^;\s]+)/i);
+      if (!m?.[1]) return;
+      const source = String(m[1]).trim();
+      const uid = source.split('|')[0];
+      if (uid) set.add(uid);
+    });
+    return set;
+  }, [items]);
+
+  const resolveTenpoByInput = useCallback((inputRaw) => {
+    const input = String(inputRaw || '').trim();
+    if (!input) return null;
+    const byId = tenpoMetaById.get(input);
+    if (byId) return byId;
+    const byName = tenpoMetaByName.get(input);
+    if (byName) return byName;
+    const norm = normalizeMatchText(input);
+    let best = null;
+    let bestScore = 0;
+    (tenpos || []).forEach((tp) => {
+      const display = formatTenpoDisplay(tp.tenpo_id, tp.name, tp.yagou_name);
+      const names = [tp?.name, tp?.yagou_name, tp?.torihikisaki_name, display, tp?.tenpo_id];
+      let score = 0;
+      names.forEach((n) => {
+        const nn = normalizeMatchText(n);
+        if (!nn) return;
+        if (nn === norm) score = Math.max(score, 300);
+        else if (nn.includes(norm) || norm.includes(nn)) score = Math.max(score, Math.min(220, nn.length * 3));
+      });
+      if (score > bestScore) {
+        bestScore = score;
+        best = tp;
+      }
+    });
+    return bestScore > 0 ? best : null;
+  }, [tenpoMetaById, tenpoMetaByName, tenpos, formatTenpoDisplay]);
+
+  const parseIcsToPreview = useCallback(() => {
+    setIcsParseError('');
+    setIcsImportSummary(null);
+    setIcsContentSyncSummary(null);
+    setIcsPriceSyncSummary(null);
+    const src = String(icsText || '').trim();
+    if (!src) {
+      setIcsPreview([]);
+      setIcsParseError('ICS内容が空です');
+      return;
+    }
+    const parsed = parseIcsEvents(src);
+    if (!parsed.length) {
+      setIcsPreview([]);
+      setIcsParseError('VEVENT が見つかりません');
+      return;
+    }
+
+    const previewRaw = parsed.map((ev, idx) => {
+      const sourceKey = `${String(ev.uid || `NO_UID_${idx + 1}`).trim()}|${String(ev.recurrenceId || 'base').trim()}`;
+      const summaryHints = extractSummaryHints(ev.summary);
+      const summaryNorm = normalizeMatchText(ev.summary);
+      const locationNorm = normalizeMatchText(ev.location);
+      const descriptionNorm = normalizeMatchText(ev.description);
+      const haystack = [ev.summary, ev.location, ev.description].filter(Boolean).join(' ');
+      // SUMMARY優先: 屋号/店舗/プランが載る前提のため、重みを高くする
+      const weightedText = [summaryNorm, summaryNorm, summaryHints.tenpoHint, locationNorm, descriptionNorm].filter(Boolean).join(' ');
+      const haystackNorm = normalizeMatchText(weightedText);
+      const isCleaning = ICS_CLEANING_PATTERN.test(haystack);
+      const type = String(ev.rrule || '').trim() ? 'teiki' : 'tanpatsu';
+      const fallbackService = type === 'teiki' ? defaultTeikiService : defaultTanpatsuService;
+      const serviceText = [summaryHints.planHint, summaryNorm, descriptionNorm].filter(Boolean).join(' ');
+      const matchedService = pickBestServiceByText(services, serviceText, fallbackService);
+      const serviceId = String(matchedService?.service_id || '').trim();
+      const serviceName = serviceMasterNameById.get(serviceId) || String(matchedService?.name || '').trim();
+      const matchedResult = pickBestTenpoByEvent(tenpos, {
+        summary: ev.summary,
+        location: ev.location,
+        description: ev.description,
+        tenpoHint: summaryHints.tenpoHint,
+      });
+      const matchedTenpo = matchedResult.tenpo;
+      const matchedScore = matchedResult.score;
+      const unresolvedStoreLabel = matchedTenpo ? '' : guessStoreLabelFromEvent(ev.summary, ev.location);
+      const extractedServiceContent = extractServiceContentFromEvent(ev.summary, ev.description, serviceName, ev.location);
+      const extractedPriceCandidates = extractPriceCandidatesFromEvent(ev.summary, ev.description, ev.location);
+
+      const rruleObj = parseRRuleObject(ev.rrule);
+      const monthlyQuota = estimateMonthlyQuotaFromIcs(rruleObj);
+      const taskMatrix = buildTaskMatrixFromIcs(serviceId, rruleObj);
+      const startDate = parseIcsDateOnly(ev.dtstart);
+      const duplicate = existingIcsSourceKeys.has(sourceKey) || (String(ev.uid || '').trim() ? existingIcsUidKeys.has(String(ev.uid || '').trim()) : false);
+      const hasKnownService = Boolean(serviceId && serviceMasterIdSet.has(serviceId));
+      const canCreate = Boolean(
+        matchedTenpo &&
+        hasKnownService &&
+        startDate &&
+        (!icsOnlyCleaning || isCleaning) &&
+        !duplicate
+      );
+      const reason = duplicate
+        ? '既存取込済み'
+        : (!matchedTenpo
+          ? `店舗未一致${unresolvedStoreLabel ? `（候補: ${unresolvedStoreLabel}）` : ''}`
+          : (!serviceId
+            ? 'サービス未設定'
+            : (!hasKnownService
+              ? 'サービス未一致(マスタ外)'
+            : (!startDate
+              ? '日付不正'
+              : ((!icsOnlyCleaning || isCleaning) ? '' : '清掃対象外')))));
+
+      return {
+        sourceKey,
+        uid: ev.uid,
+        recurrenceId: ev.recurrenceId,
+        summary: ev.summary || '(no summary)',
+        location: ev.location || '',
+        description: ev.description || '',
+        unresolvedStoreLabel,
+        summaryHints,
+        haystack: haystackNorm,
+        startDate,
+        endDate: parseIcsDateOnly(ev.dtend),
+        type,
+        isCleaning,
+        duplicate,
+        include: (!icsOnlyCleaning || isCleaning) && !duplicate,
+        canCreate,
+        reason,
+        monthlyQuota,
+        serviceId,
+        serviceName,
+        serviceContent: extractedServiceContent.text,
+        serviceContentTags: extractedServiceContent.tags,
+        priceCandidates: extractedPriceCandidates,
+        matchedScore,
+        rruleObj,
+        taskMatrix,
+        tenpoInput: matchedTenpo ? formatTenpoDisplay(matchedTenpo.tenpo_id, matchedTenpo.name, matchedTenpo.yagou_name) : '',
+        tenpo: matchedTenpo ? {
+          tenpo_id: matchedTenpo.tenpo_id,
+          tenpo_name: matchedTenpo.name,
+          yagou_id: matchedTenpo.yagou_id || '',
+          yagou_name: matchedTenpo.yagou_name || '',
+          torihikisaki_id: matchedTenpo.torihikisaki_id || '',
+          torihikisaki_name: matchedTenpo.torihikisaki_name || '',
+        } : null,
+      };
+    });
+
+    const deduped = dedupeIcsPreviewRows(previewRaw);
+    const preview = icsOnlyCleaning ? deduped.filter((r) => r.isCleaning) : deduped;
+    setIcsPreview(preview);
+  }, [
+    icsText,
+    tenpos,
+    services,
+    defaultTeikiService,
+    defaultTanpatsuService,
+    serviceMasterNameById,
+    serviceMasterIdSet,
+    existingIcsSourceKeys,
+    existingIcsUidKeys,
+    icsOnlyCleaning,
+    formatTenpoDisplay,
+  ]);
+
+  const updateIcsRow = useCallback((sourceKey, patch) => {
+    setIcsPreview((prev) => (
+      Array.isArray(prev)
+        ? prev.map((row) => (row.sourceKey === sourceKey ? { ...row, ...patch } : row))
+        : prev
+    ));
+  }, []);
+
+  const excludeUnmatchedIcsRows = useCallback(() => {
+    setIcsPreview((prev) => (
+      Array.isArray(prev)
+        ? prev.map((row) => (row?.tenpo?.tenpo_id ? row : { ...row, include: false }))
+        : prev
+    ));
+  }, []);
+
+  const applyTenpoInputToRow = useCallback((sourceKey, inputRaw) => {
+    const picked = resolveTenpoByInput(inputRaw);
+    if (!picked) {
+      updateIcsRow(sourceKey, { tenpo: null, tenpoInput: String(inputRaw || '') });
+      return;
+    }
+    updateIcsRow(sourceKey, {
+      tenpoInput: formatTenpoDisplay(picked.tenpo_id, picked.name, picked.yagou_name),
+      tenpo: {
+        tenpo_id: picked.tenpo_id,
+        tenpo_name: picked.name || '',
+        yagou_id: picked.yagou_id || '',
+        yagou_name: picked.yagou_name || '',
+        torihikisaki_id: picked.torihikisaki_id || '',
+        torihikisaki_name: picked.torihikisaki_name || '',
+      },
+    });
+  }, [resolveTenpoByInput, updateIcsRow, formatTenpoDisplay]);
+
+  const applyServiceToRow = useCallback((sourceKey, nextServiceId) => {
+    const sid = String(nextServiceId || '').trim();
+    const svc = (services || []).find((s) => String(s?.service_id || '').trim() === sid) || null;
+    const canonicalName = serviceMasterNameById.get(sid) || String(svc?.name || '').trim();
+    setIcsPreview((prev) => (
+      Array.isArray(prev)
+        ? prev.map((row) => {
+          if (row.sourceKey !== sourceKey) return row;
+          return {
+            ...row,
+            serviceId: sid,
+            serviceName: canonicalName,
+            serviceContent: String(row?.serviceContent || '').trim() || canonicalName,
+            serviceContentTags: Array.isArray(row?.serviceContentTags) && row.serviceContentTags.length
+              ? row.serviceContentTags
+              : (canonicalName ? [canonicalName] : []),
+            taskMatrix: buildTaskMatrixFromIcs(sid, row.rruleObj || {}),
+          };
+        })
+        : prev
+    ));
+  }, [services, serviceMasterNameById]);
+
+  const evaluateIcsRow = useCallback((row) => {
+    const duplicate = existingIcsSourceKeys.has(String(row?.sourceKey || '').trim());
+    const uid = String(row?.uid || '').trim();
+    const duplicateByUid = uid ? existingIcsUidKeys.has(uid) : false;
+    const isCleaning = Boolean(row?.isCleaning);
+    const include = Boolean(row?.include);
+    if (!include) return { duplicate, canCreate: false, reason: '除外' };
+    if (duplicate || duplicateByUid) return { duplicate: true, canCreate: false, reason: '既存取込済み' };
+    if (icsOnlyCleaning && !isCleaning) return { duplicate, canCreate: false, reason: '清掃対象外' };
+    if (!row?.tenpo?.tenpo_id) {
+      const unresolvedLabel = String(row?.unresolvedStoreLabel || '').trim();
+      return {
+        duplicate,
+        canCreate: false,
+        reason: unresolvedLabel
+          ? `店舗未一致（候補: ${unresolvedLabel} / 解約・名称変更候補）`
+          : '店舗未一致（解約・名称変更候補）',
+      };
+    }
+    if (!String(row?.serviceId || '').trim()) return { duplicate, canCreate: false, reason: 'サービス未設定' };
+    if (!serviceMasterIdSet.has(String(row?.serviceId || '').trim())) return { duplicate, canCreate: false, reason: 'サービス未一致(マスタ外)' };
+    if (!String(row?.startDate || '').trim()) return { duplicate, canCreate: false, reason: '日付不正' };
+    return { duplicate, canCreate: true, reason: '' };
+  }, [existingIcsSourceKeys, existingIcsUidKeys, icsOnlyCleaning, serviceMasterIdSet]);
+
+  const resolvedIcsRows = useMemo(() => (
+    (Array.isArray(icsPreview) ? icsPreview : []).map((row) => {
+      const ev = evaluateIcsRow(row);
+      return { ...row, ...ev };
+    })
+  ), [icsPreview, evaluateIcsRow]);
+
+  const importIcsPreviewToYakusoku = useCallback(async () => {
+    const mergeableRows = (resolvedIcsRows || []).filter((r) => {
+      if (!Boolean(r?.include)) return false;
+      if (icsOnlyCleaning && !Boolean(r?.isCleaning)) return false;
+      if (!String(r?.tenpo?.tenpo_id || '').trim()) return false;
+      const sid = String(r?.serviceId || '').trim();
+      return Boolean(sid && serviceMasterIdSet.has(sid));
+    });
+    if (!mergeableRows.length) {
+      window.alert('統合対象がありません（対象ON/清掃判定/店舗/サービスを確認）');
+      return;
+    }
+
+    const mergeTaskMatrix = (baseMatrix, nextMatrix) => {
+      const out = normalizeTaskMatrix(baseMatrix);
+      const src = normalizeTaskMatrix(nextMatrix);
+      PLAN_BUCKETS.forEach((b) => {
+        const k = b.key;
+        const merged = new Set([...(out[k] || []), ...(src[k] || [])].map((x) => String(x || '').trim()).filter(Boolean));
+        out[k] = Array.from(merged);
+      });
+      return out;
+    };
+
+    const grouped = new Map();
+    for (const row of mergeableRows) {
+      const tenpoId = String(row?.tenpo?.tenpo_id || '').trim();
+      if (!tenpoId) continue;
+      const siteKey = buildSiteMergeKey(row?.tenpo || {});
+      if (!siteKey) continue;
+      const sid = String(row?.serviceId || '').trim();
+      const sname = serviceMasterNameById.get(sid) || String(row?.serviceName || '').trim();
+      const uid = String(row?.uid || '').trim();
+      const sourceKey = String(row?.sourceKey || '').trim();
+
+      if (!grouped.has(siteKey)) {
+        grouped.set(siteKey, {
+          siteKey,
+          tenpo: { ...(row.tenpo || {}) },
+          type: row.type === 'teiki' ? 'teiki' : 'tanpatsu',
+          monthlyQuota: Math.max(1, Number(row?.monthlyQuota || 1)),
+          startDate: String(row?.startDate || '').trim(),
+          taskMatrix: normalizeTaskMatrix(row?.taskMatrix || createEmptyTaskMatrix()),
+          serviceIds: sid ? [sid] : [],
+          serviceNames: sname ? [sname] : [],
+          serviceContentTags: Array.isArray(row?.serviceContentTags)
+            ? row.serviceContentTags.map((x) => String(x || '').trim()).filter(Boolean)
+            : [],
+          serviceContentTexts: [String(row?.serviceContent || '').trim()].filter(Boolean),
+          sourceKeys: sourceKey ? [sourceKey] : [],
+          uids: uid ? [uid] : [],
+          summaries: [String(row?.summary || '').trim()].filter(Boolean),
+          hasCreatable: Boolean(row?.canCreate),
+        });
+        continue;
+      }
+
+      const g = grouped.get(siteKey);
+      if (!g) continue;
+      if (row.type === 'teiki') g.type = 'teiki';
+      g.monthlyQuota = Math.max(g.monthlyQuota, Math.max(1, Number(row?.monthlyQuota || 1)));
+      if (String(row?.startDate || '').trim()) {
+        const d = String(row.startDate).trim();
+        g.startDate = g.startDate ? (d < g.startDate ? d : g.startDate) : d;
+      }
+      g.taskMatrix = mergeTaskMatrix(g.taskMatrix, row?.taskMatrix || createEmptyTaskMatrix());
+
+      if (sid && !g.serviceIds.includes(sid)) g.serviceIds.push(sid);
+      if (sname && !g.serviceNames.includes(sname)) g.serviceNames.push(sname);
+      (Array.isArray(row?.serviceContentTags) ? row.serviceContentTags : [])
+        .map((x) => String(x || '').trim())
+        .filter(Boolean)
+        .forEach((tag) => {
+          if (!g.serviceContentTags.includes(tag)) g.serviceContentTags.push(tag);
+        });
+      const sct = String(row?.serviceContent || '').trim();
+      if (sct && !g.serviceContentTexts.includes(sct)) g.serviceContentTexts.push(sct);
+      if (sourceKey && !g.sourceKeys.includes(sourceKey)) g.sourceKeys.push(sourceKey);
+      if (uid && !g.uids.includes(uid)) g.uids.push(uid);
+      const sm = String(row?.summary || '').trim();
+      if (sm && !g.summaries.includes(sm)) g.summaries.push(sm);
+      if (row?.canCreate) g.hasCreatable = true;
+    }
+
+    const pickBetterExisting = (a, b) => {
+      if (!a) return b;
+      if (!b) return a;
+      const aTeiki = String(a?.type || '').trim() === 'teiki';
+      const bTeiki = String(b?.type || '').trim() === 'teiki';
+      if (aTeiki && !bTeiki) return a;
+      if (!aTeiki && bTeiki) return b;
+      const au = String(a?.updated_at || '').trim();
+      const bu = String(b?.updated_at || '').trim();
+      if (au && bu) return bu > au ? b : a;
+      return a;
+    };
+    const existingBySiteKey = new Map();
+    (items || []).forEach((it) => {
+      const key = buildSiteMergeKey(it);
+      if (!key) return;
+      const prev = existingBySiteKey.get(key);
+      existingBySiteKey.set(key, pickBetterExisting(prev, it));
+    });
+
+    const rows = Array.from(grouped.values()).filter((r) => {
+      const existing = existingBySiteKey.get(String(r?.siteKey || '').trim());
+      return Boolean(existing || r?.hasCreatable);
+    });
+    if (!rows.length) {
+      window.alert('店舗統合後に作成/更新できる対象がありません');
+      return;
+    }
+
+    if (!window.confirm(`${rows.length}件のyakusokuを作成/更新します（同一店舗は統合）。実行しますか？`)) return;
+
+    setIcsImporting(true);
+    setIcsImportSummary(null);
+    let created = 0;
+    let updated = 0;
+    let failed = 0;
+    const errors = [];
+
+    for (const row of rows) {
+      const serviceIds = (Array.isArray(row.serviceIds) ? row.serviceIds : [])
+        .map((x) => String(x || '').trim())
+        .filter((sid) => sid && serviceMasterNameById.has(sid));
+      if (!serviceIds.length) {
+        failed += 1;
+        errors.push(`${row?.tenpo?.tenpo_name || row?.tenpo?.tenpo_id || '店舗不明'}: サービス未一致(マスタ外)`);
+        continue;
+      }
+      const serviceNames = serviceIds.map((sid) => serviceMasterNameById.get(sid) || sid);
+      const primaryServiceId = serviceIds[0];
+      const primaryServiceName = serviceNames[0] || primaryServiceId;
+      const serviceContentTags = Array.from(new Set((Array.isArray(row.serviceContentTags) ? row.serviceContentTags : [])
+        .map((x) => String(x || '').trim())
+        .filter(Boolean))).slice(0, 40);
+      const serviceContent = serviceContentTags.length
+        ? serviceContentTags.join(' / ')
+        : (Array.isArray(row.serviceContentTexts) ? row.serviceContentTexts.map((x) => String(x || '').trim()).filter(Boolean).join(' / ') : '');
+      const sourceKeys = (Array.isArray(row.sourceKeys) ? row.sourceKeys : []).filter(Boolean);
+      const sourceUids = (Array.isArray(row.uids) ? row.uids : []).filter(Boolean);
+      const summaryHead = (Array.isArray(row.summaries) ? row.summaries : []).filter(Boolean).slice(0, 3).join(' | ');
+      const existing = existingBySiteKey.get(String(row?.siteKey || '').trim());
+      const existingSvc = normalizeServiceSelection(existing || {});
+      const existingSvcIds = (existingSvc?.service_ids || []).map((x) => String(x || '').trim()).filter(Boolean);
+      const mergedServiceIds = Array.from(new Set([...existingSvcIds, ...serviceIds]))
+        .filter((sid) => sid && serviceMasterNameById.has(sid));
+      const mergedServiceNames = mergedServiceIds.map((sid) => serviceMasterNameById.get(sid) || sid);
+      const existingContentTags = Array.isArray(existing?.service_contents)
+        ? existing.service_contents.map((x) => String(x || '').trim()).filter(Boolean)
+        : [];
+      splitServiceContentTags(existing?.service_content || '').forEach((t) => {
+        const tag = String(t || '').trim();
+        if (tag) existingContentTags.push(tag);
+      });
+      const mergedContentTags = Array.from(new Set([...existingContentTags, ...serviceContentTags]))
+        .map((x) => String(x || '').trim())
+        .filter(Boolean)
+        .slice(0, 80);
+      const mergedContent = mergedContentTags.length
+        ? mergedContentTags.join(' / ')
+        : String(existing?.service_content || serviceContent || '').trim();
+      const mergedType = (String(existing?.type || '').trim() === 'teiki' || row.type === 'teiki') ? 'teiki' : 'tanpatsu';
+      const existingTask = normalizeTaskMatrix(existing?.recurrence_rule?.task_matrix || createEmptyTaskMatrix());
+      const mergedTask = mergeTaskMatrix(existingTask, row.taskMatrix || createEmptyTaskMatrix());
+      const existingStart = String(existing?.start_date || '').trim();
+      const mergedStart = row.startDate
+        ? (existingStart ? (row.startDate < existingStart ? row.startDate : existingStart) : row.startDate)
+        : existingStart;
+      const existingQuota = Math.max(1, Number(existing?.monthly_quota || 1));
+      const mergedQuota = mergedType === 'teiki'
+        ? Math.max(existingQuota, Math.max(1, Number(row.monthlyQuota || 1)))
+        : 1;
+      const existingMemo = String(existing?.memo || '').trim();
+      const memoUidSet = new Set();
+      const memoUidMatch = existingMemo.match(/ics_uid_keys=([^;\s]+)/i);
+      if (memoUidMatch?.[1]) {
+        String(memoUidMatch[1]).split(',').map((x) => String(x || '').trim()).filter(Boolean).forEach((uid) => memoUidSet.add(uid));
+      }
+      sourceUids.forEach((uid) => memoUidSet.add(uid));
+      const memoSourceMatch = existingMemo.match(/ics_source=([^;\s]+)/i);
+      const mergedSource = sourceKeys[0] || (memoSourceMatch?.[1] ? String(memoSourceMatch[1]).trim() : '');
+      const mergedMemo = `ICS取込(統合): ${String(summaryHead || '').slice(0, 180)}; ics_source=${mergedSource}; ics_uid_keys=${Array.from(memoUidSet).join(',')}`;
+      if (!existing && !row?.hasCreatable) {
+        failed += 1;
+        errors.push(`${row?.tenpo?.tenpo_name || row?.tenpo?.tenpo_id || '店舗不明'}: 新規作成条件不足（開始日/重複判定）`);
+        continue;
+      }
+      const payload = {
+        tenpo_id: row.tenpo.tenpo_id,
+        tenpo_name: row.tenpo.tenpo_name,
+        yagou_id: row.tenpo.yagou_id,
+        yagou_name: row.tenpo.yagou_name,
+        torihikisaki_id: row.tenpo.torihikisaki_id,
+        torihikisaki_name: row.tenpo.torihikisaki_name,
+        type: mergedType,
+        service_ids: mergedServiceIds,
+        service_names: mergedServiceNames,
+        service_id: mergedServiceIds[0] || primaryServiceId,
+        service_name: mergedServiceNames[0] || primaryServiceName,
+        service_content: String(mergedContent || '').trim(),
+        service_contents: mergedContentTags,
+        monthly_quota: mergedQuota,
+        price: Number(existing?.price || 0),
+        start_date: mergedStart || '',
+        status: String(existing?.status || 'active') || 'active',
+        recurrence_rule: mergedType === 'teiki'
+          ? { type: 'flexible', task_matrix: mergedTask }
+          : { type: 'single' },
+        memo: mergedMemo,
+      };
+
+      try {
+        const isUpdate = Boolean(existing?.yakusoku_id);
+        const path = isUpdate ? `/yakusoku/${existing.yakusoku_id}` : '/yakusoku';
+        const method = isUpdate ? 'PUT' : 'POST';
+        if (isUpdate) {
+          payload.keiyaku_id = String(existing?.keiyaku_id || '').trim();
+          payload.keiyaku_name = String(existing?.keiyaku_name || '').trim();
+          payload.keiyaku_start_date = String(existing?.keiyaku_start_date || '').trim();
+        }
+        const res = await fetchYakusokuWithFallback(path, {
+          method,
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          failed += 1;
+          errors.push(`${row?.tenpo?.tenpo_name || row?.tenpo?.tenpo_id || '店舗不明'}: HTTP ${res.status} ${txt.slice(0, 160)}`);
+          continue;
+        }
+        if (isUpdate) updated += 1;
+        else created += 1;
+      } catch (err) {
+        failed += 1;
+        errors.push(`${row?.tenpo?.tenpo_name || row?.tenpo?.tenpo_id || '店舗不明'}: ${err?.message || String(err)}`);
+      }
+    }
+
+    setIcsImporting(false);
+    setIcsImportSummary({
+      created,
+      updated,
+      failed,
+      errors: errors.slice(0, 10),
+    });
+    if (created > 0 || updated > 0) {
+      await fetchItems();
+      parseIcsToPreview();
+    }
+  }, [resolvedIcsRows, icsOnlyCleaning, serviceMasterIdSet, items, normalizeTaskMatrix, normalizeServiceSelection, serviceMasterNameById, fetchItems, parseIcsToPreview]);
+
+  const icsServiceContentSyncGroups = useMemo(() => {
+    const rows = Array.isArray(resolvedIcsRows) ? resolvedIcsRows : [];
+    const grouped = new Map();
+    rows.forEach((row) => {
+      if (!Boolean(row?.include)) return;
+      if (icsOnlyCleaning && !Boolean(row?.isCleaning)) return;
+      if (!String(row?.tenpo?.tenpo_id || '').trim()) return;
+      const siteKey = buildSiteMergeKey(row?.tenpo || {});
+      if (!siteKey) return;
+      const rowTags = Array.isArray(row?.serviceContentTags) && row.serviceContentTags.length
+        ? row.serviceContentTags
+        : splitServiceContentTags(row?.serviceContent || '');
+      const rowTexts = [
+        String(row?.serviceContent || '').trim(),
+        String(row?.description || '').trim(),
+      ].filter(Boolean);
+      if (!rowTags.length && !rowTexts.length) return;
+      if (!grouped.has(siteKey)) {
+        grouped.set(siteKey, {
+          siteKey,
+          tenpo: { ...(row?.tenpo || {}) },
+          tags: [],
+          texts: [],
+        });
+      }
+      const g = grouped.get(siteKey);
+      if (!g) return;
+      rowTags
+        .map((x) => String(x || '').trim())
+        .filter(Boolean)
+        .forEach((tag) => {
+          if (!g.tags.includes(tag)) g.tags.push(tag);
+        });
+      rowTexts.forEach((txt) => {
+        if (txt && !g.texts.includes(txt)) g.texts.push(txt);
+      });
+    });
+    return Array.from(grouped.values());
+  }, [resolvedIcsRows, icsOnlyCleaning]);
+
+  const icsServiceContentSyncTargetCount = useMemo(() => {
+    if (!Array.isArray(icsServiceContentSyncGroups) || !icsServiceContentSyncGroups.length) return 0;
+    const existingKeySet = new Set();
+    (items || []).forEach((it) => {
+      const key = buildSiteMergeKey(it);
+      if (key) existingKeySet.add(key);
+    });
+    return icsServiceContentSyncGroups.filter((g) => existingKeySet.has(String(g?.siteKey || '').trim())).length;
+  }, [icsServiceContentSyncGroups, items]);
+
+  const syncIcsServiceContentToExistingYakusoku = useCallback(async () => {
+    const groups = Array.isArray(icsServiceContentSyncGroups) ? icsServiceContentSyncGroups : [];
+    if (!groups.length) {
+      window.alert('同期対象がありません（対象ON/清掃判定/店舗一致/サービス内容を確認してください）');
+      return;
+    }
+
+    const existingBySiteKey = new Map();
+    (items || []).forEach((it) => {
+      const key = buildSiteMergeKey(it);
+      if (!key) return;
+      const prev = existingBySiteKey.get(key);
+      if (!prev) {
+        existingBySiteKey.set(key, it);
+        return;
+      }
+      const prevUpdated = String(prev?.updated_at || '').trim();
+      const nextUpdated = String(it?.updated_at || '').trim();
+      if (nextUpdated && (!prevUpdated || nextUpdated > prevUpdated)) existingBySiteKey.set(key, it);
+    });
+
+    const targets = groups
+      .map((g) => ({ ...g, existing: existingBySiteKey.get(String(g?.siteKey || '').trim()) || null }))
+      .filter((g) => Boolean(g?.existing?.yakusoku_id));
+
+    if (!targets.length) {
+      window.alert('既存yakusokuに一致する同期対象がありません（未一致は解約/名称変更候補の可能性）');
+      return;
+    }
+
+    if (!window.confirm(`${targets.length}件の既存yakusokuへサービス内容を同期します。実行しますか？`)) return;
+
+    setIcsContentSyncing(true);
+    setIcsContentSyncSummary(null);
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+    const errors = [];
+
+    for (const t of targets) {
+      const existing = t.existing;
+      const existingTags = Array.isArray(existing?.service_contents)
+        ? existing.service_contents.map((x) => String(x || '').trim()).filter(Boolean)
+        : [];
+      splitServiceContentTags(existing?.service_content || '').forEach((tag) => {
+        if (tag && !existingTags.includes(tag)) existingTags.push(tag);
+      });
+
+      const mergedTags = Array.from(new Set([
+        ...existingTags,
+        ...(Array.isArray(t.tags) ? t.tags.map((x) => String(x || '').trim()).filter(Boolean) : []),
+      ])).slice(0, 50);
+
+      const mergedContent = mergedTags.join(' / ').trim() || String(existing?.service_content || '').trim();
+      const prevContent = String(existing?.service_content || '').trim();
+      const prevTagsJson = JSON.stringify(existingTags);
+      const nextTagsJson = JSON.stringify(mergedTags);
+      if (prevContent === mergedContent && prevTagsJson === nextTagsJson) {
+        skipped += 1;
+        continue;
+      }
+
+      const payload = {
+        ...existing,
+        service_content: mergedContent,
+        service_contents: mergedTags,
+      };
+
+      try {
+        const res = await fetchYakusokuWithFallback(`/yakusoku/${existing.yakusoku_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          failed += 1;
+          errors.push(`${t?.tenpo?.tenpo_name || t?.tenpo?.tenpo_id || existing.yakusoku_id}: HTTP ${res.status} ${txt.slice(0, 140)}`);
+          continue;
+        }
+        updated += 1;
+      } catch (err) {
+        failed += 1;
+        errors.push(`${t?.tenpo?.tenpo_name || t?.tenpo?.tenpo_id || existing.yakusoku_id}: ${err?.message || String(err)}`);
+      }
+    }
+
+    setIcsContentSyncing(false);
+    setIcsContentSyncSummary({
+      targets: targets.length,
+      updated,
+      skipped,
+      failed,
+      errors: errors.slice(0, 10),
+    });
+    if (updated > 0) await fetchItems();
+  }, [icsServiceContentSyncGroups, items, fetchItems]);
+
+  const icsTeikiPriceSyncGroups = useMemo(() => {
+    const rows = Array.isArray(resolvedIcsRows) ? resolvedIcsRows : [];
+    const grouped = new Map();
+    rows.forEach((row) => {
+      if (!Boolean(row?.include)) return;
+      if (icsOnlyCleaning && !Boolean(row?.isCleaning)) return;
+      if (String(row?.type || '').trim() !== 'teiki') return;
+      if (!String(row?.tenpo?.tenpo_id || '').trim()) return;
+      const siteKey = buildSiteMergeKey(row?.tenpo || {});
+      if (!siteKey) return;
+      const candidates = (Array.isArray(row?.priceCandidates) ? row.priceCandidates : [])
+        .map((x) => Number(x))
+        .filter((x) => Number.isFinite(x) && x > 0 && x % 1000 === 0);
+      if (!candidates.length) return;
+      if (!grouped.has(siteKey)) {
+        grouped.set(siteKey, {
+          siteKey,
+          tenpo: { ...(row?.tenpo || {}) },
+          counter: new Map(),
+          totalObserved: 0,
+        });
+      }
+      const g = grouped.get(siteKey);
+      if (!g) return;
+      candidates.forEach((price) => {
+        g.counter.set(price, (g.counter.get(price) || 0) + 1);
+        g.totalObserved += 1;
+      });
+    });
+
+    const out = [];
+    grouped.forEach((g) => {
+      const counts = Array.from(g.counter.entries()).sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return a[0] - b[0];
+      });
+      if (!counts.length) return;
+      const [topPrice, topCount] = counts[0];
+      const secondCount = counts[1]?.[1] || 0;
+      const uniqueCount = counts.length;
+      const stable = uniqueCount === 1 || (topCount >= 2 && topCount > secondCount && topCount / Math.max(1, g.totalObserved) >= 0.5);
+      out.push({
+        siteKey: g.siteKey,
+        tenpo: g.tenpo,
+        stablePrice: stable ? topPrice : null,
+        topPrice,
+        topCount,
+        totalObserved: g.totalObserved,
+        uniqueCount,
+      });
+    });
+    return out;
+  }, [resolvedIcsRows, icsOnlyCleaning]);
+
+  const icsTeikiPriceSyncTargetCount = useMemo(() => {
+    if (!Array.isArray(icsTeikiPriceSyncGroups) || !icsTeikiPriceSyncGroups.length) return 0;
+    const teikiBySiteKey = new Map();
+    (items || []).forEach((it) => {
+      const key = buildSiteMergeKey(it);
+      if (!key) return;
+      if (String(it?.type || '').trim() !== 'teiki') return;
+      if (!teikiBySiteKey.has(key)) teikiBySiteKey.set(key, it);
+    });
+    return icsTeikiPriceSyncGroups.filter((g) => g?.stablePrice && teikiBySiteKey.has(String(g?.siteKey || '').trim())).length;
+  }, [icsTeikiPriceSyncGroups, items]);
+
+  const syncStableTeikiPriceFromIcs = useCallback(async () => {
+    const groups = Array.isArray(icsTeikiPriceSyncGroups) ? icsTeikiPriceSyncGroups : [];
+    if (!groups.length) {
+      window.alert('定期清掃の金額候補がありません（対象ON/定期/満単位金額を確認してください）');
+      return;
+    }
+    const teikiBySiteKey = new Map();
+    (items || []).forEach((it) => {
+      const key = buildSiteMergeKey(it);
+      if (!key) return;
+      if (String(it?.type || '').trim() !== 'teiki') return;
+      const prev = teikiBySiteKey.get(key);
+      if (!prev) {
+        teikiBySiteKey.set(key, it);
+        return;
+      }
+      const prevUpdated = String(prev?.updated_at || '').trim();
+      const nextUpdated = String(it?.updated_at || '').trim();
+      if (nextUpdated && (!prevUpdated || nextUpdated > prevUpdated)) teikiBySiteKey.set(key, it);
+    });
+    const targets = groups
+      .filter((g) => Number.isFinite(g?.stablePrice) && g.stablePrice > 0)
+      .map((g) => ({ ...g, existing: teikiBySiteKey.get(String(g?.siteKey || '').trim()) || null }))
+      .filter((g) => Boolean(g?.existing?.yakusoku_id));
+    if (!targets.length) {
+      window.alert('既存の定期yakusokuに割り当て可能な安定金額がありません');
+      return;
+    }
+    if (!window.confirm(`${targets.length}件の定期yakusokuへ、安定した満単位金額を割り当てます。実行しますか？`)) return;
+
+    setIcsPriceSyncing(true);
+    setIcsPriceSyncSummary(null);
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+    const errors = [];
+    for (const target of targets) {
+      const existing = target.existing;
+      const nextPrice = Number(target.stablePrice || 0);
+      const prevPrice = Number(existing?.price || 0);
+      if (nextPrice <= 0 || prevPrice === nextPrice) {
+        skipped += 1;
+        continue;
+      }
+      const payload = {
+        ...existing,
+        price: nextPrice,
+      };
+      try {
+        const res = await fetchYakusokuWithFallback(`/yakusoku/${existing.yakusoku_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          failed += 1;
+          errors.push(`${target?.tenpo?.tenpo_name || target?.tenpo?.tenpo_id || existing.yakusoku_id}: HTTP ${res.status} ${txt.slice(0, 140)}`);
+          continue;
+        }
+        updated += 1;
+      } catch (err) {
+        failed += 1;
+        errors.push(`${target?.tenpo?.tenpo_name || target?.tenpo?.tenpo_id || existing.yakusoku_id}: ${err?.message || String(err)}`);
+      }
+    }
+    setIcsPriceSyncing(false);
+    setIcsPriceSyncSummary({
+      targets: targets.length,
+      updated,
+      skipped,
+      failed,
+      errors: errors.slice(0, 10),
+    });
+    if (updated > 0) await fetchItems();
+  }, [icsTeikiPriceSyncGroups, items, fetchItems]);
+
+  const icsStats = useMemo(() => {
+    const rows = Array.isArray(resolvedIcsRows) ? resolvedIcsRows : [];
+    return {
+      total: rows.length,
+      matched: rows.filter((r) => r.tenpo).length,
+      unmatched: rows.filter((r) => !r.tenpo).length,
+      cleaning: rows.filter((r) => r.isCleaning).length,
+      included: rows.filter((r) => r.include).length,
+      duplicates: rows.filter((r) => r.duplicate).length,
+      creatable: rows.filter((r) => r.canCreate).length,
+    };
+  }, [resolvedIcsRows]);
+
+  const icsMergeableRows = useMemo(() => (
+    (Array.isArray(resolvedIcsRows) ? resolvedIcsRows : []).filter((r) => {
+      if (!Boolean(r?.include)) return false;
+      if (icsOnlyCleaning && !Boolean(r?.isCleaning)) return false;
+      if (!String(r?.tenpo?.tenpo_id || '').trim()) return false;
+      const sid = String(r?.serviceId || '').trim();
+      return Boolean(sid && serviceMasterIdSet.has(sid));
+    })
+  ), [resolvedIcsRows, icsOnlyCleaning, serviceMasterIdSet]);
+
+  const icsUpsertableSiteCount = useMemo(() => {
+    const existingBySiteKey = new Set();
+    (items || []).forEach((it) => {
+      const key = buildSiteMergeKey(it);
+      if (key) existingBySiteKey.add(key);
+    });
+    const grouped = new Map();
+    icsMergeableRows.forEach((r) => {
+      const key = buildSiteMergeKey(r?.tenpo || {});
+      if (!key) return;
+      const prev = grouped.get(key) || false;
+      grouped.set(key, prev || Boolean(r?.canCreate));
+    });
+    let count = 0;
+    grouped.forEach((hasCreatable, key) => {
+      if (existingBySiteKey.has(key) || hasCreatable) count += 1;
+    });
+    return count;
+  }, [icsMergeableRows, items]);
+
+  const icsGroupedSiteCount = useMemo(() => {
+    const rows = Array.isArray(icsMergeableRows) ? icsMergeableRows : [];
+    const keys = new Set();
+    rows.forEach((r) => {
+      const key = buildSiteMergeKey(r?.tenpo || {});
+      if (key) keys.add(key);
+    });
+    return keys.size;
+  }, [icsMergeableRows]);
+
+  const icsServiceOptions = useMemo(() => (
+    (services || [])
+      .map((s) => ({
+        service_id: String(s?.service_id || '').trim(),
+        name: String(s?.name || s?.service_id || '').trim(),
+      }))
+      .filter((s) => s.service_id)
+  ), [services]);
+
+  const icsTenpoOptions = useMemo(() => (
+    (tenpos || []).map((tp) => ({
+      tenpo_id: String(tp?.tenpo_id || '').trim(),
+      label: formatTenpoDisplay(tp?.tenpo_id, tp?.name, tp?.yagou_name),
+    }))
+  ), [tenpos, formatTenpoDisplay]);
+
+  const siteNameBackfillTargetCount = useMemo(() => {
+    const list = Array.isArray(items) ? items : [];
+    return list.filter((it) => {
+      const tenpoId = String(it?.tenpo_id || '').trim();
+      if (!tenpoId) return false;
+      const meta = tenpoMetaById.get(tenpoId);
+      if (!meta) return false;
+      const canonical = {
+        tenpo_name: String(meta?.name || '').trim(),
+        yagou_id: String(meta?.yagou_id || '').trim(),
+        yagou_name: String(meta?.yagou_name || '').trim(),
+        torihikisaki_id: String(meta?.torihikisaki_id || '').trim(),
+        torihikisaki_name: String(meta?.torihikisaki_name || '').trim(),
+      };
+      return (
+        String(it?.tenpo_name || '').trim() !== canonical.tenpo_name ||
+        String(it?.yagou_id || '').trim() !== canonical.yagou_id ||
+        String(it?.yagou_name || '').trim() !== canonical.yagou_name ||
+        String(it?.torihikisaki_id || '').trim() !== canonical.torihikisaki_id ||
+        String(it?.torihikisaki_name || '').trim() !== canonical.torihikisaki_name
+      );
+    }).length;
+  }, [items, tenpoMetaById]);
 
   const addBucketTagValue = useCallback((bucketKey, tagValue) => {
     const value = String(tagValue || '').trim();
@@ -1000,6 +2477,77 @@ export default function AdminYakusokuPage() {
       window.alert(e.message);
     }
   };
+
+  const backfillYakusokuSiteNames = useCallback(async () => {
+    const list = Array.isArray(items) ? items : [];
+    const targets = list
+      .map((it) => {
+        const tenpoId = String(it?.tenpo_id || '').trim();
+        if (!tenpoId) return null;
+        const meta = tenpoMetaById.get(tenpoId);
+        if (!meta) return null;
+        const canonical = {
+          tenpo_name: String(meta?.name || '').trim(),
+          yagou_id: String(meta?.yagou_id || '').trim(),
+          yagou_name: String(meta?.yagou_name || '').trim(),
+          torihikisaki_id: String(meta?.torihikisaki_id || '').trim(),
+          torihikisaki_name: String(meta?.torihikisaki_name || '').trim(),
+        };
+        const needs =
+          String(it?.tenpo_name || '').trim() !== canonical.tenpo_name ||
+          String(it?.yagou_id || '').trim() !== canonical.yagou_id ||
+          String(it?.yagou_name || '').trim() !== canonical.yagou_name ||
+          String(it?.torihikisaki_id || '').trim() !== canonical.torihikisaki_id ||
+          String(it?.torihikisaki_name || '').trim() !== canonical.torihikisaki_name;
+        if (!needs) return null;
+        return { current: it, canonical };
+      })
+      .filter(Boolean);
+
+    if (!targets.length) {
+      window.alert('補完対象はありません（yakusoku の屋号/店舗名は最新です）');
+      return;
+    }
+    if (!window.confirm(`${targets.length}件のyakusokuへ屋号/店舗名を補完します。実行しますか？`)) return;
+
+    setSiteNameBackfilling(true);
+    setSiteNameBackfillSummary(null);
+    let updated = 0;
+    let failed = 0;
+    const errors = [];
+    for (const target of targets) {
+      const it = target.current;
+      const payload = {
+        ...it,
+        ...target.canonical,
+      };
+      try {
+        const res = await fetchYakusokuWithFallback(`/yakusoku/${it.yakusoku_id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          failed += 1;
+          errors.push(`${it?.yakusoku_id || '-'}: HTTP ${res.status} ${txt.slice(0, 140)}`);
+          continue;
+        }
+        updated += 1;
+      } catch (err) {
+        failed += 1;
+        errors.push(`${it?.yakusoku_id || '-'}: ${err?.message || String(err)}`);
+      }
+    }
+    setSiteNameBackfilling(false);
+    setSiteNameBackfillSummary({
+      targets: targets.length,
+      updated,
+      failed,
+      errors: errors.slice(0, 10),
+    });
+    if (updated > 0) await fetchItems();
+  }, [items, tenpoMetaById, fetchItems]);
 
   const activeTaskMatrix = normalizeTaskMatrix(modalData?.recurrence_rule?.task_matrix);
   const isBucketEnabled = useCallback(
@@ -1180,6 +2728,15 @@ export default function AdminYakusokuPage() {
               <span className="yotei-head-link active" aria-current="page">YAKUSOKU</span>
             </div>
             <button className="primary" onClick={openNew}>新規案件登録</button>
+            <button type="button" onClick={() => setIcsModalOpen(true)}>ICS取り込み</button>
+            <button
+              type="button"
+              onClick={backfillYakusokuSiteNames}
+              disabled={siteNameBackfilling || !siteNameBackfillTargetCount}
+              title="tenpo_id を基準に、yakusoku の屋号/店舗名を一括補完"
+            >
+              {siteNameBackfilling ? '補完中...' : `屋号・店舗名補完 (${siteNameBackfillTargetCount})`}
+            </button>
             <button onClick={fetchItems} disabled={loading}>{loading ? '...' : '更新'}</button>
           </div>
         </header>
@@ -1205,7 +2762,19 @@ export default function AdminYakusokuPage() {
           <span style={{ fontSize: 12, color: 'var(--muted)' }}>
             {filteredItems.length} / {items.length} 件
           </span>
+          {siteNameBackfillSummary ? (
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+              補完結果: 対象 {siteNameBackfillSummary.targets} / 更新 {siteNameBackfillSummary.updated} / 失敗 {siteNameBackfillSummary.failed}
+            </span>
+          ) : null}
         </div>
+        {siteNameBackfillSummary?.errors?.length ? (
+          <div style={{ padding: '0 20px 10px', fontSize: 12, color: '#f87171' }}>
+            {siteNameBackfillSummary.errors.map((er, idx) => (
+              <div key={`site-backfill-err-${idx}`}>{er}</div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="yakusoku-list" style={{ padding: '20px', overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text)' }}>
@@ -1281,6 +2850,287 @@ export default function AdminYakusokuPage() {
           </table>
         </div>
       </div>
+
+      {icsModalOpen && (
+        <div className="yotei-modal-overlay" onClick={() => setIcsModalOpen(false)}>
+          <div className="yotei-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="yotei-modal-header">
+              <h2>ICS取り込み（yakusoku）</h2>
+              <button
+                onClick={() => setIcsModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: 24 }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="yotei-modal-content">
+              <div className="yotei-form-group">
+                <label>ICSファイル</label>
+                <input
+                  type="file"
+                  accept=".ics,text/calendar"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    try {
+                      const txt = await f.text();
+                      setIcsText(txt);
+                      setIcsFileName(f.name || '');
+                      setIcsParseError('');
+                      setIcsContentSyncSummary(null);
+                      setIcsPriceSyncSummary(null);
+                    } catch (err) {
+                      setIcsParseError(err?.message || String(err));
+                    }
+                  }}
+                />
+                {icsFileName ? (
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>読み込み済み: {icsFileName}</div>
+                ) : null}
+              </div>
+              <div className="yotei-form-group">
+                <label>ICS内容（貼り付け可）</label>
+                <textarea
+                  value={icsText}
+                  onChange={(e) => {
+                    setIcsText(e.target.value);
+                    setIcsPriceSyncSummary(null);
+                  }}
+                  placeholder="BEGIN:VCALENDAR ..."
+                  style={{ minHeight: 140, resize: 'vertical' }}
+                />
+              </div>
+              <div className="yotei-form-group" style={{ marginBottom: 8 }}>
+                <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center', fontWeight: 500 }}>
+                  <input
+                    type="checkbox"
+                    checked={icsOnlyCleaning}
+                    onChange={(e) => setIcsOnlyCleaning(e.target.checked)}
+                  />
+                  清掃系キーワードのみ取り込む（推奨）
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+                <button type="button" onClick={parseIcsToPreview}>プレビュー生成</button>
+                <button
+                  type="button"
+                  onClick={() => setIcsPreview((prev) => (Array.isArray(prev) ? prev.map((r) => ({ ...r, include: true })) : prev))}
+                  disabled={!resolvedIcsRows.length}
+                >
+                  全件ON
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIcsPreview((prev) => (Array.isArray(prev) ? prev.map((r) => ({ ...r, include: false })) : prev))}
+                  disabled={!resolvedIcsRows.length}
+                >
+                  全件OFF
+                </button>
+                <button
+                  type="button"
+                  onClick={excludeUnmatchedIcsRows}
+                  disabled={!icsStats.unmatched}
+                  title="店舗未一致を対象外にします（解約/名称変更候補の切り分け用）"
+                >
+                  未一致を除外
+                </button>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={importIcsPreviewToYakusoku}
+                  disabled={icsImporting || !resolvedIcsRows.length}
+                >
+                  {icsImporting ? '取り込み中...' : `取り込み実行 (${icsUpsertableSiteCount})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={syncIcsServiceContentToExistingYakusoku}
+                  disabled={icsContentSyncing || !resolvedIcsRows.length}
+                  title="既存yakusokuへ、カレンダー由来のサービス内容のみを追記同期"
+                >
+                  {icsContentSyncing ? '同期中...' : `既存へ内容同期 (${icsServiceContentSyncTargetCount})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={syncStableTeikiPriceFromIcs}
+                  disabled={icsPriceSyncing || !resolvedIcsRows.length}
+                  title="定期清掃の安定した満単位金額のみを既存yakusokuへ割り当て"
+                >
+                  {icsPriceSyncing ? '金額割当中...' : `定期金額割当 (${icsTeikiPriceSyncTargetCount})`}
+                </button>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                  総数 {icsStats.total} / 対象ON {icsStats.included} / 店舗一致 {icsStats.matched} / 店舗未一致 {icsStats.unmatched} / 清掃判定 {icsStats.cleaning} / 重複 {icsStats.duplicates} / 統合対象行 {icsMergeableRows.length} / 統合後店舗 {icsGroupedSiteCount} / 実行対象店舗 {icsUpsertableSiteCount}
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 8 }}>
+                ※プレビューはイベント単位表示です。取り込み実行時は同一屋号・店舗を1件のyakusokuに統合します。店舗未一致は「未一致を除外」で解約/名称変更候補として切り分けできます。
+              </div>
+              {icsParseError ? (
+                <div style={{ fontSize: 12, color: '#f87171', marginBottom: 8 }}>{icsParseError}</div>
+              ) : null}
+              {icsImportSummary ? (
+                <div style={{ fontSize: 12, marginBottom: 8, color: 'var(--muted)' }}>
+                  作成: {icsImportSummary.created}件 / 更新: {icsImportSummary.updated || 0}件 / 失敗: {icsImportSummary.failed}件
+                  {icsImportSummary.errors?.length ? (
+                    <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#f87171' }}>
+                      {icsImportSummary.errors.map((er, i) => <li key={`ics-err-${i}`}>{er}</li>)}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
+              {icsContentSyncSummary ? (
+                <div style={{ fontSize: 12, marginBottom: 8, color: 'var(--muted)' }}>
+                  サービス内容同期: 対象 {icsContentSyncSummary.targets}件 / 更新 {icsContentSyncSummary.updated}件 / 変更なし {icsContentSyncSummary.skipped}件 / 失敗 {icsContentSyncSummary.failed}件
+                  {icsContentSyncSummary.errors?.length ? (
+                    <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#f87171' }}>
+                      {icsContentSyncSummary.errors.map((er, i) => <li key={`ics-sync-err-${i}`}>{er}</li>)}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
+              {icsPriceSyncSummary ? (
+                <div style={{ fontSize: 12, marginBottom: 8, color: 'var(--muted)' }}>
+                  定期金額割当: 対象 {icsPriceSyncSummary.targets}件 / 更新 {icsPriceSyncSummary.updated}件 / 変更なし {icsPriceSyncSummary.skipped}件 / 失敗 {icsPriceSyncSummary.failed}件
+                  {icsPriceSyncSummary.errors?.length ? (
+                    <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: '#f87171' }}>
+                      {icsPriceSyncSummary.errors.map((er, i) => <li key={`ics-price-err-${i}`}>{er}</li>)}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
+              {resolvedIcsRows.length ? (
+                <>
+                  <datalist id="ics-tenpo-options">
+                    {icsTenpoOptions.map((tp) => (
+                      <option key={tp.tenpo_id} value={tp.tenpo_id}>{`${tp.tenpo_id} ${tp.label}`}</option>
+                    ))}
+                  </datalist>
+                  <div style={{ maxHeight: 380, overflow: 'auto', border: '1px solid var(--line)', borderRadius: 10 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text)', fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--line)' }}>
+                        <th style={{ padding: '8px 10px' }}>対象</th>
+                        <th style={{ padding: '8px 10px' }}>状態</th>
+                        <th style={{ padding: '8px 10px' }}>種別</th>
+                        <th style={{ padding: '8px 10px' }}>開始日</th>
+                        <th style={{ padding: '8px 10px' }}>店舗</th>
+                        <th style={{ padding: '8px 10px' }}>サービス</th>
+                        <th style={{ padding: '8px 10px' }}>サービス内容</th>
+                        <th style={{ padding: '8px 10px' }}>月枠</th>
+                        <th style={{ padding: '8px 10px' }}>金額候補</th>
+                        <th style={{ padding: '8px 10px' }}>メモ抜粋</th>
+                        <th style={{ padding: '8px 10px' }}>SUMMARY</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {resolvedIcsRows.slice(0, 500).map((row) => (
+                        <tr key={row.sourceKey} style={{ borderBottom: '1px solid var(--line)' }}>
+                          <td style={{ padding: '8px 10px' }}>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(row.include)}
+                              onChange={(e) => updateIcsRow(row.sourceKey, { include: e.target.checked })}
+                            />
+                          </td>
+                          <td style={{ padding: '8px 10px', color: row.canCreate ? '#16a34a' : '#f59e0b' }}>
+                            {row.canCreate ? '取込可' : (row.reason || '-')}
+                          </td>
+                          <td style={{ padding: '8px 10px' }}>
+                            <select
+                              value={row.type}
+                              onChange={(e) => updateIcsRow(row.sourceKey, { type: e.target.value })}
+                            >
+                              <option value="teiki">定期</option>
+                              <option value="tanpatsu">単発</option>
+                            </select>
+                          </td>
+                          <td style={{ padding: '8px 10px' }}>
+                            <input
+                              type="date"
+                              value={row.startDate || ''}
+                              onChange={(e) => updateIcsRow(row.sourceKey, { startDate: e.target.value })}
+                            />
+                          </td>
+                          <td style={{ padding: '8px 10px', minWidth: 260 }}>
+                            <input
+                              list="ics-tenpo-options"
+                              value={row.tenpoInput || row.tenpo?.tenpo_id || ''}
+                              onChange={(e) => updateIcsRow(row.sourceKey, { tenpoInput: e.target.value })}
+                              onBlur={(e) => applyTenpoInputToRow(row.sourceKey, e.target.value)}
+                              placeholder="TENPO# or 屋号/店舗"
+                              style={{ width: '100%' }}
+                            />
+                            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>
+                              {row.tenpo
+                                ? formatTenpoDisplay(row.tenpo.tenpo_id, row.tenpo.tenpo_name, row.tenpo.yagou_name)
+                                : '未一致'}
+                            </div>
+                          </td>
+                          <td style={{ padding: '8px 10px', minWidth: 220 }}>
+                            <select
+                              value={row.serviceId || ''}
+                              onChange={(e) => applyServiceToRow(row.sourceKey, e.target.value)}
+                              style={{ width: '100%' }}
+                            >
+                              <option value="">サービス未選択</option>
+                              {icsServiceOptions.map((s) => (
+                                <option key={s.service_id} value={s.service_id}>
+                                  {s.name} ({s.service_id})
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td style={{ padding: '8px 10px', minWidth: 260 }}>
+                            <input
+                              type="text"
+                              value={row.serviceContent || ''}
+                              onChange={(e) => updateIcsRow(row.sourceKey, {
+                                serviceContent: e.target.value,
+                                serviceContentTags: splitServiceContentTags(e.target.value),
+                              })}
+                              placeholder="例: 害虫駆除 / グリスト / 床清掃"
+                              style={{ width: '100%' }}
+                            />
+                          </td>
+                          <td style={{ padding: '8px 10px', minWidth: 86 }}>
+                            <input
+                              type="number"
+                              min={1}
+                              max={31}
+                              value={Number(row.monthlyQuota || 1)}
+                              onChange={(e) => updateIcsRow(row.sourceKey, { monthlyQuota: Number(e.target.value || 1) })}
+                              disabled={row.type !== 'teiki'}
+                              style={{ width: 68 }}
+                            />
+                          </td>
+                          <td style={{ padding: '8px 10px', minWidth: 120 }}>
+                            {Array.isArray(row?.priceCandidates) && row.priceCandidates.length
+                              ? row.priceCandidates
+                                .filter((v) => Number.isFinite(Number(v)))
+                                .map((v) => `¥${Number(v).toLocaleString()}`)
+                                .join(' / ')
+                              : '-'}
+                          </td>
+                          <td style={{ padding: '8px 10px', maxWidth: 260 }}>
+                            <div style={{ maxHeight: 64, overflow: 'auto', whiteSpace: 'pre-wrap', color: 'var(--muted)' }}>
+                              {String(row.description || '-').slice(0, 300) || '-'}
+                            </div>
+                          </td>
+                          <td style={{ padding: '8px 10px' }}>{row.summary || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                </>
+              ) : null}
+            </div>
+            <div className="yotei-modal-footer">
+              <button onClick={() => setIcsModalOpen(false)}>閉じる</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalData && (
         <div className="yotei-modal-overlay" onClick={() => setModalData(null)}>

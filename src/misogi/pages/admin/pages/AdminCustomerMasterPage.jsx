@@ -37,11 +37,19 @@ function norm(v) {
   return String(v || '').trim();
 }
 
-function normalizeKokyakuIdInput(value) {
-  const raw = norm(value);
-  if (!raw) return '';
-  if (/^kokyaku#/i.test(raw)) return raw.replace(/^kokyaku#/i, 'KOKYAKU#');
-  return `KOKYAKU#${raw}`;
+function parseFixedPrefixNumber(value, prefix) {
+  const v = norm(value);
+  const re = new RegExp(`^${prefix}#(\\d+)$`, 'i');
+  const m = v.match(re);
+  if (!m) return Number.NaN;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : Number.NaN;
+}
+
+function buildFixedPrefixId(prefix, number) {
+  const next = Math.max(1, Number(number) || 1);
+  const width = Math.max(4, String(next).length);
+  return `${prefix}#${String(next).padStart(width, '0')}`;
 }
 
 function readActorName() {
@@ -137,7 +145,6 @@ export default function AdminCustomerMasterPage() {
   const [editing, setEditing] = useState(null);
   const [creatingKind, setCreatingKind] = useState('');
   const [createDraft, setCreateDraft] = useState({
-    kokyaku_id: '',
     kokyaku_name: '',
     torihikisaki_name: '',
     yagou_name: '',
@@ -280,6 +287,29 @@ export default function AdminCustomerMasterPage() {
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  const nextIdPreview = useMemo(() => {
+    let maxKokyaku = 0;
+    let maxTori = 0;
+    let maxYagou = 0;
+    let maxTenpo = 0;
+    rows.forEach((row) => {
+      const k = parseFixedPrefixNumber(row.kokyaku_id, 'KOKYAKU');
+      const t = parseFixedPrefixNumber(row.torihikisaki_id, 'TORI');
+      const y = parseFixedPrefixNumber(row.yagou_id, 'YAGOU');
+      const tp = parseFixedPrefixNumber(row.tenpo_id, 'TENPO');
+      if (Number.isFinite(k) && k > maxKokyaku) maxKokyaku = k;
+      if (Number.isFinite(t) && t > maxTori) maxTori = t;
+      if (Number.isFinite(y) && y > maxYagou) maxYagou = y;
+      if (Number.isFinite(tp) && tp > maxTenpo) maxTenpo = tp;
+    });
+    return {
+      kokyaku: buildFixedPrefixId('KOKYAKU', maxKokyaku + 1),
+      torihikisaki: buildFixedPrefixId('TORI', maxTori + 1),
+      yagou: buildFixedPrefixId('YAGOU', maxYagou + 1),
+      tenpo: buildFixedPrefixId('TENPO', maxTenpo + 1),
+    };
+  }, [rows]);
 
   const filteredRows = useMemo(() => {
     const q = norm(query).toLowerCase();
@@ -668,7 +698,7 @@ export default function AdminCustomerMasterPage() {
   }, [torihikisakiById, yagouById]);
 
   const createTorihikisaki = useCallback(async () => {
-    const kokyakuId = normalizeKokyakuIdInput(createDraft.kokyaku_id);
+    const kokyakuId = nextIdPreview.kokyaku;
     const kokyakuName = norm(createDraft.kokyaku_name);
     const torihikisakiName = norm(createDraft.torihikisaki_name || kokyakuName);
     if (!torihikisakiName) {
@@ -682,17 +712,16 @@ export default function AdminCustomerMasterPage() {
       const body = {
         name: torihikisakiName,
         kokyaku_name: kokyakuName || torihikisakiName,
+        kokyaku_id: kokyakuId,
         jotai: 'yuko',
         updated_by: readActorName(),
       };
-      if (kokyakuId) body.kokyaku_id = kokyakuId;
       await apiJson('/master/torihikisaki', {
         method: 'POST',
         body,
       });
       setCreateDraft((prev) => ({
         ...prev,
-        kokyaku_id: '',
         kokyaku_name: '',
         torihikisaki_name: '',
       }));
@@ -703,7 +732,7 @@ export default function AdminCustomerMasterPage() {
     } finally {
       setCreatingKind('');
     }
-  }, [createDraft.kokyaku_id, createDraft.kokyaku_name, createDraft.torihikisaki_name, loadAll]);
+  }, [createDraft.kokyaku_name, createDraft.torihikisaki_name, loadAll, nextIdPreview.kokyaku]);
 
   const createYagou = useCallback(async () => {
     const name = norm(createDraft.yagou_name);
@@ -787,14 +816,14 @@ export default function AdminCustomerMasterPage() {
           <div className="admin-customer-master-create-grid">
             <div className="admin-customer-master-create-card">
               <h3>顧客 / 取引先を追加</h3>
-              <label className="admin-master-field">
-                <span>顧客ID(kokyaku)（任意）</span>
-                <input
-                  value={createDraft.kokyaku_id}
-                  onChange={(e) => setCreateDraft((p) => ({ ...p, kokyaku_id: e.target.value }))}
-                  placeholder="例）KOKYAKU#0001"
-                />
-              </label>
+              <div className="admin-customer-master-auto-id">
+                <span>顧客ID（自動採番）</span>
+                <strong>{nextIdPreview.kokyaku}</strong>
+              </div>
+              <div className="admin-customer-master-auto-id">
+                <span>取引先ID（自動採番）</span>
+                <strong>{nextIdPreview.torihikisaki}</strong>
+              </div>
               <label className="admin-master-field">
                 <span>顧客名(kokyaku)</span>
                 <input
@@ -823,6 +852,10 @@ export default function AdminCustomerMasterPage() {
 
             <div className="admin-customer-master-create-card">
               <h3>屋号を追加</h3>
+              <div className="admin-customer-master-auto-id">
+                <span>屋号ID（自動採番）</span>
+                <strong>{nextIdPreview.yagou}</strong>
+              </div>
               <label className="admin-master-field">
                 <span>取引先ID（任意）</span>
                 <select
@@ -857,6 +890,10 @@ export default function AdminCustomerMasterPage() {
 
             <div className="admin-customer-master-create-card">
               <h3>店舗を追加</h3>
+              <div className="admin-customer-master-auto-id">
+                <span>店舗ID（自動採番）</span>
+                <strong>{nextIdPreview.tenpo}</strong>
+              </div>
               <label className="admin-master-field">
                 <span>取引先ID（任意）</span>
                 <select

@@ -23,6 +23,7 @@ export const CLEANING_HOTBAR = [
     role: 'status',
     label: 'ツール',
     subItems: [
+      { id: 'cleaning-manual', label: '清掃マニュアル', path: '/jobs/cleaning/manual' },
       { id: 'flow-guide', label: '業務フロー', path: '/flow-guide' },
     ],
   },
