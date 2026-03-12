@@ -161,7 +161,7 @@
       }
 
       main{
-        margin:auto;
+        margin:80px auto;
       }
       .hero{
         margin-top: 80px;
@@ -182,7 +182,7 @@
   
     gtag('config', 'G-ZJ1XD60S84');
   </script>
-  <body class="theme-pink ">
+  <body class="theme-pink page-service">
     <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
 
 
@@ -200,29 +200,29 @@
   <div class="swiper hero-swiper" aria-label="ヒーロースライダー">
     <div class="swiper-wrapper">
       <div class="swiper-slide">
-        <a href="#" class="hero-category-link" data-category="サービス一覧">
-          <img src="/images/service/header-main1.jpg" alt="サービス一覧"> 
+        <a href="/service/service.html" class="hero-category-link" data-category="サービス一覧">
+          <img src="/images/service/service-main01.jpg" alt="サービス一覧"> 
         </a>
       </div>
 
       <div class="swiper-slide">
-        <a href="#" class="hero-category-link" data-category="厨房設備">
-          <img src="/images/service-main02.jpg" alt="厨房洗浄"> 
+        <a href="/service/service_kitchen.html" class="hero-category-link" data-category="厨房設備">
+          <img src="/images/service/service-main02.jpg" alt="厨房洗浄"> 
         </a>
       </div>
       <div class="swiper-slide">
-        <a href="#" class="hero-category-link" data-category="空調設備">
-          <img src="/images/service-main03.jpg" alt="エアコン洗浄" />
+        <a href="/service/service_air_conditioning.html" class="hero-category-link" data-category="空調設備">
+          <img src="/images/service/service-main03.jpg" alt="エアコン洗浄" />
         </a>
         </div>
       <div class="swiper-slide">
-        <a href="#" class="hero-category-link" data-category="フロア">
-          <img src="/images/service-main04.jpg" alt="フロア洗浄" />
+        <a href="/service/service_floor.html" class="hero-category-link" data-category="フロア">
+          <img src="/images/service/service-main04.jpg" alt="フロア洗浄" />
         </a>
         </div>
       <div class="swiper-slide">
-        <a href="#" class="hero-category-link" data-category="その他">
-          <img src="/images/service-main05.jpg" alt="その他サービス" />
+        <a href="/service/service_others.html" class="hero-category-link" data-category="その他">
+          <img src="/images/service/service-main05.jpg" alt="その他サービス" />
         </a>
       </div>
     </div>
@@ -518,8 +518,6 @@
   body.page-service .hero {
     position: relative;
     width: 100vw;
-    height: 100vh;
-    min-height: 600px;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     margin-top: 0;
@@ -586,8 +584,6 @@
   
   @media (max-width: 768px) {
     body.page-service .hero {
-      height: 50vh;
-      min-height: 400px;
     }
     
     body.page-service .carousel-btn {
@@ -623,6 +619,21 @@
 
     <!-- Firebase SDK - 削除済み（Cognitoに移行） -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var heroEl = document.querySelector('.hero-swiper');
+        if (heroEl && typeof Swiper !== 'undefined') {
+          new Swiper('.hero-swiper', {
+            loop: true,
+            autoplay: { delay: 4000, disableOnInteraction: false },
+            pagination: { el: '.hero-swiper .swiper-pagination', clickable: true },
+            effect: 'slide',
+            speed: 600,
+            grabCursor: true
+          });
+        }
+      });
+    </script>
     <script src="/js/role_config.js"></script>
     <script src="/js/users.js"></script>
     <script src="/js/auth.js"></script>
