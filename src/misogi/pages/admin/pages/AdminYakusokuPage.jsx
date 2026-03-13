@@ -164,6 +164,26 @@ function decodeIcsText(v) {
     .replace(/\\\\/g, '\\');
 }
 
+function normText(v) {
+  return String(v || '').trim();
+}
+
+function parseLeadingNumber(text) {
+  const m = String(text || '').match(/(\d+)/);
+  if (!m) return Number.NaN;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : Number.NaN;
+}
+
+function compareIdYoungFirst(aId, bId) {
+  const an = parseLeadingNumber(aId);
+  const bn = parseLeadingNumber(bId);
+  if (Number.isFinite(an) && Number.isFinite(bn) && an !== bn) {
+    return an - bn;
+  }
+  return String(aId || '').localeCompare(String(bId || ''), 'ja', { numeric: true, sensitivity: 'base' });
+}
+
 function parseIcsDateOnly(raw) {
   const s = String(raw || '').trim();
   const m = s.match(/^(\d{4})(\d{2})(\d{2})/);
@@ -1208,9 +1228,8 @@ export default function AdminYakusokuPage() {
 
   const filteredItems = useMemo(() => {
     const q = String(listQuery || '').trim().toLowerCase();
-    if (!q) return items;
-    const tokens = q.split(/\s+/).filter(Boolean);
-    return (items || []).filter((it) => {
+    const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
+    const matched = (items || []).filter((it) => {
       const metaById = tenpoMetaById.get(String(it?.tenpo_id || '').trim());
       const metaByName = tenpoMetaByName.get(String(it?.tenpo_name || '').trim());
       const toriName = String(it?.torihikisaki_name || metaById?.torihikisaki_name || metaByName?.torihikisaki_name || '').trim();
@@ -1241,7 +1260,50 @@ export default function AdminYakusokuPage() {
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
-      return tokens.every((tk) => searchBlob.includes(tk));
+      return !tokens.length || tokens.every((tk) => searchBlob.includes(tk));
+    });
+    return [...matched].sort((a, b) => {
+      const aTenpoId = normText(a?.tenpo_id);
+      const bTenpoId = normText(b?.tenpo_id);
+      const aMetaById = tenpoMetaById.get(aTenpoId);
+      const bMetaById = tenpoMetaById.get(bTenpoId);
+      const aMetaByName = tenpoMetaByName.get(normText(a?.tenpo_name));
+      const bMetaByName = tenpoMetaByName.get(normText(b?.tenpo_name));
+
+      const aToriId = normText(a?.torihikisaki_id || aMetaById?.torihikisaki_id || aMetaByName?.torihikisaki_id);
+      const bToriId = normText(b?.torihikisaki_id || bMetaById?.torihikisaki_id || bMetaByName?.torihikisaki_id);
+      const aYagouId = normText(a?.yagou_id || aMetaById?.yagou_id || aMetaByName?.yagou_id);
+      const bYagouId = normText(b?.yagou_id || bMetaById?.yagou_id || bMetaByName?.yagou_id);
+      const aKokyakuId = normText(a?.kokyaku_id || (aToriId ? aToriId.replace(/^TORI#/i, 'KOKYAKU#') : ''));
+      const bKokyakuId = normText(b?.kokyaku_id || (bToriId ? bToriId.replace(/^TORI#/i, 'KOKYAKU#') : ''));
+
+      const idOrder = [
+        [aKokyakuId, bKokyakuId],
+        [aToriId, bToriId],
+        [aYagouId, bYagouId],
+        [aTenpoId, bTenpoId],
+      ];
+      for (const [av, bv] of idOrder) {
+        const cmp = compareIdYoungFirst(av, bv);
+        if (cmp !== 0) return cmp;
+      }
+
+      const aToriName = normText(a?.torihikisaki_name || aMetaById?.torihikisaki_name || aMetaByName?.torihikisaki_name);
+      const bToriName = normText(b?.torihikisaki_name || bMetaById?.torihikisaki_name || bMetaByName?.torihikisaki_name);
+      const aYagouName = normText(a?.yagou_name || aMetaById?.yagou_name || aMetaByName?.yagou_name);
+      const bYagouName = normText(b?.yagou_name || bMetaById?.yagou_name || bMetaByName?.yagou_name);
+      const aTenpoName = normText(a?.tenpo_name || aMetaById?.name || aMetaByName?.name);
+      const bTenpoName = normText(b?.tenpo_name || bMetaById?.name || bMetaByName?.name);
+      const nameOrder = [aToriName, aYagouName, aTenpoName, normText(a?.yakusoku_id)];
+      const otherNameOrder = [bToriName, bYagouName, bTenpoName, normText(b?.yakusoku_id)];
+      for (let i = 0; i < nameOrder.length; i += 1) {
+        const cmp = String(nameOrder[i] || '').localeCompare(String(otherNameOrder[i] || ''), 'ja', {
+          numeric: true,
+          sensitivity: 'base',
+        });
+        if (cmp !== 0) return cmp;
+      }
+      return 0;
     });
   }, [listQuery, items, tenpoMetaById, tenpoMetaByName, formatTenpoDisplay]);
 
@@ -2796,11 +2858,63 @@ export default function AdminYakusokuPage() {
               {filteredItems.map(it => {
                 const monthKey = dayjs().format('YYYY-MM');
                 const consumed = it.consumption_count ? (it.consumption_count[monthKey] || 0) : 0;
+                const metaById = tenpoMetaById.get(String(it?.tenpo_id || '').trim());
+                const metaByName = tenpoMetaByName.get(String(it?.tenpo_name || '').trim());
+                const torihikisakiName = String(
+                  it?.torihikisaki_name || metaById?.torihikisaki_name || metaByName?.torihikisaki_name || ''
+                ).trim();
+                const yagouName = String(
+                  it?.yagou_name || metaById?.yagou_name || metaByName?.yagou_name || ''
+                ).trim();
+                const tenpoName = String(
+                  it?.tenpo_name || metaById?.name || metaByName?.name || ''
+                ).trim();
+                const siteTags = [
+                  { kind: 'torihikisaki', label: torihikisakiName },
+                  { kind: 'yagou', label: yagouName },
+                  { kind: 'tenpo', label: tenpoName },
+                ].filter((t) => t.label);
+                const seenSiteTagLabels = new Set();
+                const uniqueSiteTags = siteTags.filter((tag) => {
+                  const key = String(tag.label).toLowerCase();
+                  if (!key || seenSiteTagLabels.has(key)) return false;
+                  seenSiteTagLabels.add(key);
+                  return true;
+                });
                 return (
                   <tr key={it.yakusoku_id} style={{ borderBottom: '1px solid var(--line)' }}>
                     <td style={{ padding: '10px', fontSize: '12px', color: 'var(--muted)' }}>{it.yakusoku_id}</td>
                     <td style={{ padding: '10px' }}>
-                      {formatTenpoDisplay(it.tenpo_id, it.tenpo_name, it.yagou_name)}
+                      {uniqueSiteTags.length ? (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {uniqueSiteTags.map((tag) => (
+                            <span
+                              key={`${it.yakusoku_id}-site-tag-${tag.kind}-${tag.label}`}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                borderRadius: 999,
+                                padding: '2px 10px',
+                                fontSize: 12,
+                                lineHeight: 1.5,
+                                border: '1px solid var(--line)',
+                                background:
+                                  tag.kind === 'torihikisaki'
+                                    ? 'rgba(186,223,219,0.42)'
+                                    : tag.kind === 'yagou'
+                                      ? 'rgba(255,164,164,0.24)'
+                                      : 'rgba(59,130,246,0.22)',
+                                color: 'var(--text)',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {tag.label}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        '-'
+                      )}
                     </td>
                     <td style={{ padding: '10px' }}>
                       {it.keiyaku_name || it.keiyaku_id ? (

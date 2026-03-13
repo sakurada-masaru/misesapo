@@ -296,7 +296,7 @@
 }
 
 .customer-detail-pane-center {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .customer-notice-section {
@@ -323,12 +323,13 @@
 .customer-notice-side-actions {
   min-width: 420px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(96px, 1fr));
+  grid-template-columns: repeat(5, minmax(96px, 1fr));
   grid-template-rows: repeat(2, minmax(44px, 1fr));
+  grid-auto-rows: 0;
   gap: 8px;
-  align-content: stretch;
+  align-content: start;
   align-self: stretch;
-  height: 100%;
+  height: auto;
 }
 
 .customer-quick-btn {
@@ -388,6 +389,79 @@
   margin-bottom: 10px;
 }
 
+.customer-panel-head-sub {
+  margin-top: 14px;
+}
+
+.customer-center-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customer-center-tabs-bottom {
+  width: 100%;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.customer-center-tab {
+  min-height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-sub);
+  background: #fff;
+  color: var(--cp-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.customer-center-tab.is-active {
+  border-color: rgba(255, 164, 164, 0.88);
+  background: rgba(255, 164, 164, 0.2);
+  color: #7e4b4b;
+}
+
+.customer-center-top-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.customer-center-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.customer-center-panel > section {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.customer-center-schedule {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.customer-center-schedule-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.customer-center-top-grid .customer-panel-head-sub {
+  margin-top: 0;
+  margin-bottom: 0;
+  height: 36px;
+  box-sizing: border-box;
+}
+
 .customer-panel-actions {
   display: inline-flex;
   align-items: center;
@@ -435,6 +509,17 @@
   font-size: 0.78rem;
   padding: 4px 9px;
   font-weight: 700;
+}
+
+.customer-center-empty-note {
+  color: var(--cp-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 62%;
 }
 
 .customer-basic-grid {
@@ -569,12 +654,20 @@
   padding-right: 4px;
 }
 
+.customer-history-tab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 .customer-history-calendar {
   border: 1px solid var(--cp-sub);
   border-radius: 12px;
   background: #fff;
   padding: 10px;
-  margin-bottom: 10px;
+  margin: 10px 0;
 }
 
 .customer-history-calendar-head {
@@ -688,7 +781,7 @@
   border-radius: 12px;
   background: #fff;
   padding: 10px 11px;
-  margin-bottom: 10px;
+  margin-top: 10px;
 }
 
 .customer-next-yotei-top {
@@ -780,6 +873,16 @@
 .customer-report-action-error {
   margin-top: 6px;
   margin-bottom: 10px;
+}
+
+.customer-report-modal-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+}
+
+.customer-report-modal .customer-report-result-list {
+  max-height: none;
 }
 
 .customer-notice-list {
@@ -1011,13 +1114,17 @@
 }
 
 .customer-chat-panel {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+  height: 100%;
+  min-height: 0;
 }
 
 .customer-chat-log {
-  max-height: 380px;
-  min-height: 220px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
   overflow: auto;
   border: 1px solid var(--cp-sub);
   border-radius: 12px;
@@ -1067,6 +1174,13 @@
 .customer-chat-composer {
   display: grid;
   gap: 8px;
+  margin-top: auto;
+}
+
+.customer-center-schedule-body .customer-history-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
 }
 
 .customer-chat-composer textarea {
@@ -1255,6 +1369,10 @@
     grid-template-columns: 1fr;
   }
 
+  .customer-center-top-grid {
+    grid-template-columns: 1fr;
+  }
+
   .customer-detail-layout {
     grid-template-columns: 1fr;
   }
@@ -1309,8 +1427,9 @@
   .customer-notice-side-actions {
     width: 100%;
     min-width: 0;
-    grid-template-columns: repeat(4, minmax(72px, 1fr));
+    grid-template-columns: repeat(5, minmax(56px, 1fr));
     grid-template-rows: repeat(2, minmax(40px, auto));
+    grid-auto-rows: 0;
   }
 
   .customer-billing-modal-backdrop {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -10,6 +10,7 @@ const CUSTOMER_REPORT_SOUKO_SOURCE = 'customer_result_report';
 const CUSTOMER_REPORT_FOLDER_ID = 'customer_report_results';
 const CUSTOMER_REPORT_FOLDER_NAME = '作業完了レポート';
 const CUSTOMER_CHAT_STORAGE_PREFIX = 'misogi-v2-customer-mypage-chat';
+const CUSTOMER_CHAT_ADMIN_ROOM = 'customer_mypage';
 
 function authHeaders() {
   const token =
@@ -774,8 +775,9 @@ export default function CustomerMyPage() {
   const [basicSaveMessage, setBasicSaveMessage] = useState('');
   const [historySelectedDate, setHistorySelectedDate] = useState('');
   const [historyMonthCursor, setHistoryMonthCursor] = useState(() => monthStart(new Date()));
+  const [centerScheduleTab, setCenterScheduleTab] = useState('calendar');
   const [detailPane, setDetailPane] = useState('center');
-  const [centerPanelMode, setCenterPanelMode] = useState('history');
+  const [reportViewerOpen, setReportViewerOpen] = useState(false);
   const [customerChatMessages, setCustomerChatMessages] = useState([]);
   const [customerChatDraft, setCustomerChatDraft] = useState('');
   const [billingViewerOpen, setBillingViewerOpen] = useState(false);
@@ -790,7 +792,6 @@ export default function CustomerMyPage() {
     customer_contact_name: '',
     business_hours: '',
   });
-  const centerSupportPanelRef = useRef(null);
 
   const scopedTenpoId = useMemo(() => {
     const sp = new URLSearchParams(location.search || '');
@@ -987,7 +988,7 @@ export default function CustomerMyPage() {
   const canMovePaneRight = detailPaneIndex < DETAIL_PANES.length - 1;
   const paneHintLabelMap = {
     left: '基本情報',
-    center: 'レポート',
+    center: 'チャット/予定',
     right: 'ストレージ',
   };
   const leftHint = canMovePaneLeft
@@ -1004,13 +1005,6 @@ export default function CustomerMyPage() {
       const nextIndex = Math.min(DETAIL_PANES.length - 1, Math.max(0, currentIndex + direction));
       return DETAIL_PANES[nextIndex];
     });
-  }, []);
-
-  const focusCenterSupportPanel = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    const node = centerSupportPanelRef.current;
-    if (!node || typeof node.scrollIntoView !== 'function') return;
-    node.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   const scopedStores = useMemo(() => {
@@ -1683,6 +1677,10 @@ export default function CustomerMyPage() {
   }, [scopedTenpoId]);
 
   useEffect(() => {
+    setReportViewerOpen(false);
+  }, [scopedTenpoId]);
+
+  useEffect(() => {
     const storageKey = customerChatStorageKey(scopedTenpoId || effectiveTenpoId);
     try {
       const parsed = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -1704,7 +1702,7 @@ export default function CustomerMyPage() {
 
   const openNextYoteiPanel = useCallback(() => {
     setDetailPane('center');
-    setCenterPanelMode('history');
+    setCenterScheduleTab('calendar');
     if (nextYotei?.startAt) {
       const ymd = ymdFromDate(nextYotei.startAt);
       if (ymd) {
@@ -1712,14 +1710,19 @@ export default function CustomerMyPage() {
         setHistorySelectedDate(ymd);
       }
     }
-    setTimeout(() => focusCenterSupportPanel(), 60);
-  }, [nextYotei, focusCenterSupportPanel]);
+  }, [nextYotei]);
 
   const openCustomerChatPanel = useCallback(() => {
     setDetailPane('center');
-    setCenterPanelMode('chat');
-    setTimeout(() => focusCenterSupportPanel(), 60);
-  }, [focusCenterSupportPanel]);
+  }, []);
+
+  const openResultReportViewer = useCallback(() => {
+    setReportViewerOpen(true);
+  }, []);
+
+  const closeResultReportViewer = useCallback(() => {
+    setReportViewerOpen(false);
+  }, []);
 
   const sendCustomerChat = useCallback(() => {
     const text = norm(customerChatDraft);
@@ -1735,7 +1738,66 @@ export default function CustomerMyPage() {
       },
     ]));
     setCustomerChatDraft('');
-  }, [customerChatDraft]);
+    const tenpoId = norm(scopedTenpoId || effectiveTenpoId);
+    const actorName = norm(
+      localStorage.getItem('display_name')
+      || localStorage.getItem('name')
+      || localStorage.getItem('username')
+      || localStorage.getItem('user_name')
+      || ''
+    ) || 'お客様';
+    const actorId = norm(localStorage.getItem('user_id')) || `customer:${tenpoId || 'unknown'}`;
+    const tenpoName = pickFirstText(
+      detailTenpo?.name,
+      detailTenpo?.tenpo_name,
+      effectiveTenpo?.name,
+      activeStore?.name
+    );
+    const yagouName = pickFirstText(
+      detailYagou?.name,
+      detailYagou?.yagou_name,
+      detailTenpo?.yagou_name,
+      activeStore?.yagou
+    );
+    const storeLabel = (yagouName && tenpoName) ? `${yagouName} / ${tenpoName}` : (yagouName || tenpoName || '-');
+    const titleBase = text.length > 24 ? `${text.slice(0, 24)}…` : text;
+    const body = {
+      room: CUSTOMER_CHAT_ADMIN_ROOM,
+      name: titleBase,
+      sender_name: actorName,
+      sender_display_name: actorName,
+      sender_id: actorId,
+      message: text,
+      source: 'customer_mypage_chat',
+      jotai: 'yuko',
+      has_attachment: false,
+      data_payload: {
+        channel: 'customer_mypage',
+        tenpo_id: tenpoId || '',
+        tenpo_name: tenpoName || '',
+        yagou_name: yagouName || '',
+        store_label: storeLabel,
+        sent_at: at,
+      },
+    };
+    void fetch(`${masterApiBase}/master/admin_chat`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }).catch(() => {});
+  }, [
+    customerChatDraft,
+    scopedTenpoId,
+    effectiveTenpoId,
+    detailTenpo,
+    detailYagou,
+    effectiveTenpo,
+    activeStore,
+    masterApiBase,
+  ]);
 
   return (
     <div className="customer-mypage customer-mypage--pop">
@@ -1806,6 +1868,13 @@ export default function CustomerMyPage() {
                 title={!nextYotei ? '次回予定はまだありません' : ''}
               >
                 次回予定
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary customer-quick-btn"
+                onClick={openResultReportViewer}
+              >
+                作業完了レポート
               </button>
               <a
                 className="btn btn-secondary customer-quick-btn"
@@ -1973,67 +2042,13 @@ export default function CustomerMyPage() {
                   </section>
 
                   <section className="customer-detail-pane customer-detail-pane-center">
-                    <article className="customer-panel">
-                      <div className="customer-panel-head">
-                        <h3>作業完了レポート（結果）</h3>
-                        <span className="count">{resultReports.length}</span>
-                      </div>
-                      {resultReportActionMessage ? <p className="customer-basic-save-message">{resultReportActionMessage}</p> : null}
-                      {resultReportActionError ? <p className="customer-mypage-error customer-report-action-error">{resultReportActionError}</p> : null}
-                      {resultReportsLoading ? (
-                        <p className="customer-muted">作業完了レポートを読み込み中です...</p>
-                      ) : resultReportsError ? (
-                        <p className="customer-muted">{resultReportsError}</p>
-                      ) : resultReports.length === 0 ? (
-                        <p className="customer-muted">表示できる作業結果はまだありません。</p>
-                      ) : (
-                        <div className="customer-report-result-list">
-                          {resultReports.map((row, idx) => (
-                            <article key={row.id || `${row.workDate}-${idx}`} className="customer-report-result-card">
-                              <div className="customer-report-result-head">
-                                <div className="customer-report-result-date">{row.workDate || '-'}</div>
-                                <button
-                                  type="button"
-                                  className="btn btn-secondary customer-report-download-btn"
-                                  onClick={() => onDownloadResultReport(row, idx)}
-                                  disabled={Boolean(resultReportSavingId)}
-                                >
-                                  {resultReportSavingId === (row.id || `${row.workDate || 'row'}-${idx}`)
-                                    ? '保存中...'
-                                    : 'PDFダウンロード'}
-                                </button>
-                              </div>
-                              <div className="customer-report-result-text">{row.result}</div>
-                            </article>
-                          ))}
-                        </div>
-                      )}
-                    </article>
-
-                    <article className="customer-panel" ref={centerSupportPanelRef}>
-                      <div className="customer-panel-head">
-                        <h3>{centerPanelMode === 'chat' ? 'チャット' : '対応履歴・次回予定'}</h3>
-                        <div className="customer-panel-actions">
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={() => setCenterPanelMode('history')}
-                            disabled={centerPanelMode === 'history'}
-                          >
-                            履歴
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={() => setCenterPanelMode('chat')}
-                            disabled={centerPanelMode === 'chat'}
-                          >
-                            チャット
-                          </button>
-                        </div>
-                      </div>
-                      {centerPanelMode === 'chat' ? (
+                    <div className="customer-center-top-grid">
+                      <article className="customer-panel customer-center-panel customer-center-panel-chat">
                         <section className="customer-chat-panel" aria-label="お客様チャット">
+                          <div className="customer-panel-head customer-panel-head-sub">
+                            <h3>チャット</h3>
+                            <span className="count">{customerChatMessages.length}</span>
+                          </div>
                           <div className="customer-chat-log">
                             {customerChatMessages.length === 0 ? (
                               <p className="customer-muted">メッセージはまだありません。</p>
@@ -2061,110 +2076,161 @@ export default function CustomerMyPage() {
                             </button>
                           </div>
                         </section>
-                      ) : nextYotei ? (
-                        <section className="customer-next-yotei" aria-label="次回予定">
-                          <div className="customer-next-yotei-top">
-                            <span className="customer-next-yotei-label">次回予定</span>
-                            <span className="customer-next-yotei-date">{fmtDateJst(nextYotei.startAt)}</span>
+                      </article>
+
+                      <article className="customer-panel customer-center-panel customer-center-panel-schedule">
+                        <section className="customer-center-schedule" aria-label="予定カレンダーと対応履歴">
+                          <div className="customer-panel-head customer-panel-head-sub">
+                            <h3>予定・対応履歴</h3>
+                            {centerScheduleTab === 'calendar' && !nextYotei ? (
+                              <span className="customer-center-empty-note">次回予定はまだありません</span>
+                            ) : null}
                           </div>
-                          <div className="customer-next-yotei-main">{nextYotei.storeLabel}</div>
-                          <div className="customer-next-yotei-sub">
-                            <span>{fmtDateTimeJst(nextYotei.startAt) || '-'}</span>
-                            <span>〜</span>
-                            <span>{fmtDateTimeJst(nextYotei.endAt) || '-'}</span>
-                            {nextYotei.workerName ? <span>担当: {nextYotei.workerName}</span> : null}
+                          <div className="customer-center-schedule-body">
+                            {centerScheduleTab === 'calendar' ? (
+                              <>
+                                <div className="customer-history-calendar">
+                                  <div className="customer-history-calendar-head">
+                                    <button
+                                      type="button"
+                                      className="customer-calendar-nav"
+                                      onClick={() => setHistoryMonthCursor((prev) => addMonths(prev, -1))}
+                                      aria-label="前月"
+                                    >
+                                      ←
+                                    </button>
+                                    <div className="customer-calendar-label">{historyMonthLabel}</div>
+                                    <button
+                                      type="button"
+                                      className="customer-calendar-nav"
+                                      onClick={() => setHistoryMonthCursor((prev) => addMonths(prev, 1))}
+                                      aria-label="次月"
+                                    >
+                                      →
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="customer-calendar-clear"
+                                      onClick={() => setHistorySelectedDate('')}
+                                      disabled={!historySelectedDate}
+                                    >
+                                      全日表示
+                                    </button>
+                                  </div>
+                                  <div className="customer-calendar-weekdays">
+                                    {['日', '月', '火', '水', '木', '金', '土'].map((wd) => (
+                                      <span key={wd}>{wd}</span>
+                                    ))}
+                                  </div>
+                                  <div className="customer-history-calendar-grid">
+                                    {historyCalendarCells.map((cell) => (
+                                      <button
+                                        key={cell.ymd}
+                                        type="button"
+                                        className={[
+                                          'customer-calendar-day',
+                                          cell.inMonth ? '' : 'is-outside',
+                                          cell.count > 0 ? 'has-record' : '',
+                                          historySelectedDate === cell.ymd ? 'is-selected' : '',
+                                        ].filter(Boolean).join(' ')}
+                                        onClick={() => {
+                                          setHistoryMonthCursor(monthStart(new Date(cell.ymd)));
+                                          setHistorySelectedDate((prev) => (prev === cell.ymd ? '' : cell.ymd));
+                                        }}
+                                        aria-label={`${cell.ymd} ${cell.count}件`}
+                                      >
+                                        <span className="day-number">{cell.day}</span>
+                                        {cell.count > 0 ? <span className="day-count">{cell.count}</span> : null}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  {historySelectedDate ? (
+                                    <p className="customer-muted small">
+                                      選択日: {historySelectedDate}
+                                    </p>
+                                  ) : null}
+                                </div>
+                                {nextYotei ? (
+                                  <section className="customer-next-yotei" aria-label="次回予定">
+                                    <div className="customer-next-yotei-top">
+                                      <span className="customer-next-yotei-label">次回予定</span>
+                                      <span className="customer-next-yotei-date">{fmtDateJst(nextYotei.startAt)}</span>
+                                    </div>
+                                    <div className="customer-next-yotei-main">{nextYotei.storeLabel}</div>
+                                    <div className="customer-next-yotei-sub">
+                                      <span>{fmtDateTimeJst(nextYotei.startAt) || '-'}</span>
+                                      <span>〜</span>
+                                      <span>{fmtDateTimeJst(nextYotei.endAt) || '-'}</span>
+                                      {nextYotei.workerName ? <span>担当: {nextYotei.workerName}</span> : null}
+                                    </div>
+                                  </section>
+                                ) : null}
+                              </>
+                            ) : (
+                              <>
+                                {historySelectedDate ? (
+                                  <div className="customer-history-tab-head">
+                                    <p className="customer-muted small">選択日: {historySelectedDate}</p>
+                                    <button
+                                      type="button"
+                                      className="customer-calendar-clear"
+                                      onClick={() => setHistorySelectedDate('')}
+                                    >
+                                      全日表示
+                                    </button>
+                                  </div>
+                                ) : null}
+                                {supportHistory.length === 0 ? (
+                                  <p className="customer-muted">対応履歴はまだありません。</p>
+                                ) : filteredSupportHistory.length === 0 ? (
+                                  <p className="customer-muted">選択した日付の対応履歴はありません。</p>
+                                ) : (
+                                  <div className="customer-history-list">
+                                    {filteredSupportHistory.map((h, idx) => {
+                                      const logs = safeArr(h?.logs).filter((lg) => norm(lg?.message));
+                                      return (
+                                        <article key={norm(h?.history_id) || `history-${idx}`} className="customer-history-card">
+                                          <div className="customer-history-top">
+                                            <span className="date">{norm(h?.date) || '-'}</span>
+                                            <span className="status">{norm(h?.status) || 'open'}</span>
+                                          </div>
+                                          <p><strong>件名:</strong> {norm(h?.topic) || '-'}</p>
+                                          <p><strong>対応:</strong> {norm(h?.action) || '-'}</p>
+                                          <p><strong>結果:</strong> {norm(h?.outcome) || '-'}</p>
+                                          <p className="customer-muted small">
+                                            更新: {fmtDateTimeJst(h?.updated_at) || '-'} / 返信 {logs.length}件
+                                          </p>
+                                        </article>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                          <div className="customer-center-tabs customer-center-tabs-bottom" role="tablist" aria-label="予定と対応履歴の表示切替">
+                            <button
+                              type="button"
+                              role="tab"
+                              aria-selected={centerScheduleTab === 'calendar'}
+                              className={['customer-center-tab', centerScheduleTab === 'calendar' ? 'is-active' : ''].filter(Boolean).join(' ')}
+                              onClick={() => setCenterScheduleTab('calendar')}
+                            >
+                              カレンダー
+                            </button>
+                            <button
+                              type="button"
+                              role="tab"
+                              aria-selected={centerScheduleTab === 'history'}
+                              className={['customer-center-tab', centerScheduleTab === 'history' ? 'is-active' : ''].filter(Boolean).join(' ')}
+                              onClick={() => setCenterScheduleTab('history')}
+                            >
+                              対応履歴
+                            </button>
                           </div>
                         </section>
-                      ) : (
-                        <p className="customer-muted">次回予定はまだありません。</p>
-                      )}
-                      <div className="customer-history-calendar">
-                        <div className="customer-history-calendar-head">
-                          <button
-                            type="button"
-                            className="customer-calendar-nav"
-                            onClick={() => setHistoryMonthCursor((prev) => addMonths(prev, -1))}
-                            aria-label="前月"
-                          >
-                            ←
-                          </button>
-                          <div className="customer-calendar-label">{historyMonthLabel}</div>
-                          <button
-                            type="button"
-                            className="customer-calendar-nav"
-                            onClick={() => setHistoryMonthCursor((prev) => addMonths(prev, 1))}
-                            aria-label="次月"
-                          >
-                            →
-                          </button>
-                          <button
-                            type="button"
-                            className="customer-calendar-clear"
-                            onClick={() => setHistorySelectedDate('')}
-                            disabled={!historySelectedDate}
-                          >
-                            全日表示
-                          </button>
-                        </div>
-                        <div className="customer-calendar-weekdays">
-                          {['日', '月', '火', '水', '木', '金', '土'].map((wd) => (
-                            <span key={wd}>{wd}</span>
-                          ))}
-                        </div>
-                        <div className="customer-history-calendar-grid">
-                          {historyCalendarCells.map((cell) => (
-                            <button
-                              key={cell.ymd}
-                              type="button"
-                              className={[
-                                'customer-calendar-day',
-                                cell.inMonth ? '' : 'is-outside',
-                                cell.count > 0 ? 'has-record' : '',
-                                historySelectedDate === cell.ymd ? 'is-selected' : '',
-                              ].filter(Boolean).join(' ')}
-                              onClick={() => {
-                                setHistoryMonthCursor(monthStart(new Date(cell.ymd)));
-                                setHistorySelectedDate((prev) => (prev === cell.ymd ? '' : cell.ymd));
-                              }}
-                              aria-label={`${cell.ymd} ${cell.count}件`}
-                            >
-                              <span className="day-number">{cell.day}</span>
-                              {cell.count > 0 ? <span className="day-count">{cell.count}</span> : null}
-                            </button>
-                          ))}
-                        </div>
-                        {historySelectedDate ? (
-                          <p className="customer-muted small">
-                            選択日: {historySelectedDate}
-                          </p>
-                        ) : null}
-                      </div>
-                      {supportHistory.length === 0 ? (
-                        <p className="customer-muted">対応履歴はまだありません。</p>
-                      ) : filteredSupportHistory.length === 0 ? (
-                        <p className="customer-muted">選択した日付の対応履歴はありません。</p>
-                      ) : (
-                        <div className="customer-history-list">
-                          {filteredSupportHistory.map((h, idx) => {
-                            const logs = safeArr(h?.logs).filter((lg) => norm(lg?.message));
-                            return (
-                              <article key={norm(h?.history_id) || `history-${idx}`} className="customer-history-card">
-                                <div className="customer-history-top">
-                                  <span className="date">{norm(h?.date) || '-'}</span>
-                                  <span className="status">{norm(h?.status) || 'open'}</span>
-                                </div>
-                                <p><strong>件名:</strong> {norm(h?.topic) || '-'}</p>
-                                <p><strong>対応:</strong> {norm(h?.action) || '-'}</p>
-                                <p><strong>結果:</strong> {norm(h?.outcome) || '-'}</p>
-                                <p className="customer-muted small">
-                                  更新: {fmtDateTimeJst(h?.updated_at) || '-'} / 返信 {logs.length}件
-                                </p>
-                              </article>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </article>
+                      </article>
+                    </div>
                   </section>
 
                   <section className="customer-detail-pane customer-detail-pane-right">
@@ -2234,6 +2300,63 @@ export default function CustomerMyPage() {
 
         </>
       )}
+      {reportViewerOpen ? (
+        <div
+          className="customer-billing-modal-backdrop"
+          role="presentation"
+          onClick={closeResultReportViewer}
+        >
+          <section
+            className="customer-billing-modal customer-report-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="作業完了レポート一覧"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="customer-billing-modal-head">
+              <div className="customer-billing-modal-title">
+                <h3>作業完了レポート（結果）</h3>
+                <span className="count">{resultReports.length}</span>
+              </div>
+              <button type="button" className="btn btn-secondary customer-billing-close-btn" onClick={closeResultReportViewer}>
+                閉じる
+              </button>
+            </header>
+            <div className="customer-report-modal-body">
+              {resultReportActionMessage ? <p className="customer-basic-save-message">{resultReportActionMessage}</p> : null}
+              {resultReportActionError ? <p className="customer-mypage-error customer-report-action-error">{resultReportActionError}</p> : null}
+              {resultReportsLoading ? (
+                <p className="customer-muted">作業完了レポートを読み込み中です...</p>
+              ) : resultReportsError ? (
+                <p className="customer-muted">{resultReportsError}</p>
+              ) : resultReports.length === 0 ? (
+                <p className="customer-muted">表示できる作業結果はまだありません。</p>
+              ) : (
+                <div className="customer-report-result-list">
+                  {resultReports.map((row, idx) => (
+                    <article key={row.id || `${row.workDate}-${idx}`} className="customer-report-result-card">
+                      <div className="customer-report-result-head">
+                        <div className="customer-report-result-date">{row.workDate || '-'}</div>
+                        <button
+                          type="button"
+                          className="btn btn-secondary customer-report-download-btn"
+                          onClick={() => onDownloadResultReport(row, idx)}
+                          disabled={Boolean(resultReportSavingId)}
+                        >
+                          {resultReportSavingId === (row.id || `${row.workDate || 'row'}-${idx}`)
+                            ? '保存中...'
+                            : 'PDFダウンロード'}
+                        </button>
+                      </div>
+                      <div className="customer-report-result-text">{row.result}</div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : null}
       {billingViewerOpen ? (
         <div
           className="customer-billing-modal-backdrop"

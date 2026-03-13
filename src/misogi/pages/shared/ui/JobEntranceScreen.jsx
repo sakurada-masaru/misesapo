@@ -65,6 +65,7 @@ const CLEANING_NOTICE_RUNNING_STORAGE_KEY = 'misogi-v2-cleaning-notice-running';
 const CLEANING_NOTICE_SWIPE_MAX = 44;
 const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
 const ADMIN_DIRECT_SIDEBAR_SECTION_IDS = new Set(['dashboard', 'filebox']);
+const CUSTOMER_CHAT_ADMIN_ROOM = 'customer_mypage';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -1339,7 +1340,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     try {
       const now = new Date();
       const ymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const [kanriResult, reportsResult] = await Promise.allSettled([
+      const [kanriResult, reportsResult, customerChatResult] = await Promise.allSettled([
         fetch(`${MASTER_API_BASE}/master/kanri_log?limit=400&jotai=yuko`, {
           headers: {
             ...authHeaders(),
@@ -1356,10 +1357,24 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           states: ['draft', 'submitted', 'triaged', 'rejected', 'approved', 'archived'],
           limit: 500,
         }),
+        fetch(
+          `${MASTER_API_BASE}/master/admin_chat?limit=400&jotai=yuko&room=${encodeURIComponent(CUSTOMER_CHAT_ADMIN_ROOM)}`,
+          {
+            headers: {
+              ...authHeaders(),
+              'Content-Type': 'application/json',
+            },
+            cache: 'no-store',
+          }
+        ).then(async (res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        }),
       ]);
 
       const kanriRows = kanriResult.status === 'fulfilled' ? asItems(kanriResult.value) : [];
       const reportRows = reportsResult.status === 'fulfilled' ? asItems(reportsResult.value) : [];
+      const customerChatRows = customerChatResult.status === 'fulfilled' ? asItems(customerChatResult.value) : [];
 
       const logEvents = kanriRows
         .map((row) => {
@@ -1406,12 +1421,57 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
         .filter(Boolean)
         .filter((row) => isSameLocalDate(row.atMs, now));
 
-      const list = [...reportEvents, ...logEvents]
+      const customerChatEvents = customerChatRows
+        .map((row) => {
+          const whenMs = toEpochMs(row?.created_at || row?.updated_at || row?.reported_at || row?.date);
+          const who = pickDisplayName(
+            row?.sender_display_name,
+            row?.sender_name,
+            row?.updated_by_name,
+            row?.created_by_name,
+            row?.user_name,
+            row?.sender_id,
+          );
+          const rawPayload = row?.data_payload;
+          const payload = (rawPayload && typeof rawPayload === 'object')
+            ? rawPayload
+            : (() => {
+                try {
+                  return rawPayload ? JSON.parse(String(rawPayload)) : {};
+                } catch {
+                  return {};
+                }
+              })();
+          const storeLabel = String(
+            payload?.store_label
+            || [payload?.yagou_name, payload?.tenpo_name].filter(Boolean).join(' / ')
+            || ''
+          ).trim();
+          const message = String(row?.message || row?.name || '').trim();
+          const messagePreview = message ? `「${message.length > 24 ? `${message.slice(0, 24)}…` : message}」` : '';
+          const storeSuffix = storeLabel ? `（${storeLabel}）` : '';
+          return {
+            id: String(row?.chat_id || row?.id || `${who}-${whenMs}-${Math.random()}`),
+            atMs: whenMs,
+            atLabel: hhmmLabel(whenMs),
+            who,
+            what: `${who}がお客様チャットを送信しました${storeSuffix}${messagePreview} >>> ${ymdHmLabel(whenMs)}`,
+            kind: 'customer-chat',
+          };
+        })
+        .filter(Boolean)
+        .filter((row) => isSameLocalDate(row.atMs, now));
+
+      const list = [...customerChatEvents, ...reportEvents, ...logEvents]
         .sort((a, b) => b.atMs - a.atMs)
         .slice(0, 80);
 
       setTodayUpdates(list);
-      if (kanriResult.status === 'rejected' && reportsResult.status === 'rejected') {
+      if (
+        kanriResult.status === 'rejected'
+        && reportsResult.status === 'rejected'
+        && customerChatResult.status === 'rejected'
+      ) {
         setUpdatesError('更新通知の取得に失敗しました');
       }
     } catch {
