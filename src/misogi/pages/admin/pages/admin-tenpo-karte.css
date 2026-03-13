@@ -105,8 +105,8 @@
 }
 
 .monshin-overview {
-  margin: 12px 20px 0;
-  padding: 12px;
+  margin: 10px 20px 0;
+  padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
@@ -125,21 +125,21 @@
 }
 
 .monshin-overview-head .title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: #e9eef8;
 }
 
 .monshin-overview-head .desc {
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: 2px;
+  font-size: 11px;
   color: rgba(233, 238, 248, 0.78);
 }
 
 .monshin-progress {
-  margin-top: 10px;
-  height: 8px;
+  margin-top: 8px;
+  height: 6px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.12);
   overflow: hidden;
@@ -153,8 +153,8 @@
 
 .monshin-missing,
 .monshin-ok {
-  margin-top: 10px;
-  font-size: 12px;
+  margin-top: 8px;
+  font-size: 11px;
 }
 
 .monshin-missing {
@@ -166,7 +166,7 @@
 }
 
 .monshin-actions {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -179,10 +179,83 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.06);
   color: #e9eef8;
-  padding: 7px 10px;
+  padding: 6px 9px;
   border-radius: 10px;
   text-decoration: none;
-  font-size: 12px;
+  font-size: 11px;
+}
+
+.tenpo-summary-pane-control {
+  margin: 8px 20px 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.tenpo-summary-pane-control .pane-arrow {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(233, 238, 248, 0.95);
+  border-radius: 10px;
+  min-height: 40px;
+  align-self: center;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tenpo-summary-pane-control .pane-center-stack {
+  min-width: 0;
+  display: block;
+}
+
+.tenpo-summary-pane-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+
+.tenpo-summary-pane-buttons .pane-btn,
+.tenpo-summary-pane-buttons .pane-link {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(233, 238, 248, 0.95);
+  border-radius: 10px;
+  min-height: 32px;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: center;
+}
+
+.tenpo-summary-pane-buttons .pane-btn.is-active {
+  border-color: rgba(162, 211, 255, 0.45);
+  background: rgba(162, 211, 255, 0.2);
+}
+
+.tenpo-summary-pane-buttons .pane-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .card-accordion {
@@ -567,6 +640,51 @@
   min-width: 0;
 }
 
+.tenpo-karte-grid.tenpo-karte-grid-summary > .summary-pane-section {
+  grid-column: 1 / -1;
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-left > .summary-pane-section:not(.summary-pane-left),
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .summary-pane-section:not(.summary-pane-center),
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-right > .summary-pane-section:not(.summary-pane-right) {
+  display: none !important;
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .support-history-card {
+  min-height: calc(100vh - 340px);
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .summary-pane-center {
+  grid-column: auto;
+  min-width: 0;
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .customer-portal-chat-card,
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .support-history-card {
+  align-self: stretch;
+  min-height: calc(100vh - 310px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .customer-portal-chat-card .support-chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .customer-portal-chat-card .support-chat-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
 /* DETAIL view should feel like one big sheet (full width), not the two-column summary layout */
 .tenpo-karte-grid-detail {
   grid-template-columns: 1fr;
@@ -638,6 +756,37 @@
   padding-right: 4px;
 }
 
+/* BASIC INFO: use width efficiently with multi-column kv layout */
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  align-content: start;
+}
+
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body > .actions-row,
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body > details,
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body > .detail-link-card {
+  grid-column: 1 / -1;
+}
+
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body > .kv {
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 10px 10px;
+  border-top: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  min-width: 0;
+}
+
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body > .kv .v-main,
+.tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body > .kv .v-sub {
+  overflow-wrap: anywhere;
+}
+
 /* SUMMARY: 対応履歴を中央で高さいっぱいに使う */
 .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .support-history-card {
   align-self: stretch;
@@ -676,6 +825,16 @@
   padding: 8px 10px;
   display: grid;
   gap: 4px;
+}
+
+.support-chat-item.is-customer {
+  border-color: rgba(250, 204, 21, 0.35);
+  background: rgba(250, 204, 21, 0.08);
+}
+
+.support-chat-item.is-admin {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.08);
 }
 
 .support-chat-item .meta {
@@ -905,6 +1064,24 @@
     margin: 10px 12px 0;
     padding: 10px;
   }
+
+  .tenpo-summary-pane-control {
+    margin: 8px 12px 0;
+    padding: 7px 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .tenpo-summary-pane-control {
+    margin: 8px 12px 0;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    gap: 8px;
+  }
+
+  .tenpo-summary-pane-control .pane-arrow {
+    min-height: 36px;
+    font-size: 16px;
+  }
 }
 
 .tenpo-mobile-form-actions {
@@ -1016,6 +1193,10 @@
   .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .support-history-card,
   .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .souko-card {
     min-height: 0;
+  }
+
+  .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body {
+    grid-template-columns: 1fr;
   }
 }
 .card {
@@ -1409,58 +1590,94 @@
   .karte-detail-layout .check-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* ========================================= */
 /* ライトモード対応（店舗カルテ）            */
 /* ========================================= */
 [data-theme="light"] .tenpo-karte-page {
-  color: #111827;
-  background: #ffffff;
+  --tp-bg: #FCF9EA;
+  --tp-main: #FFA4A4;
+  --tp-sub: #FFBDBD;
+  --tp-accent: #BADFDB;
+  --tp-text: #493628;
+  --tp-head: #3B3B1A;
+  --tp-muted: #6B5A5A;
+  --tp-card: #FFFFFF;
+  color: var(--tp-text);
+  background: var(--tp-bg);
 }
 
 [data-theme="light"] .tenpo-karte-head {
-  border-bottom-color: #d1d5db;
-  background: rgba(255, 255, 255, 0.88);
+  border-bottom-color: var(--tp-sub);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 [data-theme="light"] .tenpo-karte-head .back,
 [data-theme="light"] .tenpo-karte-head button,
 [data-theme="light"] .tenpo-karte-head .link {
-  border-color: #cbd5e1;
-  background: #ffffff;
-  color: #111827;
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+  color: var(--tp-text);
 }
 
 [data-theme="light"] .tenpo-karte-head .btn-primary {
-  border-color: #2563eb;
-  background: #dbeafe;
-  color: #1e3a8a;
+  border-color: var(--tp-main);
+  background: linear-gradient(140deg, var(--tp-main), var(--tp-sub));
+  color: #ffffff;
 }
 
 [data-theme="light"] .monshin-overview {
-  border-color: rgba(15, 23, 42, 0.14);
-  background: #f8fafc;
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
 }
 
 [data-theme="light"] .monshin-overview.is-mode {
-  border-color: rgba(30, 64, 175, 0.28);
-  background: #eaf2ff;
+  border-color: var(--tp-main);
+  background: rgba(186, 223, 219, 0.34);
 }
 
 [data-theme="light"] .monshin-overview-head .title {
-  color: #0f172a;
+  color: var(--tp-head);
 }
 
 [data-theme="light"] .monshin-overview-head .desc {
-  color: #475569;
+  color: var(--tp-muted);
 }
 
 [data-theme="light"] .monshin-actions button,
 [data-theme="light"] .monshin-actions .link {
-  color: #0f172a;
-  border-color: #cbd5e1;
-  background: #ffffff;
+  color: var(--tp-text);
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+}
+
+[data-theme="light"] .tenpo-summary-pane-control {
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+}
+
+[data-theme="light"] .tenpo-summary-pane-control .pane-arrow {
+  border-color: var(--tp-sub);
+  background: #fff7f7;
+  color: var(--tp-text);
+}
+
+[data-theme="light"] .tenpo-summary-pane-buttons .pane-btn,
+[data-theme="light"] .tenpo-summary-pane-buttons .pane-link {
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+  color: var(--tp-text);
+}
+
+[data-theme="light"] .tenpo-summary-pane-buttons .pane-btn.is-active {
+  border-color: var(--tp-main);
+  background: rgba(255, 164, 164, 0.24);
+  color: var(--tp-head);
 }
 
 [data-theme="light"] .tenpo-karte-head .titles .kicker,
@@ -1478,7 +1695,7 @@
 [data-theme="light"] .support-chat-item .meta,
 [data-theme="light"] .filelist-head .label,
 [data-theme="light"] .filelist-head .count {
-  color: #475569;
+  color: var(--tp-muted);
 }
 
 [data-theme="light"] .tenpo-karte-head h1,
@@ -1494,7 +1711,7 @@
 [data-theme="light"] .karte-accordion > summary .label,
 [data-theme="light"] .card-accordion > summary .sum-title,
 [data-theme="light"] .subhead {
-  color: #0f172a;
+  color: var(--tp-head);
 }
 
 [data-theme="light"] .tenpo-karte-head code,
@@ -1517,24 +1734,34 @@
 [data-theme="light"] .service-cycle-tag,
 [data-theme="light"] .pill,
 [data-theme="light"] .chk {
-  border-color: #d1d5db;
-  background: #ffffff;
-  color: #111827;
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+  color: var(--tp-text);
+}
+
+[data-theme="light"] .support-chat-item.is-customer {
+  border-color: var(--tp-main);
+  background: rgba(255, 189, 189, 0.34);
+}
+
+[data-theme="light"] .support-chat-item.is-admin {
+  border-color: var(--tp-accent);
+  background: rgba(186, 223, 219, 0.4);
 }
 
 [data-theme="light"] .month-chip.active,
 [data-theme="light"] .seg-tabs .seg.active,
 [data-theme="light"] .radio.active {
-  border-color: #2563eb;
-  background: #dbeafe;
-  color: #1e3a8a;
+  border-color: var(--tp-main);
+  background: rgba(255, 164, 164, 0.24);
+  color: var(--tp-head);
 }
 
 [data-theme="light"] .seg-tabs .seg,
 [data-theme="light"] .radio {
-  border-color: #cbd5e1;
-  background: #ffffff;
-  color: #111827;
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+  color: var(--tp-text);
 }
 
 [data-theme="light"] .form-grid input,
@@ -1550,38 +1777,38 @@
 [data-theme="light"] .support-chat-compose textarea,
 [data-theme="light"] .file-actions button,
 [data-theme="light"] .souko-file-actions button {
-  border-color: #cbd5e1;
-  background: #ffffff;
-  color: #111827;
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+  color: var(--tp-text);
 }
 
 [data-theme="light"] .souko-thumb .kind {
-  color: #1f2937;
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  color: var(--tp-text);
+  border-color: var(--tp-sub);
+  background: var(--tp-bg);
 }
 
 [data-theme="light"] .form-grid .f .lbl,
 [data-theme="light"] .kv .v .v-sub,
 [data-theme="light"] .karte-accordion > summary .hint {
-  color: #64748b;
+  color: var(--tp-muted);
 }
 
 [data-theme="light"] .tenpo-karte-err {
-  border-color: #fca5a5;
-  background: #fef2f2;
-  color: #991b1b;
+  border-color: var(--tp-main);
+  background: rgba(255, 164, 164, 0.22);
+  color: #8D4C4C;
 }
 
 [data-theme="light"] .tenpo-mobile-form-actions {
-  border-color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.94);
+  border-color: var(--tp-sub);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 /* ラベル/本文の取りこぼし防止 */
 [data-theme="light"] .tenpo-karte-page .card,
 [data-theme="light"] .tenpo-karte-page .card *:not(button):not(code):not(.muted):not(.muted *):not(.pill-on):not(.pill-on *):not(.pill-off):not(.pill-off *):not(.month-chip.active):not(.month-chip.active *):not(.seg-tabs .seg.active):not(.seg-tabs .seg.active *):not(.radio.active):not(.radio.active *) {
-  color: #111827;
+  color: var(--tp-text);
 }
 
 [data-theme="light"] .tenpo-karte-page .lbl,
@@ -1589,7 +1816,7 @@
 [data-theme="light"] .tenpo-karte-page .kv .k,
 [data-theme="light"] .tenpo-karte-page .file-key,
 [data-theme="light"] .tenpo-karte-page .haccp-item-label .code {
-  color: #334155;
+  color: #5f4f4f;
 }
 
 [data-theme="light"] .tenpo-karte-page .muted,
@@ -1599,19 +1826,24 @@
 [data-theme="light"] .tenpo-karte-page .file-meta,
 [data-theme="light"] .tenpo-karte-page .filelist-head .label,
 [data-theme="light"] .tenpo-karte-page .filelist-head .count {
-  color: #64748b;
+  color: var(--tp-muted);
 }
 
 [data-theme="light"] .yakusoku-mini-row {
-  border-color: #d1d5db;
-  background: #ffffff;
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
 }
 
 [data-theme="light"] .yakusoku-mini-row.is-primary {
-  border-color: #86efac;
-  background: #ecfdf5;
+  border-color: var(--tp-accent);
+  background: rgba(186, 223, 219, 0.35);
 }
 
 [data-theme="light"] .yakusoku-mini-row .meta-line {
-  color: #475569;
+  color: var(--tp-muted);
+}
+
+[data-theme="light"] .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body > .kv {
+  border-color: var(--tp-sub);
+  background: rgba(255, 255, 255, 0.94);
 }

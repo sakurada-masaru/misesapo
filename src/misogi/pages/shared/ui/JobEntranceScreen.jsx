@@ -65,7 +65,7 @@ const CLEANING_NOTICE_RUNNING_STORAGE_KEY = 'misogi-v2-cleaning-notice-running';
 const CLEANING_NOTICE_SWIPE_MAX = 44;
 const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
 const ADMIN_DIRECT_SIDEBAR_SECTION_IDS = new Set(['dashboard', 'filebox']);
-const CUSTOMER_CHAT_ADMIN_ROOM = 'customer_mypage';
+const CUSTOMER_CHAT_ADMIN_ROOM = 'customer_portal_chat';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;

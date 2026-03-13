@@ -3,14 +3,16 @@ import { useLocation } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { getAdminWorkReports } from '../../shared/api/adminWorkReportsApi';
+import {
+  fetchCustomerPortalChats,
+  postCustomerPortalChat,
+} from '../../shared/utils/customerPortalChat';
 import './customer-mypage.css';
 
 const DETAIL_PANES = ['left', 'center', 'right'];
 const CUSTOMER_REPORT_SOUKO_SOURCE = 'customer_result_report';
 const CUSTOMER_REPORT_FOLDER_ID = 'customer_report_results';
 const CUSTOMER_REPORT_FOLDER_NAME = '作業完了レポート';
-const CUSTOMER_CHAT_STORAGE_PREFIX = 'misogi-v2-customer-mypage-chat';
-const CUSTOMER_CHAT_ADMIN_ROOM = 'customer_mypage';
 
 function authHeaders() {
   const token =
@@ -564,28 +566,6 @@ function normalizeSoukoFiles(soukoRecord) {
     .filter((it) => it.key);
 }
 
-function customerChatStorageKey(tenpoId) {
-  return `${CUSTOMER_CHAT_STORAGE_PREFIX}:${norm(tenpoId) || 'unknown'}`;
-}
-
-function normalizeCustomerChatMessages(raw) {
-  const rows = Array.isArray(raw) ? raw : [];
-  return rows
-    .map((it, idx) => {
-      const text = norm(it?.text);
-      if (!text) return null;
-      const sender = norm(it?.sender) || 'customer';
-      const at = norm(it?.at) || new Date().toISOString();
-      return {
-        id: norm(it?.id) || `chat-${idx}-${Date.parse(at) || Date.now()}`,
-        sender,
-        text,
-        at,
-      };
-    })
-    .filter(Boolean);
-}
-
 function toHalfWidthDigits(input) {
   return String(input || '').replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0));
 }
@@ -780,6 +760,9 @@ export default function CustomerMyPage() {
   const [reportViewerOpen, setReportViewerOpen] = useState(false);
   const [customerChatMessages, setCustomerChatMessages] = useState([]);
   const [customerChatDraft, setCustomerChatDraft] = useState('');
+  const [customerChatLoading, setCustomerChatLoading] = useState(false);
+  const [customerChatSending, setCustomerChatSending] = useState(false);
+  const [customerChatError, setCustomerChatError] = useState('');
   const [billingViewerOpen, setBillingViewerOpen] = useState(false);
   const [billingViewerType, setBillingViewerType] = useState('invoice');
   const [billingSelectedKey, setBillingSelectedKey] = useState('');
@@ -1096,6 +1079,46 @@ export default function CustomerMyPage() {
     const d = monthStart(historyMonthCursor);
     return `${d.getFullYear()}年${d.getMonth() + 1}月`;
   }, [historyMonthCursor]);
+
+  const loadCustomerChat = useCallback(async ({ silent = false } = {}) => {
+    const tenpoId = norm(scopedTenpoId || effectiveTenpoId);
+    if (!tenpoId) {
+      setCustomerChatMessages([]);
+      setCustomerChatError('');
+      setCustomerChatLoading(false);
+      return;
+    }
+    if (!silent) setCustomerChatLoading(true);
+    try {
+      const rows = await fetchCustomerPortalChats({
+        masterApiBase,
+        authHeaders,
+        tenpoId,
+      });
+      setCustomerChatMessages(rows);
+      setCustomerChatError('');
+    } catch (e) {
+      if (!silent) {
+        setCustomerChatError(String(e?.message || e || 'チャットの取得に失敗しました'));
+      }
+    } finally {
+      if (!silent) setCustomerChatLoading(false);
+    }
+  }, [scopedTenpoId, effectiveTenpoId, masterApiBase]);
+
+  useEffect(() => {
+    setCustomerChatDraft('');
+    void loadCustomerChat();
+  }, [loadCustomerChat]);
+
+  useEffect(() => {
+    const tenpoId = norm(scopedTenpoId || effectiveTenpoId);
+    if (!tenpoId) return undefined;
+    const timer = window.setInterval(() => {
+      void loadCustomerChat({ silent: true });
+    }, 15000);
+    return () => window.clearInterval(timer);
+  }, [scopedTenpoId, effectiveTenpoId, loadCustomerChat]);
 
   const loadResultReports = useCallback(async () => {
     if (!scopedTenpoId) {
@@ -1680,26 +1703,6 @@ export default function CustomerMyPage() {
     setReportViewerOpen(false);
   }, [scopedTenpoId]);
 
-  useEffect(() => {
-    const storageKey = customerChatStorageKey(scopedTenpoId || effectiveTenpoId);
-    try {
-      const parsed = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      setCustomerChatMessages(normalizeCustomerChatMessages(parsed));
-    } catch {
-      setCustomerChatMessages([]);
-    }
-    setCustomerChatDraft('');
-  }, [scopedTenpoId, effectiveTenpoId]);
-
-  useEffect(() => {
-    const storageKey = customerChatStorageKey(scopedTenpoId || effectiveTenpoId);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(customerChatMessages));
-    } catch {
-      // no-op
-    }
-  }, [customerChatMessages, scopedTenpoId, effectiveTenpoId]);
-
   const openNextYoteiPanel = useCallback(() => {
     setDetailPane('center');
     setCenterScheduleTab('calendar');
@@ -1724,21 +1727,11 @@ export default function CustomerMyPage() {
     setReportViewerOpen(false);
   }, []);
 
-  const sendCustomerChat = useCallback(() => {
+  const sendCustomerChat = useCallback(async () => {
     const text = norm(customerChatDraft);
     if (!text) return;
-    const at = new Date().toISOString();
-    setCustomerChatMessages((prev) => ([
-      ...prev,
-      {
-        id: `customer-${Date.now()}`,
-        sender: 'customer',
-        text,
-        at,
-      },
-    ]));
-    setCustomerChatDraft('');
     const tenpoId = norm(scopedTenpoId || effectiveTenpoId);
+    if (!tenpoId) return;
     const actorName = norm(
       localStorage.getItem('display_name')
       || localStorage.getItem('name')
@@ -1759,35 +1752,27 @@ export default function CustomerMyPage() {
       detailTenpo?.yagou_name,
       activeStore?.yagou
     );
-    const storeLabel = (yagouName && tenpoName) ? `${yagouName} / ${tenpoName}` : (yagouName || tenpoName || '-');
-    const titleBase = text.length > 24 ? `${text.slice(0, 24)}…` : text;
-    const body = {
-      room: CUSTOMER_CHAT_ADMIN_ROOM,
-      name: titleBase,
-      sender_name: actorName,
-      sender_display_name: actorName,
-      sender_id: actorId,
-      message: text,
-      source: 'customer_mypage_chat',
-      jotai: 'yuko',
-      has_attachment: false,
-      data_payload: {
-        channel: 'customer_mypage',
-        tenpo_id: tenpoId || '',
-        tenpo_name: tenpoName || '',
-        yagou_name: yagouName || '',
-        store_label: storeLabel,
-        sent_at: at,
-      },
-    };
-    void fetch(`${masterApiBase}/master/admin_chat`, {
-      method: 'POST',
-      headers: {
-        ...authHeaders(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    }).catch(() => {});
+    setCustomerChatSending(true);
+    try {
+      await postCustomerPortalChat({
+        masterApiBase,
+        authHeaders,
+        tenpoId,
+        tenpoName,
+        yagouName,
+        senderRole: 'customer',
+        senderName: actorName,
+        senderId: actorId,
+        message: text,
+      });
+      setCustomerChatDraft('');
+      setCustomerChatError('');
+      await loadCustomerChat({ silent: true });
+    } catch (e) {
+      setCustomerChatError(String(e?.message || e || 'チャットの送信に失敗しました'));
+    } finally {
+      setCustomerChatSending(false);
+    }
   }, [
     customerChatDraft,
     scopedTenpoId,
@@ -1797,6 +1782,7 @@ export default function CustomerMyPage() {
     effectiveTenpo,
     activeStore,
     masterApiBase,
+    loadCustomerChat,
   ]);
 
   return (
@@ -2050,13 +2036,15 @@ export default function CustomerMyPage() {
                             <span className="count">{customerChatMessages.length}</span>
                           </div>
                           <div className="customer-chat-log">
-                            {customerChatMessages.length === 0 ? (
+                            {customerChatLoading ? (
+                              <p className="customer-muted">チャットを読み込み中です...</p>
+                            ) : customerChatMessages.length === 0 ? (
                               <p className="customer-muted">メッセージはまだありません。</p>
                             ) : (
                               customerChatMessages.map((m) => (
-                                <article key={m.id} className={`customer-chat-bubble ${m.sender === 'customer' ? 'is-customer' : 'is-agent'}`}>
+                                <article key={m.id} className={`customer-chat-bubble ${m.senderRole === 'customer' ? 'is-customer' : 'is-agent'}`}>
                                   <div className="customer-chat-bubble-head">
-                                    <span className="sender">{m.sender === 'customer' ? 'お客様' : 'ミセサポ'}</span>
+                                    <span className="sender">{m.senderName || (m.senderRole === 'customer' ? 'お客様' : 'ミセサポ')}</span>
                                     <span className="at">{fmtDateTimeJst(m.at) || '-'}</span>
                                   </div>
                                   <div className="text">{m.text}</div>
@@ -2064,6 +2052,7 @@ export default function CustomerMyPage() {
                               ))
                             )}
                           </div>
+                          {customerChatError ? <p className="customer-muted">{customerChatError}</p> : null}
                           <div className="customer-chat-composer">
                             <textarea
                               value={customerChatDraft}
@@ -2071,8 +2060,13 @@ export default function CustomerMyPage() {
                               placeholder="メッセージを入力"
                               rows={3}
                             />
-                            <button type="button" className="btn btn-secondary" onClick={sendCustomerChat} disabled={!norm(customerChatDraft)}>
-                              送信
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={sendCustomerChat}
+                              disabled={!norm(customerChatDraft) || customerChatSending}
+                            >
+                              {customerChatSending ? '送信中...' : '送信'}
                             </button>
                           </div>
                         </section>

@@ -3,6 +3,10 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 // Hamburger / admin-top are provided by GlobalNav.
 import './admin-tenpo-karte.css';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../shared/api/gatewayBase';
+import {
+  fetchCustomerPortalChats,
+  postCustomerPortalChat,
+} from '../../shared/utils/customerPortalChat';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -33,6 +37,12 @@ const YAKUSOKU_FALLBACK_BASE =
 const KARTE_VIEW = {
   SUMMARY: 'summary',
   DETAIL: 'detail',
+};
+
+const SUMMARY_PANE = {
+  LEFT: 'left',
+  CENTER: 'center',
+  RIGHT: 'right',
 };
 
 // v1: 旧カルテ（OfficeClientKartePanel）の項目を、管理オペ用に再構築して tenpo.karte_detail に保持する。
@@ -989,6 +999,7 @@ export default function AdminTenpoKartePage() {
       ? KARTE_VIEW.DETAIL
       : KARTE_VIEW.SUMMARY
   ));
+  const [summaryPane, setSummaryPane] = useState(SUMMARY_PANE.CENTER);
 
   // tenpo.karte_detail の編集ドラフト（master API PUTはmergeなので差分PUTで安全に保存できる）
   const [karteDetail, setKarteDetail] = useState(null);
@@ -1027,6 +1038,11 @@ export default function AdminTenpoKartePage() {
   const [uploadKubun, setUploadKubun] = useState('teishutsu'); // default for new upload
   const [uploadDocCategory, setUploadDocCategory] = useState('estimate');
   const [supportReplyInputs, setSupportReplyInputs] = useState({});
+  const [customerPortalChatMessages, setCustomerPortalChatMessages] = useState([]);
+  const [customerPortalChatDraft, setCustomerPortalChatDraft] = useState('');
+  const [customerPortalChatLoading, setCustomerPortalChatLoading] = useState(false);
+  const [customerPortalChatSending, setCustomerPortalChatSending] = useState(false);
+  const [customerPortalChatError, setCustomerPortalChatError] = useState('');
 
   const headerTitle = useMemo(() => {
     const tName = String(tenpo?.name || '').trim();
@@ -1106,6 +1122,24 @@ export default function AdminTenpoKartePage() {
     if (!isMonshinMode) return;
     if (isMobileLayout) setKarteView(KARTE_VIEW.SUMMARY);
   }, [isMonshinMode, isMobileLayout]);
+
+  useEffect(() => {
+    setSummaryPane(SUMMARY_PANE.CENTER);
+  }, [tenpoId]);
+
+  const moveSummaryPane = useCallback((dir) => {
+    setSummaryPane((prev) => {
+      if (dir === 'left') {
+        if (prev === SUMMARY_PANE.RIGHT) return SUMMARY_PANE.CENTER;
+        return SUMMARY_PANE.LEFT;
+      }
+      if (dir === 'right') {
+        if (prev === SUMMARY_PANE.LEFT) return SUMMARY_PANE.CENTER;
+        return SUMMARY_PANE.RIGHT;
+      }
+      return SUMMARY_PANE.CENTER;
+    });
+  }, []);
 
   const salesOwnerSummary = useMemo(() => {
     const rows = uniqTags([
@@ -1540,6 +1574,74 @@ export default function AdminTenpoKartePage() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  const loadCustomerPortalChat = useCallback(async ({ silent = false } = {}) => {
+    const targetTenpoId = String(tenpoId || '').trim();
+    if (!targetTenpoId) {
+      setCustomerPortalChatMessages([]);
+      setCustomerPortalChatError('');
+      setCustomerPortalChatLoading(false);
+      return;
+    }
+    if (!silent) setCustomerPortalChatLoading(true);
+    try {
+      const rows = await fetchCustomerPortalChats({
+        masterApiBase: MASTER_API_BASE,
+        authHeaders,
+        tenpoId: targetTenpoId,
+      });
+      setCustomerPortalChatMessages(rows);
+      setCustomerPortalChatError('');
+    } catch (e) {
+      if (!silent) setCustomerPortalChatError(String(e?.message || e || 'お客様チャットの取得に失敗しました'));
+    } finally {
+      if (!silent) setCustomerPortalChatLoading(false);
+    }
+  }, [tenpoId]);
+
+  useEffect(() => {
+    setCustomerPortalChatDraft('');
+    void loadCustomerPortalChat();
+  }, [loadCustomerPortalChat]);
+
+  useEffect(() => {
+    const targetTenpoId = String(tenpoId || '').trim();
+    if (!targetTenpoId) return undefined;
+    const timer = window.setInterval(() => {
+      void loadCustomerPortalChat({ silent: true });
+    }, 15000);
+    return () => window.clearInterval(timer);
+  }, [tenpoId, loadCustomerPortalChat]);
+
+  const sendCustomerPortalChat = useCallback(async () => {
+    const text = clampStr(String(customerPortalChatDraft || '').trim(), 500);
+    const targetTenpoId = String(tenpoId || '').trim();
+    if (!text || !targetTenpoId) return;
+    setCustomerPortalChatSending(true);
+    try {
+      await postCustomerPortalChat({
+        masterApiBase: MASTER_API_BASE,
+        authHeaders,
+        tenpoId: targetTenpoId,
+        tenpoName: String(tenpo?.name || '').trim(),
+        yagouName: String(yagou?.name || '').trim(),
+        senderRole: 'admin',
+        senderName: clampStr(getCurrentUserName() || 'ミセサポ', 80),
+        senderId: clampStr(
+          String(localStorage.getItem('user_id') || localStorage.getItem('jinzai_id') || 'admin').trim(),
+          80
+        ),
+        message: text,
+      });
+      setCustomerPortalChatDraft('');
+      setCustomerPortalChatError('');
+      await loadCustomerPortalChat({ silent: true });
+    } catch (e) {
+      setCustomerPortalChatError(String(e?.message || e || 'お客様チャットの送信に失敗しました'));
+    } finally {
+      setCustomerPortalChatSending(false);
+    }
+  }, [customerPortalChatDraft, tenpoId, tenpo?.name, yagou?.name, loadCustomerPortalChat]);
 
   useEffect(() => {
     let cancelled = false;
@@ -2673,15 +2775,6 @@ export default function AdminTenpoKartePage() {
         </div>
         <div className="right">
           <Link to={directYoteiCreateLink} className="btn-primary">予定</Link>
-          <Link to="/admin/torihikisaki-meibo" className="link">取引先名簿</Link>
-          <Link to="/admin/master/tenpo" className="link">店舗マスタ</Link>
-          <button
-            className="btn-primary"
-            onClick={() => setKarteView((v) => (v === KARTE_VIEW.DETAIL ? KARTE_VIEW.SUMMARY : KARTE_VIEW.DETAIL))}
-          >
-            {karteView === KARTE_VIEW.DETAIL ? '概要に戻る' : 'カルテ詳細'}
-          </button>
-          <button onClick={refresh} disabled={loading}>{loading ? '更新中...' : '更新'}</button>
         </div>
       </header>
 
@@ -2707,11 +2800,6 @@ export default function AdminTenpoKartePage() {
         ) : (
           <div className="monshin-ok">必須項目は揃っています。次は yakusoku と yotei 連携へ進めます。</div>
         )}
-        <div className="monshin-actions">
-          <button type="button" onClick={() => setKarteView(KARTE_VIEW.SUMMARY)}>基本情報</button>
-          <button type="button" onClick={() => setKarteView(KARTE_VIEW.DETAIL)}>詳細入力</button>
-          <Link to="/admin/yakusoku" className="link">yakusoku管理へ</Link>
-        </div>
       </section>
 
       <datalist id="tenpo-karte-jinzai-name-list">
@@ -2733,8 +2821,76 @@ export default function AdminTenpoKartePage() {
               </button>
             </div>
           ) : null}
-          <div className="tenpo-karte-grid">
-          <details className="card card-accordion basic-info-card" open>
+          <div className="tenpo-summary-pane-control" aria-label="表示切り替え">
+            <button
+              type="button"
+              className="pane-arrow"
+              onClick={() => moveSummaryPane('left')}
+            >
+              ←
+            </button>
+            <div className="pane-center-stack">
+              <div className="tenpo-summary-pane-buttons" aria-label="表示ショートカット">
+                <button
+                  type="button"
+                  className={`pane-btn ${summaryPane === SUMMARY_PANE.LEFT ? 'is-active' : ''}`}
+                  onClick={() => setSummaryPane(SUMMARY_PANE.LEFT)}
+                >
+                  基本情報
+                </button>
+                <button
+                  type="button"
+                  className={`pane-btn ${summaryPane === SUMMARY_PANE.CENTER ? 'is-active' : ''}`}
+                  onClick={() => setSummaryPane(SUMMARY_PANE.CENTER)}
+                >
+                  チャット・対応履歴
+                </button>
+                <button
+                  type="button"
+                  className={`pane-btn ${summaryPane === SUMMARY_PANE.RIGHT ? 'is-active' : ''}`}
+                  onClick={() => setSummaryPane(SUMMARY_PANE.RIGHT)}
+                >
+                  ストレージ
+                </button>
+                <Link to="/admin/torihikisaki-meibo" className="pane-link">取引先名簿</Link>
+                <Link to="/admin/master/tenpo" className="pane-link">店舗マスタ</Link>
+                <button
+                  type="button"
+                  className="pane-btn"
+                  onClick={() => setKarteView((v) => (v === KARTE_VIEW.DETAIL ? KARTE_VIEW.SUMMARY : KARTE_VIEW.DETAIL))}
+                >
+                  {karteView === KARTE_VIEW.DETAIL ? '概要に戻る' : 'カルテ詳細'}
+                </button>
+                <button type="button" className="pane-btn" onClick={refresh} disabled={loading}>
+                  {loading ? '更新中...' : '更新'}
+                </button>
+                <button
+                  type="button"
+                  className="pane-btn"
+                  onClick={() => { setKarteView(KARTE_VIEW.SUMMARY); setSummaryPane(SUMMARY_PANE.LEFT); }}
+                >
+                  問診: 基本情報
+                </button>
+                <button
+                  type="button"
+                  className="pane-btn"
+                  onClick={() => setKarteView(KARTE_VIEW.DETAIL)}
+                >
+                  問診: 詳細入力
+                </button>
+                <Link to="/admin/yakusoku" className="pane-link">問診: yakusoku管理へ</Link>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="pane-arrow"
+              onClick={() => moveSummaryPane('right')}
+            >
+              →
+            </button>
+          </div>
+          <div className={`tenpo-karte-grid tenpo-karte-grid-summary pane-${summaryPane}`}>
+          <details className="card card-accordion basic-info-card summary-pane-section summary-pane-left" open>
             <summary>
               <div className="sum-left">
                 <div className="sum-title">基本情報</div>
@@ -3262,7 +3418,58 @@ export default function AdminTenpoKartePage() {
             </div>
           </details>
 
-          <section className="card support-history-card">
+          <section className="card customer-portal-chat-card summary-pane-section summary-pane-center">
+            <div className="card-title-row">
+              <div className="card-title">お客様チャット（専用）</div>
+              <div className="muted-inline">{customerPortalChatMessages.length}件</div>
+            </div>
+            <div className="muted small">
+              お客様マイページと同一スレッドです。店舗単位でメッセージを共有します。
+            </div>
+            <div className="support-chat" style={{ marginTop: 10 }}>
+              <div className="support-chat-list">
+                {customerPortalChatLoading ? (
+                  <div className="muted">チャットを読み込み中...</div>
+                ) : customerPortalChatMessages.length === 0 ? (
+                  <div className="muted">メッセージはまだありません</div>
+                ) : (
+                  customerPortalChatMessages.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`support-chat-item ${m.senderRole === 'customer' ? 'is-customer' : 'is-admin'}`}
+                    >
+                      <div className="meta">
+                        <span>{fmtDateTimeJst(m.at) || '—'}</span>
+                        <span>{m.senderName || (m.senderRole === 'customer' ? 'お客様' : 'ミセサポ')}</span>
+                      </div>
+                      <div className="msg">{m.text}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {customerPortalChatError ? (
+                <div className="muted" style={{ color: '#fbbf24' }}>{customerPortalChatError}</div>
+              ) : null}
+              <div className="support-chat-compose">
+                <textarea
+                  rows={3}
+                  maxLength={500}
+                  value={customerPortalChatDraft}
+                  onChange={(e) => setCustomerPortalChatDraft(e.target.value)}
+                  placeholder="お客様へ返信メッセージを入力（500字）"
+                />
+                <button
+                  type="button"
+                  onClick={sendCustomerPortalChat}
+                  disabled={!String(customerPortalChatDraft || '').trim() || customerPortalChatSending}
+                >
+                  {customerPortalChatSending ? '送信中...' : '送信'}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section className="card support-history-card summary-pane-section summary-pane-center">
             <div className="card-title-row">
               <div className="card-title">対応履歴（短文・200字）</div>
               <div className="seg-tabs">
@@ -3425,7 +3632,7 @@ export default function AdminTenpoKartePage() {
             )}
           </section>
 
-          <section className="card souko-card">
+          <section className="card souko-card summary-pane-section summary-pane-right">
             <div className="card-title-row">
               <div className="card-title">ストレージ（souko）</div>
               <div className="seg-tabs" role="tablist" aria-label="souko view">
