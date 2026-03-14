@@ -61,6 +61,7 @@ const DASHBOARD_RESIZER_BAR_WIDTH = 10;
 const DASHBOARD_WORKSPACE_MIN_WIDTH = 420;
 const DASHBOARD_PANEL_MIN_WIDTH = 700;
 const DASHBOARD_PANE_TOGGLE_EVENT = 'misogi-dashboard-pane-toggle';
+const ADMIN_UPDATES_LOOKBACK_HOURS = 48;
 const CLEANING_NOTICE_RUNNING_STORAGE_KEY = 'misogi-v2-cleaning-notice-running';
 const CLEANING_NOTICE_SWIPE_MAX = 44;
 const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
@@ -106,16 +107,28 @@ function asItems(data) {
 }
 
 function toEpochMs(value) {
-  const t = Date.parse(String(value || '').trim());
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    if (value >= 1e12) return Math.trunc(value); // epoch ms
+    if (value >= 1e9) return Math.trunc(value * 1000); // epoch sec
+  }
+  const raw = String(value || '').trim();
+  if (!raw) return 0;
+  if (/^\d{13}$/.test(raw)) return Number(raw);
+  if (/^\d{10}$/.test(raw)) return Number(raw) * 1000;
+  const n = Number(raw);
+  if (Number.isFinite(n) && n > 0) {
+    if (n >= 1e12) return Math.trunc(n);
+    if (n >= 1e9) return Math.trunc(n * 1000);
+  }
+  const t = Date.parse(raw);
   return Number.isNaN(t) ? 0 : t;
 }
 
-function isSameLocalDate(ts, now = new Date()) {
+function isWithinLastHours(ts, nowMs, hours) {
   if (!Number.isFinite(ts) || ts <= 0) return false;
-  const d = new Date(ts);
-  return d.getFullYear() === now.getFullYear()
-    && d.getMonth() === now.getMonth()
-    && d.getDate() === now.getDate();
+  if (!Number.isFinite(nowMs) || nowMs <= 0) return false;
+  const spanMs = Math.max(1, Number(hours || 0)) * 60 * 60 * 1000;
+  return ts <= nowMs && ts >= (nowMs - spanMs);
 }
 
 function hhmmLabel(ts) {
@@ -284,6 +297,27 @@ function reportActionLabel(item) {
   if (state === 'archived') return '業務報告を保管しました';
   if (state === 'draft') return '業務報告を保存しました';
   return '業務報告を更新しました';
+}
+
+function reportPostedAtMs(item) {
+  const direct = toEpochMs(
+    item?.submitted_at
+    || item?.submittedAt
+    || item?.reported_at
+    || item?.posted_at
+    || item?.postedAt
+    || item?.report_submitted_at
+    || item?.reportSubmittedAt
+    || ''
+  );
+  if (direct > 0) return direct;
+  const date = String(item?.report_date || item?.date || '').trim();
+  const time = String(item?.report_time || item?.time || '').trim();
+  if (date && time) {
+    const t = Date.parse(`${date}T${time.length === 5 ? `${time}:00` : time}+09:00`);
+    if (!Number.isNaN(t)) return t;
+  }
+  return toEpochMs(item?.created_at || item?.createdAt || '');
 }
 
 function readLocalUserName() {
@@ -725,6 +759,24 @@ function parseYoteiAmountValue(row) {
     if (Number.isFinite(n) && n > 0) return n;
   }
   return 0;
+}
+
+function buildAdminTenpoPathFromPayload(payload) {
+  const tenpoId = String(
+    payload?.tenpo_id
+    || payload?.store_id
+    || payload?.tenpoId
+    || ''
+  ).trim();
+  if (!tenpoId) return '';
+  const params = new URLSearchParams();
+  const torihikisakiId = String(payload?.torihikisaki_id || payload?.torihikisakiId || '').trim();
+  const yagouId = String(payload?.yagou_id || payload?.yagouId || '').trim();
+  if (torihikisakiId) params.set('torihikisaki_id', torihikisakiId);
+  if (yagouId) params.set('yagou_id', yagouId);
+  params.set('focus', 'customer_chat');
+  const qs = params.toString();
+  return `/admin/tenpo/${encodeURIComponent(tenpoId)}${qs ? `?${qs}` : ''}`;
 }
 
 export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowGuideButton = true }) {
@@ -1333,13 +1385,23 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     if (window.innerWidth < 1024) setSidebarOpen(false);
   };
 
+  const jumpToActivityLink = useCallback((item) => {
+    const path = String(item?.linkPath || '').trim();
+    if (!path || isTransitioning) return;
+    if (/^https?:\/\//i.test(path)) {
+      window.open(path, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    startTransition(path);
+  }, [isTransitioning, startTransition]);
+
   const loadTodayUpdates = useCallback(async () => {
     if (!useSidebarNav) return;
     setUpdatesLoading(true);
     setUpdatesError('');
     try {
       const now = new Date();
-      const ymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const nowMs = now.getTime();
       const [kanriResult, reportsResult, customerChatResult] = await Promise.allSettled([
         fetch(`${MASTER_API_BASE}/master/kanri_log?limit=400&jotai=yuko`, {
           headers: {
@@ -1352,10 +1414,8 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           return res.json();
         }),
         getAdminWorkReports({
-          from: ymd,
-          to: ymd,
           states: ['draft', 'submitted', 'triaged', 'rejected', 'approved', 'archived'],
-          limit: 500,
+          limit: 2000,
         }),
         fetch(
           `${MASTER_API_BASE}/master/admin_chat?limit=400&jotai=yuko&room=${encodeURIComponent(CUSTOMER_CHAT_ADMIN_ROOM)}`,
@@ -1397,29 +1457,79 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             atMs: whenMs,
             atLabel: hhmmLabel(whenMs),
             who,
-            what: `${who}が${fact} >>> ${ymdHmLabel(whenMs)}`,
+            what: `${fact}`,
             kind: isLogin ? 'login' : 'update',
+            linkPath: '/admin/admin-log',
+            linkLabel: '管理日誌を開く',
           };
         })
         .filter(Boolean)
-        .filter((row) => isSameLocalDate(row.atMs, now));
+        .filter((row) => isWithinLastHours(row.atMs, nowMs, ADMIN_UPDATES_LOOKBACK_HOURS));
 
       const reportEvents = reportRows
-        .map((item) => {
-          const whenMs = toEpochMs(item?.submitted_at || item?.updated_at || item?.created_at);
+        .flatMap((item) => {
           const who = reportWho(item);
-          const fact = reportActionLabel(item);
-          return {
-            id: String(item?.log_id || item?.report_id || item?.id || `${who}-${whenMs}-${Math.random()}`),
-            atMs: whenMs,
-            atLabel: hhmmLabel(whenMs),
-            who,
-            what: `${who}が${fact} >>> ${ymdHmLabel(whenMs)}`,
-            kind: 'work-report',
-          };
+          const reportId = String(item?.report_id || item?.id || item?.log_id || '').trim();
+          const linkPath = reportId ? `/admin/houkoku/${encodeURIComponent(reportId)}` : '/admin/houkoku';
+          const linkLabel = reportId ? '報告詳細を開く' : '報告一覧を開く';
+          const postedMs = reportPostedAtMs(item);
+          const updatedMs = toEpochMs(item?.updated_at || item?.updatedAt || '');
+          const createdMs = toEpochMs(item?.created_at || item?.createdAt || '');
+          const action = reportActionLabel(item);
+          const events = [];
+
+          // 提出時刻がある場合は、状態に関係なく「提出通知」を優先して生成する
+          if (postedMs > 0) {
+            events.push({
+              id: String(reportId || `${who}-${postedMs}-submitted`),
+              atMs: postedMs,
+              atLabel: hhmmLabel(postedMs),
+              who,
+              what: `業務報告を提出しました（投稿 ${hhmmLabel(postedMs)}）`,
+              kind: 'work-report-submitted',
+              linkPath,
+              linkLabel,
+            });
+          }
+
+          // 提出後に別状態へ更新された場合は、更新通知も追加
+          if (
+            updatedMs > 0
+            && updatedMs !== postedMs
+            && action
+            && action !== '業務報告を提出しました'
+          ) {
+            events.push({
+              id: String(`${reportId || `${who}-${updatedMs}`}-state`),
+              atMs: updatedMs,
+              atLabel: hhmmLabel(updatedMs),
+              who,
+              what: `${action}`,
+              kind: 'work-report',
+              linkPath,
+              linkLabel,
+            });
+          }
+
+          // submitted_at が無いレコードのフォールバック
+          if (!events.length) {
+            const whenMs = updatedMs || createdMs;
+            events.push({
+              id: String(reportId || `${who}-${whenMs || 0}`),
+              atMs: whenMs,
+              atLabel: hhmmLabel(whenMs),
+              who,
+              what: `${action || '業務報告を更新しました'}`,
+              kind: 'work-report',
+              linkPath,
+              linkLabel,
+            });
+          }
+
+          return events;
         })
         .filter(Boolean)
-        .filter((row) => isSameLocalDate(row.atMs, now));
+        .filter((row) => isWithinLastHours(row.atMs, nowMs, ADMIN_UPDATES_LOOKBACK_HOURS));
 
       const customerChatEvents = customerChatRows
         .map((row) => {
@@ -1447,6 +1557,14 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             || [payload?.yagou_name, payload?.tenpo_name].filter(Boolean).join(' / ')
             || ''
           ).trim();
+          const storeTag = String(
+            [payload?.yagou_name, payload?.tenpo_name]
+              .map((v) => String(v || '').trim())
+              .filter(Boolean)
+              .join(' / ')
+            || storeLabel
+            || ''
+          ).trim();
           const isAiEscalation = Boolean(
             payload?.event_type === 'customer_ai_escalation'
             || payload?.priority === 'high'
@@ -1454,10 +1572,9 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           );
           const message = String(row?.message || row?.name || '').trim();
           const messagePreview = message ? `「${message.length > 24 ? `${message.slice(0, 24)}…` : message}」` : '';
-          const storeSuffix = storeLabel ? `（${storeLabel}）` : '';
           const what = isAiEscalation
-            ? `【要対応】${pickDisplayName(payload?.origin_sender_name, who)}から契約/金額/判断系の問い合わせを受信しました${storeSuffix}${messagePreview} >>> ${ymdHmLabel(whenMs)}`
-            : `${who}がお客様チャットを送信しました${storeSuffix}${messagePreview} >>> ${ymdHmLabel(whenMs)}`;
+            ? `【要対応】${pickDisplayName(payload?.origin_sender_name, who)}から契約/金額/判断系の問い合わせを受信しました${messagePreview}`
+            : `${who}がお客様チャットを送信しました${messagePreview}`;
           return {
             id: String(row?.chat_id || row?.id || `${who}-${whenMs}-${Math.random()}`),
             atMs: whenMs,
@@ -1465,10 +1582,13 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             who,
             what,
             kind: isAiEscalation ? 'customer-chat-priority' : 'customer-chat',
+            storeTag,
+            linkPath: buildAdminTenpoPathFromPayload(payload) || '/admin/dashboard',
+            linkLabel: 'お客様詳細を開く',
           };
         })
         .filter(Boolean)
-        .filter((row) => isSameLocalDate(row.atMs, now));
+        .filter((row) => isWithinLastHours(row.atMs, nowMs, ADMIN_UPDATES_LOOKBACK_HOURS));
 
       const list = [...customerChatEvents, ...reportEvents, ...logEvents]
         .sort((a, b) => b.atMs - a.atMs)
@@ -2141,7 +2261,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
               type="button"
               className={`job-entrance-updates-rail ${updatesSidebarOpen ? 'open' : ''}`}
               style={{ left: updatesRailLeft }}
-              aria-label={t('本日の更新通知を開閉')}
+              aria-label={t('48時間分の通知を開閉')}
               onClick={() => setUpdatesSidebarOpen((prev) => !prev)}
             >
               {updatesSidebarOpen ? '◂' : '▸'}
@@ -2155,10 +2275,10 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             <aside
               className={`job-entrance-updates-sidebar ${updatesSidebarOpen ? 'open' : ''}`}
               style={{ left: updatesPanelLeft }}
-              aria-label={t('本日の更新通知')}
+              aria-label={t('48時間分の通知')}
             >
               <div className="job-entrance-updates-head">
-                <strong>{t('本日の更新通知')}</strong>
+                <strong>{t('48時間分の通知')}</strong>
                 <button type="button" onClick={loadTodayUpdates} disabled={updatesLoading}>
                   {updatesLoading ? '...' : '更新'}
                 </button>
@@ -2169,13 +2289,28 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                   <p className="job-entrance-updates-empty">読み込み中...</p>
                 ) : null}
                 {!updatesError && !updatesLoading && todayUpdates.length === 0 ? (
-                  <p className="job-entrance-updates-empty">本日のシステム通知はありません。</p>
+                  <p className="job-entrance-updates-empty">直近48時間のシステム通知はありません。</p>
                 ) : null}
                 {todayUpdates.length > 0 ? (
                   <ul className="job-entrance-updates-list">
                     {todayUpdates.map((row) => (
                       <li key={row.id}>
-                        <span className="what">{row.what}</span>
+                        <div className="job-entrance-updates-main">
+                          <span className="time">{row.atLabel}</span>
+                          {row.storeTag ? <span className="store-tag">{row.storeTag}</span> : null}
+                          {row.who ? <span className="account-tag">{row.who}</span> : null}
+                          <span className="what">{row.what}</span>
+                        </div>
+                        {row.linkPath ? (
+                          <button
+                            type="button"
+                            className="job-entrance-updates-link"
+                            onClick={() => jumpToActivityLink(row)}
+                            disabled={isTransitioning}
+                          >
+                            {row.linkLabel || '開く'}
+                          </button>
+                        ) : null}
                       </li>
                     ))}
                   </ul>
@@ -2356,7 +2491,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                       <div className="admin-dashboard-activity-head">
                         <div className="admin-filebox-toolbar-title">
                           <strong>{t('現在のアクティビティ')}</strong>
-                          <span>{t('本日の更新通知を時系列で確認できます')}</span>
+                          <span>{t('直近48時間の通知を時系列で確認できます')}</span>
                         </div>
                         <button type="button" onClick={loadTodayUpdates} disabled={updatesLoading}>
                           {updatesLoading ? '...' : t('更新')}
@@ -2365,14 +2500,27 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                       {updatesError ? <p className="admin-filebox-error">{updatesError}</p> : null}
                       <div className="admin-dashboard-activity-body">
                         {todayUpdates.length === 0 ? (
-                          <p className="admin-filebox-empty">{t('本日の更新はありません')}</p>
+                          <p className="admin-filebox-empty">{t('直近48時間の更新はありません')}</p>
                         ) : (
                           <ul className="job-entrance-updates-list">
                             {todayUpdates.map((item) => (
                               <li key={item.id}>
-                                <span className="time">{item.atLabel}</span>
-                                <span className="who">{item.who}</span>
-                                <span className="what">{item.what}</span>
+                                <div className="job-entrance-updates-main">
+                                  <span className="time">{item.atLabel}</span>
+                                  {item.storeTag ? <span className="store-tag">{item.storeTag}</span> : null}
+                                  {item.who ? <span className="account-tag">{item.who}</span> : null}
+                                  <span className="what">{item.what}</span>
+                                </div>
+                                {item.linkPath ? (
+                                  <button
+                                    type="button"
+                                    className="job-entrance-updates-link"
+                                    onClick={() => jumpToActivityLink(item)}
+                                    disabled={isTransitioning}
+                                  >
+                                    {item.linkLabel || '開く'}
+                                  </button>
+                                ) : null}
                               </li>
                             ))}
                           </ul>

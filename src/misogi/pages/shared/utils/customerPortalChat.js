@@ -59,6 +59,11 @@ export function normalizeCustomerPortalChatRows(rawRows, tenpoId = '') {
         atMs: toEpochMs(at),
         senderRole,
         senderName,
+        senderId: norm(payload?.sender_id || row?.sender_id || row?.created_by),
+        aiMode: norm(payload?.ai_meta?.mode || payload?.ai_mode),
+        aiProvider: norm(payload?.ai_meta?.provider || payload?.ai_provider),
+        aiModel: norm(payload?.ai_meta?.model || payload?.ai_model),
+        eventType: norm(payload?.event_type),
         tenpoId: norm(payload?.tenpo_id),
       };
     })
@@ -125,6 +130,7 @@ export async function postCustomerPortalChat({
       channel: 'customer_portal_chat',
       sender_role: senderRole === 'customer' ? 'customer' : 'admin',
       sender_name: senderName,
+      sender_id: senderId,
       tenpo_id: norm(tenpoId),
       tenpo_name: norm(tenpoName),
       yagou_name: norm(yagouName),

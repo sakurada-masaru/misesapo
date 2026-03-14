@@ -837,7 +837,8 @@
 
 .support-chat-list {
   max-height: 260px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: grid;
   gap: 8px;
   border: 1px solid rgba(255,255,255,0.12);
@@ -889,7 +890,36 @@
 }
 
 .customer-portal-chat-card .support-chat-bubble-name {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  opacity: 0.86;
+}
+
+.customer-portal-chat-card .support-chat-ai-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+
+.customer-portal-chat-card .support-chat-ai-chip.mode-gemini {
+  background: rgba(186, 223, 219, 0.5);
+  border-color: rgba(42, 70, 80, 0.24);
+  color: #2a4650;
+}
+
+.customer-portal-chat-card .support-chat-ai-chip.mode-fallback,
+.customer-portal-chat-card .support-chat-ai-chip.mode-restricted {
+  background: rgba(255, 189, 189, 0.5);
+  border-color: rgba(73, 54, 40, 0.22);
+  color: #493628;
 }
 
 .customer-portal-chat-card .support-chat-bubble-text {

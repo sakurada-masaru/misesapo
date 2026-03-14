@@ -767,6 +767,15 @@ function fmtDateTimeJst(iso) {
   }
 }
 
+function getCustomerAiModeLabel(message) {
+  const mode = String(message?.aiMode || '').trim().toLowerCase();
+  if (!mode) return '';
+  if (mode === 'gemini') return 'Gemini';
+  if (mode === 'fallback') return '定型';
+  if (mode === 'restricted') return '制限対応';
+  return '';
+}
+
 function todayDate() {
   const d = new Date();
   const y = d.getFullYear();
@@ -3687,15 +3696,21 @@ export default function AdminTenpoKartePage() {
                 ) : (
                   customerPortalChatMessages.map((m) => {
                     const mine = m.senderRole !== 'customer';
+                    const aiModeLabel = getCustomerAiModeLabel(m);
                     return (
                       <div
                         key={m.id}
                         className={`support-chat-row ${mine ? 'mine' : 'other'}`}
                       >
                         <article className={`support-chat-bubble ${mine ? 'mine' : 'other'}`}>
-                          <div className="support-chat-bubble-name">
-                            {m.senderName || (m.senderRole === 'customer' ? 'お客様' : 'ミセサポ')}
-                          </div>
+                          {aiModeLabel ? (
+                            <div className="support-chat-bubble-name">
+                              <span className="sender">{m.senderName || (m.senderRole === 'customer' ? 'お客様' : 'ミセサポ')}</span>
+                              <span className={`support-chat-ai-chip mode-${String(m.aiMode || '').toLowerCase()}`}>
+                                {aiModeLabel}
+                              </span>
+                            </div>
+                          ) : null}
                           <div className="support-chat-bubble-text">{m.text}</div>
                           <div className="support-chat-bubble-time">{fmtDateTimeJst(m.at) || '—'}</div>
                         </article>

@@ -2,9 +2,11 @@ import json
 import os
 import base64
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from urllib.parse import unquote
+from urllib import request as urllib_request
+from urllib import error as urllib_error
 
 import boto3
 from boto3.dynamodb.conditions import Attr
@@ -96,6 +98,47 @@ CHAT_STORAGE_BUCKET = os.environ.get("CHAT_STORAGE_BUCKET", "").strip() or STORA
 FILEBOX_SOUKO_SOURCE = "admin_filebox"
 FILEBOX_SOUKO_TENPO_ID = "filebox_company"
 translate_client = boto3.client("translate", region_name=AWS_REGION)
+
+GOOGLE_AI_MODEL = os.environ.get("GOOGLE_AI_MODEL", "gemini-2.0-flash").strip() or "gemini-2.0-flash"
+GOOGLE_AI_API_KEY = os.environ.get("GOOGLE_AI_API_KEY", "").strip()
+CUSTOMER_CHAT_AI_ENABLED_RAW = str(os.environ.get("CUSTOMER_CHAT_AI_ENABLED", "true")).strip().lower()
+CUSTOMER_CHAT_AI_ENABLED = CUSTOMER_CHAT_AI_ENABLED_RAW not in {"0", "false", "off", "disabled"}
+try:
+    CUSTOMER_CHAT_OPERATOR_START_HOUR = int(str(os.environ.get("CUSTOMER_CHAT_OPERATOR_START_HOUR", "9")).strip() or "9")
+except Exception:
+    CUSTOMER_CHAT_OPERATOR_START_HOUR = 9
+try:
+    CUSTOMER_CHAT_OPERATOR_END_HOUR = int(str(os.environ.get("CUSTOMER_CHAT_OPERATOR_END_HOUR", "18")).strip() or "18")
+except Exception:
+    CUSTOMER_CHAT_OPERATOR_END_HOUR = 18
+
+CUSTOMER_CHAT_RESTRICTED_KEYWORDS = [
+    "契約",
+    "契約書",
+    "約款",
+    "規約",
+    "料金",
+    "金額",
+    "見積",
+    "請求",
+    "領収",
+    "支払",
+    "値引",
+    "返金",
+    "違約",
+    "補償",
+    "賠償",
+    "責任",
+    "保証",
+    "法務",
+    "違法",
+    "訴訟",
+    "判断",
+    "確約",
+    "承認",
+    "合意",
+]
+CUSTOMER_CHAT_RESTRICTED_REPLY = "ご質問ありがとうございます。契約・金額・判断が必要な内容はAIでは確定回答できません。担当者が確認のうえご連絡いたします。"
 
 
 def _now_iso() -> str:
@@ -752,6 +795,206 @@ def _translate_admin_chat_text(body: dict):
             "source_language": "auto",
             "target_language": _normalize_lang_code(body.get("target_lang"), "ja"),
         }, None
+
+
+def _jst_hour_now() -> int:
+    try:
+        jst_now = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=9)))
+        return int(jst_now.hour)
+    except Exception:
+        return int(datetime.now().hour)
+
+
+def _is_within_operator_support_hours() -> bool:
+    hour = _jst_hour_now()
+    start = CUSTOMER_CHAT_OPERATOR_START_HOUR if isinstance(CUSTOMER_CHAT_OPERATOR_START_HOUR, int) else 9
+    end = CUSTOMER_CHAT_OPERATOR_END_HOUR if isinstance(CUSTOMER_CHAT_OPERATOR_END_HOUR, int) else 18
+    return hour >= start and hour < end
+
+
+def _detect_restricted_customer_inquiry(text: str):
+    raw = _strip(text).lower()
+    if not raw:
+        return []
+    reasons = []
+    for kw in CUSTOMER_CHAT_RESTRICTED_KEYWORDS:
+        if kw and kw.lower() in raw:
+            reasons.append(kw)
+    return reasons
+
+
+def _build_recent_history_text(recent_messages):
+    rows = recent_messages if isinstance(recent_messages, list) else []
+    lines = []
+    for src in rows[-6:]:
+        if not isinstance(src, dict):
+            continue
+        sender_role = _strip(src.get("sender_role") or src.get("senderRole")).lower()
+        role = "お客様" if sender_role == "customer" else "担当者"
+        text = _strip(src.get("text"))[:220]
+        if text:
+            lines.append(f"{role}: {text}")
+    return "\n".join(lines)
+
+
+def _parse_gemini_text(payload: dict) -> str:
+    try:
+        candidates = payload.get("candidates") if isinstance(payload, dict) else None
+        first = candidates[0] if isinstance(candidates, list) and candidates else {}
+        content = first.get("content") if isinstance(first, dict) else {}
+        parts = content.get("parts") if isinstance(content, dict) else []
+        if not isinstance(parts, list):
+            return ""
+        out = []
+        for p in parts:
+            if isinstance(p, dict):
+                out.append(str(p.get("text") or ""))
+        return "".join(out).replace("\r", "").strip()
+    except Exception:
+        return ""
+
+
+def _request_gemini_customer_reply(user_message: str, store_label: str = "", recent_messages=None) -> str:
+    if not GOOGLE_AI_API_KEY:
+        raise RuntimeError("Google AI APIキーが未設定です（GOOGLE_AI_API_KEY）。")
+
+    endpoint = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{GOOGLE_AI_MODEL}:generateContent?key={GOOGLE_AI_API_KEY}"
+    )
+    history_text = _build_recent_history_text(recent_messages)
+    prompt_text = "\n\n".join(
+        [
+            f"店舗ラベル: {store_label or '未設定'}",
+            f"直近会話:\n{history_text}" if history_text else "",
+            f"今回のお問い合わせ:\n{user_message}",
+        ]
+    ).strip()
+
+    body = {
+        "systemInstruction": {
+            "parts": [{
+                "text": "\n".join([
+                    "あなたは「ミセサポ」お客様窓口AIです。",
+                    "役割: 受付・一般案内・確認事項の整理のみ。",
+                    "禁止: 契約、金額、請求、値引き、補償、責任、法務、判断、確約、承認に関する確定回答。",
+                    "禁止話題が含まれる場合は、必ず「担当者が確認して連絡する」旨の案内に留める。",
+                    "回答は日本語、丁寧語、120文字以内を目安。過剰な装飾や絵文字は使わない。",
+                ])
+            }]
+        },
+        "generationConfig": {
+            "temperature": 0.35,
+            "topP": 0.9,
+            "maxOutputTokens": 180,
+        },
+        "contents": [{
+            "role": "user",
+            "parts": [{"text": prompt_text}],
+        }],
+    }
+
+    req = urllib_request.Request(
+        endpoint,
+        data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib_request.urlopen(req, timeout=18) as res:
+            status = int(res.getcode() or 0)
+            raw = res.read().decode("utf-8")
+        if status < 200 or status >= 300:
+            raise RuntimeError(f"Google AI応答エラー: {status} {raw}".strip())
+        payload = json.loads(raw)
+    except urllib_error.HTTPError as e:
+        err_body = ""
+        try:
+            err_body = e.read().decode("utf-8")
+        except Exception:
+            err_body = str(e)
+        raise RuntimeError(f"Google AI応答エラー: {e.code} {err_body}".strip())
+    except Exception as e:
+        raise RuntimeError(f"Google AI応答エラー: {str(e)}".strip())
+
+    text = _parse_gemini_text(payload)
+    if not text:
+        raise RuntimeError("Google AIから有効な応答テキストを取得できませんでした。")
+    return text
+
+
+def _customer_ai_reply_admin_chat(body: dict):
+    user_message = _strip(body.get("user_message") or body.get("message") or body.get("text"))
+    store_label = _strip(body.get("store_label"))
+    recent_messages = body.get("recent_messages") if isinstance(body.get("recent_messages"), list) else []
+
+    if not user_message:
+        return {
+            "enabled": CUSTOMER_CHAT_AI_ENABLED,
+            "blocked": False,
+            "mode": "empty",
+            "provider": "none",
+            "model": GOOGLE_AI_MODEL,
+            "reply": "",
+        }, None
+
+    if not CUSTOMER_CHAT_AI_ENABLED:
+        return {
+            "enabled": False,
+            "blocked": False,
+            "mode": "disabled",
+            "provider": "none",
+            "model": GOOGLE_AI_MODEL,
+            "reply": "",
+        }, None
+
+    if _is_within_operator_support_hours():
+        return {
+            "enabled": True,
+            "blocked": False,
+            "mode": "operator_hours",
+            "provider": "none",
+            "model": GOOGLE_AI_MODEL,
+            "reply": "",
+        }, None
+
+    reasons = _detect_restricted_customer_inquiry(user_message)
+    if reasons:
+        return {
+            "enabled": True,
+            "blocked": True,
+            "mode": "restricted",
+            "provider": "misogi-guard",
+            "model": GOOGLE_AI_MODEL,
+            "reasons": reasons,
+            "reply": CUSTOMER_CHAT_RESTRICTED_REPLY,
+        }, None
+
+    try:
+        ai_text = _request_gemini_customer_reply(
+            user_message=user_message,
+            store_label=store_label,
+            recent_messages=recent_messages,
+        )
+        return {
+            "enabled": True,
+            "blocked": False,
+            "mode": "gemini",
+            "provider": "gemini",
+            "model": GOOGLE_AI_MODEL,
+            "reply": _strip(ai_text) or "お問い合わせありがとうございます。担当者が内容を確認し、必要に応じてご連絡いたします。",
+        }, None
+    except Exception as e:
+        print(f"[admin_chat] customer_ai_reply fallback err={str(e)}")
+        return {
+            "enabled": True,
+            "blocked": False,
+            "mode": "fallback",
+            "provider": "misogi-fallback",
+            "model": GOOGLE_AI_MODEL,
+            "reply": "お問い合わせありがとうございます。内容を受け付けました。担当者が確認してご連絡いたします。",
+            "error": str(e),
+        }, None
     if len(text) > 4000:
         text = text[:4000]
 
@@ -1252,6 +1495,12 @@ def lambda_handler(event, context):
                 return _resp(200, payload)
 
             mode = _strip(body.get("mode")).lower()
+            if collection == "admin_chat" and mode in {"customer_ai_reply", "customer_ai", "ai_reply_customer"}:
+                payload, err_resp = _customer_ai_reply_admin_chat(body)
+                if err_resp:
+                    return err_resp
+                return _resp(200, payload)
+
             looks_like_translate = ("text" in body)
             if collection == "admin_chat" and (mode in {"translate_text", "translate", "translation"} or looks_like_translate):
                 payload, err_resp = _translate_admin_chat_text(body)

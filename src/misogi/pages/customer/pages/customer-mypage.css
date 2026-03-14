@@ -1179,8 +1179,9 @@
 .customer-chat-log {
   flex: 1 1 auto;
   min-height: 0;
-  max-height: none;
-  overflow: auto;
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid var(--cp-sub);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.92);
@@ -1228,7 +1229,36 @@
 }
 
 .customer-chat-bubble-name {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  opacity: 0.86;
+}
+
+.customer-chat-ai-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+
+.customer-chat-ai-chip.mode-gemini {
+  background: rgba(186, 223, 219, 0.5);
+  border-color: rgba(42, 70, 80, 0.24);
+  color: #2a4650;
+}
+
+.customer-chat-ai-chip.mode-fallback,
+.customer-chat-ai-chip.mode-restricted {
+  background: rgba(255, 189, 189, 0.5);
+  border-color: rgba(73, 54, 40, 0.22);
+  color: #493628;
 }
 
 .customer-chat-bubble-text {
@@ -1287,10 +1317,23 @@
 }
 
 .customer-chat-composer .btn {
-  justify-self: end;
   min-height: 34px;
   border-radius: 9px;
   padding: 0 14px;
+}
+
+.customer-chat-submit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.customer-chat-support-note {
+  margin: 0;
+  font-size: 0.71rem;
+  line-height: 1.35;
+  color: var(--cp-muted);
 }
 
 .customer-storage-grid {
@@ -1463,6 +1506,10 @@
     min-height: 460px;
   }
 
+  .customer-chat-log {
+    max-height: 320px;
+  }
+
   .customer-detail-layout {
     grid-template-columns: 1fr;
   }
@@ -1495,6 +1542,19 @@
   .customer-center-panel-chat > .customer-chat-panel,
   .customer-center-panel-schedule > .customer-center-schedule {
     min-height: 420px;
+  }
+
+  .customer-chat-log {
+    max-height: 280px;
+  }
+
+  .customer-chat-submit-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .customer-chat-composer .btn {
+    align-self: flex-end;
   }
 
   .customer-detail-shell {

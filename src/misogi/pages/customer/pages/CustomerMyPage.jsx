@@ -7,7 +7,7 @@ import {
   fetchCustomerPortalChats,
   postCustomerPortalChat,
 } from '../../shared/utils/customerPortalChat';
-import { buildCustomerPortalAiReply } from '../../shared/utils/customerPortalAi';
+import { buildCustomerPortalAiReply, shouldUseCustomerAiAutoReplyNow } from '../../shared/utils/customerPortalAi';
 import './customer-mypage.css';
 
 const DETAIL_PANES = ['left', 'center', 'right'];
@@ -59,6 +59,15 @@ function safeArr(v) {
 
 function norm(v) {
   return String(v || '').trim();
+}
+
+function getCustomerAiModeLabel(message) {
+  const mode = norm(message?.aiMode).toLowerCase();
+  if (!mode) return '';
+  if (mode === 'gemini') return 'Gemini';
+  if (mode === 'fallback') return '定型';
+  if (mode === 'restricted') return '制限対応';
+  return '';
 }
 
 function ensureHttpUrl(raw) {
@@ -1925,49 +1934,60 @@ export default function CustomerMyPage() {
         senderId: actorId,
         message: text,
       });
-      const aiResult = await buildCustomerPortalAiReply({
-        userMessage: text,
-        storeLabel,
-        recentMessages: [
-          ...safeArr(customerChatMessages),
-          {
-            senderRole: 'customer',
-            text,
-            at: new Date().toISOString(),
-          },
-        ],
-      });
-      const aiReply = norm(aiResult?.reply);
-      if (aiReply) {
-        const aiRestricted = Boolean(aiResult?.blocked);
-        await postCustomerPortalChat({
+      if (shouldUseCustomerAiAutoReplyNow()) {
+        const aiResult = await buildCustomerPortalAiReply({
           masterApiBase,
           authHeaders,
-          tenpoId,
-          tenpoName,
-          yagouName,
-          senderRole: 'admin',
-          senderName: 'ミセサポAI',
-          senderId: 'misogi-customer-ai',
-          message: aiReply,
-          dataPayloadExtra: aiRestricted
-            ? {
-                event_type: 'customer_ai_escalation',
-                priority: 'high',
-                ai_guard: {
-                  restricted: true,
-                  reason_count: Array.isArray(aiResult?.reasons) ? aiResult.reasons.length : 0,
-                },
-                origin_sender_name: actorName,
-              }
-            : {
-                event_type: 'customer_ai_reply',
-                priority: 'normal',
-                ai_guard: {
-                  restricted: false,
-                },
-              },
+          userMessage: text,
+          storeLabel,
+          recentMessages: [
+            ...safeArr(customerChatMessages),
+            {
+              senderRole: 'customer',
+              text,
+              at: new Date().toISOString(),
+            },
+          ],
         });
+        const aiReply = norm(aiResult?.reply);
+        if (aiReply) {
+          const aiRestricted = Boolean(aiResult?.blocked);
+          const aiMeta = {
+            mode: String(aiResult?.mode || (aiRestricted ? 'restricted' : 'fallback')).trim(),
+            provider: String(aiResult?.provider || (aiRestricted ? 'misogi-guard' : 'misogi-fallback')).trim(),
+            model: String(aiResult?.model || '').trim(),
+          };
+          await postCustomerPortalChat({
+            masterApiBase,
+            authHeaders,
+            tenpoId,
+            tenpoName,
+            yagouName,
+            senderRole: 'admin',
+            senderName: 'ミセサポAI',
+            senderId: 'misogi-customer-ai',
+            message: aiReply,
+            dataPayloadExtra: aiRestricted
+              ? {
+                  event_type: 'customer_ai_escalation',
+                  priority: 'high',
+                  ai_meta: aiMeta,
+                  ai_guard: {
+                    restricted: true,
+                    reason_count: Array.isArray(aiResult?.reasons) ? aiResult.reasons.length : 0,
+                  },
+                  origin_sender_name: actorName,
+                }
+              : {
+                  event_type: 'customer_ai_reply',
+                  priority: 'normal',
+                  ai_meta: aiMeta,
+                  ai_guard: {
+                    restricted: false,
+                  },
+                },
+          });
+        }
       }
       setCustomerChatDraft('');
       setCustomerChatError('');
@@ -2247,12 +2267,18 @@ export default function CustomerMyPage() {
                             ) : (
                               customerChatMessages.map((m) => {
                                 const mine = m.senderRole === 'customer';
+                                const aiModeLabel = getCustomerAiModeLabel(m);
                                 return (
                                   <div key={m.id} className={`customer-chat-row ${mine ? 'mine' : 'other'}`}>
                                     <article className={`customer-chat-bubble ${mine ? 'mine' : 'other'}`}>
-                                      <div className="customer-chat-bubble-name">
-                                        {m.senderName || (mine ? 'お客様' : 'ミセサポ')}
-                                      </div>
+                                      {aiModeLabel ? (
+                                        <div className="customer-chat-bubble-name">
+                                          <span className="sender">{m.senderName || (mine ? 'お客様' : 'ミセサポ')}</span>
+                                          <span className={`customer-chat-ai-chip mode-${String(m.aiMode || '').toLowerCase()}`}>
+                                            {aiModeLabel}
+                                          </span>
+                                        </div>
+                                      ) : null}
                                       <div className="customer-chat-bubble-text">{m.text}</div>
                                       <div className="customer-chat-bubble-time">{fmtDateTimeJst(m.at) || '-'}</div>
                                     </article>
@@ -2269,14 +2295,19 @@ export default function CustomerMyPage() {
                               placeholder="メッセージを入力"
                               rows={3}
                             />
-                            <button
-                              type="button"
-                              className="btn btn-secondary"
-                              onClick={sendCustomerChat}
-                              disabled={!norm(customerChatDraft) || customerChatSending}
-                            >
-                              {customerChatSending ? '送信中...' : '送信'}
-                            </button>
+                            <div className="customer-chat-submit-row">
+                              <p className="customer-chat-support-note">
+                                オペレーター対応時間は 9:00-18:00 です。それ以外のお時間はサポートAI「MISOGI」が対応します。
+                              </p>
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={sendCustomerChat}
+                                disabled={!norm(customerChatDraft) || customerChatSending}
+                              >
+                                {customerChatSending ? '送信中...' : '送信'}
+                              </button>
+                            </div>
                           </div>
                         </section>
                       </article>
