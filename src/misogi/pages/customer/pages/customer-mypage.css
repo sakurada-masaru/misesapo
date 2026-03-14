@@ -440,6 +440,11 @@
   min-height: 0;
 }
 
+.customer-center-panel-chat > .customer-chat-panel,
+.customer-center-panel-schedule > .customer-center-schedule {
+  min-height: 520px;
+}
+
 .customer-center-schedule {
   display: flex;
   flex-direction: column;
@@ -1089,6 +1094,56 @@
   background: #fff;
 }
 
+.customer-catalog-modal {
+  width: min(1280px, 100%);
+}
+
+.customer-catalog-preview-pane {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.customer-catalog-preview-head .name {
+  font-size: 0.96rem;
+}
+
+.customer-catalog-preview-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.customer-catalog-image-wrap {
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--cp-sub);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fffaf8 0%, #fff 100%);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+}
+
+.customer-catalog-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(73, 54, 40, 0.15);
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+.customer-catalog-image.is-loading {
+  opacity: 0;
+  transform: translateY(8px) scale(0.985);
+}
+
 .customer-history-top {
   display: flex;
   justify-content: space-between;
@@ -1130,45 +1185,75 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.92);
   padding: 10px;
-  display: grid;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .customer-chat-bubble {
-  border: 1px solid var(--cp-sub);
-  border-radius: 10px;
+  border: 1px solid transparent;
+  border-radius: 16px;
   padding: 8px 10px;
-  display: grid;
-  gap: 4px;
-}
-
-.customer-chat-bubble.is-customer {
-  background: rgba(255, 189, 189, 0.22);
-  border-color: var(--cp-main);
-}
-
-.customer-chat-bubble.is-agent {
-  background: rgba(186, 223, 219, 0.22);
-}
-
-.customer-chat-bubble-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 0.76rem;
-  color: var(--cp-muted);
+  flex-direction: column;
+  gap: 3px;
+  width: fit-content;
+  max-width: min(76%, 540px);
+  min-width: 0;
+  box-sizing: border-box;
+  line-height: 1.35;
 }
 
-.customer-chat-bubble .sender {
-  font-weight: 700;
+.customer-chat-row {
+  display: flex;
+  width: 100%;
 }
 
-.customer-chat-bubble .text {
+.customer-chat-row.mine {
+  justify-content: flex-end;
+}
+
+.customer-chat-row.other {
+  justify-content: flex-start;
+}
+
+.customer-chat-bubble.mine {
+  background: #ffbdbd;
+  border-color: transparent;
+}
+
+.customer-chat-bubble.other {
+  background: #badfdb;
+  border-color: transparent;
+}
+
+.customer-chat-bubble-name {
+  display: none;
+}
+
+.customer-chat-bubble-text {
+  display: block;
   white-space: pre-wrap;
-  line-height: 1.55;
-  font-size: 0.9rem;
-  color: var(--cp-text);
+  font-size: 0.83rem;
+  color: #1b1b1f;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.customer-chat-bubble.mine .customer-chat-bubble-text {
+  color: #493628;
+}
+
+.customer-chat-bubble.other .customer-chat-bubble-text {
+  color: #2a4650;
+}
+
+.customer-chat-bubble-time {
+  display: block;
+  font-size: 0.66rem;
+  opacity: 0.75;
+  margin-top: 1px;
+  text-align: right;
 }
 
 .customer-chat-composer {
@@ -1185,7 +1270,7 @@
 
 .customer-chat-composer textarea {
   width: 100%;
-  min-height: 92px;
+  min-height: 64px;
   resize: vertical;
   border: 1px solid var(--cp-line);
   border-radius: 10px;
@@ -1373,6 +1458,11 @@
     grid-template-columns: 1fr;
   }
 
+  .customer-center-panel-chat > .customer-chat-panel,
+  .customer-center-panel-schedule > .customer-center-schedule {
+    min-height: 460px;
+  }
+
   .customer-detail-layout {
     grid-template-columns: 1fr;
   }
@@ -1400,6 +1490,11 @@
 
   .customer-storage-grid {
     grid-template-columns: 1fr;
+  }
+
+  .customer-center-panel-chat > .customer-chat-panel,
+  .customer-center-panel-schedule > .customer-center-schedule {
+    min-height: 420px;
   }
 
   .customer-detail-shell {
@@ -1452,5 +1547,14 @@
 
   .customer-billing-pdf-frame {
     min-height: 360px;
+  }
+
+  .customer-catalog-preview-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .customer-catalog-image-wrap {
+    min-height: 320px;
   }
 }

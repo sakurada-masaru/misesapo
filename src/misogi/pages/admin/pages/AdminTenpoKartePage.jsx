@@ -49,45 +49,6 @@ const SUMMARY_PANE = {
 // フィールドスタッフ入力ではないため、自由記述は最小限（短文・限定運用）にする。
 const KARTE_DETAIL_VERSION = 2;
 
-const HACCP_STATUS = {
-  MIKANRYO: 'mikanryo',
-  KAKUNIN_ZUMI: 'kakunin_zumi',
-  GAITOU_NASHI: 'gaitou_nashi',
-};
-
-const HACCP_GROUPS = [
-  {
-    title: '衛生・清掃',
-    items: [
-      { code: 'haccp_seisou_keikaku', label: '清掃計画（手順/頻度）がある' },
-      { code: 'haccp_seisou_kiroku', label: '清掃の記録が残せる運用になっている' },
-      { code: 'haccp_tebori', label: '手洗い/消毒の導線が整っている' },
-      { code: 'haccp_sanitation_tools', label: '清掃用具の保管場所が区別されている' },
-    ],
-  },
-  {
-    title: '温度・保管',
-    items: [
-      { code: 'haccp_temp_fridge', label: '冷蔵/冷凍の温度管理を行っている' },
-      { code: 'haccp_storage_separation', label: '生/加熱後/アレルゲンの区別がある' },
-    ],
-  },
-  {
-    title: '害虫・異物',
-    items: [
-      { code: 'haccp_pest_control', label: '害虫対策（点検/駆除）の記録がある' },
-      { code: 'haccp_foreign_object', label: '異物混入防止（清掃/点検/ルール）がある' },
-    ],
-  },
-  {
-    title: '廃棄物・排水',
-    items: [
-      { code: 'haccp_garbage', label: '廃棄物の分別/保管がルール化されている' },
-      { code: 'haccp_drainage', label: '排水/グリストラップの管理計画がある' },
-    ],
-  },
-];
-
 const EQUIPMENT_OPTIONS = [
   { code: 'aircon', label: '空調' },
   { code: 'duct', label: 'ダクト' },
@@ -159,6 +120,30 @@ const BASIC_INFO_PROFILE_KEYS = [
   'customer_contact_phone',
   'sales_owner',
 ];
+const MAX_CUSTOM_BASIC_INFO_FIELDS = 24;
+
+function normalizeCustomBasicInfoFields(raw) {
+  const srcList = Array.isArray(raw)
+    ? raw
+    : (raw && typeof raw === 'object'
+      ? Object.entries(raw).map(([label, value]) => ({ label, value }))
+      : []);
+  const rows = [];
+  srcList.forEach((it) => {
+    if (rows.length >= MAX_CUSTOM_BASIC_INFO_FIELDS) return;
+    const label = clampStr(
+      it?.label ?? it?.key ?? it?.name ?? '',
+      40
+    );
+    const value = clampStr(
+      it?.value ?? it?.v ?? it?.text ?? '',
+      160
+    );
+    if (!String(label || '').trim() && !String(value || '').trim()) return;
+    rows.push({ label, value });
+  });
+  return rows;
+}
 
 function normalizeHttpUrl(rawUrl) {
   const v = String(rawUrl || '').trim();
@@ -625,6 +610,22 @@ const SOUKO_DOC_CATEGORY_OPTIONS = [
   { value: 'other', label: 'その他' },
 ];
 
+const AI_FACT_KIND_LABELS = {
+  customer_contact_name: '担当者名',
+  customer_contact_phone: '担当者連絡先',
+  business_hours: '営業時間',
+  contact_method: '連絡手段',
+  key_handling: '鍵の扱い',
+  security_info: 'セキュリティ情報',
+  rule_free_note: 'ルールメモ',
+};
+
+const AI_FACT_STATUS_LABELS = {
+  pending: '未処理',
+  adopted: '採用済み',
+  rejected: '却下',
+};
+
 function makeHistoryId() {
   return `HST#${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -842,6 +843,117 @@ function uniqTags(arr, max = 8) {
   return out.slice(0, max);
 }
 
+function makeAiFactCandidateId() {
+  return `AIF#${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeAiFactCandidates(raw) {
+  const src = Array.isArray(raw) ? raw : [];
+  return src
+    .map((it) => {
+      const kind = clampStr(it?.kind || '', 40);
+      const value = clampStr(it?.value || '', 200);
+      const status = clampStr(it?.status || 'pending', 20);
+      return {
+        candidate_id: clampStr(it?.candidate_id || '', 64) || makeAiFactCandidateId(),
+        kind,
+        label: clampStr(it?.label || AI_FACT_KIND_LABELS[kind] || kind || '候補', 60),
+        value,
+        source_message_id: clampStr(it?.source_message_id || '', 80),
+        source_at: clampStr(it?.source_at || '', 40),
+        source_excerpt: clampStr(it?.source_excerpt || '', 200),
+        status: ['pending', 'adopted', 'rejected'].includes(status) ? status : 'pending',
+        created_at: clampStr(it?.created_at || '', 40) || nowIso(),
+        adopted_at: clampStr(it?.adopted_at || '', 40),
+        rejected_at: clampStr(it?.rejected_at || '', 40),
+      };
+    })
+    .filter((it) => it.kind && it.value)
+    .sort((a, b) => String(b.source_at || b.created_at || '').localeCompare(String(a.source_at || a.created_at || '')));
+}
+
+function extractAiFactCandidatesFromChats(messages = []) {
+  const out = [];
+  const push = (base) => {
+    const kind = String(base?.kind || '').trim();
+    const value = clampStr(base?.value || '', 200);
+    if (!kind || !value) return;
+    out.push({
+      candidate_id: makeAiFactCandidateId(),
+      kind,
+      label: AI_FACT_KIND_LABELS[kind] || kind,
+      value,
+      source_message_id: clampStr(base?.source_message_id || '', 80),
+      source_at: clampStr(base?.source_at || '', 40),
+      source_excerpt: clampStr(base?.source_excerpt || '', 200),
+      status: 'pending',
+      created_at: nowIso(),
+      adopted_at: '',
+      rejected_at: '',
+    });
+  };
+
+  const rows = Array.isArray(messages) ? messages : [];
+  rows.forEach((m) => {
+    if (String(m?.senderRole || '') !== 'customer') return;
+    const txt = String(m?.text || '').trim();
+    if (!txt) return;
+    const sourceBase = {
+      source_message_id: String(m?.id || ''),
+      source_at: String(m?.at || ''),
+      source_excerpt: txt,
+    };
+
+    const phoneMatches = txt.match(/(?:\+81[-\s]?)?0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4}/g) || [];
+    phoneMatches.forEach((p) => {
+      push({ ...sourceBase, kind: 'customer_contact_phone', value: p.replace(/\s+/g, '') });
+    });
+
+    const hours = txt.match(/(\d{1,2}[:：]\d{2})\s*[~〜\-ー]\s*(\d{1,2}[:：]\d{2})/);
+    if (hours) {
+      const st = String(hours[1] || '').replace('：', ':');
+      const ed = String(hours[2] || '').replace('：', ':');
+      push({ ...sourceBase, kind: 'business_hours', value: `${st}-${ed}` });
+    }
+
+    const nameHit = txt.match(/(?:担当者|ご担当|担当)\s*[:：]?\s*([^\s、。,\n]{2,20})/);
+    if (nameHit?.[1]) {
+      push({ ...sourceBase, kind: 'customer_contact_name', value: nameHit[1] });
+    }
+
+    if (/電話|tel|ＴＥＬ/i.test(txt)) {
+      push({ ...sourceBase, kind: 'contact_method', value: '電話' });
+    }
+    if (/line|ライン|LINE/.test(txt)) {
+      push({ ...sourceBase, kind: 'contact_method', value: 'LINE' });
+    }
+    if (/メール|mail|e-mail/i.test(txt)) {
+      push({ ...sourceBase, kind: 'contact_method', value: 'メール' });
+    }
+
+    if (/鍵|キーボックス|暗証|キー番号|鍵番号/.test(txt)) {
+      push({ ...sourceBase, kind: 'key_handling', value: clampStr(txt, 120) });
+    }
+    if (/防犯|警備|セキュリティ|入室|入館|暗証/.test(txt)) {
+      push({ ...sourceBase, kind: 'security_info', value: clampStr(txt, 120) });
+    }
+    if (/注意|要望|希望|ルール|禁止|不可/.test(txt)) {
+      push({ ...sourceBase, kind: 'rule_free_note', value: clampStr(txt, 200) });
+    }
+  });
+
+  // kind + value + source_message_id 単位で重複除去
+  const uniq = [];
+  const seen = new Set();
+  out.forEach((it) => {
+    const key = `${it.kind}::${it.value}::${it.source_message_id}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    uniq.push(it);
+  });
+  return uniq;
+}
+
 function fileExt(fileName, key = '') {
   const base = String(fileName || key || '').trim();
   const i = base.lastIndexOf('.');
@@ -1020,6 +1132,7 @@ export default function AdminTenpoKartePage() {
     customer_contact_name: '',
     customer_contact_phone: '',
     sales_owner: '',
+    custom_fields: [],
     torihikisaki_keiyaku_id: '',
     torihikisaki_keiyaku_name: '',
     torihikisaki_keiyaku_start_date: '',
@@ -1043,14 +1156,19 @@ export default function AdminTenpoKartePage() {
   const [customerPortalChatLoading, setCustomerPortalChatLoading] = useState(false);
   const [customerPortalChatSending, setCustomerPortalChatSending] = useState(false);
   const [customerPortalChatError, setCustomerPortalChatError] = useState('');
+  const [aiFactGenerating, setAiFactGenerating] = useState(false);
+  const [aiFactActionId, setAiFactActionId] = useState('');
+  const [aiFactStatusMessage, setAiFactStatusMessage] = useState('');
 
   const headerTitle = useMemo(() => {
-    const tName = String(tenpo?.name || '').trim();
-    const yName = String(yagou?.name || '').trim();
-    if (yName && tName) return `${yName} / ${tName}`;
-    if (tName) return tName;
-    return tenpoId;
-  }, [tenpo?.name, yagou?.name, tenpoId]);
+    const toriName = String(torihikisaki?.name || '').trim();
+    const yagouName = String(yagou?.name || '').trim();
+    const tenpoName = String(tenpo?.name || '').trim();
+    if (yagouName && tenpoName) return `${yagouName} / ${tenpoName}`;
+    if (tenpoName) return tenpoName;
+    if (toriName) return toriName;
+    return String(tenpoId || 'お客様詳細');
+  }, [tenpo?.name, torihikisaki?.name, yagou?.name, tenpoId]);
 
   const directYoteiCreateLink = useMemo(() => {
     const sp = new URLSearchParams();
@@ -1104,6 +1222,26 @@ export default function AdminTenpoKartePage() {
       toriSharedBasicInfoProfile
     )
   ), [tenpoBasicInfoProfile, yagouSharedBasicInfoProfile, toriSharedBasicInfoProfile]);
+
+  const basicInfoCustomFields = useMemo(() => (
+    normalizeCustomBasicInfoFields(
+      karteDetail?.spec?.custom_fields
+      ?? tenpo?.karte_detail?.spec?.custom_fields
+      ?? []
+    )
+  ), [karteDetail?.spec?.custom_fields, tenpo?.karte_detail?.spec?.custom_fields]);
+
+  const aiFactCandidates = useMemo(() => (
+    normalizeAiFactCandidates(
+      karteDetail?.spec?.ai_fact_candidates
+      ?? tenpo?.karte_detail?.spec?.ai_fact_candidates
+      ?? []
+    )
+  ), [karteDetail?.spec?.ai_fact_candidates, tenpo?.karte_detail?.spec?.ai_fact_candidates]);
+
+  const aiFactPendingCount = useMemo(() => (
+    aiFactCandidates.filter((it) => String(it?.status || '') === 'pending').length
+  ), [aiFactCandidates]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -1324,11 +1462,13 @@ export default function AdminTenpoKartePage() {
 
   const buildBasicInfoDraft = useCallback(() => ({
     ...resolvedBasicInfo,
+    custom_fields: basicInfoCustomFields,
     torihikisaki_keiyaku_id: String(torihikisaki?.keiyaku_id || '').trim(),
     torihikisaki_keiyaku_name: String(torihikisaki?.keiyaku_name || '').trim(),
     torihikisaki_keiyaku_start_date: String(torihikisaki?.keiyaku_start_date || '').trim(),
   }), [
     resolvedBasicInfo,
+    basicInfoCustomFields,
     torihikisaki?.keiyaku_id,
     torihikisaki?.keiyaku_name,
     torihikisaki?.keiyaku_start_date,
@@ -1341,6 +1481,46 @@ export default function AdminTenpoKartePage() {
 
   const onBasicInfoField = useCallback((key, value) => {
     setBasicInfoDraft((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const displayedCustomFields = useMemo(() => (
+    normalizeCustomBasicInfoFields(
+      editingBasicInfo
+        ? basicInfoDraft?.custom_fields
+        : basicInfoCustomFields
+    )
+  ), [editingBasicInfo, basicInfoDraft?.custom_fields, basicInfoCustomFields]);
+
+  const onBasicInfoCustomField = useCallback((index, field, value) => {
+    const i = Number(index);
+    if (!Number.isFinite(i) || i < 0) return;
+    setBasicInfoDraft((prev) => {
+      const list = normalizeCustomBasicInfoFields(prev?.custom_fields);
+      if (!list[i]) return prev;
+      const nextVal = field === 'label'
+        ? clampStr(value || '', 40)
+        : clampStr(value || '', 160);
+      list[i] = { ...list[i], [field]: nextVal };
+      return { ...prev, custom_fields: list };
+    });
+  }, []);
+
+  const addBasicInfoCustomField = useCallback(() => {
+    setBasicInfoDraft((prev) => {
+      const list = normalizeCustomBasicInfoFields(prev?.custom_fields);
+      if (list.length >= MAX_CUSTOM_BASIC_INFO_FIELDS) return prev;
+      return { ...prev, custom_fields: [...list, { label: '', value: '' }] };
+    });
+  }, []);
+
+  const removeBasicInfoCustomField = useCallback((index) => {
+    const i = Number(index);
+    if (!Number.isFinite(i) || i < 0) return;
+    setBasicInfoDraft((prev) => {
+      const list = normalizeCustomBasicInfoFields(prev?.custom_fields);
+      if (!list[i]) return prev;
+      return { ...prev, custom_fields: list.filter((_, idx) => idx !== i) };
+    });
   }, []);
 
   const files = useMemo(() => {
@@ -1643,6 +1823,120 @@ export default function AdminTenpoKartePage() {
     }
   }, [customerPortalChatDraft, tenpoId, tenpo?.name, yagou?.name, loadCustomerPortalChat]);
 
+  const generateAiFactCandidates = useCallback(() => {
+    setAiFactGenerating(true);
+    setAiFactStatusMessage('');
+    try {
+      const extracted = extractAiFactCandidatesFromChats(customerPortalChatMessages);
+      if (!extracted.length) {
+        setAiFactStatusMessage('抽出できる候補が見つかりませんでした。お客様メッセージを増やして再実行してください。');
+        return;
+      }
+      setKarteDetail((prev) => {
+        const base = prev && typeof prev === 'object' ? prev : {};
+        const next = { ...base };
+        const spec = { ...(next.spec || {}) };
+        const current = normalizeAiFactCandidates(spec.ai_fact_candidates);
+        const existingKeys = new Set(
+          current.map((it) => `${it.kind}::${it.value}::${it.source_message_id}`)
+        );
+        const merged = [...current];
+        extracted.forEach((it) => {
+          const key = `${it.kind}::${it.value}::${it.source_message_id}`;
+          if (existingKeys.has(key)) return;
+          existingKeys.add(key);
+          merged.push(it);
+        });
+        spec.ai_fact_candidates = normalizeAiFactCandidates(merged);
+        next.spec = spec;
+        return next;
+      });
+      setAiFactStatusMessage(`AI候補を ${extracted.length} 件抽出しました（重複は自動除外）。`);
+    } finally {
+      setAiFactGenerating(false);
+    }
+  }, [customerPortalChatMessages]);
+
+  const applyAiFactCandidate = useCallback((candidateId) => {
+    const targetId = String(candidateId || '').trim();
+    if (!targetId) return;
+    setAiFactActionId(targetId);
+    setAiFactStatusMessage('');
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const spec = { ...(next.spec || {}) };
+      const list = normalizeAiFactCandidates(spec.ai_fact_candidates);
+      const idx = list.findIndex((it) => String(it?.candidate_id || '') === targetId);
+      if (idx < 0) return prev;
+      const row = { ...list[idx] };
+      if (row.status !== 'pending') return prev;
+      const value = String(row.value || '').trim();
+      if (!value) return prev;
+
+      switch (row.kind) {
+        case 'customer_contact_name':
+          spec.customer_contact_name = clampStr(value, 80);
+          break;
+        case 'customer_contact_phone':
+          spec.customer_contact_phone = clampStr(value, 40);
+          break;
+        case 'business_hours':
+          spec.business_hours = clampStr(value, 80);
+          break;
+        case 'contact_method':
+          spec.contact_method = clampStr(value, 80);
+          break;
+        case 'key_handling':
+          spec.key_handling = clampStr(value, 120);
+          break;
+        case 'security_info':
+          spec.security_info = clampStr(value, 120);
+          break;
+        case 'rule_free_note': {
+          const prevNote = String(spec.rule_free_note || '').trim();
+          const mergedNote = prevNote ? `${prevNote}\n${value}` : value;
+          spec.rule_free_note = clampStr(mergedNote, 2000);
+          break;
+        }
+        default:
+          break;
+      }
+      row.status = 'adopted';
+      row.adopted_at = nowIso();
+      list[idx] = row;
+      spec.ai_fact_candidates = normalizeAiFactCandidates(list);
+      next.spec = spec;
+      return next;
+    });
+    setAiFactActionId('');
+    setAiFactStatusMessage('候補を採用しました。必要に応じて右上の保存を実行してください。');
+  }, []);
+
+  const rejectAiFactCandidate = useCallback((candidateId) => {
+    const targetId = String(candidateId || '').trim();
+    if (!targetId) return;
+    setAiFactActionId(targetId);
+    setAiFactStatusMessage('');
+    setKarteDetail((prev) => {
+      const base = prev && typeof prev === 'object' ? prev : {};
+      const next = { ...base };
+      const spec = { ...(next.spec || {}) };
+      const list = normalizeAiFactCandidates(spec.ai_fact_candidates);
+      const idx = list.findIndex((it) => String(it?.candidate_id || '') === targetId);
+      if (idx < 0) return prev;
+      const row = { ...list[idx] };
+      row.status = 'rejected';
+      row.rejected_at = nowIso();
+      list[idx] = row;
+      spec.ai_fact_candidates = normalizeAiFactCandidates(list);
+      next.spec = spec;
+      return next;
+    });
+    setAiFactActionId('');
+    setAiFactStatusMessage('候補を却下しました。');
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -1854,6 +2148,9 @@ export default function AdminTenpoKartePage() {
     next.plan.primary_yakusoku_id = clampStr(next.plan.primary_yakusoku_id || '', 64);
     next.spec.security_info = clampStr(next.spec.security_info || '', 120);
     next.spec.business_hours = clampStr(next.spec.business_hours || '', 80);
+    next.spec.rule_free_note = clampStr(next.spec.rule_free_note || '', 2000);
+    next.spec.custom_fields = normalizeCustomBasicInfoFields(next.spec.custom_fields);
+    next.spec.ai_fact_candidates = normalizeAiFactCandidates(next.spec.ai_fact_candidates);
     {
       const attendance = clampStr(next.spec.customer_attendance || '', 20);
       next.spec.customer_attendance = CUSTOMER_ATTENDANCE_OPTIONS.some((o) => o.value === attendance)
@@ -1964,35 +2261,8 @@ export default function AdminTenpoKartePage() {
       .filter((cp) => cp.jotai !== 'torikeshi' && (cp.zone || cp.item || cp.standard));
     next.report_profile = rp;
 
-    // HACCP defaults
-    if (!next.haccp || typeof next.haccp !== 'object') next.haccp = {};
-    if (!next.haccp.items || typeof next.haccp.items !== 'object') next.haccp.items = {};
-    HACCP_GROUPS.forEach((g) => {
-      g.items.forEach((it) => {
-        if (!next.haccp.items[it.code]) {
-          next.haccp.items[it.code] = { status: HACCP_STATUS.MIKANRYO, updated_at: '' };
-        }
-      });
-    });
-    next.haccp.version = 1;
     return next;
   }, [karteDetail, tenpo?.contact_name, tenpo?.contact_person, tenpo?.contact_phone, tenpo?.contact_person_phone, tenpo?.tantou_name, tenpo?.tantou_phone]);
-
-  const ensureHaccpDefaults = useCallback(() => {
-    const base = karteDetail && typeof karteDetail === 'object' ? karteDetail : {};
-    const next = { ...base };
-    if (!next.haccp || typeof next.haccp !== 'object') next.haccp = {};
-    if (!next.haccp.items || typeof next.haccp.items !== 'object') next.haccp.items = {};
-    HACCP_GROUPS.forEach((g) => {
-      g.items.forEach((it) => {
-        if (!next.haccp.items[it.code]) {
-          next.haccp.items[it.code] = { status: HACCP_STATUS.MIKANRYO, updated_at: '' };
-        }
-      });
-    });
-    next.haccp.version = 1;
-    return next;
-  }, [karteDetail]);
 
   const setKarteField = useCallback((path, value) => {
     setKarteDetail((prev) => {
@@ -2322,60 +2592,6 @@ export default function AdminTenpoKartePage() {
     });
   }, []);
 
-  const addReportCheckpoint = useCallback(() => {
-    setKarteDetail((prev) => {
-      const base = prev && typeof prev === 'object' ? prev : {};
-      const next = { ...base };
-      const rp = { ...(next.report_profile || {}) };
-      const rows = Array.isArray(rp.checkpoints) ? rp.checkpoints.slice() : [];
-      rows.push({
-        checkpoint_id: `CHK#${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-        zone: '',
-        item: '',
-        standard: '',
-        photo_required: true,
-        customer_visible: true,
-        jotai: 'yuko',
-      });
-      rp.checkpoints = rows;
-      next.report_profile = rp;
-      return next;
-    });
-  }, []);
-
-  const updateReportCheckpoint = useCallback((index, patch) => {
-    setKarteDetail((prev) => {
-      const base = prev && typeof prev === 'object' ? prev : {};
-      const next = { ...base };
-      const rp = { ...(next.report_profile || {}) };
-      const rows = Array.isArray(rp.checkpoints) ? rp.checkpoints.slice() : [];
-      if (!rows[index]) return next;
-      const row = { ...(rows[index] || {}) };
-      const p = patch || {};
-      if (p.zone !== undefined) row.zone = clampStr(p.zone, 60);
-      if (p.item !== undefined) row.item = clampStr(p.item, 80);
-      if (p.standard !== undefined) row.standard = clampStr(p.standard, 120);
-      if (p.photo_required !== undefined) row.photo_required = Boolean(p.photo_required);
-      if (p.customer_visible !== undefined) row.customer_visible = Boolean(p.customer_visible);
-      rows[index] = row;
-      rp.checkpoints = rows;
-      next.report_profile = rp;
-      return next;
-    });
-  }, []);
-
-  const removeReportCheckpoint = useCallback((index) => {
-    setKarteDetail((prev) => {
-      const base = prev && typeof prev === 'object' ? prev : {};
-      const next = { ...base };
-      const rp = { ...(next.report_profile || {}) };
-      const rows = Array.isArray(rp.checkpoints) ? rp.checkpoints.slice() : [];
-      rp.checkpoints = rows.filter((_, i) => i !== index);
-      next.report_profile = rp;
-      return next;
-    });
-  }, []);
-
   const addReportChemical = useCallback(() => {
     setKarteDetail((prev) => {
       const base = prev && typeof prev === 'object' ? prev : {};
@@ -2490,21 +2706,6 @@ export default function AdminTenpoKartePage() {
     });
   }, []);
 
-  const setHaccpItemStatus = useCallback((code, status) => {
-    setKarteDetail((prev) => {
-      const base = prev && typeof prev === 'object' ? prev : {};
-      const next = { ...base };
-      const haccp = { ...(next.haccp || {}) };
-      const items = { ...(haccp.items || {}) };
-      items[code] = { ...(items[code] || {}), status, updated_at: nowIso() };
-      haccp.items = items;
-      haccp.updated_at = nowIso();
-      haccp.version = 1;
-      next.haccp = haccp;
-      return next;
-    });
-  }, []);
-
   const saveKarteDetailNow = useCallback(async () => {
     if (!tenpoId) return;
     setSavingKarteDetail(true);
@@ -2546,6 +2747,7 @@ export default function AdminTenpoKartePage() {
       nextSpec.customer_contact_name = clampStr(basicInfoDraft?.customer_contact_name || '', 80);
       nextSpec.customer_contact_phone = customerContactPhone;
       nextSpec.sales_owner = clampStr(basicInfoDraft?.sales_owner || '', 80);
+      nextSpec.custom_fields = normalizeCustomBasicInfoFields(basicInfoDraft?.custom_fields);
       nextKarte.spec = nextSpec;
 
       const customerContactName = clampStr(basicInfoDraft?.customer_contact_name || '', 80);
@@ -2637,6 +2839,11 @@ export default function AdminTenpoKartePage() {
           40
         ),
         sales_owner: clampStr(updated?.karte_detail?.spec?.sales_owner || nextSpec.sales_owner || '', 80),
+        custom_fields: normalizeCustomBasicInfoFields(
+          updated?.karte_detail?.spec?.custom_fields
+          ?? nextSpec.custom_fields
+          ?? []
+        ),
         torihikisaki_keiyaku_id: String((updatedTorihikisaki?.keiyaku_id || selectedKeiyakuId || '')).trim(),
         torihikisaki_keiyaku_name: clampStr(
           String(
@@ -2742,6 +2949,81 @@ export default function AdminTenpoKartePage() {
     }
   }, []);
 
+  const monshinOverviewPanel = (
+    <section className={`monshin-overview ${isMonshinMode ? 'is-mode' : ''}`}>
+      <div className="monshin-overview-head">
+        <div className="left">
+          <div className="title">{isMonshinMode ? '問診票モード' : '問診票チェック'}</div>
+          <div className="desc">契約（yakusoku）・カルテ・報告設計の土台となる必須項目の充足率</div>
+        </div>
+        <div className={`pill ${monshinChecklist.missing.length === 0 ? 'pill-on' : 'pill-off'}`}>
+          {monshinChecklist.completed}/{monshinChecklist.total} 完了
+        </div>
+      </div>
+      <div className="monshin-progress">
+        <div className="bar" style={{ width: `${monshinChecklist.ratio}%` }} />
+      </div>
+      {monshinChecklist.missing.length > 0 ? (
+        <div className="monshin-missing">
+          未入力: {monshinChecklist.missing.map((m) => m.label).join(' / ')}
+        </div>
+      ) : (
+        <div className="monshin-ok">必須項目は揃っています。次は yakusoku と yotei 連携へ進めます。</div>
+      )}
+    </section>
+  );
+
+  const summaryControlPanel = (
+    <div className="tenpo-summary-shell">
+      <button
+        type="button"
+        className="tenpo-summary-side-nav tenpo-summary-side-nav-left"
+        aria-label="左のペインへ切り替え"
+        onClick={() => moveSummaryPane('left')}
+      >
+        <span className="tenpo-summary-side-nav-hint">基本情報</span>
+        ←
+      </button>
+      <div className="tenpo-summary-pane-control" aria-label="表示切り替え">
+        <div className="pane-center-stack">
+          <div className="tenpo-summary-pane-buttons" aria-label="表示ショートカット">
+            <Link to="/admin/torihikisaki-meibo" className="pane-link">取引先名簿</Link>
+            <Link to="/admin/master/tenpo" className="pane-link">店舗マスタ</Link>
+            <a
+              href={buildCustomerMyPageUrl(tenpoId)}
+              className="pane-link"
+              target="_blank"
+              rel="noreferrer"
+            >
+              お客様マイページ
+            </a>
+            <button
+              type="button"
+              className="pane-btn"
+              onClick={() => setKarteView((v) => (v === KARTE_VIEW.DETAIL ? KARTE_VIEW.SUMMARY : KARTE_VIEW.DETAIL))}
+            >
+              {karteView === KARTE_VIEW.DETAIL ? '概要に戻る' : 'カルテ詳細'}
+            </button>
+            <button type="button" className="pane-btn" onClick={refresh} disabled={loading}>
+              {loading ? '更新中...' : '更新'}
+            </button>
+            <Link to="/admin/yotei" className="pane-link">yotei</Link>
+            <Link to="/admin/yakusoku" className="pane-link">yakusoku</Link>
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        className="tenpo-summary-side-nav tenpo-summary-side-nav-right"
+        aria-label="右のペインへ切り替え"
+        onClick={() => moveSummaryPane('right')}
+      >
+        <span className="tenpo-summary-side-nav-hint">ストレージ</span>
+        →
+      </button>
+    </div>
+  );
+
   if (!tenpoId) {
     return (
       <div className="tenpo-karte-page">
@@ -2767,9 +3049,9 @@ export default function AdminTenpoKartePage() {
             <div className="kicker">お客様詳細</div>
             <h1>{headerTitle}</h1>
             <div className="pathline">
-              <span className="seg">
-                取引先: {torihikisaki?.name || '—'}
-              </span>
+              <span className="seg">取引先: {torihikisaki?.name || '—'}</span>
+              <span className="seg">屋号: {yagou?.name || '—'}</span>
+              <span className="seg">店舗: {tenpo?.name || '—'}</span>
             </div>
           </div>
         </div>
@@ -2780,36 +3062,15 @@ export default function AdminTenpoKartePage() {
 
       {error ? <div className="tenpo-karte-err">{error}</div> : null}
 
-      <section className={`monshin-overview ${isMonshinMode ? 'is-mode' : ''}`}>
-        <div className="monshin-overview-head">
-          <div className="left">
-            <div className="title">{isMonshinMode ? '問診票モード' : '問診票チェック'}</div>
-            <div className="desc">契約（yakusoku）・カルテ・報告設計の土台となる必須項目の充足率</div>
-          </div>
-          <div className={`pill ${monshinChecklist.missing.length === 0 ? 'pill-on' : 'pill-off'}`}>
-            {monshinChecklist.completed}/{monshinChecklist.total} 完了
-          </div>
-        </div>
-        <div className="monshin-progress">
-          <div className="bar" style={{ width: `${monshinChecklist.ratio}%` }} />
-        </div>
-        {monshinChecklist.missing.length > 0 ? (
-          <div className="monshin-missing">
-            未入力: {monshinChecklist.missing.map((m) => m.label).join(' / ')}
-          </div>
-        ) : (
-          <div className="monshin-ok">必須項目は揃っています。次は yakusoku と yotei 連携へ進めます。</div>
-        )}
-      </section>
-
       <datalist id="tenpo-karte-jinzai-name-list">
         {jinzais.map((j) => (
           <option key={j.jinzai_id} value={j.name} />
         ))}
       </datalist>
 
-      {karteView === KARTE_VIEW.SUMMARY ? (
-        <>
+      <div className={`tenpo-content-safe ${karteView === KARTE_VIEW.SUMMARY ? 'is-summary' : 'is-detail'}`}>
+        {karteView === KARTE_VIEW.SUMMARY ? (
+          <>
           {isMobileLayout ? (
             <div className="tenpo-mobile-cta">
               <button
@@ -2821,73 +3082,9 @@ export default function AdminTenpoKartePage() {
               </button>
             </div>
           ) : null}
-          <div className="tenpo-summary-pane-control" aria-label="表示切り替え">
-            <button
-              type="button"
-              className="pane-arrow"
-              onClick={() => moveSummaryPane('left')}
-            >
-              ←
-            </button>
-            <div className="pane-center-stack">
-              <div className="tenpo-summary-pane-buttons" aria-label="表示ショートカット">
-                <button
-                  type="button"
-                  className={`pane-btn ${summaryPane === SUMMARY_PANE.LEFT ? 'is-active' : ''}`}
-                  onClick={() => setSummaryPane(SUMMARY_PANE.LEFT)}
-                >
-                  基本情報
-                </button>
-                <button
-                  type="button"
-                  className={`pane-btn ${summaryPane === SUMMARY_PANE.CENTER ? 'is-active' : ''}`}
-                  onClick={() => setSummaryPane(SUMMARY_PANE.CENTER)}
-                >
-                  チャット・対応履歴
-                </button>
-                <button
-                  type="button"
-                  className={`pane-btn ${summaryPane === SUMMARY_PANE.RIGHT ? 'is-active' : ''}`}
-                  onClick={() => setSummaryPane(SUMMARY_PANE.RIGHT)}
-                >
-                  ストレージ
-                </button>
-                <Link to="/admin/torihikisaki-meibo" className="pane-link">取引先名簿</Link>
-                <Link to="/admin/master/tenpo" className="pane-link">店舗マスタ</Link>
-                <button
-                  type="button"
-                  className="pane-btn"
-                  onClick={() => setKarteView((v) => (v === KARTE_VIEW.DETAIL ? KARTE_VIEW.SUMMARY : KARTE_VIEW.DETAIL))}
-                >
-                  {karteView === KARTE_VIEW.DETAIL ? '概要に戻る' : 'カルテ詳細'}
-                </button>
-                <button type="button" className="pane-btn" onClick={refresh} disabled={loading}>
-                  {loading ? '更新中...' : '更新'}
-                </button>
-                <button
-                  type="button"
-                  className="pane-btn"
-                  onClick={() => { setKarteView(KARTE_VIEW.SUMMARY); setSummaryPane(SUMMARY_PANE.LEFT); }}
-                >
-                  問診: 基本情報
-                </button>
-                <button
-                  type="button"
-                  className="pane-btn"
-                  onClick={() => setKarteView(KARTE_VIEW.DETAIL)}
-                >
-                  問診: 詳細入力
-                </button>
-                <Link to="/admin/yakusoku" className="pane-link">問診: yakusoku管理へ</Link>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="pane-arrow"
-              onClick={() => moveSummaryPane('right')}
-            >
-              →
-            </button>
+          <div className="tenpo-summary-top-row">
+            {monshinOverviewPanel}
+            {summaryControlPanel}
           </div>
           <div className={`tenpo-karte-grid tenpo-karte-grid-summary pane-${summaryPane}`}>
           <details className="card card-accordion basic-info-card summary-pane-section summary-pane-left" open>
@@ -3209,6 +3406,61 @@ export default function AdminTenpoKartePage() {
                 </div>
               </div>
               <div className="kv">
+                <div className="k">追加情報</div>
+                <div className="v">
+                  {editingBasicInfo ? (
+                    <div className="basic-custom-fields-editor">
+                      {displayedCustomFields.length === 0 ? (
+                        <div className="v-sub">追加項目はまだありません</div>
+                      ) : null}
+                      <div className="basic-custom-fields-list">
+                        {displayedCustomFields.map((row, idx) => (
+                          <div key={`custom-${idx}`} className="basic-custom-fields-row">
+                            <input
+                              value={String(row?.label || '')}
+                              onChange={(e) => onBasicInfoCustomField(idx, 'label', e.target.value)}
+                              placeholder="項目名（例: 緊急連絡ルール）"
+                            />
+                            <input
+                              value={String(row?.value || '')}
+                              onChange={(e) => onBasicInfoCustomField(idx, 'value', e.target.value)}
+                              placeholder="内容"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeBasicInfoCustomField(idx)}
+                              aria-label={`追加情報 ${idx + 1} を削除`}
+                            >
+                              削除
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addBasicInfoCustomField}
+                        disabled={displayedCustomFields.length >= MAX_CUSTOM_BASIC_INFO_FIELDS}
+                      >
+                        項目を追加
+                      </button>
+                    </div>
+                  ) : (
+                    displayedCustomFields.length > 0 ? (
+                      <div className="basic-custom-fields-view">
+                        {displayedCustomFields.map((row, idx) => (
+                          <div key={`custom-view-${idx}`} className="basic-custom-fields-chip">
+                            <span className="label">{row.label || `項目${idx + 1}`}</span>
+                            <span className="value">{row.value || '—'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="v-main">—</div>
+                    )
+                  )}
+                </div>
+              </div>
+              <div className="kv">
                 <div className="k">主契約</div>
                 <div className="v">
                   <div className="v-main">
@@ -3433,18 +3685,23 @@ export default function AdminTenpoKartePage() {
                 ) : customerPortalChatMessages.length === 0 ? (
                   <div className="muted">メッセージはまだありません</div>
                 ) : (
-                  customerPortalChatMessages.map((m) => (
-                    <div
-                      key={m.id}
-                      className={`support-chat-item ${m.senderRole === 'customer' ? 'is-customer' : 'is-admin'}`}
-                    >
-                      <div className="meta">
-                        <span>{fmtDateTimeJst(m.at) || '—'}</span>
-                        <span>{m.senderName || (m.senderRole === 'customer' ? 'お客様' : 'ミセサポ')}</span>
+                  customerPortalChatMessages.map((m) => {
+                    const mine = m.senderRole !== 'customer';
+                    return (
+                      <div
+                        key={m.id}
+                        className={`support-chat-row ${mine ? 'mine' : 'other'}`}
+                      >
+                        <article className={`support-chat-bubble ${mine ? 'mine' : 'other'}`}>
+                          <div className="support-chat-bubble-name">
+                            {m.senderName || (m.senderRole === 'customer' ? 'お客様' : 'ミセサポ')}
+                          </div>
+                          <div className="support-chat-bubble-text">{m.text}</div>
+                          <div className="support-chat-bubble-time">{fmtDateTimeJst(m.at) || '—'}</div>
+                        </article>
                       </div>
-                      <div className="msg">{m.text}</div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
               {customerPortalChatError ? (
@@ -3465,6 +3722,65 @@ export default function AdminTenpoKartePage() {
                 >
                   {customerPortalChatSending ? '送信中...' : '送信'}
                 </button>
+              </div>
+
+              <div className="ai-fact-panel">
+                <div className="ai-fact-panel-head">
+                  <div className="left">
+                    <strong>AI抽出候補（お客様チャット由来）</strong>
+                    <span className="muted small">未処理: {aiFactPendingCount}件</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={generateAiFactCandidates}
+                    disabled={aiFactGenerating || customerPortalChatLoading}
+                  >
+                    {aiFactGenerating ? '候補生成中...' : '候補生成'}
+                  </button>
+                </div>
+                {aiFactStatusMessage ? (
+                  <div className="muted small ai-fact-status">{aiFactStatusMessage}</div>
+                ) : null}
+                <div className="ai-fact-list">
+                  {aiFactCandidates.length === 0 ? (
+                    <div className="muted small">候補はまだありません。チャット後に「候補生成」を実行してください。</div>
+                  ) : (
+                    aiFactCandidates.map((it) => (
+                      <div key={it.candidate_id} className={`ai-fact-row is-${it.status}`}>
+                        <div className="ai-fact-main">
+                          <div className="ai-fact-top">
+                            <span className="tag-chip">{it.label || it.kind}</span>
+                            <span className={`pill ${it.status === 'adopted' ? 'pill-on' : it.status === 'rejected' ? 'pill-off' : ''}`}>
+                              {AI_FACT_STATUS_LABELS[it.status] || it.status}
+                            </span>
+                          </div>
+                          <div className="ai-fact-value">{it.value}</div>
+                          <div className="ai-fact-meta">
+                            根拠: {fmtDateTimeJst(it.source_at) || '—'} / {clampStr(it.source_excerpt || '', 80) || 'メッセージ参照'}
+                          </div>
+                        </div>
+                        {it.status === 'pending' ? (
+                          <div className="ai-fact-actions">
+                            <button
+                              type="button"
+                              onClick={() => applyAiFactCandidate(it.candidate_id)}
+                              disabled={aiFactActionId === it.candidate_id}
+                            >
+                              採用
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => rejectAiFactCandidate(it.candidate_id)}
+                              disabled={aiFactActionId === it.candidate_id}
+                            >
+                              却下
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </section>
@@ -3759,10 +4075,15 @@ export default function AdminTenpoKartePage() {
             </div>
           </section>
           </div>
-        </>
+          </>
       ) : (
-        <div className="tenpo-karte-grid tenpo-karte-grid-detail">
-          <section className="card card-large card-full">
+        <>
+          <div className="tenpo-summary-top-row">
+            {monshinOverviewPanel}
+            {summaryControlPanel}
+          </div>
+          <div className="tenpo-karte-grid tenpo-karte-grid-detail">
+            <section className="card card-large card-full">
             <div className="card-title-row">
               <div>
                 <div className="card-title">カルテ詳細</div>
@@ -3776,6 +4097,9 @@ export default function AdminTenpoKartePage() {
                 </div>
               </div>
               <div className="seg-tabs tenpo-detail-save-top">
+                <button type="button" onClick={() => setKarteView(KARTE_VIEW.SUMMARY)}>
+                  お客様詳細
+                </button>
                 <button type="button" onClick={saveKarteDetailNow} disabled={savingKarteDetail}>
                   {savingKarteDetail ? '保存中...' : '保存'}
                 </button>
@@ -3900,6 +4224,16 @@ export default function AdminTenpoKartePage() {
                         value={String(karteDetail?.spec?.contact_method || '')}
                         onChange={(e) => setKarteField('spec.contact_method', clampStr(e.target.value, 80))}
                         placeholder="例: 電話 / LINE / SMS / メール"
+                      />
+                    </label>
+                    <label className="f" style={{ gridColumn: '1 / -1' }}>
+                      <div className="lbl">運用ルール（自由入力）</div>
+                      <textarea
+                        className="memo"
+                        value={String(karteDetail?.spec?.rule_free_note || '')}
+                        onChange={(e) => setKarteField('spec.rule_free_note', clampStr(e.target.value, 2000))}
+                        placeholder="例: 開店前はバックヤード立入禁止 / 〇曜日は搬入時間に注意 / 特記事項"
+                        rows={8}
                       />
                     </label>
                   </div>
@@ -4240,140 +4574,12 @@ export default function AdminTenpoKartePage() {
                 </section>
               </div>
 
-              <section className="card card-sub card-wide">
-                <div className="card-title-row">
-                  <div className="card-title">清掃チェックポイント（報告基準）</div>
-                  <div className="seg-tabs">
-                    <button type="button" onClick={addReportCheckpoint}>追加</button>
-                  </div>
-                </div>
-                <div className="muted small">
-                  各ゾーンで「何を見て、どの状態なら完了か」を固定。現場報告・顧客報告の両方で同じ基準を使う。
-                </div>
-                {Array.isArray(karteDetail?.report_profile?.checkpoints) && karteDetail.report_profile.checkpoints.length > 0 ? (
-                  <div className="service-plan-list" style={{ marginTop: 10 }}>
-                    {karteDetail.report_profile.checkpoints.map((cp, i) => (
-                      <div key={cp?.checkpoint_id || i} className="service-plan-row">
-                        <div className="service-plan-head">
-                          <div className="service-plan-title">基準 {i + 1}</div>
-                          <button type="button" onClick={() => removeReportCheckpoint(i)}>×</button>
-                        </div>
-                        <div className="form-grid">
-                          <label className="f">
-                            <div className="lbl">ゾーン</div>
-                            <input
-                              value={String(cp?.zone || '')}
-                              onChange={(e) => updateReportCheckpoint(i, { zone: e.target.value })}
-                              placeholder="例: 厨房 / ホール / トイレ"
-                            />
-                          </label>
-                          <label className="f">
-                            <div className="lbl">項目</div>
-                            <input
-                              value={String(cp?.item || '')}
-                              onChange={(e) => updateReportCheckpoint(i, { item: e.target.value })}
-                              placeholder="例: グリスト / 床 / 壁面"
-                            />
-                          </label>
-                          <label className="f" style={{ gridColumn: '1 / -1' }}>
-                            <div className="lbl">完了基準（短文）</div>
-                            <input
-                              value={String(cp?.standard || '')}
-                              onChange={(e) => updateReportCheckpoint(i, { standard: e.target.value })}
-                              placeholder="例: 油膜なし、手触りべたつきなし"
-                            />
-                          </label>
-                          <label className="f">
-                            <div className="lbl">写真必須</div>
-                            <select
-                              value={toBool(cp?.photo_required, true) ? 'y' : 'n'}
-                              onChange={(e) => updateReportCheckpoint(i, { photo_required: e.target.value === 'y' })}
-                            >
-                              <option value="y">必須</option>
-                              <option value="n">任意</option>
-                            </select>
-                          </label>
-                          <label className="f">
-                            <div className="lbl">顧客に表示</div>
-                            <select
-                              value={toBool(cp?.customer_visible, true) ? 'y' : 'n'}
-                              onChange={(e) => updateReportCheckpoint(i, { customer_visible: e.target.value === 'y' })}
-                            >
-                              <option value="y">表示する</option>
-                              <option value="n">内部のみ</option>
-                            </select>
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="muted" style={{ marginTop: 10 }}>未登録</div>
-                )}
-              </section>
-
-              <section className="card card-sub card-wide">
-                <div className="card-title-row">
-                  <div className="card-title">HACCP 準拠チェック</div>
-                  <div className="muted small">
-                    状態はHACCP内に記録（チェックのみ）
-                    {' '} / 最終更新: <code>{fmtDateTimeJst(karteDetail?.haccp?.updated_at || '') || '—'}</code>
-                  </div>
-                </div>
-                <div className="haccp-grid">
-                  {HACCP_GROUPS.map((g) => (
-                    <div key={g.title} className="haccp-group">
-                      <div className="haccp-group-title">{g.title}</div>
-                      <div className="haccp-items">
-                        {g.items.map((it) => {
-                          const st = String(karteDetail?.haccp?.items?.[it.code]?.status || HACCP_STATUS.MIKANRYO);
-                          return (
-                            <div className="haccp-item" key={it.code}>
-                              <div className="haccp-item-label">
-                                <div className="label">{it.label}</div>
-                                <div className="code"><code>{it.code}</code></div>
-                              </div>
-                              <div className="haccp-item-controls" role="radiogroup" aria-label={it.label}>
-                                <label className={`radio ${st === HACCP_STATUS.MIKANRYO ? 'active' : ''}`}>
-                                  <input
-                                    type="radio"
-                                    name={it.code}
-                                    checked={st === HACCP_STATUS.MIKANRYO}
-                                    onChange={() => setHaccpItemStatus(it.code, HACCP_STATUS.MIKANRYO)}
-                                  />
-                                  未
-                                </label>
-                                <label className={`radio ${st === HACCP_STATUS.KAKUNIN_ZUMI ? 'active' : ''}`}>
-                                  <input
-                                    type="radio"
-                                    name={it.code}
-                                    checked={st === HACCP_STATUS.KAKUNIN_ZUMI}
-                                    onChange={() => setHaccpItemStatus(it.code, HACCP_STATUS.KAKUNIN_ZUMI)}
-                                  />
-                                  OK
-                                </label>
-                                <label className={`radio ${st === HACCP_STATUS.GAITOU_NASHI ? 'active' : ''}`}>
-                                  <input
-                                    type="radio"
-                                    name={it.code}
-                                    checked={st === HACCP_STATUS.GAITOU_NASHI}
-                                    onChange={() => setHaccpItemStatus(it.code, HACCP_STATUS.GAITOU_NASHI)}
-                                  />
-                                  対象外
-                                </label>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
             </div>
-          </section>
-        </div>
-      )}
+            </section>
+          </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

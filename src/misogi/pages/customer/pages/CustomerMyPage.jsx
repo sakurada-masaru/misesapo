@@ -13,6 +13,25 @@ const DETAIL_PANES = ['left', 'center', 'right'];
 const CUSTOMER_REPORT_SOUKO_SOURCE = 'customer_result_report';
 const CUSTOMER_REPORT_FOLDER_ID = 'customer_report_results';
 const CUSTOMER_REPORT_FOLDER_NAME = '作業完了レポート';
+const DEFAULT_SERVICE_CATALOG_SPLIT_FILES = [
+  '0102.png',
+  '0506.png',
+  '0708.png',
+  '0910.png',
+  '1112.png',
+  '1314.png',
+  '1516.png',
+  '1718.png',
+  '1920.png',
+  '2122.png',
+  '2223.png',
+  '2425.png',
+  '2627.png',
+  '2829.png',
+  '3031.png',
+  '3233.png',
+  '3435.png',
+];
 
 function authHeaders() {
   const token =
@@ -146,6 +165,20 @@ function resolveBasicInfoByHierarchy(storeProfile, yagouSharedProfile, toriShare
   return mergeBasicInfoProfile(byTori, yagouSharedProfile);
 }
 
+function normalizeCustomBasicInfoFields(raw) {
+  const srcList = Array.isArray(raw)
+    ? raw
+    : (raw && typeof raw === 'object'
+      ? Object.entries(raw).map(([label, value]) => ({ label, value }))
+      : []);
+  return srcList
+    .map((it) => ({
+      label: norm(it?.label ?? it?.key ?? it?.name ?? ''),
+      value: norm(it?.value ?? it?.v ?? it?.text ?? ''),
+    }))
+    .filter((it) => it.label || it.value);
+}
+
 function extractBasicInfoProfileFromTenpoRecord(tp, fallbackStore) {
   const tenpo = tp && typeof tp === 'object' ? tp : {};
   const spec = tenpo?.karte_detail?.spec && typeof tenpo.karte_detail.spec === 'object'
@@ -268,6 +301,16 @@ function fmtYmd(dateLike) {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+function catalogPageLabel(fileName) {
+  const stem = norm(fileName).replace(/\.[^.]+$/, '');
+  const m = stem.match(/^(\d{2})(\d{2})$/);
+  if (!m) return stem || 'ページ';
+  const start = Number(m[1]);
+  const end = Number(m[2]);
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return `${m[1]}-${m[2]}ページ`;
+  return `${start}-${end}ページ`;
 }
 
 function coerceObject(raw) {
@@ -763,6 +806,9 @@ export default function CustomerMyPage() {
   const [customerChatLoading, setCustomerChatLoading] = useState(false);
   const [customerChatSending, setCustomerChatSending] = useState(false);
   const [customerChatError, setCustomerChatError] = useState('');
+  const [catalogViewerOpen, setCatalogViewerOpen] = useState(false);
+  const [catalogSelectedName, setCatalogSelectedName] = useState('');
+  const [catalogImageLoading, setCatalogImageLoading] = useState(true);
   const [billingViewerOpen, setBillingViewerOpen] = useState(false);
   const [billingViewerType, setBillingViewerType] = useState('invoice');
   const [billingSelectedKey, setBillingSelectedKey] = useState('');
@@ -1521,6 +1567,15 @@ export default function CustomerMyPage() {
   const basicInfoRows = useMemo(() => {
     if (!effectiveTenpo && !activeStore) return [];
     const myPageUrl = buildCustomerMyPageUrl(effectiveTenpoId);
+    const customRows = normalizeCustomBasicInfoFields(
+      effectiveTenpo?.karte_detail?.spec?.custom_fields
+      ?? []
+    ).map((row, idx) => ({
+      key: `custom_${idx}`,
+      label: row.label || `追加情報${idx + 1}`,
+      value: row.value || '-',
+      readOnly: true,
+    }));
     return [
       { key: 'torihikisaki_name', label: '法人', value: basicInfoForm.torihikisaki_name || '-' },
       { key: 'yagou_name', label: '屋号', value: basicInfoForm.yagou_name || '-' },
@@ -1529,6 +1584,7 @@ export default function CustomerMyPage() {
       { key: 'phone', label: '電話番号', value: basicInfoForm.phone || '-' },
       { key: 'customer_contact_name', label: '担当者', value: basicInfoForm.customer_contact_name || '-' },
       { key: 'business_hours', label: '営業時間', value: basicInfoForm.business_hours || '-' },
+      ...customRows,
       { label: 'お客様マイページURL', value: myPageUrl, href: myPageUrl },
     ];
   }, [effectiveTenpo, activeStore, effectiveTenpoId, basicInfoForm]);
@@ -1621,6 +1677,22 @@ export default function CustomerMyPage() {
     return `${normalizedBase}customer/catalog/misesapo_catalog_0303.pdf`;
   }, []);
 
+  const serviceCatalogPages = useMemo(() => {
+    const envCsv = norm(import.meta.env?.VITE_CUSTOMER_SERVICE_CATALOG_SPLIT_FILES);
+    const fileNames = (envCsv
+      ? envCsv.split(',').map((v) => norm(v)).filter(Boolean)
+      : DEFAULT_SERVICE_CATALOG_SPLIT_FILES
+    ).slice();
+    const base = String(import.meta.env?.BASE_URL || '/');
+    const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+    return fileNames.map((fileName, idx) => ({
+      fileName,
+      label: catalogPageLabel(fileName),
+      order: idx + 1,
+      url: `${normalizedBase}customer/catalog/split/${encodeURIComponent(fileName)}`,
+    }));
+  }, []);
+
   const customerInquiryUrl = useMemo(() => {
     const explicit = norm(import.meta.env?.VITE_CUSTOMER_INQUIRY_URL);
     if (explicit) return explicit;
@@ -1672,6 +1744,47 @@ export default function CustomerMyPage() {
     return selected || activeBillingDocuments[0] || null;
   }, [activeBillingDocuments, billingSelectedKey]);
 
+  const selectedCatalogPage = useMemo(() => {
+    if (!serviceCatalogPages.length) return null;
+    const selected = serviceCatalogPages.find((p) => p.fileName === catalogSelectedName);
+    return selected || serviceCatalogPages[0];
+  }, [serviceCatalogPages, catalogSelectedName]);
+
+  const selectedCatalogIndex = useMemo(() => {
+    if (!selectedCatalogPage) return -1;
+    return serviceCatalogPages.findIndex((p) => p.fileName === selectedCatalogPage.fileName);
+  }, [serviceCatalogPages, selectedCatalogPage]);
+
+  const canMoveCatalogPrev = selectedCatalogIndex > 0;
+  const canMoveCatalogNext = selectedCatalogIndex >= 0 && selectedCatalogIndex < serviceCatalogPages.length - 1;
+
+  const openServiceCatalog = useCallback(() => {
+    if (!serviceCatalogPages.length) {
+      if (serviceCatalogUrl && typeof window !== 'undefined') {
+        window.open(serviceCatalogUrl, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
+    setCatalogSelectedName(serviceCatalogPages[0].fileName);
+    setCatalogImageLoading(true);
+    setCatalogViewerOpen(true);
+  }, [serviceCatalogPages, serviceCatalogUrl]);
+
+  const closeServiceCatalog = useCallback(() => {
+    setCatalogViewerOpen(false);
+    setCatalogImageLoading(true);
+  }, []);
+
+  const moveCatalogPage = useCallback((delta) => {
+    if (!serviceCatalogPages.length) return;
+    const baseIndex = selectedCatalogIndex >= 0 ? selectedCatalogIndex : 0;
+    const nextIndex = Math.max(0, Math.min(serviceCatalogPages.length - 1, baseIndex + Number(delta || 0)));
+    const next = serviceCatalogPages[nextIndex];
+    if (!next || next.fileName === catalogSelectedName) return;
+    setCatalogImageLoading(true);
+    setCatalogSelectedName(next.fileName);
+  }, [serviceCatalogPages, selectedCatalogIndex, catalogSelectedName]);
+
   const openBillingViewer = useCallback((type) => {
     setBillingViewerType(type === 'receipt' ? 'receipt' : 'invoice');
     setBillingSelectedKey('');
@@ -1698,6 +1811,47 @@ export default function CustomerMyPage() {
     setBillingViewerOpen(false);
     setBillingSelectedKey('');
   }, [scopedTenpoId]);
+
+  useEffect(() => {
+    if (!catalogViewerOpen) return;
+    if (!serviceCatalogPages.length) {
+      setCatalogSelectedName('');
+      setCatalogImageLoading(true);
+      return;
+    }
+    if (!serviceCatalogPages.some((p) => p.fileName === catalogSelectedName)) {
+      setCatalogSelectedName(serviceCatalogPages[0].fileName);
+      setCatalogImageLoading(true);
+    }
+  }, [catalogViewerOpen, serviceCatalogPages, catalogSelectedName]);
+
+  useEffect(() => {
+    setCatalogViewerOpen(false);
+    setCatalogSelectedName('');
+    setCatalogImageLoading(true);
+  }, [scopedTenpoId]);
+
+  useEffect(() => {
+    if (!catalogViewerOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeServiceCatalog();
+        return;
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        moveCatalogPage(-1);
+        return;
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        moveCatalogPage(1);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [catalogViewerOpen, closeServiceCatalog, moveCatalogPage]);
 
   useEffect(() => {
     setReportViewerOpen(false);
@@ -1862,14 +2016,13 @@ export default function CustomerMyPage() {
               >
                 作業完了レポート
               </button>
-              <a
+              <button
+                type="button"
                 className="btn btn-secondary customer-quick-btn"
-                href={serviceCatalogUrl}
-                target="_blank"
-                rel="noreferrer"
+                onClick={openServiceCatalog}
               >
                 サービスカタログ
-              </a>
+              </button>
               <button
                 type="button"
                 className="btn btn-secondary customer-quick-btn"
@@ -1982,7 +2135,7 @@ export default function CustomerMyPage() {
                           <div key={row.label} className="customer-basic-row">
                             <dt>{row.label}</dt>
                             <dd>
-                              {basicEditMode && row.key ? (
+                              {basicEditMode && row.key && !row.readOnly ? (
                                 <input
                                   type="text"
                                   value={String(basicInfoForm?.[row.key] || '')}
@@ -2041,15 +2194,20 @@ export default function CustomerMyPage() {
                             ) : customerChatMessages.length === 0 ? (
                               <p className="customer-muted">メッセージはまだありません。</p>
                             ) : (
-                              customerChatMessages.map((m) => (
-                                <article key={m.id} className={`customer-chat-bubble ${m.senderRole === 'customer' ? 'is-customer' : 'is-agent'}`}>
-                                  <div className="customer-chat-bubble-head">
-                                    <span className="sender">{m.senderName || (m.senderRole === 'customer' ? 'お客様' : 'ミセサポ')}</span>
-                                    <span className="at">{fmtDateTimeJst(m.at) || '-'}</span>
+                              customerChatMessages.map((m) => {
+                                const mine = m.senderRole === 'customer';
+                                return (
+                                  <div key={m.id} className={`customer-chat-row ${mine ? 'mine' : 'other'}`}>
+                                    <article className={`customer-chat-bubble ${mine ? 'mine' : 'other'}`}>
+                                      <div className="customer-chat-bubble-name">
+                                        {m.senderName || (mine ? 'お客様' : 'ミセサポ')}
+                                      </div>
+                                      <div className="customer-chat-bubble-text">{m.text}</div>
+                                      <div className="customer-chat-bubble-time">{fmtDateTimeJst(m.at) || '-'}</div>
+                                    </article>
                                   </div>
-                                  <div className="text">{m.text}</div>
-                                </article>
-                              ))
+                                );
+                              })
                             )}
                           </div>
                           {customerChatError ? <p className="customer-muted">{customerChatError}</p> : null}
@@ -2294,6 +2452,104 @@ export default function CustomerMyPage() {
 
         </>
       )}
+      {catalogViewerOpen ? (
+        <div
+          className="customer-billing-modal-backdrop"
+          role="presentation"
+          onClick={closeServiceCatalog}
+        >
+          <section
+            className="customer-billing-modal customer-catalog-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="サービスカタログ"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="customer-billing-modal-head">
+              <div className="customer-billing-modal-title">
+                <h3>サービスカタログ</h3>
+                <span className="count">{serviceCatalogPages.length}</span>
+              </div>
+              <button type="button" className="btn btn-secondary customer-billing-close-btn" onClick={closeServiceCatalog}>
+                閉じる
+              </button>
+            </header>
+
+            <div className="customer-billing-modal-body">
+              <aside className="customer-billing-list-pane" aria-label="カタログページ一覧">
+                {serviceCatalogPages.length === 0 ? (
+                  <p className="customer-muted">表示できるカタログページがありません。</p>
+                ) : (
+                  <div className="customer-billing-list">
+                    {serviceCatalogPages.map((page) => (
+                      <button
+                        key={page.fileName}
+                        type="button"
+                        className={`customer-billing-list-item${selectedCatalogPage?.fileName === page.fileName ? ' is-selected' : ''}`}
+                        onClick={() => {
+                          setCatalogImageLoading(true);
+                          setCatalogSelectedName(page.fileName);
+                        }}
+                      >
+                        <div className="customer-billing-list-top">
+                          <span className="period">{page.label}</span>
+                          <span className="time">{String(page.order).padStart(2, '0')}</span>
+                        </div>
+                        <div className="name" title={page.fileName}>{page.fileName}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </aside>
+
+              <section className="customer-billing-preview-pane customer-catalog-preview-pane" aria-label="カタログプレビュー">
+                {!selectedCatalogPage ? (
+                  <p className="customer-muted">左のリストからページを選択してください。</p>
+                ) : (
+                  <>
+                    <div className="customer-billing-preview-head customer-catalog-preview-head">
+                      <div className="name" title={selectedCatalogPage.fileName}>
+                        {selectedCatalogPage.label}
+                      </div>
+                      <div className="customer-catalog-preview-actions">
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => moveCatalogPage(-1)}
+                          disabled={!canMoveCatalogPrev}
+                        >
+                          ← 前へ
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => moveCatalogPage(1)}
+                          disabled={!canMoveCatalogNext}
+                        >
+                          次へ →
+                        </button>
+                        <a href={selectedCatalogPage.url} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                          新しいタブで開く
+                        </a>
+                      </div>
+                    </div>
+                    <div className="customer-catalog-image-wrap">
+                      <img
+                        key={selectedCatalogPage.fileName}
+                        className={`customer-catalog-image${catalogImageLoading ? ' is-loading' : ''}`}
+                        src={selectedCatalogPage.url}
+                        alt={selectedCatalogPage.label}
+                        onLoad={() => setCatalogImageLoading(false)}
+                        onError={() => setCatalogImageLoading(false)}
+                      />
+                    </div>
+                  </>
+                )}
+              </section>
+            </div>
+          </section>
+        </div>
+      ) : null}
       {reportViewerOpen ? (
         <div
           className="customer-billing-modal-backdrop"

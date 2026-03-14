@@ -5,10 +5,16 @@
 }
 
 .tenpo-karte-page {
+  --tenpo-side-control-safe: 72px;
   min-height: 100vh;
   color: #e9eef8;
   background: var(--tenpo-bg);
   overflow-x: hidden;
+}
+
+.tenpo-content-safe {
+  padding-left: var(--tenpo-side-control-safe);
+  padding-right: var(--tenpo-side-control-safe);
 }
 
 .tenpo-karte-head {
@@ -185,29 +191,85 @@
   font-size: 11px;
 }
 
+.tenpo-summary-top-row {
+  margin: 10px 0 0;
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(0, 2fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.tenpo-summary-top-row .monshin-overview {
+  margin: 0;
+  height: 100%;
+}
+
+.tenpo-summary-top-row .tenpo-summary-shell {
+  margin-top: 0;
+}
+
+.tenpo-summary-shell {
+  --tenpo-summary-nav-clearance: 72px;
+  --tenpo-summary-nav-inset: 24px;
+  position: relative;
+  margin-top: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .tenpo-summary-pane-control {
-  margin: 8px 20px 0;
+  margin: 0;
   padding: 8px 12px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.06);
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
-  align-items: stretch;
-  gap: 10px;
+  display: block;
 }
 
-.tenpo-summary-pane-control .pane-arrow {
+.tenpo-summary-side-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.08);
   color: rgba(233, 238, 248, 0.95);
-  border-radius: 10px;
-  min-height: 40px;
-  align-self: center;
+  border-radius: 14px;
+  width: 42px;
+  height: 56px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 800;
   line-height: 1;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.tenpo-summary-side-nav:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.tenpo-summary-side-nav-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: rgba(233, 238, 248, 0.82);
+  pointer-events: none;
+}
+
+.tenpo-summary-side-nav-left {
+  left: max(var(--tenpo-summary-nav-inset), env(safe-area-inset-left));
+}
+
+.tenpo-summary-side-nav-right {
+  right: max(var(--tenpo-summary-nav-inset), env(safe-area-inset-right));
 }
 
 .tenpo-summary-pane-control .pane-center-stack {
@@ -216,15 +278,11 @@
 }
 
 .tenpo-summary-pane-buttons {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  justify-content: stretch;
   gap: 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  padding-bottom: 2px;
 }
 
 .tenpo-summary-pane-buttons .pane-btn,
@@ -239,18 +297,25 @@
   font-size: 11px;
   font-weight: 700;
   line-height: 1.2;
-  display: inline-flex;
-  flex: 0 0 auto;
+  display: flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   text-decoration: none;
   cursor: pointer;
   text-align: center;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 }
 
 .tenpo-summary-pane-buttons .pane-btn.is-active {
   border-color: rgba(162, 211, 255, 0.45);
   background: rgba(162, 211, 255, 0.2);
+}
+
+.tenpo-summary-pane-buttons .pane-btn:hover:not(:disabled):not(.is-active),
+.tenpo-summary-pane-buttons .pane-link:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .tenpo-summary-pane-buttons .pane-btn:disabled {
@@ -338,60 +403,6 @@
 
 .card-large {
   padding: 16px;
-}
-
-.haccp-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.haccp-group {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.haccp-group-title {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  color: rgba(233, 238, 248, 0.8);
-  margin-bottom: 10px;
-}
-
-.haccp-items {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-.haccp-item {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.haccp-item-label .label {
-  font-size: 14px;
-  color: rgba(233, 238, 248, 0.92);
-}
-
-.haccp-item-label .code {
-  margin-top: 6px;
-  color: rgba(233, 238, 248, 0.55);
-  font-size: 12px;
-}
-
-.haccp-item-controls {
-  display: inline-flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .radio {
@@ -640,6 +651,11 @@
   min-width: 0;
 }
 
+.tenpo-content-safe.is-summary .tenpo-karte-grid {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .tenpo-karte-grid.tenpo-karte-grid-summary > .summary-pane-section {
   grid-column: 1 / -1;
 }
@@ -670,6 +686,14 @@
   min-height: calc(100vh - 310px);
   display: flex;
   flex-direction: column;
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .customer-portal-chat-card {
+  order: 1;
+}
+
+.tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .support-history-card {
+  order: 2;
 }
 
 .tenpo-karte-grid.tenpo-karte-grid-summary.pane-center > .customer-portal-chat-card .support-chat {
@@ -804,8 +828,9 @@
 
 .support-chat {
   margin-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
   display: grid;
   gap: 8px;
 }
@@ -815,41 +840,144 @@
   overflow: auto;
   display: grid;
   gap: 8px;
-  padding-right: 4px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.customer-portal-chat-card .support-chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.customer-portal-chat-card .support-chat-row {
+  display: flex;
+  width: 100%;
+}
+
+.customer-portal-chat-card .support-chat-row.mine {
+  justify-content: flex-end;
+}
+
+.customer-portal-chat-card .support-chat-row.other {
+  justify-content: flex-start;
+}
+
+.customer-portal-chat-card .support-chat-bubble {
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: fit-content;
+  max-width: min(76%, 540px);
+  min-width: 0;
+  box-sizing: border-box;
+  line-height: 1.35;
+}
+
+.customer-portal-chat-card .support-chat-bubble.mine {
+  background: #ffbdbd;
+  border-color: transparent;
+}
+
+.customer-portal-chat-card .support-chat-bubble.other {
+  background: #badfdb;
+  border-color: transparent;
+}
+
+.customer-portal-chat-card .support-chat-bubble-name {
+  display: none;
+}
+
+.customer-portal-chat-card .support-chat-bubble-text {
+  display: block;
+  white-space: pre-wrap;
+  font-size: 0.83rem;
+  color: #1b1b1f;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.customer-portal-chat-card .support-chat-bubble.mine .support-chat-bubble-text {
+  color: #493628;
+}
+
+.customer-portal-chat-card .support-chat-bubble.other .support-chat-bubble-text {
+  color: #2a4650;
+}
+
+.customer-portal-chat-card .support-chat-bubble-time {
+  display: block;
+  font-size: 0.66rem;
+  opacity: 0.75;
+  margin-top: 1px;
+  text-align: right;
 }
 
 .support-chat-item {
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
+  border-radius: 16px;
   background: rgba(255,255,255,0.04);
-  padding: 8px 10px;
+  padding: 6px 9px;
   display: grid;
-  gap: 4px;
+  gap: 3px;
+  width: fit-content;
+  max-width: 72%;
+  min-width: 0;
+}
+
+.customer-portal-chat-card .support-chat-item {
+  display: block;
+  padding: 6px 10px;
+  border-radius: 16px;
+  max-width: 76%;
 }
 
 .support-chat-item.is-customer {
-  border-color: rgba(250, 204, 21, 0.35);
-  background: rgba(250, 204, 21, 0.08);
+  justify-self: start;
+  border-color: transparent;
+  background: #e9eaee;
 }
 
 .support-chat-item.is-admin {
-  border-color: rgba(56, 189, 248, 0.35);
-  background: rgba(56, 189, 248, 0.08);
+  justify-self: end;
+  border-color: transparent;
+  background: #98de67;
 }
 
 .support-chat-item .meta {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
-  font-size: 11px;
+  font-size: 10px;
   color: rgba(233, 238, 248, 0.7);
 }
 
+.customer-portal-chat-card .support-chat-item .meta {
+  display: none;
+}
+
 .support-chat-item .msg {
-  font-size: 13px;
+  font-size: 12.5px;
+  line-height: 1.45;
   color: rgba(233, 238, 248, 0.95);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.customer-portal-chat-card .support-chat-item .msg {
+  display: block;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: #1b1b1f;
+  word-break: break-word;
+}
+
+.customer-portal-chat-card .support-chat-item.is-admin .msg {
+  color: #17320e;
 }
 
 .support-chat-compose {
@@ -871,6 +999,78 @@
 
 .support-chat-compose button {
   justify-self: end;
+}
+
+.ai-fact-panel {
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+  margin-top: 4px;
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.ai-fact-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-fact-panel-head .left {
+  display: grid;
+  gap: 2px;
+}
+
+.ai-fact-list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.ai-fact-row {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.ai-fact-main {
+  display: grid;
+  gap: 4px;
+}
+
+.ai-fact-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-fact-value {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(233, 238, 248, 0.95);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ai-fact-meta {
+  font-size: 11px;
+  color: rgba(233, 238, 248, 0.68);
+}
+
+.ai-fact-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ai-fact-status {
+  color: rgba(233, 238, 248, 0.82);
 }
 
 .support-thread-row {
@@ -1060,27 +1260,79 @@
 }
 
 @media (max-width: 900px) {
+  .tenpo-karte-page {
+    --tenpo-side-control-safe: 54px;
+  }
+
+  .tenpo-content-safe {
+    padding-left: var(--tenpo-side-control-safe);
+    padding-right: var(--tenpo-side-control-safe);
+  }
+
+  .tenpo-summary-top-row {
+    margin: 10px 0 0;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .tenpo-summary-top-row .monshin-overview {
+    margin: 0;
+  }
+
   .monshin-overview {
     margin: 10px 12px 0;
     padding: 10px;
   }
 
   .tenpo-summary-pane-control {
-    margin: 8px 12px 0;
+    margin: 0;
     padding: 7px 10px;
+  }
+
+  .tenpo-summary-pane-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tenpo-summary-shell {
+    --tenpo-summary-nav-clearance: 58px;
+    --tenpo-summary-nav-inset: 14px;
+    margin-top: 0;
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 
 @media (max-width: 640px) {
-  .tenpo-summary-pane-control {
-    margin: 8px 12px 0;
-    grid-template-columns: 36px minmax(0, 1fr) 36px;
-    gap: 8px;
+  .tenpo-karte-page {
+    --tenpo-side-control-safe: 40px;
   }
 
-  .tenpo-summary-pane-control .pane-arrow {
-    min-height: 36px;
+  .tenpo-content-safe {
+    padding-left: var(--tenpo-side-control-safe);
+    padding-right: var(--tenpo-side-control-safe);
+  }
+
+  .tenpo-summary-shell {
+    --tenpo-summary-nav-clearance: 46px;
+    --tenpo-summary-nav-inset: 8px;
+    margin-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .tenpo-summary-pane-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tenpo-summary-side-nav {
+    width: 34px;
+    height: 46px;
     font-size: 16px;
+    border-radius: 12px;
+  }
+
+  .tenpo-summary-side-nav-hint {
+    display: none;
   }
 }
 
@@ -1354,6 +1606,70 @@
   padding: 8px 10px;
 }
 
+.basic-custom-fields-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.basic-custom-fields-list {
+  display: grid;
+  gap: 8px;
+}
+
+.basic-custom-fields-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.9fr) minmax(0, 1.4fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.basic-custom-fields-row button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(233, 238, 248, 0.95);
+  border-radius: 10px;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.basic-custom-fields-view {
+  display: grid;
+  gap: 6px;
+}
+
+.basic-custom-fields-chip {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 6px 8px;
+}
+
+.basic-custom-fields-chip .label {
+  font-size: 12px;
+  color: rgba(233, 238, 248, 0.72);
+}
+
+.basic-custom-fields-chip .value {
+  font-size: 13px;
+  color: rgba(233, 238, 248, 0.95);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .basic-custom-fields-row {
+    grid-template-columns: 1fr;
+  }
+
+  .basic-custom-fields-row button {
+    justify-self: start;
+  }
+}
+
 .karte-accordion {
   margin-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
@@ -1576,17 +1892,9 @@
     grid-template-columns: 1fr;
   }
 
-  /* HACCP groups: horizontal layout on desktop */
-  .haccp-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (min-width: 1280px) {
-  .haccp-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .karte-detail-layout .check-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1661,10 +1969,14 @@
   background: var(--tp-card);
 }
 
-[data-theme="light"] .tenpo-summary-pane-control .pane-arrow {
+[data-theme="light"] .tenpo-summary-side-nav {
   border-color: var(--tp-sub);
   background: #fff7f7;
   color: var(--tp-text);
+}
+
+[data-theme="light"] .tenpo-summary-side-nav-hint {
+  color: var(--tp-muted);
 }
 
 [data-theme="light"] .tenpo-summary-pane-buttons .pane-btn,
@@ -1680,11 +1992,17 @@
   color: var(--tp-head);
 }
 
+[data-theme="light"] .tenpo-summary-pane-buttons .pane-btn:hover:not(:disabled):not(.is-active),
+[data-theme="light"] .tenpo-summary-pane-buttons .pane-link:hover {
+  border-color: var(--tp-main);
+  background: #ffe9e9;
+  color: var(--tp-head);
+}
+
 [data-theme="light"] .tenpo-karte-head .titles .kicker,
 [data-theme="light"] .tenpo-karte-head .pathline,
 [data-theme="light"] .tenpo-karte-head .pathline .seg,
 [data-theme="light"] .card-accordion > summary .sum-hint,
-[data-theme="light"] .haccp-group-title,
 [data-theme="light"] .service-plan-title .s,
 [data-theme="light"] .service-cycle-label,
 [data-theme="light"] .muted.small,
@@ -1702,7 +2020,6 @@
 [data-theme="light"] .tenpo-karte-head .link,
 [data-theme="light"] .card-title,
 [data-theme="light"] .card-title-row .card-title,
-[data-theme="light"] .haccp-item-label .label,
 [data-theme="light"] .service-plan-title,
 [data-theme="light"] .kv .k,
 [data-theme="light"] .kv .v .v-main,
@@ -1715,8 +2032,6 @@
 }
 
 [data-theme="light"] .tenpo-karte-head code,
-[data-theme="light"] .haccp-group,
-[data-theme="light"] .haccp-item,
 [data-theme="light"] .service-plan-row,
 [data-theme="light"] .service-search-item,
 [data-theme="light"] .service-search-selected,
@@ -1749,6 +2064,17 @@
   background: rgba(186, 223, 219, 0.4);
 }
 
+/* Keep customer portal chat in LINE-like gray/green even in light theme */
+[data-theme="light"] .customer-portal-chat-card .support-chat-item.is-customer {
+  border-color: transparent;
+  background: #e9eaee;
+}
+
+[data-theme="light"] .customer-portal-chat-card .support-chat-item.is-admin {
+  border-color: transparent;
+  background: #98de67;
+}
+
 [data-theme="light"] .month-chip.active,
 [data-theme="light"] .seg-tabs .seg.active,
 [data-theme="light"] .radio.active {
@@ -1775,6 +2101,7 @@
 [data-theme="light"] .tenpo-karte-page select,
 [data-theme="light"] .tenpo-karte-page textarea,
 [data-theme="light"] .support-chat-compose textarea,
+[data-theme="light"] .support-chat-list,
 [data-theme="light"] .file-actions button,
 [data-theme="light"] .souko-file-actions button {
   border-color: var(--tp-sub);
@@ -1790,8 +2117,23 @@
 
 [data-theme="light"] .form-grid .f .lbl,
 [data-theme="light"] .kv .v .v-sub,
-[data-theme="light"] .karte-accordion > summary .hint {
+[data-theme="light"] .karte-accordion > summary .hint,
+[data-theme="light"] .ai-fact-meta,
+[data-theme="light"] .ai-fact-status {
   color: var(--tp-muted);
+}
+
+[data-theme="light"] .ai-fact-panel {
+  border-top-color: var(--tp-sub);
+}
+
+[data-theme="light"] .ai-fact-row {
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+}
+
+[data-theme="light"] .ai-fact-value {
+  color: var(--tp-text);
 }
 
 [data-theme="light"] .tenpo-karte-err {
@@ -1814,8 +2156,7 @@
 [data-theme="light"] .tenpo-karte-page .lbl,
 [data-theme="light"] .tenpo-karte-page label,
 [data-theme="light"] .tenpo-karte-page .kv .k,
-[data-theme="light"] .tenpo-karte-page .file-key,
-[data-theme="light"] .tenpo-karte-page .haccp-item-label .code {
+[data-theme="light"] .tenpo-karte-page .file-key {
   color: #5f4f4f;
 }
 
@@ -1846,4 +2187,23 @@
 [data-theme="light"] .tenpo-karte-grid:not(.tenpo-karte-grid-detail) > .basic-info-card .accordion-body > .kv {
   border-color: var(--tp-sub);
   background: rgba(255, 255, 255, 0.94);
+}
+
+[data-theme="light"] .basic-custom-fields-row button {
+  border-color: var(--tp-sub);
+  background: var(--tp-card);
+  color: var(--tp-text);
+}
+
+[data-theme="light"] .basic-custom-fields-chip {
+  border-color: var(--tp-sub);
+  background: #fff;
+}
+
+[data-theme="light"] .basic-custom-fields-chip .label {
+  color: var(--tp-muted);
+}
+
+[data-theme="light"] .basic-custom-fields-chip .value {
+  color: var(--tp-text);
 }
