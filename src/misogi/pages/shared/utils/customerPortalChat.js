@@ -101,12 +101,16 @@ export async function postCustomerPortalChat({
   senderName = '',
   senderId = '',
   message = '',
+  dataPayloadExtra = null,
 }) {
   const base = String(masterApiBase || '').replace(/\/$/, '');
   const text = norm(message);
   if (!text) throw new Error('message is required');
   const sentAt = new Date().toISOString();
   const titleBase = text.length > 24 ? `${text.slice(0, 24)}…` : text;
+  const extraPayload = (dataPayloadExtra && typeof dataPayloadExtra === 'object')
+    ? dataPayloadExtra
+    : {};
   const payload = {
     room: CUSTOMER_PORTAL_CHAT_ROOM,
     name: titleBase,
@@ -127,6 +131,7 @@ export async function postCustomerPortalChat({
       store_label: [norm(yagouName), norm(tenpoName)].filter(Boolean).join(' / '),
       sent_at: sentAt,
       message: text,
+      ...extraPayload,
     },
   };
   const headers = {

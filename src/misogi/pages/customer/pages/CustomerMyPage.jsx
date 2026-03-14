@@ -7,6 +7,7 @@ import {
   fetchCustomerPortalChats,
   postCustomerPortalChat,
 } from '../../shared/utils/customerPortalChat';
+import { buildCustomerPortalAiReply } from '../../shared/utils/customerPortalAi';
 import './customer-mypage.css';
 
 const DETAIL_PANES = ['left', 'center', 'right'];
@@ -1669,6 +1670,10 @@ export default function CustomerMyPage() {
     return '屋号未設定 / 店舗名未設定';
   }, [basicInfoForm.yagou_name, basicInfoForm.name, effectiveTenpo, activeStore]);
 
+  const headerTitle = useMemo(() => (
+    scopedTenpoId ? detailHeadline : 'お客様マイページ'
+  ), [scopedTenpoId, detailHeadline]);
+
   const serviceCatalogUrl = useMemo(() => {
     const explicit = norm(import.meta.env?.VITE_CUSTOMER_SERVICE_CATALOG_URL);
     if (explicit) return explicit;
@@ -1906,6 +1911,7 @@ export default function CustomerMyPage() {
       detailTenpo?.yagou_name,
       activeStore?.yagou
     );
+    const storeLabel = [yagouName, tenpoName].filter(Boolean).join(' / ');
     setCustomerChatSending(true);
     try {
       await postCustomerPortalChat({
@@ -1919,6 +1925,50 @@ export default function CustomerMyPage() {
         senderId: actorId,
         message: text,
       });
+      const aiResult = await buildCustomerPortalAiReply({
+        userMessage: text,
+        storeLabel,
+        recentMessages: [
+          ...safeArr(customerChatMessages),
+          {
+            senderRole: 'customer',
+            text,
+            at: new Date().toISOString(),
+          },
+        ],
+      });
+      const aiReply = norm(aiResult?.reply);
+      if (aiReply) {
+        const aiRestricted = Boolean(aiResult?.blocked);
+        await postCustomerPortalChat({
+          masterApiBase,
+          authHeaders,
+          tenpoId,
+          tenpoName,
+          yagouName,
+          senderRole: 'admin',
+          senderName: 'ミセサポAI',
+          senderId: 'misogi-customer-ai',
+          message: aiReply,
+          dataPayloadExtra: aiRestricted
+            ? {
+                event_type: 'customer_ai_escalation',
+                priority: 'high',
+                ai_guard: {
+                  restricted: true,
+                  reason_count: Array.isArray(aiResult?.reasons) ? aiResult.reasons.length : 0,
+                },
+                origin_sender_name: actorName,
+              }
+            : {
+                event_type: 'customer_ai_reply',
+                priority: 'normal',
+                ai_guard: {
+                  restricted: false,
+                },
+              },
+        });
+      }
       setCustomerChatDraft('');
       setCustomerChatError('');
       await loadCustomerChat({ silent: true });
@@ -1935,6 +1985,7 @@ export default function CustomerMyPage() {
     detailYagou,
     effectiveTenpo,
     activeStore,
+    customerChatMessages,
     masterApiBase,
     loadCustomerChat,
   ]);
@@ -1943,7 +1994,7 @@ export default function CustomerMyPage() {
     <div className="customer-mypage customer-mypage--pop">
       <header className="customer-mypage-hero">
         <p className="customer-mypage-kicker">MISESAPO CUSTOMER PORTAL</p>
-        <h1>お客様マイページ</h1>
+        <h1>{headerTitle}</h1>
         <p className="customer-mypage-sub">
           {scopedTenpoId
             ? '基本情報 / 対応履歴 / ストレージを確認できます'

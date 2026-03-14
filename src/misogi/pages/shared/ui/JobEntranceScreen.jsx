@@ -1447,16 +1447,24 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             || [payload?.yagou_name, payload?.tenpo_name].filter(Boolean).join(' / ')
             || ''
           ).trim();
+          const isAiEscalation = Boolean(
+            payload?.event_type === 'customer_ai_escalation'
+            || payload?.priority === 'high'
+            || payload?.ai_guard?.restricted
+          );
           const message = String(row?.message || row?.name || '').trim();
           const messagePreview = message ? `「${message.length > 24 ? `${message.slice(0, 24)}…` : message}」` : '';
           const storeSuffix = storeLabel ? `（${storeLabel}）` : '';
+          const what = isAiEscalation
+            ? `【要対応】${pickDisplayName(payload?.origin_sender_name, who)}から契約/金額/判断系の問い合わせを受信しました${storeSuffix}${messagePreview} >>> ${ymdHmLabel(whenMs)}`
+            : `${who}がお客様チャットを送信しました${storeSuffix}${messagePreview} >>> ${ymdHmLabel(whenMs)}`;
           return {
             id: String(row?.chat_id || row?.id || `${who}-${whenMs}-${Math.random()}`),
             atMs: whenMs,
             atLabel: hhmmLabel(whenMs),
             who,
-            what: `${who}がお客様チャットを送信しました${storeSuffix}${messagePreview} >>> ${ymdHmLabel(whenMs)}`,
-            kind: 'customer-chat',
+            what,
+            kind: isAiEscalation ? 'customer-chat-priority' : 'customer-chat',
           };
         })
         .filter(Boolean)
