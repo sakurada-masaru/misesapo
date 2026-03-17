@@ -7,8 +7,13 @@ import './cleaning-worker-chrome.css';
 const NAV_HOTBAR_ACTIONS = [
   { id: 'report', label: '報告', to: '/jobs/cleaning/houkoku', icon: 'report' },
   { id: 'plan', label: '予定', to: '/jobs/cleaning/yotei', icon: 'plan' },
-  { id: 'tools', label: 'ツール', to: '/jobs/cleaning/availability-declare', icon: 'tools' },
+  { id: 'tools', label: 'ツール', to: '/jobs/cleaning/mypage', icon: 'tools' },
   { id: 'settings', label: '設定', to: '/jobs/cleaning/entrance', icon: 'settings' },
+];
+
+const TOOLS_SUB_ACTIONS = [
+  { id: 'sales', label: '売上表', to: '/jobs/cleaning/mypage' },
+  { id: 'manual', label: 'マニュアル', to: '/jobs/cleaning/manual' },
 ];
 
 const YOTEI_DETAIL_HOTBAR_ACTIONS = [
@@ -21,13 +26,23 @@ const YOTEI_DETAIL_HOTBAR_ACTIONS = [
 const BRIEFING_UNLOCK_STORAGE_KEY = 'misogi-v2-cleaning-briefing-unlocked';
 const BRIEFING_DECLARATION_ACCEPTED_STORAGE_KEY = 'misogi-v2-cleaning-briefing-declaration-accepted';
 
-function activeByPath(pathname) {
+function activeByPath(pathname, search = '') {
   const p = String(pathname || '/');
   if (/^\/jobs\/cleaning\/(?:houkoku|report)(?:\/|$)/.test(p)) return 'report';
-  if (/^\/jobs\/cleaning\/(?:yotei|schedule|clients)(?:\/|$)/.test(p)) return 'plan';
-  if (/^\/jobs\/cleaning\/(?:availability-declare|manual)(?:\/|$)/.test(p)) return 'tools';
-  if (/^\/jobs\/cleaning\/mypage(?:\/|$)/.test(p)) return 'settings';
+  if (/^\/jobs\/cleaning\/(?:yotei|schedule|clients)(?:\/|$)/.test(p)) {
+    const sp = new URLSearchParams(String(search || ''));
+    if (String(sp.get('entry') || '').toLowerCase() === 'report') return 'report';
+    return 'plan';
+  }
+  if (/^\/jobs\/cleaning\/(?:availability-declare|manual|mypage)(?:\/|$)/.test(p)) return 'tools';
   if (/^\/jobs\/cleaning\/entrance(?:\/|$)/.test(p)) return 'settings';
+  return '';
+}
+
+function activeToolsSubByPath(pathname) {
+  const p = String(pathname || '/');
+  if (/^\/jobs\/cleaning\/manual(?:\/|$)/.test(p)) return 'manual';
+  if (/^\/jobs\/cleaning\/mypage(?:\/|$)/.test(p)) return 'sales';
   return '';
 }
 
@@ -65,7 +80,7 @@ function isDeclarationAccepted(yoteiId) {
   }
 }
 
-export default function CleaningWorkerChrome({ showNavHotbar = false }) {
+export default function CleaningWorkerChrome({ showNavHotbar = false, topbarRight = null }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
@@ -94,9 +109,11 @@ export default function CleaningWorkerChrome({ showNavHotbar = false }) {
       if (briefingChecked) return 'detail';
       return '';
     }
-    return activeByPath(pathname);
-  }, [isYoteiSingleView, pathname, query, declarationAccepted, briefingChecked]);
+    return activeByPath(pathname, search);
+  }, [isYoteiSingleView, pathname, search, query, declarationAccepted, briefingChecked]);
   const showSingleBriefingHint = isYoteiSingleView && declarationAccepted && !briefingChecked && active !== 'detail';
+  const toolsSubActive = useMemo(() => activeToolsSubByPath(pathname), [pathname]);
+  const showToolsSubbar = showNavHotbar && !isYoteiSingleView && active === 'tools';
   const hotbarActions = useMemo(() => {
     if (!isYoteiSingleView) return NAV_HOTBAR_ACTIONS;
     if (!declarationAccepted) {
@@ -132,18 +149,37 @@ export default function CleaningWorkerChrome({ showNavHotbar = false }) {
         >
           ← エントランス
         </button>
-        <button
-          type="button"
-          className="cleaning-worker-topbar-btn"
-          onClick={onAuth}
-          aria-label={isAuthenticated ? 'ログアウト' : 'ログイン'}
-          title={isAuthenticated ? 'ログアウト' : 'ログイン'}
-        >
-          {isAuthenticated ? 'ログアウト' : 'ログイン'}
-        </button>
+        <div className="cleaning-worker-topbar-right">
+          {topbarRight}
+          <button
+            type="button"
+            className="cleaning-worker-topbar-btn"
+            onClick={onAuth}
+            aria-label={isAuthenticated ? 'ログアウト' : 'ログイン'}
+            title={isAuthenticated ? 'ログアウト' : 'ログイン'}
+          >
+            {isAuthenticated ? 'ログアウト' : 'ログイン'}
+          </button>
+        </div>
       </nav>
       {showNavHotbar ? (
         <div className="cleaning-worker-nav-hotbar">
+          {showToolsSubbar ? (
+            <div className="cleaning-worker-tools-subbar" role="tablist" aria-label="ツール切替">
+              {TOOLS_SUB_ACTIONS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={toolsSubActive === item.id}
+                  className={`cleaning-worker-tools-subbtn${toolsSubActive === item.id ? ' is-active' : ''}`}
+                  onClick={() => navigate(item.to)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
           {showSingleBriefingHint ? (
             <div className="cleaning-worker-hotbar-hint" role="status" aria-live="polite">
               <span className="hint-arrow" aria-hidden="true">↓</span>

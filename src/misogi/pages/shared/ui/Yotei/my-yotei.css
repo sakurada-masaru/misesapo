@@ -193,6 +193,12 @@
   text-align: center;
 }
 
+.my-yotei-empty-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
 .my-yotei-list {
   margin-top: 16px;
   display: flex;

@@ -63,6 +63,7 @@ const DASHBOARD_PANEL_MIN_WIDTH = 700;
 const DASHBOARD_PANE_TOGGLE_EVENT = 'misogi-dashboard-pane-toggle';
 const ADMIN_UPDATES_LOOKBACK_HOURS = 48;
 const CLEANING_NOTICE_RUNNING_STORAGE_KEY = 'misogi-v2-cleaning-notice-running';
+const CLEANING_MANUAL_LANG_STORAGE_KEY = 'cleaning-manual-language';
 const CLEANING_NOTICE_SWIPE_MAX = 44;
 const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
 const ADMIN_DIRECT_SIDEBAR_SECTION_IDS = new Set(['dashboard', 'filebox']);
@@ -779,6 +780,20 @@ function buildAdminTenpoPathFromPayload(payload) {
   return `/admin/tenpo/${encodeURIComponent(tenpoId)}${qs ? `?${qs}` : ''}`;
 }
 
+function normalizeCleaningManualLang(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  return raw === 'en' ? 'en' : 'jp';
+}
+
+function readCleaningManualLang() {
+  if (typeof window === 'undefined') return 'jp';
+  try {
+    return normalizeCleaningManualLang(window.localStorage.getItem(CLEANING_MANUAL_LANG_STORAGE_KEY));
+  } catch {
+    return 'jp';
+  }
+}
+
 export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowGuideButton = true }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -846,6 +861,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const [cleaningNoticeNowMs, setCleaningNoticeNowMs] = useState(() => Date.now());
   const [cleaningStartConfirm, setCleaningStartConfirm] = useState(null);
   const [cleaningStartConfirmSaving, setCleaningStartConfirmSaving] = useState(false);
+  const [cleaningManualLang, setCleaningManualLang] = useState(() => readCleaningManualLang());
   const fileboxInputRef = useRef(null);
   const fileboxLayoutRef = useRef(null);
   const fileboxShellRef = useRef(null);
@@ -861,6 +877,16 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     explorerWidth: DASHBOARD_EXPLORER_WIDTH_DEFAULT,
     chatWidth: DASHBOARD_CHAT_WIDTH_DEFAULT,
   });
+
+  const onChangeCleaningManualLang = useCallback((next) => {
+    const normalized = normalizeCleaningManualLang(next);
+    setCleaningManualLang(normalized);
+    try {
+      localStorage.setItem(CLEANING_MANUAL_LANG_STORAGE_KEY, normalized);
+    } catch {
+      // noop
+    }
+  }, []);
 
   const onHotbar = (id) => {
     const action = actions?.find((a) => a.id === id);
@@ -2808,6 +2834,27 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                 <span className="job-entrance-settings-label">{t('言語')}</span>
                 <LanguageSwitcher />
               </div>
+              {jobKey === 'cleaning' ? (
+                <div className="job-entrance-settings-row">
+                  <span className="job-entrance-settings-label">{t('マニュアル言語')}</span>
+                  <div className="job-entrance-manual-lang" role="group" aria-label={t('マニュアル言語切替')}>
+                    <button
+                      type="button"
+                      className={cleaningManualLang === 'jp' ? 'active' : ''}
+                      onClick={() => onChangeCleaningManualLang('jp')}
+                    >
+                      日本語
+                    </button>
+                    <button
+                      type="button"
+                      className={cleaningManualLang === 'en' ? 'active' : ''}
+                      onClick={() => onChangeCleaningManualLang('en')}
+                    >
+                      EN
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               <div className="job-entrance-settings-row">
                 <span className="job-entrance-settings-label">{t('表示')}</span>
                 <ThemeToggle />

@@ -10,17 +10,33 @@
   gap: 12px;
 }
 
-.cleaner-my-sales-header {
+.cleaner-my-sales-head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.cleaner-my-sales-header h1 {
+.cleaner-my-sales-head-title {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cleaner-my-sales-kicker {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  color: #705a4d;
+}
+
+.cleaner-my-sales-head h1 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  color: #3b3b1a;
+}
+
+.cleaner-my-sales-head-tools {
+  flex: 0 0 auto;
 }
 
 .cleaner-my-sales-controls {
@@ -120,6 +136,21 @@
 }
 
 @media (max-width: 740px) {
+  .cleaner-my-sales-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cleaner-my-sales-head-tools {
+    width: 100%;
+  }
+
+  .cleaner-my-sales-controls {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
   .cleaner-my-sales-summary {
     grid-template-columns: 1fr;
   }

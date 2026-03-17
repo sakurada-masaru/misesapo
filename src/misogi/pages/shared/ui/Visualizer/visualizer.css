@@ -7,6 +7,7 @@
 .visualizer-container {
   --visualizer-ripple-duration: 5s;
   --visualizer-ripple-duration-active: 1.5s;
+  --visualizer-ripple-max: 600px;
 }
 
 @keyframes core-liquid-breathe {
@@ -49,7 +50,7 @@
 
 @keyframes ripple-out {
   0% { width: 100px; height: 100px; opacity: 0.6; }
-  100% { width: 600px; height: 600px; opacity: 0; border-width: 0.5px; }
+  100% { width: var(--visualizer-ripple-max); height: var(--visualizer-ripple-max); opacity: 0; border-width: 0.5px; }
 }
 
 .visualizer-container {
@@ -363,12 +364,14 @@
   .visualizer-container {
     width: min(260px, 100%);
     height: min(260px, 100vw);
-    overflow: hidden;
-    contain: layout paint;
-    isolation: isolate;
+    /* 波紋は画面内に広げるためコンテナ境界でクリップしない */
+    overflow: visible;
+    contain: none;
+    isolation: auto;
+    --visualizer-ripple-max: min(92vw, 600px);
   }
 
   .visualizer-viz-wrap {
-    overflow: hidden;
+    overflow: visible;
   }
 }

@@ -50,6 +50,12 @@ TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-re
 if not TABLE_NAME:
     raise ValueError("UNIVERSAL_WORK_LOGS_TABLE environment variable is required")
 table = dynamodb.Table(TABLE_NAME)
+# 報告系の保存先は manual バケットと分離する（manual 側にはフォールバックしない）
+WORK_REPORTS_BUCKET = (
+    os.environ.get('WORK_REPORTS_BUCKET')
+    or os.environ.get('HOUKOKU_BUCKET')
+    or 'misesapo-work-reports'
+)
 logger.info("[INIT] DynamoDB table=%s, region=%s", TABLE_NAME, DYNAMODB_REGION)
 print(f"[INIT] DynamoDB table={TABLE_NAME}, region={DYNAMODB_REGION}")
 
@@ -1531,8 +1537,8 @@ def _handle_admin_work_reports_export_pdf(report_id, headers, user_info, is_hr_a
         
         # S3 key を生成
         s3_key = f"work-reports/{report_id}/export_{_get_jst_now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        # 業務報告専用バケット（WORK_REPORTS_BUCKET）があれば優先
-        s3_bucket = os.environ.get('WORK_REPORTS_BUCKET') or os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
+        # 業務報告専用バケット（manual 側へはフォールバックしない）
+        s3_bucket = WORK_REPORTS_BUCKET
         s3_region = os.environ.get('S3_REGION', 'ap-northeast-1')
         s3_client = boto3.client('s3', region_name=s3_region)
         
@@ -1595,7 +1601,7 @@ def _handle_admin_work_reports_bulk_export_pdf(event, headers, user_info, is_hr_
         ng = []
         pdf_urls = {}
         
-        s3_bucket = os.environ.get('WORK_REPORTS_BUCKET') or os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
+        s3_bucket = WORK_REPORTS_BUCKET
         s3_region = os.environ.get('S3_REGION', 'ap-northeast-1')
         s3_client = boto3.client('s3', region_name=s3_region)
         

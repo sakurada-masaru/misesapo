@@ -648,6 +648,7 @@ export default function MyYoteiListPage() {
   const job = (jobKey && JOBS[jobKey]) ? JOBS[jobKey] : null;
   const isDemo = isDemoMode(searchParams);
   const isSingleView = safeStr(searchParams.get('view')).toLowerCase() === 'single';
+  const isReportEntry = safeStr(searchParams.get('entry')).toLowerCase() === 'report';
   const focusYoteiId = safeStr(searchParams.get('yotei_id'));
   const focusDateParam = isValidYmd(searchParams.get('date')) ? safeStr(searchParams.get('date')) : '';
   const singleHotbarTab = normalizeSingleTab(searchParams.get('tab'));
@@ -808,6 +809,10 @@ export default function MyYoteiListPage() {
     setSupportOpen(true);
   }, []);
 
+  const openHoukokuWithoutYotei = useCallback(() => {
+    navigate('/jobs/cleaning/houkoku');
+  }, [navigate]);
+
   const openHoukokuFromYotei = useCallback(async (item) => {
     const key = normId(item?.yotei_id || item?.schedule_id || item?.id);
     let isWorking = normalizeJotai(item) === 'working';
@@ -892,6 +897,12 @@ export default function MyYoteiListPage() {
       setItems(list);
     } catch (e) {
       console.error('[MyYoteiListPage] load failed:', e);
+      // 担当予定が0件の環境差で 404 を返す実装があるため、404は「予定なし」として扱う。
+      if (Number(e?.status || 0) === 404) {
+        setError('');
+        setItems([]);
+        return;
+      }
       setError(e?.message || '取得に失敗しました');
       setItems([]);
     } finally {
@@ -1324,6 +1335,13 @@ export default function MyYoteiListPage() {
                 {assignScope === 'self' && 'この期間に、あなたに割り当てられた予定はありません。'}
                 {assignScope === 'incoming' && 'この期間に、あなた宛ての引き継ぎ予定はありません。'}
                 {assignScope === 'outgoing' && 'この期間に、あなたから引き継ぐ予定はありません。'}
+                {assignScope === 'self' && isReportEntry ? (
+                  <div className="my-yotei-empty-actions">
+                    <button type="button" className="btn btn-primary" onClick={openHoukokuWithoutYotei}>
+                      予定なしで報告を作成
+                    </button>
+                  </div>
+                ) : null}
               </>
             )}
           </div>
@@ -1678,7 +1696,7 @@ export default function MyYoteiListPage() {
                                     <section className="my-yotei-single-panel">
                                       <div className="my-yotei-single-panel-head">業務報告</div>
                                       <p className="my-yotei-single-panel-text">{reportGuideText}</p>
-                                      <button type="button" className="btn btn-primary" onClick={() => openHoukokuFromYotei(it)} disabled={!canStartReport}>
+                                      <button type="button" className="btn btn-primary" onClick={() => openHoukokuFromYotei(it)} disabled={!id}>
                                         この予定で報告を開始
                                       </button>
                                       {!itemBriefingUnlocked ? (
@@ -1781,7 +1799,7 @@ export default function MyYoteiListPage() {
                                 type="button"
                                 className="btn btn-primary"
                                 onClick={() => openHoukokuFromYotei(it)}
-                                disabled={!canStartReport}
+                                disabled={!id}
                               >
                                 この予定で報告
                               </button>

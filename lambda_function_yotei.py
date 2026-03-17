@@ -901,6 +901,12 @@ SOUKO_TABLE = dynamodb.Table('souko')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
+# 報告系は manual バケットと分離（manual 側へはフォールバックしない）
+WORK_REPORTS_BUCKET_NAME = (
+    os.environ.get('WORK_REPORTS_BUCKET')
+    or os.environ.get('HOUKOKU_BUCKET')
+    or 'misesapo-work-reports'
+)
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
 ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('ALLOWED_ORIGINS', '*').split(',') if origin.strip()]
 # Add misesapo.co.jp explicitly to avoid CORS issues
@@ -1899,8 +1905,8 @@ def handle_upload_url(event, headers):
     date = body_json.get('date') or datetime.utcnow().strftime('%Y-%m-%d')
     safe_name = _sanitize_upload_filename(filename)
     key = f"reports/{date}/{str(uuid.uuid4())}_{safe_name}"
-    # 業務報告専用バケット（WORK_REPORTS_BUCKET）があれば優先、なければ UPLOAD_BUCKET / S3_BUCKET_NAME
-    bucket = os.environ.get('WORK_REPORTS_BUCKET') or os.environ.get('UPLOAD_BUCKET', S3_BUCKET_NAME)
+    # 業務報告専用バケット（manual 側へはフォールバックしない）
+    bucket = WORK_REPORTS_BUCKET_NAME
     region = os.environ.get('S3_REGION', S3_REGION)
     try:
         upload_url = s3_client.generate_presigned_url(
@@ -2964,6 +2970,13 @@ def handle_report_flags_patch(report_id, flag_id, event, headers):
     updated = REPORT_FLAGS_TABLE.get_item(Key={'pk': pk, 'sk': flag_id}).get('Item')
     return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated, ensure_ascii=False)}
 
+def _resolve_bucket_for_object_key(path):
+    clean = str(path or '').lstrip('/')
+    if clean.startswith('reports/') or clean.startswith('work-reports/'):
+        return WORK_REPORTS_BUCKET_NAME
+    return S3_BUCKET_NAME
+
+
 def convert_to_s3_url(path):
     """
     相対パスをS3の完全URLに変換
@@ -2981,7 +2994,8 @@ def convert_to_s3_url(path):
     clean_path = path.lstrip('/')
     
     # S3の完全URLを生成
-    return f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{clean_path}"
+    bucket = _resolve_bucket_for_object_key(clean_path)
+    return f"https://{bucket}.s3.{S3_REGION}.amazonaws.com/{clean_path}"
 
 def upload_photo_to_s3(base64_image, s3_key):
     """
@@ -2994,15 +3008,16 @@ def upload_photo_to_s3(base64_image, s3_key):
         image_data = base64.b64decode(base64_image)
         
         # S3にアップロード（ACLなし - バケットポリシーで公開設定）
+        bucket = _resolve_bucket_for_object_key(s3_key)
         s3_client.put_object(
-            Bucket=S3_BUCKET_NAME,
+            Bucket=bucket,
             Key=s3_key,
             Body=image_data,
             ContentType='image/jpeg'
         )
         
         # 公開URLを生成
-        photo_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
+        photo_url = f"https://{bucket}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
         return photo_url
     except Exception as e:
         print(f"Error uploading photo to S3: {str(e)}")

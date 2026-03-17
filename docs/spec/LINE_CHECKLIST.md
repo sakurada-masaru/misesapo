@@ -4316,3 +4316,275 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] standalone(PWA)起動時に `#/customer/mypage` で開かれた場合のみ `#/`（Portal）へ補正するガードを追加
 - [x] 通常ブラウザの直URL（`#/customer/mypage?...`）は維持し、customer導線は破壊しない条件分岐に調整
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Remove Top Padding On App Shell (2026-03-17)
+
+- [x] `app-fullscreen.cleaning-worker-app` の上部パディングを `0` に変更（清掃エントランス上部余白を解消）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: Visualizer Ripple Clipping Fix (2026-03-17)
+
+- [x] モバイル時の `visualizer-container` / `visualizer-viz-wrap` の `overflow: hidden` を解除し、波紋がコンテナ境界で切れないように調整
+- [x] 波紋最大径を `--visualizer-ripple-max` 変数化し、モバイルでは `min(92vw, 600px)` へ制限（画面内で拡張）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning HOTBAR: No-assignment 404 Handling + Route Consistency (2026-03-17)
+
+- [x] 清掃予定取得で `404` が返る環境差を吸収し、`MyYoteiListPage` では `予定なし`（空配列）として扱うよう修正
+- [x] 清掃ワーカークロームのHOTバー導線をエントランス仕様に整合（`報告` は `予定一覧(報告導線)`、`ツール` は `清掃マニュアル`）
+- [x] `報告` 導線（`/jobs/cleaning/yotei?entry=report`）時はHOTバーのアクティブを `報告` 側で表示するよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Report Start: Remove Stale Disabled Blocker (2026-03-17)
+
+- [x] Yotei一覧/単体の `報告開始` ボタンを `canStartReport` で無効化しないよう修正（`id` 未設定時のみ無効）
+- [x] `openHoukokuFromYotei` 内の最新再取得判定（実行中/宣誓/作業前確認）を常に実行できる導線へ修正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## S3 Separation: Manual vs Houkoku Buckets (2026-03-17)
+
+- [x] `universal_work_reports.py` の PDF出力保存先を `WORK_REPORTS_BUCKET/HOUKOKU_BUCKET` 優先 + `misesapo-work-reports` 既定へ統一（`S3_BUCKET_NAME` フォールバック廃止）
+- [x] `lambda_function_s3_upload.py` の `/upload-url` で報告ファイル保存先を `WORK_REPORTS_BUCKET_NAME` 固定化（manual バケットへ保存されないよう修正）
+- [x] `lambda_function_yotei.py` の `/upload-url` も同様に報告専用バケットへ固定化
+- [x] 旧報告経路の `reports/*` URL解決/画像アップロードで `s3_key` プレフィックスに応じてバケットを切替（`reports|work-reports` は報告バケット、その他は manual バケット）
+- [x] `lambda_package/universal_work_reports.py` にも同一修正を反映（デプロイ資材との乖離防止）
+- [x] `python3 -m py_compile universal_work_reports.py lambda_package/universal_work_reports.py lambda_function_s3_upload.py lambda_function_yotei.py` で構文確認
+
+## Cleaning Manual (React): API-first Image/Data Load (2026-03-17)
+
+- [x] `CleaningManualPage` を静的JSON固定から `cleaning-manual` API優先読込へ変更（`/api-master/cleaning-manual`）
+- [x] 英語表示時は `-en` エンドポイントを優先し、未提供環境では通常エンドポイントへフォールバック
+- [x] API失敗時は同梱 `cleaning-manual*.json` にフォールバックし、画面に状態メッセージを表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Image Frame Portrait Tuning (2026-03-17)
+
+- [x] 清掃マニュアルの比較画像枠を縦長に調整（`180x120` → `168x210`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Equal-width Image Layout (2026-03-17)
+
+- [x] 比較画像の配置を固定幅から均等割りグリッドへ変更（`repeat(auto-fit, minmax(140px, 1fr))`）
+- [x] 画像幅を `100%` に変更し、表示エリア幅に対して均等表示へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Slider For 3+ Images (2026-03-17)
+
+- [x] `badImage/goodImage` が3枚以上のセクションのみ `is-slider` クラスを付与
+- [x] `is-slider` で横スワイプ + scroll-snap レイアウトへ切替（1〜2枚は均等幅表示を維持）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Fixed Header + Content-only Scroll (2026-03-17)
+
+- [x] タイトル/言語切替/カテゴリタブを固定し、カード本文のみを内部スクロールへ変更
+- [x] `CleaningManualPage` を `scroll` ラッパー構造へ調整（ステータス + リストを同一スクロール領域化）
+- [x] `cleaning-manual-react-app/page` を `height:100vh + overflow:hidden` 化してページ全体スクロールを抑止
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): No Horizontal Scroll + Extend Vertical Area (2026-03-17)
+
+- [x] 清掃マニュアルルートの横スクロールを抑止（`overflow-x: hidden`）
+- [x] カテゴリタブを横スクロールから折り返し表示へ変更（`flex-wrap: wrap`）
+- [x] 画面下余白を圧縮し、本文スクロール領域を HOTバー上端まで拡張
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Keep Main Width + Photo-only Carousel + Aspect Ratio (2026-03-17)
+
+- [x] メインコンテンツ幅を全幅維持（`cleaning-manual-react-page` を `width/max-width:100%`）
+- [x] 3枚以上の画像は写真行のみカルーセル（1スライド=1枚、`flex-basis:100%`）に変更
+- [x] 画像は固定高さを廃止し、`height:auto` で元比率を維持（`max-height:58vh`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Aspect-preserving Downscale Tuning (2026-03-17)
+
+- [x] 画像表示を `object-fit: contain` へ変更し、トリミング無しで比率維持
+- [x] 通常表示/カルーセル表示それぞれに `max-height` 上限を設定し、過大表示を抑制
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Photo Visual Consistency Tuning (2026-03-17)
+
+- [x] 比率維持のまま画像表示ボックス高さを統一（通常/カルーセルで固定レンジ化）
+- [x] `object-position:center` と内部パディング追加で余白バランスを統一
+- [x] `align-items: stretch` へ変更し、画像行の見た目揃えを強化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Disable Carousel, Keep Listed Photos (2026-03-17)
+
+- [x] 3枚以上時の `is-slider` 条件付与を撤去し、常に羅列グリッド表示へ統一
+- [x] `.image-row.is-slider` のカルーセル用CSSを削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual (React): Topbar Language Toggle + Category Tabs Cleanup (2026-03-17)
+
+- [x] 言語切替ボタンをマニュアルヘッダーから清掃トップバー（エントランス/ログイン行）へ移設
+- [x] `CleaningWorkerChrome` にトップバー右側拡張スロットを追加し、ページ側から言語トグルを注入可能化
+- [x] カテゴリボタンを4列1行固定表示へ変更（`厨房設備/空調設備/フロア/その他`）
+- [x] タブ生成対象を `CATEGORY_META` 定義キーのみに制限し、`updatedAt/by` 等メタキーの表示を除外
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei: Report Creation Without Assigned Schedule (2026-03-17)
+
+- [x] 清掃 HOTバー `報告` 導線（`/jobs/cleaning/yotei?entry=report`）で予定0件時に、`予定なしで報告を作成` ボタンを表示
+- [x] 上記ボタン押下で `yotei_id` なしの `'/jobs/cleaning/houkoku'` へ遷移できるように変更
+- [x] 既存の「予定あり + 実行中 + 宣誓/確認完了」時の報告開始ガードは維持（既存仕様を壊さない）
+
+## Cleaning HOTBAR: Direct Report Navigation (2026-03-17)
+
+- [x] 清掃 HOTバー `報告` の遷移先を `'/jobs/cleaning/houkoku'` へ変更（予定一覧を経由しない）
+- [x] 清掃エントランスの HOTBAR 設定（`hotbar.config.js`）も同一導線へ統一
+
+## Cleaning Houkoku: Top Margin Offset For Fixed Topbar (2026-03-17)
+
+- [x] `AdminCleaningHoukokuBuilderPage` のメインラッパー上余白を `safe-area` 込みで拡張し、固定トップバーとの重なりを解消
+- [x] モバイル幅（`max-width: 640px`）でも同様に上余白を調整
+
+## Cleaning Topbar: Mobile Safe-area Offset Increase (2026-03-17)
+
+- [x] 清掃トップバーの `padding-top` を増やし、`エントランス/ログアウト` ボタンがスマホの時計・ステータス領域と重ならないように調整
+
+## Cleaning Houkoku UI: Store Search + Service Picker Visual Separation (2026-03-17)
+
+- [x] 報告作成の入力上段で `取引先・店舗検索` を1コンテナ化（検索 + 店舗候補 + 店舗選択）
+- [x] `サービス選択` を独立コンテナへ分離し、店舗検索と見た目を切り離し
+- [x] サービス選択ボタンの `masterQuery` 自動引き継ぎを外し、検索挙動を店舗検索と分離
+
+## Cleaning Houkoku UI: Search/Select Hint Label Update (2026-03-17)
+
+- [x] `取引先・店舗検索` 見出しを `取引先・店舗検索（自由入力で店舗を検索できます。）` へ変更
+- [x] `店舗情報（souko保存先）` を `店舗選択（既存顧客の選択ができます）` へ変更
+- [x] `サービス選択` 見出しを `サービス選択（担当したサービスの選択を行なってください。）` へ更新
+
+## Cleaning Houkoku: Cleaner Auto-fill (Worker) + Manual Select (Admin) (2026-03-17)
+
+- [x] 清掃員側（`forceDirectBucketUpload=true`）では、清掃員をログインアカウント本人IDで自動設定
+- [x] 清掃員側の清掃員UIを「自動入力」表示へ変更（手動チェックリスト非表示）
+- [x] 管理側（`forceDirectBucketUpload=false`）は既存どおり複数清掃員を手動選択可能なまま維持
+
+## Cleaning Houkoku: Companion Worker Toggle (2026-03-17)
+
+- [x] 清掃員側に `同伴作業員: なし/あり` の選択UIを追加
+- [x] `あり` の場合のみ同伴作業員チェックリストを表示し、同伴者を複数選択可能化
+- [x] 本人（ログイン清掃員）は常に選択維持し、`なし` 選択時は同伴者のみ解除
+
+## Cleaning Houkoku UI: Cleaner-first Order + Numbered Section Titles (2026-03-17)
+
+- [x] 入力順を `取引先・店舗` → `清掃員` → `作業日等` → `サービス` へ再編成（`作業日等` を清掃員の下へ移動）
+- [x] 各項目タイトルに番号を付与（`1` / `1-1` / `2` / `2-1` / `3` / `4`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku UI: Service Selected Area Height Up (2026-03-17)
+
+- [x] `サービス選択` の選択済み表示枠（`ServiceTagFrame`）の最小高さを拡張（`30px` → `72px`、モバイル `64px`）
+- [x] 内側タグ領域（`ServiceTags`）の最小高さを拡張し、空状態/選択状態とも視認性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku UI: Service Option Cards Bordered (2026-03-17)
+
+- [x] サービス選択オーバーレイ内でカテゴリごとの候補ブロック（`.svc-group`）をボーダー枠で分離表示
+- [x] 各サービス選択項目（`label`）にもボーダーを付与し、選択時は枠色を強調
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku UI: Boxed Sections for 2 and 3 (2026-03-17)
+
+- [x] `2. 清掃員` ブロックを独立コンテナ化し、`1`/`4` と同様にボーダー枠で囲うよう調整
+- [x] `3. 作業日等` ブロックを独立コンテナ化し、ボーダー枠で囲うよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku UI: Step-by-step Input Flow (2026-03-17)
+
+- [x] 必須選択セクションを段階表示へ変更（`1: 店舗情報` → `2: 清掃員` → `3: 作業日等` → `4: サービス選択`）
+- [x] `次へ進む / 戻る` ナビゲーションを追加し、各ステップの必須条件を満たした場合のみ次へ進行可能化
+- [x] ステップヘッダー（4段）を追加し、到達済みステップへの直接移動を可能化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku UI: Hide Detail/Photo Blocks Until Step4 Complete (2026-03-17)
+
+- [x] `作業内容詳細` / `作業写真` / `補助資料` / 提出操作を、ステップ4完了（サービス選択済み）まで非表示化
+- [x] 非表示中は案内メッセージのみ表示し、入力導線をステップ選択へ集中
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku UI: Strict Sequential Step Progression (2026-03-17)
+
+- [x] ステップヘッダーの直接クリック遷移を廃止し、順番固定の表示（進捗インジケータ）へ変更
+- [x] 進行は `次へ進む` / `戻る` のみで操作する仕様へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku UI: Camera Icon In Empty Before/After Buckets (2026-03-17)
+
+- [x] `ビフォア/アフター/作業写真` の空状態文言にカメラアイコン付き `カメラで撮影` ボタンを追加
+- [x] バケット別ファイル入力に `capture=\"environment\"` を追加し、モバイルでカメラ起動導線を強化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning HOTBAR: Move My Sales To Tools (2026-03-17)
+
+- [x] 清掃エントランスHOTバーで `マイページ（売上）` を `予定` から `ツール` サブメニューへ移動
+- [x] 清掃ワーカー共通HOTバーの `ツール` 遷移先を `/jobs/cleaning/mypage` に変更（マニュアルとは別導線）
+- [x] `activeByPath` で `/jobs/cleaning/mypage` を `tools` アクティブとして判定するよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku: Use Default Worker HOTBAR (2026-03-17)
+
+- [x] `App.jsx` で `/jobs/cleaning/houkoku`（`/report` 含む）でも清掃共通HOTバーを表示するよう変更
+- [x] `AdminCleaningHoukokuBuilderPage` の専用モバイルHOTバー（検索/サービス/カメラ/プレビュー）を削除
+- [x] 報告ページの下部ナビゲーションを `報告 / 予定 / ツール / 設定` に統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaner My Sales: Subtotal/Reward Formula + Labels Update (2026-03-17)
+
+- [x] 小計売上を `売上 - システム維持費20%`（=売上×0.8）で計算するよう変更
+- [x] 報酬見込みを `小計売上×40%÷人数`（人数は予定参加者数、最低1）で計算するよう変更
+- [x] サマリー/表ヘッダー文言を指定表記へ更新（小計売上・報酬見込み）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning HOTBAR: Tools Sub-buttons For Manual/Sales (2026-03-17)
+
+- [x] 清掃共通HOTバー（`CleaningWorkerChrome`）で `ツール` 選択時にサブボタンを表示
+- [x] サブボタンを `売上表`（`/jobs/cleaning/mypage`）と `マニュアル`（`/jobs/cleaning/manual`）の2件に統一
+- [x] 現在ページに応じてサブボタンのアクティブ状態を切替（`mypage`=`売上表`, `manual`=`マニュアル`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning HOTBAR: Move Tools Sub-buttons To Top (2026-03-17)
+
+- [x] 清掃共通HOTバーの `ツール` サブボタン表示位置を下部から上部（トップバー直下）へ移動
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning UI: Remove Visualizer Display (2026-03-17)
+
+- [x] 清掃ジョブで `job-entrance-viz`（エントランスのビジュアライザー）を非表示化
+- [x] 清掃ジョブで `report-page-viz`（各ページ上部ビジュアライザー）を非表示化
+- [x] ビジュアライザー非表示に伴い `report-page-content` の上マージンを0へ補正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual UI: Move Category Buttons To Header Right (2026-03-17)
+
+- [x] `作業手順ライブラリ` ヘッダー内へカテゴリボタン（厨房設備/空調設備/フロア/その他）を移設
+- [x] タイトル左・カテゴリボタン右の同一行レイアウトに調整
+- [x] 画面幅に応じたボタンサイズ/最小幅のレスポンシブ調整を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Pages: Header Layout Unified (2026-03-17)
+
+- [x] `売上表（CleanerMySalesPage）` と `マニュアル（CleaningManualPage）` のヘッダーを共通構造へ統一
+- [x] 共通ヘッダー仕様を `左: タイトル(kicker+h1) / 右: 操作群` に統一
+- [x] モバイル時の折返し挙動（ヘッダー下段へ操作群）を両ページで同一化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Manual: Move Language Switch To Settings (2026-03-17)
+
+- [x] 清掃マニュアル画面のトップバー言語切替（日本語/EN）を削除
+- [x] 清掃エントランス `設定` パネルへ `マニュアル言語`（日本語/EN）を追加
+- [x] マニュアル画面は `localStorage(cleaning-manual-language)` の設定値を参照して表示言語を決定
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Header Layout: Fix Sales/Manual CSS Scope Collision (2026-03-17)
+
+- [x] `売上表` と `マニュアル` の共通ヘッダークラスをページスコープ化し、CSS上書き競合を解消
+- [x] `売上表` ヘッダーレイアウト崩れを修正（Manual CSSの影響を遮断）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Sales/Manual: Fully Decouple Header+Tab Layout (2026-03-17)
+
+- [x] `売上表` ヘッダーを専用クラス（`cleaner-my-sales-head*`）へ分離し、共通クラス依存を廃止
+- [x] `マニュアル` ヘッダーを専用クラス（`cleaning-manual-react-head*`）へ分離し、タイトル行とカテゴリタブ行を独立配置
+- [x] 両ページのタブ/操作行を相互非依存レイアウトに再調整（タイトル崩れ防止）
+- [x] `npm -C src/misogi run build` でビルド確認

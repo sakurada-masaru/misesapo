@@ -5,7 +5,7 @@ export const CLEANING_HOTBAR = [
     role: 'log',
     label: '報告',
     subItems: [
-      { id: 'work-report-from-yotei', label: '予定から報告', path: '/jobs/cleaning/yotei' },
+      { id: 'work-report-direct', label: '報告作成', path: '/jobs/cleaning/houkoku' },
     ],
   },
   {
@@ -14,7 +14,6 @@ export const CLEANING_HOTBAR = [
     label: '予定',
     subItems: [
       { id: 'my-yotei', label: '予定一覧', path: '/jobs/cleaning/yotei' },
-      { id: 'my-sales', label: 'マイページ（売上）', path: '/jobs/cleaning/mypage' },
       { id: 'availability-declare', label: '休み申請カレンダー', path: '/jobs/cleaning/availability-declare' },
     ],
   },
@@ -23,6 +22,7 @@ export const CLEANING_HOTBAR = [
     role: 'status',
     label: 'ツール',
     subItems: [
+      { id: 'my-sales', label: '売上確認（マイページ）', path: '/jobs/cleaning/mypage' },
       { id: 'cleaning-manual', label: '清掃マニュアル', path: '/jobs/cleaning/manual' },
       { id: 'flow-guide', label: '業務フロー', path: '/flow-guide' },
     ],

@@ -8,12 +8,12 @@ import { getTemplateById } from '../../../templates';
 import { apiFetch, apiFetchWorkReport } from '../../shared/api/client';
 import { useAuth } from '../../shared/auth/useAuth';
 import { getServiceCategoryLabel } from './serviceCategoryCatalog';
-import Hotbar from '../../shared/ui/Hotbar/Hotbar';
 
 const TEMPLATE_ID = 'CLEANING_SHEETS_3_V1';
 const WORK_TYPE_OPTIONS = ['定期清掃', 'スポット清掃', '追加清掃', '再清掃'];
 const SPECIAL_ADD_SERVICE_ID = 'service_0044';
 const SPECIAL_ADD_SERVICE_LABEL = 'その他';
+const MASTER_STEP_LABELS = ['店舗情報', '清掃員', '作業日等', 'サービス選択'];
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -284,7 +284,7 @@ function fileToBase64(file) {
 }
 
 export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUpload = false }) {
-  const { user, isLoading: authLoading, isAuthenticated, login, getToken } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated, login, getToken, authz } = useAuth();
   const [searchParams] = useSearchParams();
   const template = useMemo(() => getTemplateById(TEMPLATE_ID), []);
   const editorTemplate = useMemo(() => {
@@ -334,11 +334,21 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
   const [tenpoId, setTenpoId] = useState('');
   const [serviceIds, setServiceIds] = useState([]);
   const [cleanerIds, setCleanerIds] = useState([]);
+  const [masterStep, setMasterStep] = useState(1);
+  const [hasCompanionWorker, setHasCompanionWorker] = useState(false);
   const [draggingPhoto, setDraggingPhoto] = useState(null); // {type:'pool'|'service',serviceId?,bucket?,index}
   const localPhotoObjectUrlsRef = React.useRef(new Set());
   const [localPhotoSrcByKey, setLocalPhotoSrcByKey] = useState({});
   // 清掃ジョブ側は直接アップロード、管理側は共通画像プールを維持する。
   const directBucketUploadMode = Boolean(forceDirectBucketUpload);
+  const signedInCleanerId = useMemo(
+    () => norm(authz?.jinzaiId || authz?.workerId || user?.jinzai_id || user?.worker_id || user?.sagyouin_id || ''),
+    [authz?.jinzaiId, authz?.workerId, user?.jinzai_id, user?.worker_id, user?.sagyouin_id]
+  );
+  const signedInCleanerName = useMemo(
+    () => norm(user?.name || user?.display_name || user?.nickname || ''),
+    [user?.display_name, user?.name, user?.nickname]
+  );
 
   // Keep user_name updated when auth finishes.
   React.useEffect(() => {
@@ -416,6 +426,32 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
     && Array.isArray(serviceIds)
     && serviceIds.length > 0
   );
+
+  const isStep1Ready = !!norm(tenpoId);
+  const isStep2Ready = Array.isArray(cleanerIds) && cleanerIds.length > 0;
+  const isStep3Ready = !!norm(payload.work_date);
+  const isStep4Ready = Array.isArray(serviceIds) && serviceIds.length > 0;
+  const isMasterStepReady = useCallback((step) => {
+    if (step === 1) return isStep1Ready;
+    if (step === 2) return isStep2Ready;
+    if (step === 3) return isStep3Ready;
+    if (step === 4) return isStep4Ready;
+    return false;
+  }, [isStep1Ready, isStep2Ready, isStep3Ready, isStep4Ready]);
+  const canGoNextMasterStep = masterStep < 4 && isMasterStepReady(masterStep);
+  const masterStepHint = useMemo(() => {
+    if (masterStep === 1 && !isStep1Ready) return '店舗を選択すると次へ進めます。';
+    if (masterStep === 2 && !isStep2Ready) return '清掃員を1名以上選択すると次へ進めます。';
+    if (masterStep === 3 && !isStep3Ready) return '作業日を設定すると次へ進めます。';
+    if (masterStep === 4 && !isStep4Ready) return 'サービスを選択してください。';
+    return '';
+  }, [isStep1Ready, isStep2Ready, isStep3Ready, isStep4Ready, masterStep]);
+  const handleNextMasterStep = useCallback(() => {
+    if (masterStep >= 4) return;
+    if (!isMasterStepReady(masterStep)) return;
+    setMasterStep((prev) => Math.min(4, prev + 1));
+  }, [isMasterStepReady, masterStep]);
+  const showDetailWorkflow = masterStep === 4 && isStep4Ready;
 
   const authHeaders = useCallback(() => {
     const token = getToken() || localStorage.getItem('cognito_id_token');
@@ -1097,6 +1133,19 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
       .filter(Boolean),
     [cleanerById, cleanerIds]
   );
+  const companionCleanerIds = useMemo(
+    () => (cleanerIds || [])
+      .map((cid) => norm(cid))
+      .filter((cid) => Boolean(cid) && cid !== signedInCleanerId),
+    [cleanerIds, signedInCleanerId]
+  );
+  const companionCleanerRows = useMemo(
+    () => (visibleCleanerRows || []).filter((row) => {
+      const id = norm(row?.jinzai_id);
+      return Boolean(id) && id !== signedInCleanerId;
+    }),
+    [visibleCleanerRows, signedInCleanerId]
+  );
 
   const primaryCleanerName = useMemo(
     () => cleanerNames[0] || '',
@@ -1264,6 +1313,40 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
     if (!cid) return;
     setCleanerIds((prev) => (prev.includes(cid) ? prev.filter((id) => id !== cid) : [...prev, cid]));
   }, []);
+
+  const toggleCompanionCleaner = useCallback((cidRaw) => {
+    if (!hasCompanionWorker) return;
+    const cid = norm(cidRaw);
+    if (!cid || cid === signedInCleanerId) return;
+    setCleanerIds((prev) => {
+      const companions = (prev || [])
+        .map((id) => norm(id))
+        .filter((id) => Boolean(id) && id !== signedInCleanerId);
+      const nextCompanions = companions.includes(cid)
+        ? companions.filter((id) => id !== cid)
+        : [...companions, cid];
+      const uniqueCompanions = Array.from(new Set(nextCompanions));
+      return signedInCleanerId ? [signedInCleanerId, ...uniqueCompanions] : uniqueCompanions;
+    });
+  }, [hasCompanionWorker, signedInCleanerId]);
+
+  React.useEffect(() => {
+    if (!directBucketUploadMode) return;
+    if (!signedInCleanerId) return;
+    setCleanerIds((prev) => {
+      const companions = (prev || [])
+        .map((id) => norm(id))
+        .filter((id) => Boolean(id) && id !== signedInCleanerId);
+      if (!hasCompanionWorker) return [signedInCleanerId];
+      return [signedInCleanerId, ...Array.from(new Set(companions))];
+    });
+  }, [directBucketUploadMode, hasCompanionWorker, signedInCleanerId]);
+
+  React.useEffect(() => {
+    if (!directBucketUploadMode) return;
+    if (hasCompanionWorker) return;
+    if (companionCleanerIds.length > 0) setHasCompanionWorker(true);
+  }, [companionCleanerIds.length, directBucketUploadMode, hasCompanionWorker]);
 
   React.useEffect(() => {
     if (!servicePickerOpen) return undefined;
@@ -1769,82 +1852,6 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
     user?.name,
   ]);
 
-  const openCameraPicker = useCallback(() => {
-    if (directBucketUploadMode) {
-      const selected = selectedServices.find((svc) => norm(svc?.service_id) === norm(activeServiceTab))
-        || selectedServices[0];
-      const serviceId = norm(selected?.service_id);
-      if (!serviceId) {
-        setStatus({ type: 'error', text: '先にサービスを選択してください' });
-        return;
-      }
-      const bucketKey = isSingleWorkPhotoService(selected) ? 'work' : 'before';
-      const input = bucketPhotoInputRefs.current[`${serviceId}::${bucketKey}`];
-      if (!input) {
-        setStatus({ type: 'error', text: '写真追加欄が見つかりませんでした' });
-        return;
-      }
-      input.click();
-      return;
-    }
-    reportPhotosInputRef.current?.click();
-  }, [activeServiceTab, directBucketUploadMode, selectedServices]);
-
-  const mobileHotbarActions = useMemo(() => ([
-    {
-      id: 'search',
-      label: '検索',
-      icon: 'preview',
-      disabled: saving || soukoBusy,
-    },
-    {
-      id: 'service',
-      label: 'サービス',
-      icon: 'tools',
-      disabled: saving || soukoBusy,
-    },
-    {
-      id: 'camera',
-      label: 'カメラ',
-      icon: 'camera',
-      disabled: photoBusy || saving || soukoBusy,
-    },
-    {
-      id: 'preview',
-      label: 'プレビュー',
-      icon: 'pdf',
-      disabled: previewBusy || pdfBusy || saving || soukoBusy,
-    },
-  ]), [pdfBusy, photoBusy, previewBusy, saving, soukoBusy]);
-
-  const onMobileHotbarChange = useCallback((id) => {
-    if (id === 'search') {
-      setMasterSearchOverlayOpen(true);
-      return;
-    }
-    if (id === 'service') {
-      if (!norm(serviceQuery) && norm(masterQuery)) setServiceQuery(norm(masterQuery));
-      setServicePickerOpen(true);
-      return;
-    }
-    if (id === 'camera') {
-      openCameraPicker();
-      return;
-    }
-    if (id === 'preview') {
-      openPreview();
-      return;
-    }
-    if (id === 'pdf') {
-      outputPdf();
-      return;
-    }
-    if (id === 'save') {
-      submit();
-      return;
-    }
-  }, [masterQuery, openCameraPicker, openPreview, outputPdf, serviceQuery, submit]);
-
   const renderPhotoBucket = useCallback((serviceId, serviceName, bucketKey, bucketLabel, photos) => (
     <PhotoBucket
       key={`${serviceId}-${bucketKey}`}
@@ -1878,6 +1885,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
                 }}
                 type="file"
                 accept="image/*"
+                capture="environment"
                 multiple
                 style={{ display: 'none' }}
                 onChange={(e) => {
@@ -1930,7 +1938,20 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
         ))}
         {!photos.length ? (
           <div className="empty">
-            {directBucketUploadMode ? `${bucketLabel}写真を追加してください` : `${bucketLabel}写真をここへドラッグ&ドロップ`}
+            {directBucketUploadMode ? (
+              <>
+                <div className="empty-label">{bucketLabel}写真を追加してください</div>
+                <button
+                  type="button"
+                  className="camera-btn"
+                  disabled={photoBusy}
+                  onClick={() => bucketPhotoInputRefs.current[`${serviceId}::${bucketKey}`]?.click()}
+                >
+                  <span className="camera-icon" aria-hidden="true">📷</span>
+                  カメラで撮影
+                </button>
+              </>
+            ) : `${bucketLabel}写真をここへドラッグ&ドロップ`}
           </div>
         ) : null}
       </PhotoGrid>
@@ -1961,116 +1982,240 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
       <MasterPickCard aria-label="清掃業務報告 必要選択">
         <MasterPickHead>
           <div className="t">清掃業務報告 必要選択</div>
-          <div className="sub">サービス / 店舗情報 / 清掃員を選択してください（統合検索対応）</div>
+          <div className="sub">ステップ {masterStep} / 4 : {MASTER_STEP_LABELS[masterStep - 1]}</div>
         </MasterPickHead>
+        <MasterStepBar aria-label="入力ステップ">
+          {MASTER_STEP_LABELS.map((label, idx) => {
+            const step = idx + 1;
+            const active = step === masterStep;
+            const done = step < masterStep;
+            return (
+              <div
+                key={`master-step-${step}`}
+                className={`step${active ? ' active' : ''}${done ? ' done' : ''}`}
+              >
+                <span className="n">{step}</span>
+                <span className="txt">{label}</span>
+              </div>
+            );
+          })}
+        </MasterStepBar>
         <PickGrid>
-          <PickCell>
-            <div className="h">統合検索</div>
-            <MasterSearch
-              type="text"
-              value={masterQuery}
-              onChange={(e) => setMasterQuery(String(e.target.value || ''))}
-              placeholder="統合検索: 店舗名 / 屋号 / 取引先 / サービス / 清掃員"
-            />
-            {searchCandidates ? (
-              <UnifiedSearchCandidates aria-label="統合検索結果">
-                <section>
-                  <h4>店舗候補</h4>
-                  <div className="chips">
-                    {searchCandidates.tenpo.length ? searchCandidates.tenpo.map((row) => {
-                      const id = norm(row?.tenpo_id);
-                      const label = [norm(row?.torihikisaki_name), norm(row?.yagou_name), norm(row?.name) || id]
-                        .filter(Boolean)
-                        .join(' / ');
-                      const active = norm(tenpoId) === id;
-                      return (
-                        <button
-                          key={`cand-tenpo-${id}`}
-                          type="button"
-                          className={active ? 'active' : ''}
-                          onClick={() => setTenpoId(id)}
-                          title={label || id}
-                        >
-                          {label || id}
-                        </button>
-                      );
-                    }) : <div className="empty">候補なし</div>}
-                  </div>
-                </section>
-                <section>
-                  <h4>清掃員候補</h4>
-                  <div className="chips">
-                    {searchCandidates.cleaner.length ? searchCandidates.cleaner.map((row) => {
+          {masterStep === 1 ? (
+            <PickCell>
+            <StoreSearchBox aria-label="取引先・店舗検索">
+              <div className="h">1. 取引先・店舗検索（自由入力で店舗を検索できます。）</div>
+              <MasterSearch
+                type="text"
+                value={masterQuery}
+                onChange={(e) => setMasterQuery(String(e.target.value || ''))}
+                placeholder="取引先名 / 屋号 / 店舗名で検索"
+              />
+              {searchCandidates ? (
+                <UnifiedSearchCandidates aria-label="取引先・店舗候補">
+                  <section>
+                    <h4>店舗候補</h4>
+                    <div className="chips">
+                      {searchCandidates.tenpo.length ? searchCandidates.tenpo.map((row) => {
+                        const id = norm(row?.tenpo_id);
+                        const label = [norm(row?.torihikisaki_name), norm(row?.yagou_name), norm(row?.name) || id]
+                          .filter(Boolean)
+                          .join(' / ');
+                        const active = norm(tenpoId) === id;
+                        return (
+                          <button
+                            key={`cand-tenpo-${id}`}
+                            type="button"
+                            className={active ? 'active' : ''}
+                            onClick={() => setTenpoId(id)}
+                            title={label || id}
+                          >
+                            {label || id}
+                          </button>
+                        );
+                      }) : <div className="empty">候補なし</div>}
+                    </div>
+                  </section>
+                </UnifiedSearchCandidates>
+              ) : null}
+
+              <div className="h">1-1. 店舗選択（既存顧客の選択ができます）</div>
+              <TenpoSelect
+                value={tenpoId}
+                onChange={(e) => setTenpoId(String(e.target.value || ''))}
+              >
+                <option value="">店舗を選択してください（souko保存先）</option>
+                {tenpoSelectRows.map((row) => {
+                  const id = norm(row?.tenpo_id);
+                  const label = [
+                    norm(row?.torihikisaki_name),
+                    norm(row?.yagou_name),
+                    norm(row?.name) || id,
+                  ].filter(Boolean).join(' / ');
+                  return (
+                    <option key={id} value={id}>
+                      {label || id}
+                    </option>
+                  );
+                })}
+              </TenpoSelect>
+            </StoreSearchBox>
+            </PickCell>
+          ) : null}
+          {masterStep >= 2 ? (
+            <PickCell>
+            {masterStep === 2 ? (
+            <CleanerSelectBox aria-label="清掃員選択">
+              {directBucketUploadMode ? (
+                <>
+                  <div className="h">2. 清掃員（アカウント本人を自動入力）</div>
+                  <AutoCleanerBox aria-label="清掃員自動設定">
+                    <strong>{signedInCleanerName || cleanerNames[0] || '（名前未設定）'}</strong>
+                    <span>{signedInCleanerId || 'ID未設定'}</span>
+                  </AutoCleanerBox>
+                  <div className="h" style={{ marginTop: 10 }}>2-1. 同伴作業員</div>
+                  <CompanionSwitch aria-label="同伴作業員の有無">
+                    <button
+                      type="button"
+                      className={!hasCompanionWorker ? 'active' : ''}
+                      onClick={() => {
+                        setHasCompanionWorker(false);
+                        if (signedInCleanerId) setCleanerIds([signedInCleanerId]);
+                      }}
+                    >
+                      なし
+                    </button>
+                    <button
+                      type="button"
+                      className={hasCompanionWorker ? 'active' : ''}
+                      onClick={() => setHasCompanionWorker(true)}
+                    >
+                      あり
+                    </button>
+                  </CompanionSwitch>
+                  {hasCompanionWorker ? (
+                    <CompanionChecklist aria-label="同伴作業員選択リスト">
+                      {companionCleanerRows.map((row) => {
+                        const id = norm(row?.jinzai_id);
+                        const label = norm(row?.name) || id;
+                        const checked = companionCleanerIds.includes(id);
+                        return (
+                          <label key={`companion-${id}`}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleCompanionCleaner(id)}
+                            />
+                            <span>{label || id}</span>
+                          </label>
+                        );
+                      })}
+                      {!companionCleanerRows.length ? (
+                        <div className="empty">同伴候補がありません</div>
+                      ) : null}
+                    </CompanionChecklist>
+                  ) : (
+                    <CompanionNote>同伴作業員なしで報告を作成します。</CompanionNote>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="h">2. 清掃員（複数選択）</div>
+                  <CleanerChecklist aria-label="清掃員選択リスト">
+                    {visibleCleanerRows.map((row) => {
                       const id = norm(row?.jinzai_id);
                       const label = norm(row?.name) || id;
-                      const active = cleanerIds.includes(id);
+                      const checked = cleanerIds.includes(id);
                       return (
-                        <button
-                          key={`cand-cleaner-${id}`}
-                          type="button"
-                          className={active ? 'active' : ''}
-                          onClick={() => toggleCleaner(id)}
-                          title={label || id}
-                        >
-                          {label || id}
-                        </button>
+                        <label key={id}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleCleaner(id)}
+                          />
+                          <span>{label || id}</span>
+                        </label>
                       );
-                    }) : <div className="empty">候補なし</div>}
-                  </div>
-                </section>
-                <section>
-                  <h4>サービス候補</h4>
-                  <div className="chips">
-                    {searchCandidates.service.length ? searchCandidates.service.map((row) => {
-                      const sid = norm(row?.service_id);
-                      const label = [norm(row?.name) || sid, getServiceCategoryLabel(row?.category)].filter(Boolean).join(' / ');
-                      const active = serviceIds.includes(sid);
-                      return (
-                        <button
-                          key={`cand-service-${sid}`}
-                          type="button"
-                          className={active ? 'active' : ''}
-                          onClick={() => toggleService(sid)}
-                          title={label || sid}
-                        >
-                          {label || sid}
-                        </button>
-                      );
-                    }) : <div className="empty">候補なし</div>}
-                  </div>
-                </section>
-              </UnifiedSearchCandidates>
+                    })}
+                    {!visibleCleanerRows.length ? (
+                      <div className="empty">清掃員候補がありません</div>
+                    ) : null}
+                  </CleanerChecklist>
+                </>
+              )}
+            </CleanerSelectBox>
+            ) : null}
+            {masterStep === 3 ? (
+            <WorkMetaBox aria-label="作業日等">
+              <div className="h">3. 作業日等</div>
+              <WorkMetaGrid>
+                <label>
+                  <span>作業日</span>
+                  <input
+                    type="date"
+                    value={norm(payload.work_date)}
+                    onChange={(e) => onMetaChange('work_date', String(e.target.value || ''))}
+                  />
+                </label>
+                <label>
+                  <span>作業開始</span>
+                  <input
+                    type="time"
+                    value={norm(payload.work_start_time)}
+                    onChange={(e) => onMetaChange('work_start_time', String(e.target.value || ''))}
+                  />
+                </label>
+                <label>
+                  <span>作業終了</span>
+                  <input
+                    type="time"
+                    value={norm(payload.work_end_time)}
+                    onChange={(e) => onMetaChange('work_end_time', String(e.target.value || ''))}
+                  />
+                </label>
+                <div className="mins">
+                  総作業時間: {typeof totalWorkMinutes === 'number' ? `${totalWorkMinutes} 分` : '-'}
+                </div>
+                <label>
+                  <span>作業区分</span>
+                  <select
+                    value={norm(payload.work_type) || '定期清掃'}
+                    onChange={(e) => onMetaChange('work_type', String(e.target.value || '定期清掃'))}
+                  >
+                    {WORK_TYPE_OPTIONS.map((it) => (
+                      <option key={it} value={it}>{it}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="wide">
+                  <span>紐づけ予定（yotei）</span>
+                  <select
+                    value={norm(linkedYoteiId)}
+                    onChange={(e) => setLinkedYoteiId(norm(e.target.value))}
+                  >
+                    <option value="">
+                      {yoteiBusy
+                        ? '予定候補を検索中...'
+                        : (yoteiCandidates.length ? '予定を選択してください' : '一致する予定はありません')}
+                    </option>
+                    {yoteiCandidates.map((it) => (
+                      <option key={it.id} value={it.id}>
+                        {`${it.scheduled_date || '-'} ${it.start_time || '--:--'}-${it.end_time || '--:--'} / ${it.tenpo_name || it.tenpo_id || '-'} / ${it.id}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </WorkMetaGrid>
+            </WorkMetaBox>
             ) : null}
 
-            <div className="h">店舗情報（souko保存先）</div>
-            <TenpoSelect
-              value={tenpoId}
-              onChange={(e) => setTenpoId(String(e.target.value || ''))}
-            >
-              <option value="">店舗を選択してください（souko保存先）</option>
-              {tenpoSelectRows.map((row) => {
-                const id = norm(row?.tenpo_id);
-                const label = [
-                  norm(row?.torihikisaki_name),
-                  norm(row?.yagou_name),
-                  norm(row?.name) || id,
-                ].filter(Boolean).join(' / ');
-                return (
-                  <option key={id} value={id}>
-                    {label || id}
-                  </option>
-                );
-              })}
-            </TenpoSelect>
-            <div style={{ marginTop: 10 }}>
-              <div className="h">サービス選択</div>
+            {masterStep === 4 ? (
+            <ServiceSelectBox aria-label="サービス選択">
+              <div className="h">4. サービス選択（担当したサービスの選択を行なってください。）</div>
               <ServicePickHeader>
                 <ServicePickerOpenBtn
                   type="button"
-                  onClick={() => {
-                    if (!norm(serviceQuery) && norm(masterQuery)) setServiceQuery(norm(masterQuery));
-                    setServicePickerOpen(true);
-                  }}
+                  onClick={() => setServicePickerOpen(true)}
                 >
                   サービスを選択
                 </ServicePickerOpenBtn>
@@ -2101,93 +2246,38 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
                   </ServiceTags>
                 </ServiceTagFrame>
               </ServicePickHeader>
-            </div>
+            </ServiceSelectBox>
+            ) : null}
           </PickCell>
-          <PickCell>
-            <div className="h">清掃員（複数選択）</div>
-            <CleanerChecklist aria-label="清掃員選択リスト">
-              {visibleCleanerRows.map((row) => {
-                const id = norm(row?.jinzai_id);
-                const label = norm(row?.name) || id;
-                const checked = cleanerIds.includes(id);
-                return (
-                  <label key={id}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleCleaner(id)}
-                    />
-                    <span>{label || id}</span>
-                  </label>
-                );
-              })}
-              {!visibleCleanerRows.length ? (
-                <div className="empty">清掃員候補がありません</div>
-              ) : null}
-            </CleanerChecklist>
-          </PickCell>
+          ) : null}
         </PickGrid>
-
-        <WorkMetaGrid>
-          <label>
-            <span>作業日</span>
-            <input
-              type="date"
-              value={norm(payload.work_date)}
-              onChange={(e) => onMetaChange('work_date', String(e.target.value || ''))}
-            />
-          </label>
-          <label>
-            <span>作業開始</span>
-            <input
-              type="time"
-              value={norm(payload.work_start_time)}
-              onChange={(e) => onMetaChange('work_start_time', String(e.target.value || ''))}
-            />
-          </label>
-          <label>
-            <span>作業終了</span>
-            <input
-              type="time"
-              value={norm(payload.work_end_time)}
-              onChange={(e) => onMetaChange('work_end_time', String(e.target.value || ''))}
-            />
-          </label>
-          <div className="mins">
-            総作業時間: {typeof totalWorkMinutes === 'number' ? `${totalWorkMinutes} 分` : '-'}
-          </div>
-          <label>
-            <span>作業区分</span>
-            <select
-              value={norm(payload.work_type) || '定期清掃'}
-              onChange={(e) => onMetaChange('work_type', String(e.target.value || '定期清掃'))}
+        <MasterStepActions>
+          <button
+            type="button"
+            className="sub"
+            disabled={masterStep === 1}
+            onClick={() => setMasterStep((prev) => Math.max(1, prev - 1))}
+          >
+            戻る
+          </button>
+          {masterStep < 4 ? (
+            <button
+              type="button"
+              className="next"
+              disabled={!canGoNextMasterStep}
+              onClick={handleNextMasterStep}
             >
-              {WORK_TYPE_OPTIONS.map((it) => (
-                <option key={it} value={it}>{it}</option>
-              ))}
-            </select>
-          </label>
-          <label className="wide">
-            <span>紐づけ予定（yotei）</span>
-            <select
-              value={norm(linkedYoteiId)}
-              onChange={(e) => setLinkedYoteiId(norm(e.target.value))}
-            >
-              <option value="">
-                {yoteiBusy
-                  ? '予定候補を検索中...'
-                  : (yoteiCandidates.length ? '予定を選択してください' : '一致する予定はありません')}
-              </option>
-              {yoteiCandidates.map((it) => (
-                <option key={it.id} value={it.id}>
-                  {`${it.scheduled_date || '-'} ${it.start_time || '--:--'}-${it.end_time || '--:--'} / ${it.tenpo_name || it.tenpo_id || '-'} / ${it.id}`}
-                </option>
-              ))}
-            </select>
-          </label>
-        </WorkMetaGrid>
+              次へ進む
+            </button>
+          ) : (
+            <div className="done">{isStep4Ready ? 'サービス選択完了' : 'サービスを選択してください'}</div>
+          )}
+        </MasterStepActions>
+        {masterStepHint ? <MasterStepHint>{masterStepHint}</MasterStepHint> : null}
       </MasterPickCard>
 
+      {showDetailWorkflow ? (
+      <>
       <WorkDetailCard aria-label="作業内容詳細">
         <PhotoHead>
           <div className="t">作業内容詳細</div>
@@ -2463,6 +2553,12 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
           </FooterBar>
         )}
       />
+      </>
+      ) : (
+        <MasterStepLockedNote>
+          ステップ4でサービスを選択すると、作業内容詳細・作業写真・補助資料・提出操作が表示されます。
+        </MasterStepLockedNote>
+      )}
 
       {/* PDF生成用のA4キャンバス（画面外描画） */}
       <PrintHost aria-hidden>
@@ -2794,13 +2890,6 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
         </ServiceOverlay>
       ) : null}
 
-      <MobileHotbarSlot>
-        <Hotbar
-          actions={mobileHotbarActions}
-          onChange={onMobileHotbarChange}
-          showFlowGuideButton={false}
-        />
-      </MobileHotbarSlot>
     </Wrap>
   );
 }
@@ -2855,12 +2944,12 @@ const Wrap = styled.div`
   }
 
   min-height: 100vh;
-  padding: 18px 12px 80px;
+  padding: calc(58px + env(safe-area-inset-top)) 12px 80px;
   background: var(--ch-bg);
   color: var(--ch-text);
 
   @media (max-width: 640px) {
-    padding: 12px 8px 56px;
+    padding: calc(56px + env(safe-area-inset-top)) 8px 56px;
   }
 `;
 
@@ -2913,6 +3002,115 @@ const MasterPickHead = styled.div`
     font-size: 12px;
     color: var(--ch-sub);
   }
+`;
+
+const MasterStepBar = styled.div`
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+
+  .step {
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--ch-border);
+    background: var(--ch-input-bg);
+    color: var(--ch-input-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .step .n {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    border: 1px solid var(--ch-border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    background: var(--ch-card-bg-strong);
+  }
+
+  .step.active {
+    border-color: rgba(16, 185, 129, 0.55);
+    background: var(--ch-selected-bg);
+    color: var(--ch-text);
+  }
+
+  .step.done {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.08);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`;
+
+const MasterStepActions = styled.div`
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  button {
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--ch-border);
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  button.sub {
+    background: var(--ch-sub-btn-bg);
+    color: var(--ch-sub-btn-text);
+  }
+
+  button.next {
+    background: var(--ch-primary-btn-bg);
+    color: white;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .done {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--ch-sub);
+  }
+`;
+
+const MasterStepHint = styled.div`
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ch-sub);
+  font-weight: 700;
+`;
+
+const MasterStepLockedNote = styled.div`
+  max-width: 1480px;
+  width: 100%;
+  margin: 0 auto 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--ch-border);
+  border-radius: 12px;
+  background: var(--ch-list-bg);
+  color: var(--ch-sub);
+  font-size: 12px;
+  font-weight: 700;
 `;
 
 const MasterSearch = styled.input`
@@ -2975,12 +3173,8 @@ const UnifiedSearchCandidates = styled.div`
 
 const PickGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
 `;
 
 const PickCell = styled.div`
@@ -2990,6 +3184,36 @@ const PickCell = styled.div`
     font-weight: 900;
     color: var(--ch-text);
   }
+`;
+
+const StoreSearchBox = styled.section`
+  border: 1px solid var(--ch-border);
+  border-radius: 12px;
+  background: var(--ch-list-bg);
+  padding: 10px;
+`;
+
+const CleanerSelectBox = styled.section`
+  border: 1px solid var(--ch-border);
+  border-radius: 12px;
+  background: var(--ch-list-bg);
+  padding: 10px;
+`;
+
+const WorkMetaBox = styled.section`
+  margin-top: 10px;
+  border: 1px solid var(--ch-border);
+  border-radius: 12px;
+  background: var(--ch-list-bg);
+  padding: 10px;
+`;
+
+const ServiceSelectBox = styled.section`
+  margin-top: 10px;
+  border: 1px solid var(--ch-border);
+  border-radius: 12px;
+  background: var(--ch-list-bg);
+  padding: 10px;
 `;
 
 const ServicePickHeader = styled.div`
@@ -3009,14 +3233,16 @@ const ServiceTagFrame = styled.div`
   flex: 0 0 100%;
   width: 100%;
   min-width: 0;
-  min-height: 30px;
+  min-height: 72px;
   border: 1px dashed var(--ch-input-border);
   border-radius: 10px;
   background: var(--ch-input-bg);
-  padding: 4px 6px;
+  padding: 8px 10px;
 
   @media (max-width: 640px) {
     width: 100%;
+    min-height: 64px;
+    padding: 7px 9px;
   }
 `;
 
@@ -3106,12 +3332,75 @@ const CleanerChecklist = styled.div`
   }
 `;
 
+const AutoCleanerBox = styled.div`
+  min-height: 76px;
+  border: 1px solid var(--ch-input-border);
+  border-radius: 10px;
+  background: var(--ch-input-bg);
+  padding: 10px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+
+  strong {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--ch-input-text);
+    line-height: 1.3;
+  }
+
+  span {
+    font-size: 11px;
+    color: var(--ch-sub);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+`;
+
+const CompanionSwitch = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  button {
+    height: 30px;
+    min-width: 64px;
+    border-radius: 999px;
+    border: 1px solid var(--ch-input-border);
+    background: var(--ch-input-bg);
+    color: var(--ch-input-text);
+    padding: 0 12px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  button.active {
+    border-color: rgba(16, 185, 129, 0.55);
+    background: var(--ch-selected-bg);
+    color: var(--ch-text);
+  }
+`;
+
+const CompanionChecklist = styled(CleanerChecklist)`
+  margin-top: 8px;
+  min-height: 90px;
+  max-height: 180px;
+`;
+
+const CompanionNote = styled.p`
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--ch-sub);
+  font-weight: 700;
+`;
+
 const ServiceTags = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
-  min-height: 20px;
+  min-height: 46px;
 
   .empty {
     font-size: 11px;
@@ -3170,14 +3459,6 @@ const FooterActions = styled.div`
     button.mobile-secondary {
       display: none;
     }
-  }
-`;
-
-const MobileHotbarSlot = styled.div`
-  display: none;
-
-  @media (max-width: 640px) {
-    display: block;
   }
 `;
 
@@ -3322,6 +3603,31 @@ const PhotoGrid = styled.div`
     border-radius: 10px;
     padding: 12px;
     text-align: center;
+  }
+  .empty .empty-label {
+    margin-bottom: 8px;
+  }
+  .empty .camera-btn {
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--ch-border);
+    background: var(--ch-sub-btn-bg);
+    color: var(--ch-sub-btn-text);
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .empty .camera-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .empty .camera-icon {
+    font-size: 14px;
+    line-height: 1;
   }
   &.pool-grid {
     display: flex;
@@ -4124,10 +4430,15 @@ const ServiceOverlayList = styled.div`
   overflow: auto;
   padding: 10px;
 
+  .svc-group {
+    border: 1px solid var(--ch-border);
+    border-radius: 10px;
+    background: var(--ch-input-bg);
+    padding: 10px;
+  }
+
   .svc-group + .svc-group {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--ch-border);
+    margin-top: 10px;
   }
 
   .svc-group-head {
@@ -4165,6 +4476,8 @@ const ServiceOverlayList = styled.div`
     align-items: start;
     padding: 7px;
     border-radius: 8px;
+    border: 1px solid var(--ch-input-border);
+    background: var(--ch-input-bg);
     cursor: pointer;
   }
   label:hover {
@@ -4172,6 +4485,7 @@ const ServiceOverlayList = styled.div`
   }
   label.checked {
     background: var(--ch-selected-bg);
+    border-color: rgba(16, 185, 129, 0.5);
   }
   input {
     grid-area: cb;

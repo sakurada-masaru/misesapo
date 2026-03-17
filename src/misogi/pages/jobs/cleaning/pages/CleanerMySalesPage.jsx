@@ -5,7 +5,9 @@ import { apiFetch } from '../../../shared/api/client';
 import { useAuth } from '../../../shared/auth/useAuth';
 import './cleaner-my-sales.css';
 
-const REWARD_RATE = 0.8;
+const SYSTEM_MAINTENANCE_RATE = 0.2;
+const SUBTOTAL_RATE = 1 - SYSTEM_MAINTENANCE_RATE;
+const REWARD_RATE = 0.4;
 const EXCLUDED_STATUS = new Set(['torikeshi']);
 
 function safeStr(v) {
@@ -216,7 +218,9 @@ export default function CleanerMySalesPage() {
       .filter((it) => !EXCLUDED_STATUS.has(safeStr(it?.jotai || it?.status).toLowerCase()))
       .map((it) => {
         const amount = resolveYoteiUnitPrice(it);
-        const reward = Math.round(amount * REWARD_RATE);
+        const participantCount = Math.max(extractParticipantIds(it).length, 1);
+        const subtotal = Math.round(amount * SUBTOTAL_RATE);
+        const reward = Math.round((subtotal * REWARD_RATE) / participantCount);
         const date = safeStr(it?.date || it?.scheduled_date || it?.scheduled_for || '');
         const start = safeStr(it?.start_at || it?.start_time || '');
         const end = safeStr(it?.end_at || it?.end_time || '');
@@ -231,6 +235,8 @@ export default function CleanerMySalesPage() {
           timeLabel: `${fmtHm(start)} - ${fmtHm(end)}`,
           status: jotaiLabel(it?.jotai || it?.status),
           amount,
+          subtotal,
+          participantCount,
           reward,
         };
       })
@@ -243,7 +249,7 @@ export default function CleanerMySalesPage() {
 
   const totals = useMemo(() => {
     const count = rows.length;
-    const subtotal = rows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+    const subtotal = rows.reduce((sum, row) => sum + Number(row.subtotal || 0), 0);
     const reward = rows.reduce((sum, row) => sum + Number(row.reward || 0), 0);
     return { count, subtotal, reward };
   }, [rows]);
@@ -254,9 +260,12 @@ export default function CleanerMySalesPage() {
         <Visualizer mode="base" className="report-page-visualizer" />
       </div>
       <div className="report-page-content cleaner-my-sales-content">
-        <header className="cleaner-my-sales-header">
-          <h1>マイページ（売上）</h1>
-          <div className="cleaner-my-sales-controls">
+        <header className="cleaner-my-sales-head">
+          <div className="cleaner-my-sales-head-title">
+            <p className="cleaner-my-sales-kicker">清掃売上管理</p>
+            <h1>マイページ（売上）</h1>
+          </div>
+          <div className="cleaner-my-sales-head-tools cleaner-my-sales-controls">
             <label htmlFor="cleaner-my-sales-month">対象月</label>
             <input
               id="cleaner-my-sales-month"
@@ -276,11 +285,11 @@ export default function CleanerMySalesPage() {
             <strong className="v">{totals.count}件</strong>
           </article>
           <article>
-            <span className="k">小計売り上げ</span>
+            <span className="k">小計売上（売上-システム維持費20%）</span>
             <strong className="v">{formatYen(totals.subtotal)}</strong>
           </article>
           <article>
-            <span className="k">報酬見込（80%）</span>
+            <span className="k">報酬見込み（小計売上×40%÷人数）</span>
             <strong className="v">{formatYen(totals.reward)}</strong>
           </article>
         </section>
@@ -295,8 +304,8 @@ export default function CleanerMySalesPage() {
                 <th>時間</th>
                 <th>屋号 / 店舗</th>
                 <th>状態</th>
-                <th>小計売り上げ</th>
-                <th>報酬</th>
+                <th>小計売上（売上-システム維持費20%）</th>
+                <th>報酬見込み（小計売上×40%÷人数）</th>
               </tr>
             </thead>
             <tbody>
@@ -314,7 +323,7 @@ export default function CleanerMySalesPage() {
                     <div className="tenpo">{row.tenpo}</div>
                   </td>
                   <td>{row.status}</td>
-                  <td>{formatYen(row.amount)}</td>
+                  <td>{formatYen(row.subtotal)}</td>
                   <td>{formatYen(row.reward)}</td>
                 </tr>
               ))}

@@ -14,7 +14,6 @@ function shouldShowCleaningNavHotbar(pathname) {
   const p = String(pathname || '/');
   if (!isCleaningWorkerPath(p)) return false;
   if (/^\/jobs\/cleaning\/entrance\/?$/.test(p)) return false;
-  if (/^\/jobs\/cleaning\/(?:houkoku|report)(?:\/|$)/.test(p)) return false;
   return true;
 }
 

@@ -1119,6 +1119,30 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.job-entrance-manual-lang {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+
+.job-entrance-manual-lang button {
+  min-height: 30px;
+  border: 0;
+  padding: 0 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--fg);
+  background: transparent;
+}
+
+.job-entrance-manual-lang button.active {
+  background: #ffa4a4;
+  color: #fff;
+}
+
 .admin-filebox-panel {
   width: 100%;
   margin: 0;

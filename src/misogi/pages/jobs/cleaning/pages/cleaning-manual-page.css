@@ -1,24 +1,38 @@
 .cleaning-manual-react-app {
   background: #fcf9ea;
+  height: 100dvh;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .cleaning-manual-react-page {
-  width: min(1080px, 100%);
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
   margin: 0 auto;
-  padding: calc(70px + env(safe-area-inset-top)) 12px calc(116px + env(safe-area-inset-bottom));
+  padding: calc(70px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   color: #493628;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.cleaning-manual-react-header {
+.cleaning-manual-react-head {
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
-.cleaning-manual-react-header h1 {
+.cleaning-manual-react-title {
+  min-width: 0;
+  flex: 1 1 100%;
+}
+
+.cleaning-manual-react-head h1 {
   margin: 0;
   font-size: clamp(1.1rem, 2.4vw, 1.5rem);
   color: #3b3b1a;
@@ -55,30 +69,30 @@
 }
 
 .cleaning-manual-react-tabs {
-  position: sticky;
-  top: calc(52px + env(safe-area-inset-top));
-  z-index: 20;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: stretch;
   gap: 8px;
-  overflow-x: auto;
-  margin: 0 -4px 12px;
-  padding: 8px 4px;
-  background: #fcf9ea;
+  margin: 0 0 8px;
+  padding: 0;
+  background: transparent;
+  flex: 0 0 auto;
+  min-width: 0;
+  width: 100%;
 }
 
 .cleaning-manual-react-tabs button {
-  flex: 0 0 auto;
-  min-width: 128px;
+  width: 100%;
+  min-width: 0;
   border: 1px solid #ffbdbd;
   background: #fff;
   color: #5d4a41;
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 8px 8px;
   line-height: 1.2;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 4px;
   font-weight: 700;
 }
@@ -97,6 +111,24 @@
 .cleaning-manual-react-list {
   display: grid;
   gap: 14px;
+}
+
+.cleaning-manual-react-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 2px 10px;
+}
+
+.cleaning-manual-react-status {
+  margin: 0 2px 10px;
+  font-size: 0.82rem;
+  color: #5d4a41;
+}
+
+.cleaning-manual-react-status.is-error {
+  color: #9f1239;
 }
 
 .cleaning-manual-react-card {
@@ -173,19 +205,26 @@
 
 .image-row {
   margin-top: 8px;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 8px;
-  overflow-x: auto;
+  overflow: visible;
+  align-items: stretch;
 }
 
 .image-row img {
-  width: 180px;
-  max-width: 100%;
-  height: 120px;
-  object-fit: cover;
+  width: 100%;
+  height: clamp(180px, 28vh, 260px);
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  box-sizing: border-box;
+  padding: 8px;
   border-radius: 10px;
   border: 1px solid #ead1d1;
   background: #fff;
+  display: block;
+  margin: 0 auto;
 }
 
 .qa-block {
@@ -209,5 +248,19 @@
 @media (min-width: 900px) {
   .comparison-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .cleaning-manual-react-tabs {
+    gap: 6px;
+  }
+
+  .cleaning-manual-react-tabs button {
+    padding: 7px 6px;
+  }
+
+  .cleaning-manual-react-tabs button span {
+    font-size: 0.78rem;
   }
 }
