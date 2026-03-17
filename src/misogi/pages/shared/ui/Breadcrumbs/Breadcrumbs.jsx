@@ -73,6 +73,9 @@ function labelForPath(pathname) {
   if (p === '/admin/dashboard') return 'ダッシュボード';
   if (p === '/admin/filebox') return 'ファイルボックス';
   if (p === '/admin/torihikisaki-touroku') return '顧客マスタ';
+  if (p === '/sales/master/customer') return '顧客マスタ申請';
+  if (p === '/sales/clients/list') return '顧客情報一覧';
+  if (p.startsWith('/sales/tenpo/')) return '顧客詳細';
   if (p === '/admin/torihikisaki-meibo') return '取引先名簿';
   if (p === '/admin/jinzai-meibo') return '人材名簿';
   if (p.startsWith('/admin/tenpo/')) return '店舗カルテ';

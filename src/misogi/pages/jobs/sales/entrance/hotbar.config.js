@@ -3,11 +3,11 @@ export const SALES_HOTBAR = [
   {
     id: 'customer',
     role: 'target',
+    icon: 'customer',
     label: '顧客',
     subItems: [
-      { id: 'client-new', label: '顧客登録', path: '/sales/clients/new' },
-      { id: 'client-list', label: '顧客一覧', path: '/sales/clients/list' },
-      { id: 'client-karte', label: '顧客カルテ', path: '/sales/kartes' },
+      { id: 'client-master-new', label: '顧客マスタ登録', path: '/sales/master/customer' },
+      { id: 'client-list', label: '顧客情報一覧', path: '/sales/clients/list' },
     ]
   },
   {

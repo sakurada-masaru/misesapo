@@ -65,7 +65,7 @@ export default function SalesCustomerListPanel({ title = '顧客一覧' }) {
   }, [search, stores]);
 
   const goToKarte = (storeId) => {
-    navigate(`/sales/store/${encodeURIComponent(storeId)}`);
+    navigate(`/sales/tenpo/${encodeURIComponent(storeId)}`);
   };
 
   if (loading) {

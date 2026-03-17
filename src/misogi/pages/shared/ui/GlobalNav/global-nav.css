@@ -69,8 +69,6 @@
 
 @media (max-width: 640px){
   .global-nav{
-    top: 8px;
-    margin: 8px 0 10px 8px;
     padding: 10px 10px;
   }
   .global-nav-label{
@@ -80,5 +78,13 @@
   .global-nav-link{
     padding: 10px 12px;
     font-size: 14px;
+  }
+}
+
+@media (max-width: 900px){
+  .global-nav{
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    margin-top: calc(env(safe-area-inset-top, 0px) + 8px);
+    margin-left: calc(env(safe-area-inset-left, 0px) + 8px);
   }
 }

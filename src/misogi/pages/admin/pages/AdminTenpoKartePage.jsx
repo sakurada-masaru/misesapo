@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 // Hamburger / admin-top are provided by GlobalNav.
 import './admin-tenpo-karte.css';
@@ -1082,11 +1082,12 @@ async function fetchTenpoDetail({ tenpoId, parentKeys }) {
   }
 }
 
-export default function AdminTenpoKartePage() {
+export default function AdminTenpoKartePage({ mode = 'admin' }) {
   const { tenpoId: tenpoIdParam } = useParams();
   const location = useLocation();
 
   const tenpoId = decodeURIComponent(String(tenpoIdParam || '')).trim();
+  const isSalesMode = String(mode || '').toLowerCase() === 'sales';
   const pageMode = useMemo(() => {
     const sp = new URLSearchParams(location.search || '');
     return String(sp.get('mode') || '').trim().toLowerCase();
@@ -1116,11 +1117,16 @@ export default function AdminTenpoKartePage() {
     typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
   ));
   const [karteView, setKarteView] = useState(() => (
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
+    isSalesMode
+      ? KARTE_VIEW.SUMMARY
+      : (typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches
       ? KARTE_VIEW.DETAIL
-      : KARTE_VIEW.SUMMARY
+      : KARTE_VIEW.SUMMARY)
   ));
-  const [summaryPane, setSummaryPane] = useState(SUMMARY_PANE.CENTER);
+  const [summaryPane, setSummaryPane] = useState(() => (
+    isSalesMode && isMobileLayout ? SUMMARY_PANE.LEFT : SUMMARY_PANE.CENTER
+  ));
+  const summaryTouchStartRef = useRef(null);
 
   // tenpo.karte_detail の編集ドラフト（master API PUTはmergeなので差分PUTで安全に保存できる）
   const [karteDetail, setKarteDetail] = useState(null);
@@ -1168,6 +1174,12 @@ export default function AdminTenpoKartePage() {
   const [aiFactGenerating, setAiFactGenerating] = useState(false);
   const [aiFactActionId, setAiFactActionId] = useState('');
   const [aiFactStatusMessage, setAiFactStatusMessage] = useState('');
+
+  useEffect(() => {
+    if (isSalesMode && karteView !== KARTE_VIEW.SUMMARY) {
+      setKarteView(KARTE_VIEW.SUMMARY);
+    }
+  }, [isSalesMode, karteView]);
 
   const headerTitle = useMemo(() => {
     const toriName = String(torihikisaki?.name || '').trim();
@@ -1271,10 +1283,26 @@ export default function AdminTenpoKartePage() {
   }, [isMonshinMode, isMobileLayout]);
 
   useEffect(() => {
-    setSummaryPane(SUMMARY_PANE.CENTER);
-  }, [tenpoId]);
+    setSummaryPane(isSalesMode && isMobileLayout ? SUMMARY_PANE.LEFT : SUMMARY_PANE.CENTER);
+  }, [tenpoId, isSalesMode, isMobileLayout]);
 
   const moveSummaryPane = useCallback((dir) => {
+    if (isSalesMode && isMobileLayout) {
+      setSummaryPane((prev) => {
+        if (dir === 'left') {
+          if (prev === SUMMARY_PANE.RIGHT) return SUMMARY_PANE.CENTER;
+          if (prev === SUMMARY_PANE.CENTER) return SUMMARY_PANE.LEFT;
+          return SUMMARY_PANE.LEFT;
+        }
+        if (dir === 'right') {
+          if (prev === SUMMARY_PANE.LEFT) return SUMMARY_PANE.CENTER;
+          if (prev === SUMMARY_PANE.CENTER) return SUMMARY_PANE.RIGHT;
+          return SUMMARY_PANE.RIGHT;
+        }
+        return prev;
+      });
+      return;
+    }
     setSummaryPane((prev) => {
       if (dir === 'left') {
         if (prev === SUMMARY_PANE.RIGHT) return SUMMARY_PANE.CENTER;
@@ -1286,7 +1314,28 @@ export default function AdminTenpoKartePage() {
       }
       return SUMMARY_PANE.CENTER;
     });
-  }, []);
+  }, [isSalesMode, isMobileLayout]);
+
+  const onSummaryTouchStart = useCallback((e) => {
+    if (!(isSalesMode && isMobileLayout)) return;
+    const touch = e.touches?.[0];
+    if (!touch) return;
+    summaryTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, [isSalesMode, isMobileLayout]);
+
+  const onSummaryTouchEnd = useCallback((e) => {
+    if (!(isSalesMode && isMobileLayout)) return;
+    const start = summaryTouchStartRef.current;
+    const touch = e.changedTouches?.[0];
+    summaryTouchStartRef.current = null;
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 44) return;
+    if (Math.abs(dy) > Math.abs(dx)) return;
+    if (dx > 0) moveSummaryPane('left');
+    else moveSummaryPane('right');
+  }, [isSalesMode, isMobileLayout, moveSummaryPane]);
 
   const salesOwnerSummary = useMemo(() => {
     const rows = uniqTags([
@@ -1749,7 +1798,7 @@ export default function AdminTenpoKartePage() {
       const isNotFound = Number(e?.status) === 404 || String(e?.message || '').includes('HTTP 404');
       if (isNotFound) {
         setError(
-          `店舗が見つかりません: ${tenpoId}\n取引先名簿（/admin/torihikisaki-meibo）から開き直してください。`
+          `店舗が見つかりません: ${tenpoId}\n${isSalesMode ? '顧客情報一覧（/sales/clients/list）' : '取引先名簿（/admin/torihikisaki-meibo）'}から開き直してください。`
         );
       } else {
         setError(e?.message || '読み込みに失敗しました');
@@ -1758,7 +1807,7 @@ export default function AdminTenpoKartePage() {
       setYakusokuLoading(false);
       setLoading(false);
     }
-  }, [tenpoId, parentKeys.torihikisaki_id, parentKeys.yagou_id]);
+  }, [tenpoId, parentKeys.torihikisaki_id, parentKeys.yagou_id, isSalesMode]);
 
   useEffect(() => {
     refresh();
@@ -2982,56 +3031,149 @@ export default function AdminTenpoKartePage() {
     </section>
   );
 
+  const isSalesMobile = isSalesMode && isMobileLayout;
+  const showSidePaneController = !isSalesMobile;
+  const showSummaryControlPanel = !isSalesMobile;
+  const showMonshinTopRow = !isMobileLayout;
+  const showSummaryTopRow = showMonshinTopRow || showSummaryControlPanel;
   const summaryControlPanel = (
     <div className="tenpo-summary-shell">
-      <button
-        type="button"
-        className="tenpo-summary-side-nav tenpo-summary-side-nav-left"
-        aria-label="左のペインへ切り替え"
-        onClick={() => moveSummaryPane('left')}
-      >
-        <span className="tenpo-summary-side-nav-hint">基本情報</span>
-        ←
-      </button>
+      {showSidePaneController ? (
+        <button
+          type="button"
+          className="tenpo-summary-side-nav tenpo-summary-side-nav-left"
+          aria-label="左のペインへ切り替え"
+          onClick={() => moveSummaryPane('left')}
+        >
+          <span className="tenpo-summary-side-nav-hint">基本情報</span>
+          ←
+        </button>
+      ) : null}
       <div className="tenpo-summary-pane-control" aria-label="表示切り替え">
         <div className="pane-center-stack">
           <div className="tenpo-summary-pane-buttons" aria-label="表示ショートカット">
-            <Link to="/admin/torihikisaki-meibo" className="pane-link">取引先名簿</Link>
-            <Link to="/admin/master/tenpo" className="pane-link">店舗マスタ</Link>
-            <a
-              href={buildCustomerMyPageUrl(tenpoId)}
-              className="pane-link"
-              target="_blank"
-              rel="noreferrer"
-            >
-              お客様マイページ
-            </a>
-            <button
-              type="button"
-              className="pane-btn"
-              onClick={() => setKarteView((v) => (v === KARTE_VIEW.DETAIL ? KARTE_VIEW.SUMMARY : KARTE_VIEW.DETAIL))}
-            >
-              {karteView === KARTE_VIEW.DETAIL ? '概要に戻る' : 'カルテ詳細'}
-            </button>
-            <button type="button" className="pane-btn" onClick={refresh} disabled={loading}>
-              {loading ? '更新中...' : '更新'}
-            </button>
-            <Link to="/admin/yotei" className="pane-link">yotei</Link>
-            <Link to="/admin/yakusoku" className="pane-link">yakusoku</Link>
+            {isSalesMobile ? (
+              <>
+                <button
+                  type="button"
+                  className={`pane-btn ${summaryPane === SUMMARY_PANE.LEFT ? 'is-active' : ''}`}
+                  onClick={() => setSummaryPane(SUMMARY_PANE.LEFT)}
+                >
+                  基本情報
+                </button>
+                <button
+                  type="button"
+                  className={`pane-btn ${summaryPane === SUMMARY_PANE.CENTER ? 'is-active' : ''}`}
+                  onClick={() => setSummaryPane(SUMMARY_PANE.CENTER)}
+                >
+                  チャット
+                </button>
+                <button
+                  type="button"
+                  className={`pane-btn ${summaryPane === SUMMARY_PANE.RIGHT ? 'is-active' : ''}`}
+                  onClick={() => setSummaryPane(SUMMARY_PANE.RIGHT)}
+                >
+                  ストレージ
+                </button>
+              </>
+            ) : isSalesMode ? (
+              <Link to="/sales/clients/list" className="pane-link">顧客情報一覧</Link>
+            ) : (
+              <>
+                <Link to="/admin/torihikisaki-meibo" className="pane-link">取引先名簿</Link>
+                <Link to="/admin/master/tenpo" className="pane-link">店舗マスタ</Link>
+              </>
+            )}
+            {!isSalesMode || !isMobileLayout ? (
+              <a
+                href={buildCustomerMyPageUrl(tenpoId)}
+                className="pane-link"
+                target="_blank"
+                rel="noreferrer"
+              >
+                お客様マイページ
+              </a>
+            ) : null}
+            {!isSalesMode ? (
+              <button
+                type="button"
+                className="pane-btn"
+                onClick={() => setKarteView((v) => (v === KARTE_VIEW.DETAIL ? KARTE_VIEW.SUMMARY : KARTE_VIEW.DETAIL))}
+              >
+                {karteView === KARTE_VIEW.DETAIL ? '概要に戻る' : 'カルテ詳細'}
+              </button>
+            ) : null}
+            {!isSalesMode || !isMobileLayout ? (
+              <button type="button" className="pane-btn" onClick={refresh} disabled={loading}>
+                {loading ? '更新中...' : '更新'}
+              </button>
+            ) : null}
+            {!isSalesMode ? (
+              <>
+                <Link to="/admin/yotei" className="pane-link">yotei</Link>
+                <Link to="/admin/yakusoku" className="pane-link">yakusoku</Link>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
-      <button
-        type="button"
-        className="tenpo-summary-side-nav tenpo-summary-side-nav-right"
-        aria-label="右のペインへ切り替え"
-        onClick={() => moveSummaryPane('right')}
-      >
-        <span className="tenpo-summary-side-nav-hint">ストレージ</span>
-        →
-      </button>
+      {showSidePaneController ? (
+        <button
+          type="button"
+          className="tenpo-summary-side-nav tenpo-summary-side-nav-right"
+          aria-label="右のペインへ切り替え"
+          onClick={() => moveSummaryPane('right')}
+        >
+          <span className="tenpo-summary-side-nav-hint">ストレージ</span>
+          →
+        </button>
+      ) : null}
     </div>
   );
+
+  const salesMobileHotbar = isSalesMobile ? (
+    <nav className="tenpo-sales-mobile-hotbar" aria-label="顧客詳細HOTバー">
+      <div className="tenpo-sales-mobile-hotbar-inner">
+        <button
+          type="button"
+          className={`hotbar-btn ${karteView === KARTE_VIEW.SUMMARY && summaryPane === SUMMARY_PANE.LEFT ? 'is-active' : ''}`}
+          onClick={() => {
+            setKarteView(KARTE_VIEW.SUMMARY);
+            setSummaryPane(SUMMARY_PANE.LEFT);
+          }}
+        >
+          基本情報
+        </button>
+        <button
+          type="button"
+          className={`hotbar-btn ${karteView === KARTE_VIEW.SUMMARY && summaryPane === SUMMARY_PANE.CENTER ? 'is-active' : ''}`}
+          onClick={() => {
+            setKarteView(KARTE_VIEW.SUMMARY);
+            setSummaryPane(SUMMARY_PANE.CENTER);
+          }}
+        >
+          チャット
+        </button>
+        <button
+          type="button"
+          className={`hotbar-btn ${karteView === KARTE_VIEW.DETAIL ? 'is-active' : ''}`}
+          onClick={() => setKarteView(KARTE_VIEW.DETAIL)}
+        >
+          カルテ
+        </button>
+        <button
+          type="button"
+          className={`hotbar-btn ${karteView === KARTE_VIEW.SUMMARY && summaryPane === SUMMARY_PANE.RIGHT ? 'is-active' : ''}`}
+          onClick={() => {
+            setKarteView(KARTE_VIEW.SUMMARY);
+            setSummaryPane(SUMMARY_PANE.RIGHT);
+          }}
+        >
+          ストレージ
+        </button>
+      </div>
+    </nav>
+  ) : null;
 
   if (!tenpoId) {
     return (
@@ -3048,7 +3190,7 @@ export default function AdminTenpoKartePage() {
   }
 
   return (
-    <div className={`tenpo-karte-page ${isMobileLayout ? 'is-mobile' : ''}`}>
+    <div className={`tenpo-karte-page ${isMobileLayout ? 'is-mobile' : ''} ${isSalesMode ? 'is-sales-mode' : ''}`.trim()}>
       <header className="tenpo-karte-head">
         <div className="left">
           <div className="admin-top-left">
@@ -3065,7 +3207,7 @@ export default function AdminTenpoKartePage() {
           </div>
         </div>
         <div className="right">
-          <Link to={directYoteiCreateLink} className="btn-primary">予定</Link>
+          {!isSalesMode ? <Link to={directYoteiCreateLink} className="btn-primary">予定</Link> : null}
         </div>
       </header>
 
@@ -3080,7 +3222,7 @@ export default function AdminTenpoKartePage() {
       <div className={`tenpo-content-safe ${karteView === KARTE_VIEW.SUMMARY ? 'is-summary' : 'is-detail'}`}>
         {karteView === KARTE_VIEW.SUMMARY ? (
           <>
-          {isMobileLayout ? (
+          {isMobileLayout && !isSalesMode ? (
             <div className="tenpo-mobile-cta">
               <button
                 type="button"
@@ -3091,11 +3233,17 @@ export default function AdminTenpoKartePage() {
               </button>
             </div>
           ) : null}
-          <div className="tenpo-summary-top-row">
-            {monshinOverviewPanel}
-            {summaryControlPanel}
-          </div>
-          <div className={`tenpo-karte-grid tenpo-karte-grid-summary pane-${summaryPane}`}>
+          {showSummaryTopRow ? (
+            <div className="tenpo-summary-top-row">
+              {showMonshinTopRow ? monshinOverviewPanel : null}
+              {showSummaryControlPanel ? summaryControlPanel : null}
+            </div>
+          ) : null}
+          <div
+            className={`tenpo-karte-grid tenpo-karte-grid-summary pane-${summaryPane}`}
+            onTouchStart={onSummaryTouchStart}
+            onTouchEnd={onSummaryTouchEnd}
+          >
           <details className="card card-accordion basic-info-card summary-pane-section summary-pane-left" open>
             <summary>
               <div className="sum-left">
@@ -3113,27 +3261,29 @@ export default function AdminTenpoKartePage() {
             </summary>
             <div className="accordion-body">
               <div className="actions-row basic-info-actions">
-                {!editingBasicInfo ? (
-                  <button type="button" onClick={() => { setBasicInfoDraft(buildBasicInfoDraft()); setEditingBasicInfo(true); }}>
-                    基本情報を編集
-                  </button>
-                ) : (
-                  <>
-                    <button type="button" className="btn-primary" onClick={saveBasicInfoNow} disabled={savingBasicInfo}>
-                      {savingBasicInfo ? '保存中...' : '保存してマスタ反映'}
+                {!isSalesMode ? (
+                  !editingBasicInfo ? (
+                    <button type="button" onClick={() => { setBasicInfoDraft(buildBasicInfoDraft()); setEditingBasicInfo(true); }}>
+                      基本情報を編集
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBasicInfoDraft(buildBasicInfoDraft());
-                        setEditingBasicInfo(false);
-                      }}
-                      disabled={savingBasicInfo}
-                    >
-                      キャンセル
-                    </button>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <button type="button" className="btn-primary" onClick={saveBasicInfoNow} disabled={savingBasicInfo}>
+                        {savingBasicInfo ? '保存中...' : '保存してマスタ反映'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBasicInfoDraft(buildBasicInfoDraft());
+                          setEditingBasicInfo(false);
+                        }}
+                        disabled={savingBasicInfo}
+                      >
+                        キャンセル
+                      </button>
+                    </>
+                  )
+                ) : null}
               </div>
 
               <details className="karte-accordion" open={false}>
@@ -3545,9 +3695,11 @@ export default function AdminTenpoKartePage() {
                       })}
                     </div>
                   ) : null}
-                  <div className="actions-row" style={{ marginTop: 10, marginBottom: 0 }}>
-                    <Link to="/admin/yakusoku" className="link">yakusoku管理へ</Link>
-                  </div>
+                  {!isSalesMode ? (
+                    <div className="actions-row" style={{ marginTop: 10, marginBottom: 0 }}>
+                      <Link to="/admin/yakusoku" className="link">yakusoku管理へ</Link>
+                    </div>
+                  ) : null}
                 </div>
               </details>
 
@@ -3631,8 +3783,12 @@ export default function AdminTenpoKartePage() {
                     <div className="v">{torihikisaki?.updated_at || '—'}</div>
                   </div>
                   <div className="actions-row">
-                    <Link to="/admin/master/torihikisaki" className="link">取引先マスタ</Link>
-                    <Link to="/admin/master/keiyaku" className="link">契約マスタ</Link>
+                    {!isSalesMode ? (
+                      <>
+                        <Link to="/admin/master/torihikisaki" className="link">取引先マスタ</Link>
+                        <Link to="/admin/master/keiyaku" className="link">契約マスタ</Link>
+                      </>
+                    ) : null}
                     {tenpo?.torihikisaki_id ? (
                       <button onClick={() => copy(String(tenpo?.torihikisaki_id))}>IDコピー</button>
                     ) : null}
@@ -3669,7 +3825,7 @@ export default function AdminTenpoKartePage() {
                     <div className="v">{yagou?.updated_at || '—'}</div>
                   </div>
                   <div className="actions-row">
-                    <Link to="/admin/master/yagou" className="link">屋号マスタ</Link>
+                    {!isSalesMode ? <Link to="/admin/master/yagou" className="link">屋号マスタ</Link> : null}
                     {tenpo?.yagou_id ? (
                       <button onClick={() => copy(String(tenpo?.yagou_id))}>IDコピー</button>
                     ) : null}
@@ -3803,16 +3959,19 @@ export default function AdminTenpoKartePage() {
           <section className="card support-history-card summary-pane-section summary-pane-center">
             <div className="card-title-row">
               <div className="card-title">対応履歴（短文・200字）</div>
-              <div className="seg-tabs">
-                <button type="button" onClick={addSupportHistory}>追加</button>
-                <button type="button" onClick={saveKarteDetailNow} disabled={savingKarteDetail}>
-                  {savingKarteDetail ? '保存中...' : '保存'}
-                </button>
-              </div>
+              {!isSalesMode ? (
+                <div className="seg-tabs">
+                  <button type="button" onClick={addSupportHistory}>追加</button>
+                  <button type="button" onClick={saveKarteDetailNow} disabled={savingKarteDetail}>
+                    {savingKarteDetail ? '保存中...' : '保存'}
+                  </button>
+                </div>
+              ) : null}
             </div>
             <div className="muted small">
               目的: 事実ベースで「いつ/誰から/何の件/誰が対応/何をした/結果」を短く残す。長文の経緯・評価・提案は書かない。
             </div>
+            <fieldset disabled={isSalesMode} className={isSalesMode ? 'readonly-fieldset' : ''}>
             {Array.isArray(karteDetail?.support_history) && karteDetail.support_history.length > 0 ? (
               <div className="service-plan-list" style={{ marginTop: 10 }}>
                 {karteDetail.support_history.map((h, i) => {
@@ -3961,6 +4120,7 @@ export default function AdminTenpoKartePage() {
             ) : (
               <div className="muted" style={{ marginTop: 10 }}>未登録</div>
             )}
+            </fieldset>
           </section>
 
           <section className="card souko-card summary-pane-section summary-pane-right">
@@ -3998,52 +4158,54 @@ export default function AdminTenpoKartePage() {
               {souko?.souko_id ? (
                 <button onClick={() => copy(String(souko?.souko_id))}>souko_idコピー</button>
               ) : (
-                <button onClick={ensureSouko} disabled={loading}>souko作成</button>
+                !isSalesMode ? <button onClick={ensureSouko} disabled={loading}>souko作成</button> : null
               )}
-              <Link to="/admin/master/souko" className="link">soukoマスタ</Link>
+              {!isSalesMode ? <Link to="/admin/master/souko" className="link">soukoマスタ</Link> : null}
             </div>
 
-            <div className="upload">
-              <div className="upload-row">
-                <select
-                  value={uploadKubun}
-                  onChange={(e) => setUploadKubun(e.target.value)}
-                  disabled={uploading}
-                  className="upload-kubun"
-                  aria-label="アップロード区分"
-                >
-                  <option value="teishutsu">提出物</option>
-                  <option value="naibu">内部</option>
-                </select>
-                <select
-                  value={uploadDocCategory}
-                  onChange={(e) => setUploadDocCategory(e.target.value)}
-                  disabled={uploading}
-                  className="upload-kubun"
-                  aria-label="書類カテゴリ"
-                >
-                  {SOUKO_DOC_CATEGORY_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-                <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={uploading} />
-                <button onClick={onUpload} disabled={!file || uploading}>
-                  {uploading ? 'アップロード中...' : 'アップロード'}
-                </button>
-              </div>
-              {lastUpload?.key ? (
-                <div className="upload-last">
-                  <div className="label">直近アップロード</div>
-                  <div className="value">
-                    <code>{lastUpload.key}</code>
-                    <button onClick={() => copy(lastUpload.key)}>キーコピー</button>
-                    {lastUpload.get_url ? (
-                      <a className="link" href={lastUpload.get_url} target="_blank" rel="noreferrer">開く(期限あり)</a>
-                    ) : null}
-                  </div>
+            {!isSalesMode ? (
+              <div className="upload">
+                <div className="upload-row">
+                  <select
+                    value={uploadKubun}
+                    onChange={(e) => setUploadKubun(e.target.value)}
+                    disabled={uploading}
+                    className="upload-kubun"
+                    aria-label="アップロード区分"
+                  >
+                    <option value="teishutsu">提出物</option>
+                    <option value="naibu">内部</option>
+                  </select>
+                  <select
+                    value={uploadDocCategory}
+                    onChange={(e) => setUploadDocCategory(e.target.value)}
+                    disabled={uploading}
+                    className="upload-kubun"
+                    aria-label="書類カテゴリ"
+                  >
+                    {SOUKO_DOC_CATEGORY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={uploading} />
+                  <button onClick={onUpload} disabled={!file || uploading}>
+                    {uploading ? 'アップロード中...' : 'アップロード'}
+                  </button>
                 </div>
-              ) : null}
-            </div>
+                {lastUpload?.key ? (
+                  <div className="upload-last">
+                    <div className="label">直近アップロード</div>
+                    <div className="value">
+                      <code>{lastUpload.key}</code>
+                      <button onClick={() => copy(lastUpload.key)}>キーコピー</button>
+                      {lastUpload.get_url ? (
+                        <a className="link" href={lastUpload.get_url} target="_blank" rel="noreferrer">開く(期限あり)</a>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="filelist">
               <div className="filelist-head">
@@ -4093,10 +4255,12 @@ export default function AdminTenpoKartePage() {
           </>
       ) : (
         <>
-          <div className="tenpo-summary-top-row">
-            {monshinOverviewPanel}
-            {summaryControlPanel}
-          </div>
+          {showSummaryTopRow ? (
+            <div className="tenpo-summary-top-row">
+              {showMonshinTopRow ? monshinOverviewPanel : null}
+              {showSummaryControlPanel ? summaryControlPanel : null}
+            </div>
+          ) : null}
           <div className="tenpo-karte-grid tenpo-karte-grid-detail">
             <section className="card card-large card-full">
             <div className="card-title-row">
@@ -4595,6 +4759,7 @@ export default function AdminTenpoKartePage() {
           </>
         )}
       </div>
+      {salesMobileHotbar}
     </div>
   );
 }

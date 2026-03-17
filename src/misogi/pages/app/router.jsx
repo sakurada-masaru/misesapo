@@ -54,7 +54,6 @@ import OfficeWorkReportDetailPage from '../office/OfficeWorkReportDetailPage';
 import OfficePayrollMonthPage from '../office/OfficePayrollMonthPage';
 import SalesKarteListPage from '../shared/ui/Sales/SalesKarteListPage';
 import SalesClientNewPage from '../jobs/sales/clients/SalesClientNewPage';
-import SalesClientListPage from '../jobs/sales/clients/SalesClientListPage';
 import SalesLeadsPage from '../shared/ui/Sales/SalesLeadsPage';
 import SalesLeadNewPage from '../shared/ui/Sales/SalesLeadNewPage';
 import SalesLeadDetailPage from '../shared/ui/Sales/SalesLeadDetailPage';
@@ -207,7 +206,7 @@ export default function Router() {
       <Route path="/sales/store/:storeKey" element={<SalesStoreKartePage />} />
       <Route path="/sales/report-day" element={<SalesDayReportPage />} />
       <Route path="/sales/customers" element={<Navigate to="/sales/clients/list" replace />} />
-      <Route path="/sales/clients/list" element={<SalesClientListPage />} />
+      <Route path="/sales/clients/list" element={<AdminTorihikisakiMeiboPage mode="sales" />} />
       <Route path="/sales/register" element={<Navigate to="/sales/clients/new" replace />} />
       <Route path="/sales/clients/new" element={<SalesClientNewPage />} />
       <Route path="/sales/kartes" element={<SalesKarteListPage />} />
@@ -216,6 +215,8 @@ export default function Router() {
       <Route path="/sales/leads/new" element={<SalesLeadNewPage />} />
       <Route path="/sales/leads/:leadId" element={<SalesLeadDetailPage />} />
       <Route path="/sales/schedule" element={<SalesSchedulePage />} />
+      <Route path="/sales/master/customer" element={<AdminCustomerMasterPage mode="sales" />} />
+      <Route path="/sales/tenpo/:tenpoId" element={<AdminTenpoKartePage mode="sales" />} />
       <Route path="/jobs/cleaning/schedule" element={<CleanerSchedulePage />} />
       <Route path="/jobs/cleaning/availability-declare" element={<ContractorAvailabilityDeclarationPage />} />
       <Route path="/jobs/cleaning/manual" element={<CleaningManualPage />} />

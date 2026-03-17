@@ -280,7 +280,7 @@ export default function SalesClientListPage() {
                                 borderLeftColor: store.status === 'active' ? '#22c55e' : 'rgba(255,255,255,0.1)',
                                 cursor: 'pointer'
                             }}
-                            onClick={() => navigate(`/sales/store/${store.id}`)}
+                            onClick={() => navigate(`/sales/tenpo/${encodeURIComponent(store.tenpo_id || store.id)}`)}
                         >
                             {/* 1行目: 法人 [法人名タグ] / 店舗 〇〇店舗名 */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginBottom: '6px', fontSize: '0.8rem' }}>

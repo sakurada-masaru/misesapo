@@ -27,6 +27,21 @@ function redirectPathToHashRoute() {
   return true;
 }
 
+function normalizeStandaloneStartRoute() {
+  if (typeof window === 'undefined') return false;
+  const pathname = String(window.location.pathname || '');
+  const hash = String(window.location.hash || '');
+  const base = '/misogi';
+  const isStandalone =
+    (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches) ||
+    window.navigator?.standalone === true;
+  if (!isStandalone) return false;
+  if (pathname !== `${base}/`) return false;
+  if (!/^#\/customer\/mypage(?:[/?]|$)/.test(hash)) return false;
+  window.location.replace(`${base}/#/`);
+  return true;
+}
+
 function resolveInitialTheme() {
   if (typeof window === 'undefined') return 'dark';
   try {
@@ -40,8 +55,10 @@ function resolveInitialTheme() {
 
 const redirectedToHashRoute =
   typeof document !== 'undefined' ? redirectPathToHashRoute() : false;
+const redirectedToPortalFromStandalone =
+  typeof document !== 'undefined' ? normalizeStandaloneStartRoute() : false;
 
-if (typeof document !== 'undefined' && !redirectedToHashRoute) {
+if (typeof document !== 'undefined' && !redirectedToHashRoute && !redirectedToPortalFromStandalone) {
   document.documentElement.setAttribute('data-theme', resolveInitialTheme());
 }
 
@@ -69,7 +86,7 @@ if (!rootEl) {
   document.body.innerHTML = '<p style="padding:1rem;color:red">#root が見つかりません。</p>';
 } else {
   try {
-    if (!redirectedToHashRoute) {
+    if (!redirectedToHashRoute && !redirectedToPortalFromStandalone) {
       ReactDOM.createRoot(rootEl).render(
         <I18nProvider>
           <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

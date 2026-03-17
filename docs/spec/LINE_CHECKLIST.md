@@ -4,6 +4,95 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 ---
 
+## Repo Housekeeping: Root Artifact Cleanup (2026-03-15)
+
+- [x] ルート直下の生成物/一時成果物（`zip/log/json/txt/ics`）を `archive/root_artifacts/2026-03-15/` へ退避
+- [x] 実行系ファイル（`src/`, `scripts/`, `lambda_function.py`, `requirements.txt` など）は未変更のまま維持
+- [x] 既存で削除状態だった `import_to_db*` 系ファイルには追加変更を加えず、そのまま尊重
+- [x] ルート一覧の視認性改善（散在成果物を集約）
+
+## HTML Legacy Contrast Inventory (2026-03-15)
+
+- [x] `src/**.html`（`node_modules`除外）を集計し、現行運用/生成物/レガシー候補に分類
+- [x] 現行運用を `src/misogi/index.html`（Viteエントリ）として明示
+- [x] `src/misogi/dist/index.html` を生成物（編集対象外）として分離
+- [x] レガシー候補のカテゴリ別件数と `src/misogi` 内レガシーHTML 4件を整理（`docs/spec/HTML_LEGACY_CONTRAST_20260315.md`）
+
+## Misogi Legacy HTML Cleanup (2026-03-15)
+
+- [x] `src/misogi/pages/jobs/sales/entrance/*.html`（4件）を `archive/legacy_html/src/misogi/pages/jobs/sales/entrance/` へ退避
+- [x] 退避方針を `archive/legacy_html/README.md` に記録
+- [x] 関連仕様ドキュメントの参照先を退避後パスへ更新（`src/misogi/docs/SALES_CLIENT_NEW_INVITE_BUTTON_SPEC.md`）
+
+## Legacy Pages Archive: `src/pages` (2026-03-15)
+
+- [x] `src/pages`（レガシー静的HTML群、119 files）を `archive/legacy_html/src/pages` へ退避
+- [x] 退避内容を `archive/legacy_html/README.md` に追記
+- [x] HTML対比ドキュメントを最新状態へ更新（`docs/spec/HTML_LEGACY_CONTRAST_20260315.md`）
+
+## Admin Customer Master: Manual Input Save Reflection Fix (2026-03-12)
+
+- [x] 顧客マスタ編集の保存処理で、更新APIの対象IDを編集中値ではなく元レコードIDで固定（自由入力時の誤パス更新を防止）
+- [x] `tenpo` 保存時に `kokyaku_id/kokyaku_name/torihikisaki_name/yagou_name` も差分反映するよう拡張
+- [x] 自由入力で取引先ID・屋号IDを変更した場合でも、保存後の再取得で表示が欠落しにくいよう補助項目を永続化
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Customer Master: Single-Page Batch Edit + Create (2026-03-12)
+
+- [x] `顧客マスタ` 画面内で `取引先 / 屋号 / 店舗` を新規追加できる3カードUIを追加
+- [x] 追加APIを `POST /master/torihikisaki`・`POST /master/yagou`・`POST /master/tenpo` へ統一し、同画面再読込で反映
+- [x] 取引先・屋号の候補連動（店舗追加時に取引先絞り込み/屋号連携）を実装
+- [x] 一括編集の見やすさ向上のため、`顧客マスタ` 専用の作成セクションCSS（ライト/ダーク両対応）を追加
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Customer Master: Create UI Consistency + Kokyaku Inputs (2026-03-12)
+
+- [x] 新規追加セクションの先頭カードを `顧客 / 取引先を追加` へ変更し、`顧客ID(kokyaku)`・`顧客名(kokyaku)` 入力を追加
+- [x] `取引先追加` API送信時に `kokyaku_id` / `kokyaku_name` を同時保存するよう拡張
+- [x] 新規追加3カードのボタンサイズを統一（幅100%・同一高さ・同一配置）
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Customer Master: Create Button Pop Style (2026-03-12)
+
+- [x] 新規追加3カードの `primary` ボタンを強い角丸（ピル形）へ変更
+- [x] ボタン配色をポップ寄りグラデーションへ調整（既存パレット準拠）
+- [x] ホバー/押下/無効時の見た目を追加して操作感を改善
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Customer Master: Edit Input Mode UI Refresh (2026-03-12)
+
+- [x] 編集モーダルの `入力モード` をチェックボックス式から `構造化入力 / 自由入力` の2択トグルUIへ変更
+- [x] モード説明文を追加し、自由入力時は警告色で注意喚起する表示へ調整
+- [x] ダーク/ライト両テーマでモードトグルの配色と可読性を最適化
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Customer Master: Sticky List Header On Scroll (2026-03-12)
+
+- [x] 顧客マスタ一覧のテーブルヘッダーを `position: sticky` 化し、スクロール時も上部に固定表示
+- [x] 顧客マスタのみテーブルラッパーに高さ制約を追加し、一覧スクロールをページ全体と分離
+- [x] ライト/ダーク両テーマで sticky ヘッダー背景と境界線を調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Torihikisaki Meibo: Theme Tone Sync (2026-03-12)
+
+- [x] `取引先名簿` のライトテーマ基調色を管理ページ共通トーンへ調整（背景 `#FCF9EA` / ヘッダー `#FFDBDB`）
+- [x] テキスト・ミュート色を `#493628` 系へ統一し、他管理ページと視覚整合
+- [x] 行ホバー/選択色、ボタン境界色、エラー表示色をピンク系パレットへ調整
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Sidebar: Dashboard/Filebox Direct Buttons (2026-03-11)
+
+- [x] 管理サイドバーの `ダッシュボード` / `ファイルボックス` をアコーディオン開閉対象から除外
+- [x] 上記2項目は単一遷移先のダイレクトボタンとして表示（1クリックで遷移）
+- [x] 既存の他カテゴリ（複数項目）は従来通りアコーディオン表示を維持
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
+## Admin Entrance: Default Open Dashboard (2026-03-11)
+
+- [x] `/admin/entrance` を `/admin/dashboard` へ `replace` リダイレクトするよう変更
+- [x] 管理エントランス起動時にダッシュボード表示モードが初期表示になることをルーティングで統一
+- [x] `npm -C src/misogi run build` でビルド成功を確認
+
 ## Cleaning Entrance: HOTBAR Bottom Padding Tuning (2026-03-07)
 
 - [x] スマホ実機で下端が詰まらないよう、HOTバーの下側余白を拡大
@@ -2421,6 +2510,7 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 ## Cleaning Yotei: Entrance Single View + Hotbar List View Split (2026-03-07)
 
 - [x] 清掃エントランス予定バブル押下時は `yotei_id` をクエリで渡し、`単体表示` で開くよう変更
+- [x] HOTバーの `予定` から開く `/jobs/cleaning/yotei` は従来どおり `一覧表示`（全件）を維持
 - [x] 一覧表示はリスト名（屋号/店舗）を押すと、詳細と引き継ぎを展開するUIへ変更
 - [x] 単体表示時は `一覧表示へ` ボタンを追加し、通常一覧へ戻れる導線を追加
 - [x] `npm -C src/misogi run build` でビルド確認
@@ -2871,4 +2961,1358 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 実行中判定の別名 (`working/shinkou/in_progress/progress/実行中/進行中`) を同一ルールで解釈
 - [x] 報告開始直前に `GET /yotei/{id}` で最新状態を再取得して再判定（状態反映遅延の吸収）
 - [x] 詳細内 `状態` 表示も同じ統一判定を参照するように修正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer: MyPage Store URL + Address List (2026-03-09)
+
+- [x] お客様向け `お客様マイページ` を v2 に新規追加（`/customer/mypage`）
+- [x] 店舗マスタ（`tenpo`）から `店舗ID / 店舗名 / 住所 / URL` を一覧表示
+- [x] `URL` 未設定店舗には仮URL（`https://store.misesapo.local/{tenpo_id}`）を自動補完表示
+- [x] 検索（店舗名/住所/URL）と手動更新を実装
+- [x] パンくず表示名に `お客様マイページ` を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Store Basic Info: Add URL Field Across Key Views (2026-03-09)
+
+- [x] `営業カルテ（SalesStoreKarte）` の基本情報に `URL` 入力項目を追加
+- [x] 営業カルテの店舗初期化（`/stores/:id` 取得時）で `url/site_url/website` を取り込み
+- [x] `事務カルテパネル（OfficeClientKartePanel）` の基本情報に `URL` 表示を追加
+- [x] `清掃予定詳細（MyYoteiListPage）` の基本情報に `URL` 表示を追加（一覧/単体の両方）
+- [x] `tenpo` 参照時に `url/site_url/website/google_map_url/map_url` を優先解決して表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Store URL: Avoid Blank Display With Fallback (2026-03-09)
+
+- [x] `営業カルテ（SalesStoreKarte）` の基本情報URLが未設定でも仮URLを補完表示
+- [x] `事務カルテ（OfficeClientKartePanel）` の基本情報URLが未設定でも仮URLを補完表示
+- [x] `清掃予定詳細（MyYoteiListPage）` の基本情報URLが未設定でも仮URLを補完表示
+- [x] `https://` なしURLは表示時に自動補正（`https://` 付与）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Karte: Basic Info URL Fallback (2026-03-09)
+
+- [x] `お客様情報基本情報（AdminTenpoKarte）` のURL解決元を拡張（`url/site_url/website/google_map_url/map_url`）
+- [x] URL未設定時に `https://store.misesapo.local/{tenpo_id}` を自動補完表示
+- [x] `https://` なしURLは表示時に自動補正（`https://` 付与）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer URL: Switch To MISOGI MyPage Link (2026-03-09)
+
+- [x] `お客様情報基本情報（AdminTenpoKarte）` のURLを外部サイトではなく `MISOGIお客様マイページURL` 生成へ変更
+- [x] 生成URL形式を `https://misesapo.co.jp/misogi/#/customer/mypage?tenpo_id={tenpo_id}` に統一（環境変数上書き可）
+- [x] `CustomerMyPage` で `tenpo_id` クエリを受け取り対象店舗のみ表示できるよう対応
+- [x] `CustomerMyPage` の行URLを `MISOGIお客様マイページURL` 優先へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Detach System Chrome (2026-03-09)
+
+- [x] `/customer/mypage` で共通ヘッダー（パンくず/戻る/ハンバーガー/共通チャット）を非表示化
+- [x] `CustomerMyPage` 内の `Portalへ戻る` 導線を削除
+- [x] お客様マイページをシステム外導線前提の単独画面として整理
+- [x] `App.jsx` 側にも `/customer/mypage` のヘッダー描画抑止ガードを追加（二重抑止）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Pink POP Redesign + Detail Sections (2026-03-09)
+
+- [x] `CustomerMyPage` 全体レイアウトを刷新（ピンク基調・POPトーン・カード型UI）
+- [x] `tenpo_id` 指定時に `基本情報 / 対応履歴 / ストレージ` の3セクション表示を追加
+- [x] `対応履歴` は `tenpo.karte_detail.support_history` を日付降順で表示
+- [x] `ストレージ` は `souko(tenpo_id)` の登録ファイルをカード表示（画像サムネイル + 開くリンク）
+- [x] `tenpo_id` 未指定時は店舗カード一覧（店舗別お客様ページURL導線）を表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: White Background (2026-03-09)
+
+- [x] `CustomerMyPage` のページ背景を白固定へ変更
+- [x] `/customer/mypage`（standalone-page）時のアプリ全体背景を白固定へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Basic Info Labels + Remove Search (2026-03-09)
+
+- [x] 基本情報から `店舗ID` を削除
+- [x] 基本情報に `取引先` を追加（`torihikisaki_name/company_name/customer_name` などから解決）
+- [x] 基本情報の `屋号` 表示を維持
+- [x] 検索UI（検索入力）を削除
+- [x] `tenpo_id` 未指定時の一覧は検索なし全件表示に変更（更新ボタンは一覧サマリへ集約）
+- [x] 基本情報ラベル `取引先` を `法人` 表記へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Brand Title Masking (2026-03-09)
+
+- [x] `/customer/mypage` 表示中のみブラウザタイトルを `ミセサポ お客様マイページ` に切り替え
+- [x] ページ離脱時に元のタイトルへ復帰
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Customer-only PWA Manifest (2026-03-09)
+
+- [x] お客様向け `customer-manifest.json` を追加（`name/short_name = ミセサポ`）
+- [x] `/customer/mypage` 表示中のみ `link[rel="manifest"]` を `customer-manifest.json` へ差し替え
+- [x] ページ離脱時に元の `manifest` 参照へ復元
+- [x] `/customer/mypage` 表示中のみ `apple-mobile-web-app-title` を `ミセサポ` へ設定（離脱時復元）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Basic Info Self Edit (2026-03-09)
+
+- [x] お客様マイページ `基本情報` に `編集 / 保存 / キャンセル` を追加
+- [x] 編集対象を `法人 / 屋号 / 店舗名 / 住所 / 電話番号 / 担当者 / 営業時間` に設定
+- [x] 保存時に `PUT /master/tenpo/{tenpo_id}` で `tenpo` 本体 + `karte_detail.spec` を同時更新
+- [x] 保存結果を画面へ即時反映し、保存メッセージを表示
+- [x] PC/SP で崩れないよう入力UIスタイルを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Base Background Color FCF9EA (2026-03-09)
+
+- [x] `CustomerMyPage` 背景色を `#FCF9EA` に変更
+- [x] `/customer/mypage` の standalone 背景色を `#FCF9EA` に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Color Palette Update (2026-03-09)
+
+- [x] お客様マイページのカラーパレットを指定値へ更新（メイン `#FFA4A4` / サブ `#FFBDBD` / アクセント `#BADFDB`）
+- [x] ボタン/バッジ/入力フォーカス/履歴ステータス/ストレージサムネ背景など主要UI配色を新パレットに統一
+- [x] お客様向け PWA `customer-manifest.json` の `theme_color` をメインカラー `#FFA4A4` へ変更
+- [x] お客様マイページの基準文字色を `#493628` へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Basic Info Edit Text Visibility Fix (2026-03-09)
+
+- [x] 基本情報編集エリアの `編集/保存/キャンセル` ボタン文字色を固定化し、テーマ差分で文字が見えなくならないよう修正
+- [x] 基本情報編集入力の文字色を明示指定（`-webkit-text-fill-color` 含む）して可読性を安定化
+- [x] プレースホルダ文字色を調整し、入力欄で視認できるよう修正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Main Content Drop Shadow Removal (2026-03-09)
+
+- [x] お客様マイページのメインコンテンツ（`.customer-mypage`）のドロップシャドウを削除
+- [x] フォーカスリング等の操作性に必要な視認効果は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Houkoku Result-only Section (2026-03-09)
+
+- [x] お客様マイページに `作業完了レポート（結果）` セクションを追加
+- [x] `admin/work-reports` から対象店舗の報告を抽出し、顧客向けに `結果` テキストのみ表示（本文詳細は非表示）
+- [x] 表示対象を完了系ステータス（`submitted/triaged/approved/archived`）に限定
+- [x] 取得失敗時は画面を壊さず、結果セクション内でメッセージ表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Notice Feed + Houkoku Tenpo Link (2026-03-09)
+
+- [x] 清掃報告（`CleaningDayReportPage`）の店舗保存データに `tenpo_id` を永続化（`description.store.tenpo_id`）
+- [x] 店舗選択時に `StoreSearchField` の `store_key` を報告データへ連携（`tenpo_id` として保持）
+- [x] 報告保存時、`tenpo_id` がある場合は `target_id` にも反映して照合精度を向上
+- [x] お客様マイページの作業完了レポート抽出で `tenpo_id` 一致を優先し、店舗名一致をフォールバック化
+- [x] お客様マイページ下部に `お知らせ` セクションを追加
+- [x] `yotei` 作成イベント（`created_at`）を通知表示
+- [x] `yotei` 実行中イベント（`working/shinkou` 系ステータス）を通知表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Move Notice Section To Page Bottom (2026-03-09)
+
+- [x] `お知らせ` を詳細グリッド内から分離し、`お客様マイページ` の最下部セクションへ移動
+- [x] 下部配置用の余白スタイル（`.customer-notice-section`）を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Detail Title Uses Yagou + Tenpo (2026-03-09)
+
+- [x] お客様マイページ詳細タイトルを `屋号 / 店舗名` のセット表示へ統一
+- [x] どちらか未設定時はタイトル側のみ `屋号未設定` / `店舗名未設定` を補完表示
+- [x] 基本情報セクションの個別表示は既存のまま維持
+
+## Admin Theme: Customer Palette Sync + Light-only Mode (2026-03-10)
+
+- [x] 管理系統（`data-job="admin"`）の基調カラーをお客様マイページと同一パレットへ統一（`#FCF9EA / #FFA4A4 / #FFBDBD / #BADFDB / #493628`）
+- [x] 管理系統の見出し文字色を `#3B3B1A` へ統一
+- [x] 管理系統のコンテンツ背景（カード/パネル/ワークスペース）を `#FCF9EA` 基調へ統一
+- [x] 共通ヘッダー（`breadcrumbs`）背景色を `#FFDBDB` に統一
+- [x] 管理ルートのボディ外枠背景（`app-fullscreen`）を `#FCF9EA` へ固定
+- [x] 管理ルート表示中は `body/html` 背景色も `#FCF9EA` へ固定（root外余白も同色化）
+- [x] 管理エントランス（通常/セピア）背景を同一トーンに統一し、セピア専用のテクスチャ演出を無効化
+- [x] 管理サイドバー / 通知レール / 通知パネル / 管理ワークスペースの配色を同一トーンへ統一
+- [x] 管理パンくずヘッダー（`.breadcrumbs-admin`）の配色を同一トーンへ統一
+- [x] 管理系統の表示モードをライト固定化（管理サイドバーからモード切替UIを撤去し、`ライトモード（固定）` 表示へ変更）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Table Row Key Stabilization (2026-03-10)
+
+- [x] `AdminMasterBase` のテーブル行 `key` を `Math.random()` 依存から安定キーへ変更（`rid` 優先 / 未定義時は `rowIndex` フォールバック）
+- [x] セル `key` も `rid` 依存から行安定キーに統一し、ID欠落行での再描画ズレを抑制
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Tenpo Yagou Empty Display (2026-03-10)
+
+- [x] 店舗マスタの `屋号` 列で、未割り当て値を `-` 補完せず空白表示する仕様を追加
+- [x] 共通テーブルに `emptyAsBlank` を追加し、指定フィールドのみ空欄表示を選択可能化
+- [x] `AdminMasterTenpoPage` の `yagou_id` フィールドへ `emptyAsBlank` を適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Customer Master Integration Entry (2026-03-10)
+
+- [x] `AdminTorihikisakiTourokuPage` を `mode` 対応し、`顧客マスタ` 用の見出し/説明へ切替可能化
+- [x] `AdminCustomerMasterPage` を追加し、統合導線 `/admin/master/customer` を新設
+- [x] 管理エントランスの `マスタ情報` を `顧客マスタ` 1本導線へ集約（取引先/屋号/店舗の個別導線を統合）
+- [x] 事務エントランスの `情報` 内 `マスタ(顧客)` 導線も `顧客マスタ` へ統合
+- [x] パンくず表示に `/admin/master/customer` => `顧客マスタ` を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Partial Hierarchy Support (2026-03-10)
+
+- [x] 顧客マスタの `屋号追加` で `取引先未選択` を許容（`torihikisaki_id` は任意送信）
+- [x] 顧客マスタの `店舗追加` で `取引先のみ` / `屋号のみ` / `両方なし` を許容（`torihikisaki_id`/`yagou_id` を任意送信）
+- [x] `屋号（既存）` 選択を取引先未選択でも有効化し、未選択時は全屋号をロード
+- [x] 既存検索インデックスを拡張し、`取引先なし屋号` / `屋号なし店舗` / `取引先なし店舗` も候補表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Customer Master Unified Edit Page (2026-03-10)
+
+- [x] `/admin/master/customer` を「取引先 / 屋号 / 店舗の一括編集・保存」専用ページとして再実装
+- [x] 3マスタを同時取得し、`tenpo` 中心 + `yagou単体` + `torihikisaki単体` を統合表示
+- [x] 1行編集で `torihikisaki / yagou / tenpo` を横断更新できるモーダル保存を実装
+- [x] `torihikisaki_id`・`yagou_id` の再紐付けを店舗保存時に同時更新可能化
+- [x] 旧 `/admin/torihikisaki-touroku` は「顧客登録（新規作成）」導線として維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Hide Address Display In Customer Master (2026-03-10)
+
+- [x] 顧客マスタ一覧テーブルの `住所` 列を非表示化（列ヘッダー/値表示を削除）
+- [x] 空状態行 `colSpan` を列数に合わせて調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Torihikisaki Label Revert (2026-03-10)
+
+- [x] 基本情報の `torihikisaki_name` ラベルを `法人` から `取引先` へ戻す
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Torihikisaki Label As Houjin (2026-03-10)
+
+- [x] お客様マイページの基本情報で `torihikisaki_name` ラベルを `法人` 表記へ戻す
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Customer Master Kokyaku Layer + Clean Filters (2026-03-10)
+
+- [x] 顧客マスタ一覧に `顧客(kokyaku)` 列を追加（`kokyaku_id/kokyaku_name` を表示）
+- [x] `kokyaku` 検索を統合検索に追加（顧客/取引先/屋号/店舗を横断検索）
+- [x] 画面フィルタを追加（`全件` / `未紐付け` / `重複候補`）
+- [x] 一覧に状態列を追加し、`未紐付けあり` / `重複候補` / `正常` を可視化
+- [x] 編集モーダルに `顧客ID(kokyaku)` / `顧客名(kokyaku)` を追加
+- [x] `torihikisaki` 保存時に `kokyaku_id` / `kokyaku_name` 更新を反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Customer Master Sort + Center Search (2026-03-10)
+
+- [x] 顧客マスタ一覧ヘッダーに列別ソートを追加（`顧客/取引先/屋号/店舗/電話/URL/状態` の昇順・降順切替）
+- [x] ID系ソート（`TORI/YAGOU/TENPO/KOKYAKU`）を若番優先で比較し、番号が小さい順に上から表示
+- [x] 既定ソートを `取引先ID` 昇順に変更（若番が上）
+- [x] 表示件数をソート後リスト基準で表示するよう調整
+- [x] 統合検索を大型化（入力高・フォント拡大）し、ツールバー中央へ配置
+- [x] モバイル幅では検索を全幅・左寄せへフォールバック
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Kokyaku ID Priority Display (2026-03-10)
+
+- [x] 顧客IDの既定表示を `kokyaku_id` 優先に統一
+- [x] `kokyaku_id` 未設定時の表示フォールバックを `TORI#...` 直接表示ではなく `KOKYAKU#...` 形式へ正規化
+- [x] 既定ソートを `kokyaku_id` 昇順（若番優先）に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Customer URL Column Compaction (2026-03-10)
+
+- [x] 顧客マスタの `URL` 列を固定幅化（140px）して横幅を圧縮
+- [x] URL表示をホスト名ベースへ短縮し、フルURLはツールチップで保持
+- [x] 顧客マスタテーブルを固定レイアウト化し、列幅圧縮時の横スクロールを抑制
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Customer ID Tag Colors (2026-03-10)
+
+- [x] 顧客マスタ一覧のIDをタグ表示へ変更（`kokyaku / torihikisaki / yagou / tenpo`）
+- [x] IDタグを種別ごとに色分け（ダーク/ライト両テーマ対応）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Customer Table Emergency Layout Stabilization (2026-03-10)
+
+- [x] 顧客マスタで崩れ要因になっていた固定テーブルレイアウト強制（`table-layout: fixed`）を解除
+- [x] 顧客マスタで全セル折返し強制（`white-space: normal`）を解除し、既存の安定表示へ復帰
+- [x] `URL` 列の圧縮（固定幅 + 省略表示）は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Customer Bulk Delete + URL Removal (2026-03-10)
+
+- [x] 顧客マスタに行選択チェックボックス（ヘッダー一括選択 + 行ごとの選択）を追加
+- [x] ツールバーの一括アクションを `取り消し` から `削除` へ変更（確認ダイアログ付き）
+- [x] 選択行は `DELETE` API で物理削除するフローへ変更（成功/失敗メッセージも削除文言へ統一）
+- [x] 顧客マスタ一覧と編集モーダルから `URL` 項目を削除
+- [x] 顧客マスタの `URL` ソート分岐を削除し、表示列定義と整合
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Master: Structured Edit Default + Manual Override (2026-03-10)
+
+- [x] 顧客マスタ編集モーダルを「構造化入力デフォルト」に変更（ID/紐付けは選択式）
+- [x] `取引先ID` / `屋号ID` を手入力欄から既存候補の `select` へ変更
+- [x] 選択時に関連する名称（必要に応じて `kokyaku` 情報）を自動反映する補助ロジックを追加
+- [x] `顧客ID` / `店舗ID` は通常モードで直接編集不可（誤入力防止）
+- [x] 必要時のみ `自由入力を許可（通常はOFF推奨）` をONにして手入力可能なハイブリッド運用へ対応
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Cleaning Houkoku: Selection Card Backdrop Tone Adjustment (2026-03-10)
+
+- [x] `清掃業務報告 必要選択` カード本体背景は白基調を維持
+- [x] カード背面（ページ背景）を指定トーン `#FCF9EA` へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Theme: Cream Backdrop Expansion (2026-03-10)
+
+- [x] 管理マスタ系ページ（`.admin-master-page`）のライト背景を `#FCF9EA` に統一
+- [x] 例外で白背景だった `kadai` 画面も `#FCF9EA` へ統一
+- [x] 管理報告ページ（`.report-page[data-job=\"admin\"]`）のライト背景を `#FCF9EA` へ統一
+- [x] 管理エントランス（`.job-entrance-page[data-job=\"admin\"]`）のライト背景を `#FCF9EA` へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Theme: Yotei/Ugoki/Yakusoku Cream Backdrop Sync (2026-03-10)
+
+- [x] `yotei` / `yakusoku` 共通タイムライン画面（`.admin-yotei-timeline-page`）のライト背景を `#FCF9EA` へ統一
+- [x] `capacity-safe / warn / danger` の背景グラデーション下地も `#FCF9EA` へ統一
+- [x] `ugoki` ダッシュボード（`.admin-ugoki-dashboard-page`）のライト背景を `#FCF9EA` へ統一
+- [x] カード/パネル背景は白を維持（可読性優先）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yotei: Gradient Removal (2026-03-10)
+
+- [x] `admin-yotei-timeline` の `capacity-safe / warn / danger` 背景グラデーションを削除し、単色背景へ統一
+- [x] `yotei-head h1` のグラデーション文字を廃止し、単色文字表示へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request Document: Cream Background Sync (2026-03-10)
+
+- [x] `依頼書作成` ページ（`.admin-request-doc-page`）の背景をクリームトーン `#FCF9EA` へ統一
+- [x] ライトモード時の背景色も `#FCF9EA` へ統一
+- [x] 入力/プレビューのパネル背景（白）は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Shared Header: Blue Tone Update (2026-03-12)
+
+- [x] 共通 `Breadcrumbs` ヘッダー背景を青系トーンへ変更（`#dbeafe`）
+- [x] 共通リンク/現在地ラベル/境界線色を青系へ調整
+- [x] `breadcrumbs-admin` 上書き配色も青系へ統一（ボタンON状態含む）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Global Palette: 4-Color Theme Sync (2026-03-12)
+
+- [x] ライトテーマ共通トークンを4色パレットへ統一（`#FCF9EA / #BADFDB / #FFA4A4 / #FFBDBD`）
+- [x] 共通UI（リンク/入力/ボタン/カード）のライト配色を4色パレットへ調整
+- [x] 共通ヘッダー（Breadcrumbs）配色を4色パレットへ再統一
+- [x] 取引先名簿ヘッダー配色を4色パレットへ調整
+- [x] 管理 `yasumi` / `schedule timeline` のライト配色を4色パレットへ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Per-Store URL Scope Fix (2026-03-12)
+
+- [x] `customer/mypage` URLが既存値でも `tenpo_id` を必ず付与・上書きする共通補助関数を追加
+- [x] `CustomerMyPage` の店舗一覧リンク生成で `tenpo_id` 付きURLを強制し、全店舗同一ページ化を防止
+- [x] `AdminTenpoKarte` の基本情報URL解決でも `tenpo_id` を強制付与し、表示URLの一意性を保証
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Scoped Detail Strict Match (2026-03-12)
+
+- [x] `tenpo_id` 指定付き一覧取得の結果を先頭採用せず、`tenpo_id` 完全一致のみ採用するよう修正
+- [x] API側フィルタが効かない場合でも他店舗データを誤表示しないよう防御
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Basic Info Source Sync To Karte (2026-03-12)
+
+- [x] お客様マイページ基本情報を `tenpo` 直値だけでなく `karte_detail.spec` 優先で参照するよう修正
+- [x] `yagou.shared_basic_profile` / `torihikisaki.shared_basic_profile` を取得し、カルテ同様の階層マージ参照へ統一
+- [x] 基本情報フォーム初期値と編集キャンセル復帰時の参照元を同一ロジックへ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Support History Calendar (2026-03-12)
+
+- [x] お客様マイページの `対応履歴` セクションに月カレンダーを追加
+- [x] 日付セル選択で該当日の履歴だけを絞り込み表示（再タップ/全日表示で解除）
+- [x] 履歴件数バッジを日付セルへ表示し、月移動（前月/次月）操作を追加
+- [x] カレンダーUIの専用スタイルを追加し、既存配色トーンへ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning: Manual Page React Rebuild (2026-03-12)
+
+- [x] 旧 `cleaning-manual.html` の構成をもとに、React版 `清掃マニュアル` ページを新規実装
+- [x] 既存データ `cleaning-manual.json / cleaning-manual-en.json` を利用したカテゴリ切替・言語切替を実装
+- [x] NG/OK 比較・リスク・Q&A・画像表示をカードUIで再構成（モバイル表示対応）
+- [x] ルーティングを追加（`/jobs/cleaning/manual`）し、`/cleaning-manual` からの遷移もReactページへ統一
+- [x] 清掃エントランスの `ツール` 配下に `清掃マニュアル` 導線を追加
+- [x] 清掃ワーカー共通HOTバーの `tools` アクティブ判定に `manual` ルートを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Customer Master: New Create ID Auto-Assignment (2026-03-12)
+
+- [x] 顧客マスタ新規追加の `顧客ID(kokyaku)` 手入力欄を廃止
+- [x] 新規追加時の `kokyaku_id` は一覧データから算出した次連番を自動割り当てへ変更
+- [x] 新規追加カードに `顧客/取引先/屋号/店舗` の自動採番予定IDを表示
+- [x] 自動採番表示用のUIスタイルを追加（ライト/ダーク両対応）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Customer Master: List Header Sticky to Viewport Top (2026-03-12)
+
+- [x] 顧客マスタ一覧の内部スクロールを廃止し、ページスクロール基準へ変更
+- [x] リストヘッダー（`thead`）が画面上部へ固定される挙動へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Customer Master: Sticky Search + Internal List Scroll (2026-03-12)
+
+- [x] 顧客マスタの検索ツールバーを画面上部で `sticky` 固定へ変更
+- [x] 検索バー到達後は一覧テーブルを内部スクロールするように調整（`table-wrap` 高さ制御）
+- [x] モバイル時のツールバー高さを考慮した内部スクロール高さへ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Side Arrow Slide Navigation (2026-03-12)
+
+- [x] お客様マイページ詳細表示を3ペイン化（左: 基本情報 / 中央: レポート+対応履歴 / 右: ストレージ）
+- [x] 左右余白に `← / →` ナビボタンを追加し、クリックでスライド切替を実装
+- [x] デフォルト表示を中央ペイン（レポート + 対応履歴）に設定
+- [x] モバイル含むレスポンシブでスライダーレイアウトを調整
+- [x] メインコンテンツを全幅化し、矢印ボタンをコンテンツ外の独立固定コントロールへ変更
+- [x] 矢印ボタンとの重なり防止のため、詳細コンテンツに左右クリアランスを追加
+- [x] 左右矢印を「1ステップ移動コントローラー」へ変更（左:1つ左 / 右:1つ右）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Basic Info Service Subscription Tags (2026-03-12)
+
+- [x] 基本情報カード下に `現在お申し込み中のサービス` セクションを追加
+- [x] `プラン` をタグ表示（`karte_detail.plan` / 店舗側プラン項目をフォールバック参照）
+- [x] `サービス` をタグ表示（`karte_detail.service_plan` を主軸に既存サービス項目をフォールバック参照）
+- [x] サービス/プラン表示をお客様マイページ配色に合わせたタグUIへ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Arrow Hint + Content Clearance Tuning (2026-03-12)
+
+- [x] 左右ナビ矢印の上にヒントラベルを追加（次に移動するペイン名を表示）
+- [x] 矢印ヒントとコンテンツの重なりを避けるため、左右クリアランスを拡張
+- [x] SP/タブレット向けにヒント文字サイズとクリアランスをレスポンシブ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Body Horizontal Padding Tuning (2026-03-12)
+
+- [x] お客様マイページのボディ左右パディングを拡張（PC: `24px`）
+- [x] SP時の左右パディングも拡張（`16px`）して端詰まり感を軽減
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Control Button Inset Tuning (2026-03-12)
+
+- [x] 左右コントロールボタンの配置を内側へ調整（`left/right` を固定値 `8px` から可変insetへ変更）
+- [x] `customer-detail-shell` に `--customer-nav-inset` を追加し、PC/タブレット/SPで最適値を切り替え
+- [x] 矢印ボタンの見た目位置をコンテンツ端に合わせやすいよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Control Button Inset = Body Padding (2026-03-12)
+
+- [x] コントロールボタンの左右insetをボディ左右パディングと同値へ統一（PC/Tablet: `24px`、SP: `16px`）
+- [x] `customer-detail-shell` の `--customer-nav-inset` をブレークポイントごとに再調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Footer Copyright (2026-03-12)
+
+- [x] お客様マイページ最下部にコピーライトフッターを追加
+- [x] フッター配色をピンク背景＋白文字へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Fixed Full-Width Footer Overlay (2026-03-12)
+
+- [x] お客様マイページのコピーライトフッターを `position: fixed` で全幅表示に変更
+- [x] フッターを最前面表示（高 `z-index`）へ調整
+- [x] フッター固定時にコンテンツが隠れないよう、ページ下部余白をフッター高さ分拡張
+- [x] `env(safe-area-inset-bottom)` を加味してSP実機の下端表示を調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Footer Height Compact (2026-03-12)
+
+- [x] 固定フッター高さを約半分へ縮小（`--customer-fixed-footer-height: 24px`）
+- [x] フッター内余白・コピーライト文字サイズを縮小して高さに合わせて最適化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Hide TENPO# ID In Cards (2026-03-12)
+
+- [x] お客様マイページの店舗カードで `TENPO#...` IDチップを非表示化
+- [x] `TENPO#` 以外のID表示は従来通り維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Hide TENPO# In Hero Subtitle (2026-03-12)
+
+- [x] お客様マイページヘッダー説明文から `（TENPO#...）` のID表記を削除
+- [x] ヘッダー説明文は `基本情報 / 対応履歴 / ストレージを確認できます` に統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Hover Visibility Enhancement (2026-03-12)
+
+- [x] PCマウス環境でカード/パネル/行/カレンダー要素に統一ホバー強調（境界・影）を追加
+- [x] ボタン/リンク/ナビにホバー時の浮き表現を追加し、現在のポインタ位置を視認しやすく調整
+- [x] フォーカス可視化（`focus-visible`）を追加して操作対象を明確化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Control Button Hover Motion Removal (2026-03-12)
+
+- [x] 左右コントロールボタンのホバー時移動（translate）を削除
+- [x] コントロールボタンは色変化のみでホバー反応するよう調整
+- [x] 共通ホバー浮き演出の対象からコントロールボタンを除外
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Support History Generalization + Next Schedule Highlight (2026-03-12)
+
+- [x] `対応履歴` セクションを `対応履歴・次回予定` へ拡張
+- [x] `yotei` から対象店舗の次回予定（未来・未クローズ）を抽出して表示
+- [x] 次回予定の日付を赤文字で強調表示し、判別しやすく調整
+- [x] 次回予定の店舗名・時間帯・担当者を履歴セクション内で確認できるよう追加
+- [x] `fmtDateTimeJst` を `Date` 入力にも対応させ、表示の安定性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Download -> Auto Save To Souko (2026-03-12)
+
+- [x] 作業完了レポート（結果）に `PDFダウンロード` ボタンを追加
+- [x] ダウンロード時にレポート内容からA4 PDFを生成（店舗/作業日/作成日時/結果を含む）
+- [x] ダウンロード実行と同時に同一PDFを `souko` へ自動保存する処理を追加
+- [x] `souko` 保存フローを実装（保存先取得 or 作成 -> presign -> PUT -> files更新）
+- [x] 保存成功/失敗のフィードバック表示を追加し、成功時にストレージ一覧を再取得
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Notice Area Slim + Quick Buttons (2026-03-12)
+
+- [x] ヘッダー下のお知らせ領域を2カラム化し、お知らせ幅をスリム化
+- [x] 右カラムにクイックメニューを追加（`サービスカタログ / 基本情報 / レポート / ストレージ / お知らせ更新`）
+- [x] `サービスカタログ` ボタン導線用PDFを `public/customer/catalog/misesapo_catalog_0303.pdf` に配置
+- [x] SP幅ではお知らせ+クイックメニューを1カラムに自動切替
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Remove Quick Menu Panel Style (2026-03-12)
+
+- [x] `クイックメニュー` 独立パネルを撤去し、`お知らせ`単一パネル構成へ変更
+- [x] 操作ボタン群は `お知らせ` ヘッダー右に統合（`サービスカタログ` ボタンは維持）
+- [x] お知らせパネル幅を抑制（`max-width`）し、過剰な横幅使用を抑えるレイアウトへ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Notice Header Buttons Narrowed To 2 (2026-03-12)
+
+- [x] お知らせヘッダーの操作ボタンを `サービスカタログ` / `お問い合わせ` の2つに整理
+- [x] `基本情報/レポート/ストレージ/更新` ボタンを撤去
+- [x] `お問い合わせ` 導線を `VITE_CUSTOMER_INQUIRY_URL` 優先、未設定時は `https://misesapo.co.jp/contact/` にフォールバック
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Move Notice Buttons Outside Panel (2026-03-12)
+
+- [x] `サービスカタログ / お問い合わせ` ボタンを `お知らせ` パネル内から外へ移動
+- [x] ボタンを `お知らせ` セクション上部ツールバーとして配置
+- [x] `お知らせ` パネルヘッダーは件数表示のみへ整理
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Place Catalog/Inquiry On Right Side Of Notice (2026-03-12)
+
+- [x] `お知らせ` と `サービスカタログ/お問い合わせ` を同一行に再配置（左: お知らせ、右: 2ボタン）
+- [x] 2ボタンは `お知らせ` パネル外の右サイドアクションとして実装
+- [x] SP表示は1カラムへ自動切替し、2ボタンは横並び表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Right Buttons 2-Row + Match Notice Height (2026-03-12)
+
+- [x] `サービスカタログ / お問い合わせ` を右サイドで上下2段固定に調整
+- [x] `お知らせ` 行を `stretch` 配置にして、右2ボタンの高さを左お知らせパネル高に追従
+- [x] ボタンを行内中央配置にしつつ、2行グリッド全面フィットへ変更
+- [x] SP時も右2ボタンは2段表示を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tools: Cleaning Manual Link + Cleaner Visibility Confirmed (2026-03-12)
+
+- [x] 管理サイドバー `運用ツール` に `清掃マニュアル` 導線を追加（`/jobs/cleaning/manual`）
+- [x] 清掃員側 `ツール > 清掃マニュアル` の既存導線が維持されていることを確認
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Import Preview + Bulk Create (2026-03-12)
+
+- [x] `yakusoku` 画面ヘッダーに `ICS取り込み` ボタンを追加
+- [x] `.ics` ファイル読込 / ICSテキスト貼り付けの両対応モーダルを実装
+- [x] VEVENTを解析して、店舗一致・清掃判定・重複判定（`memo` 内 `ics_source=`）付きプレビューを追加
+- [x] `取り込み実行` で `yakusoku` を一括作成（種別/サービス/月枠/定期のtask_matrixを自動補完）
+- [x] 取り込み結果（作成件数/失敗件数/エラー詳細）を画面表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Precision Matching + Pre-Import Manual Fix (2026-03-12)
+
+- [x] `SUMMARY（屋号/店舗/プラン）` 優先の重み付けマッチへ調整（店舗/サービス抽出精度を改善）
+- [x] 取り込みプレビュー行ごとに `対象ON/OFF・種別・開始日・店舗・サービス・月枠` を手修正可能化
+- [x] `全件ON / 全件OFF` を追加し、一括選別を高速化
+- [x] 取り込み判定を行単位で再評価（除外・清掃判定・重複・店舗・サービス・日付）
+- [x] 手修正した値をそのまま `yakusoku` 一括作成に反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Service Content + Tenpo/Yagou Match Boost (2026-03-12)
+
+- [x] `LOCATION`/`SUMMARY`/`DESCRIPTION` をイベント文脈として扱う店舗一致ロジックへ強化（屋号+店舗の同時一致を加点）
+- [x] `SUMMARY` の区切りパターン（`/` と全角スペース連結）を拡張し、屋号/店舗/プランの推定精度を改善
+- [x] ICS本文（`SUMMARY` + `DESCRIPTION`）から `サービス内容` を抽出する処理を追加
+- [x] ICSプレビュー行に `サービス内容` 編集列を追加（行ごとに手修正可能）
+- [x] `yakusoku` 作成時に `service_content` / `service_contents` へ抽出内容を保存
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Duplicate Collapse To Single Case (2026-03-12)
+
+- [x] ICSプレビューを `UID` 優先キーで重複統合し、同一予定系列を1件表示へ変更
+- [x] `RECURRENCE-ID` 付き複製は、親イベント（`RECURRENCE-ID` なし）優先で残すよう調整
+- [x] 既存取り込み判定を `ics_source` の完全一致に加えて `UID` 単位でも重複判定するよう強化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Master Service Strict + Non-Cleaning Omit (2026-03-12)
+
+- [x] ICS取り込みで `service_id` がサービスマスタに存在しない行は作成不可に変更（`サービス未一致(マスタ外)`）
+- [x] `service_name` はサービスマスタ正式名称を強制使用（取り込み時の名称揺れを排除）
+- [x] `清掃系キーワードのみ取り込む` ON時は、非清掃予定をプレビューから非表示化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: Same Yagou/Tenpo Unified Into One Yakusoku (2026-03-12)
+
+- [x] ICS取り込み実行時、`tenpo_id`（同一屋号/店舗）単位で行を統合して1件の `yakusoku` を作成
+- [x] 統合時に `service_ids/service_names` を重複排除で束ね、先頭を `service_id/service_name` に反映
+- [x] 統合時に `task_matrix` をバケット単位でマージし、`start_date` は最古日を採用
+- [x] 統合時に `service_content/service_contents` を集約して保存
+- [x] `memo` に `ics_uid_keys` を保持し、再取り込み時のUID重複判定を強化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: One-Store-One-Yakusoku Upsert Merge (2026-03-12)
+
+- [x] ICS取り込みを `同一店舗=同一yakusoku` の upsert 方式へ変更（既存があれば `PUT` 更新、なければ `POST` 作成）
+- [x] 既存yakusoku更新時に `service_ids/service_names` をマスタ準拠でマージ統合
+- [x] 既存yakusoku更新時に `task_matrix`・`monthly_quota`・`start_date` を統合ルールで更新（開始日は最古）
+- [x] `service_content/service_contents` を既存値+ICS抽出値で累積統合
+- [x] 取り込み結果サマリーに `更新件数` を追加表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: Merge Services Even From Non-Creatable ICS Rows (2026-03-12)
+
+- [x] ICS取り込み集計母集団を `canCreate` 限定から拡張し、対象ONかつ店舗/サービス一致の行を統合候補化
+- [x] 重複扱い行でも、既存yakusoku更新時はサービス統合・サービス内容統合に反映
+- [x] 新規作成は従来どおり `hasCreatable` 条件を維持（開始日等の最低条件を満たす場合のみ作成）
+- [x] `site key` を `tenpo_id` 優先 + `屋号名/店舗名` フォールバックで統合
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Tenpo Matching Fuzzy Boost (2026-03-12)
+
+- [x] `LOCATION` 先頭（店名部）と `SUMMARY` 先頭を抽出し、屋号+店舗の近似一致（表記ゆれ吸収）を加点
+- [x] 近似一致が競合した場合は誤一致回避のため未一致扱いにする安全弁を追加
+- [x] 店舗一致率向上を狙いつつ、誤マッチ増加を抑えるスコアガードを実装
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Preview Clarification For Store-Level Merge (2026-03-12)
+
+- [x] ICSモーダル統計に `統合後店舗` 件数を追加（取り込み後の実際のyakusoku件数目安を可視化）
+- [x] 「プレビューはイベント単位、取り込み時は同一屋号/店舗を統合」の注記を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Import Runtime Fixes (2026-03-12)
+
+- [x] `TASK_BUCKETS is not defined` 例外を修正（`PLAN_BUCKETS` 参照へ統一）
+- [x] 取り込みボタンの有効条件を `作成可能件数` から `upsert可能店舗件数` へ変更
+- [x] `取り込み実行` ボタン表示件数を新ロジック（店舗単位upsert件数）へ同期
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Memo(Service Content) Ingestion Boost (2026-03-12)
+
+- [x] ICSデコードで `\\N` 改行も解釈するよう修正（メモ列の段落を保持）
+- [x] `service_content` 抽出で `DESCRIPTION + SUMMARY + LOCATION` を統合利用
+- [x] メモ抽出時に全角/連続空白・見出し記号（`【】`）を分割トークン化へ反映
+- [x] メモ抽出タグから頻出接頭語（`毎月/隔月/都度` 等）を除去し、作業語を正規化
+- [x] ICSプレビュー表に `メモ抜粋` 列を追加し、吸い込み確認を可視化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS Execute Button Activation + Diagnostics (2026-03-12)
+
+- [x] `取り込み実行` ボタン無効化条件を緩和（プレビュー行があれば押下可能）
+- [x] 実行不可理由は押下時アラートで案内するフローへ統一
+- [x] ICS統計表示に `統合対象行` / `実行対象店舗` を追加し、押せない原因を可視化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICS 店舗未一致を解約候補として切り分け (2026-03-12)
+
+- [x] ICS統計に `店舗未一致` 件数を表示
+- [x] 取り込みモーダルに `未一致を除外` ボタンを追加（対象ONの未一致行を一括OFF）
+- [x] 未一致理由を `候補名 + 解約・名称変更候補` 付きで表示するよう改善
+- [x] 注記に「未一致を除外で切り分け可能」を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: ICSサービス内容を既存yakusokuへ同期 (2026-03-12)
+
+- [x] ICSプレビュー（対象ON + 店舗一致）を店舗単位に集約し、サービス内容同期候補を算出
+- [x] `既存へ内容同期` ボタンを追加（新規作成せず、既存yakusokuの `service_content/service_contents` のみ更新）
+- [x] 同期時は既存値とICS抽出値を重複排除でマージし、変更なし案件はスキップ
+- [x] 同期結果サマリー（対象/更新/変更なし/失敗）をモーダルに表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: 屋号/店舗名 一括補完 (2026-03-12)
+
+- [x] `tenpo_id` を基準に `yakusoku` の `tenpo_name/yagou_id/yagou_name/torihikisaki_id/torihikisaki_name` を補完する一括処理を追加
+- [x] ヘッダーに `屋号・店舗名補完` ボタンを追加し、補完対象件数を表示
+- [x] 補完実行後に結果サマリー（対象/更新/失敗）を表示
+- [x] 失敗時は `yakusoku_id` 単位のエラー行を表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: 定期清掃の安定満単位金額を一括割当 (2026-03-12)
+
+- [x] ICSプレビュー行に `金額候補` 列を追加（SUMMARY/DESCRIPTION/LOCATION から `¥/円` を抽出）
+- [x] 定期行のみを対象に、`満単位（1000円単位）` 金額の安定候補を店舗単位で集計
+- [x] `定期金額割当` ボタンを追加し、安定候補のみ `yakusoku.price` へ一括反映
+- [x] 価格割当結果サマリー（対象/更新/変更なし/失敗）を表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Notice Label Renamed To Misesapo Message (2026-03-13)
+
+- [x] お客様マイページの `お知らせ` 見出しを `ミセサポからのメッセージ` へ変更
+- [x] 読み込み中/空表示文言を `ミセサポからのメッセージ` 表記へ統一
+- [x] サイドアクションのARIAラベルを `ミセサポメッセージ操作` へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Billing/Receipt List + PDF Preview (2026-03-13)
+
+- [x] お客様マイページ右側アクションに `請求書` / `領収書` ボタンを追加（ファイル未登録時は無効化）
+- [x] `souko` 登録ファイルを `doc_category / kubun / ファイル名` から請求・領収へ自動分類するロジックを追加
+- [x] ボタン押下で「期間付きリスト + PDFプレビュー」モーダルを表示し、リスト選択で対象PDFを閲覧可能化
+- [x] 期間表示（`YYYY年MM月分`）をファイル名優先で推定し、取得不可時はアップロード月を表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Notice Side Buttons 2-Row Horizontal + Chat (2026-03-13)
+
+- [x] お客様マイページのお知らせ右側アクションに `チャット` ボタンを追加
+- [x] 右側ボタン群を `2段` の横並びレイアウト（`3列 x 2段`）へ変更
+- [x] ボタン高を揃えて、PC/SPとも横方向優先で並ぶUIに調整
+- [x] `チャット` 遷移先は `VITE_CUSTOMER_CHAT_URL` 優先、未設定時は `お問い合わせ` 導線へフォールバック
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Add Terms + Policy/Privacy Buttons (2026-03-13)
+
+- [x] お客様マイページ右側アクションに `利用規約` ボタンを追加
+- [x] お客様マイページ右側アクションに `ポリシーアンドプライバシー` ボタンを追加
+- [x] ボタン群を `4列 x 2段` に調整し、2段固定のまま横方向へ拡張
+- [x] `利用規約` は `VITE_CUSTOMER_TERMS_URL` 優先、未設定時は `https://misesapo.co.jp/terms/`
+- [x] `ポリシーアンドプライバシー` は `VITE_CUSTOMER_POLICY_PRIVACY_URL` 優先、未設定時は `https://misesapo.co.jp/privacy-policy/`
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Notice Area Width Expansion (2026-03-13)
+
+- [x] お知らせ行コンテナの最大幅を拡張（`1120px` → `min(1380px, 100%)`）
+- [x] 右側アクション列の最小幅を最適化（`456px` → `420px`）し、メッセージ本文の横幅を拡大
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Next Yotei Button + Inline Chat Panel (2026-03-13)
+
+- [x] お知らせ右側アクションに `次回予定` ボタンを追加（未設定時は無効化）
+- [x] `次回予定` 押下で中央ペイン（対応履歴・次回予定）へフォーカスし、次回予定日の履歴へ絞り込み
+- [x] `チャット` を外部リンクから切替ボタンへ変更し、対応履歴エリア位置に独自チャットパネルを表示
+- [x] お客様チャットは店舗単位キーで `localStorage` 永続化（再訪時復元）
+- [x] 中央パネルに `履歴 / チャット` の表示切替ボタンを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: List Ordering Aligned With Customer Master (2026-03-13)
+
+- [x] `yakusoku` 一覧の表示順を固定化（顧客マスタと同様に `kokyaku/torihikisaki/yagou/tenpo` のID若番優先）
+- [x] `tenpo_id` 由来メタ（取引先ID・屋号ID）で補完し、旧データでも安定した並び順になるよう調整
+- [x] ID同順時は `取引先名 → 屋号名 → 店舗名 → yakusoku_id` の順でフォールバック
+- [x] 統合検索あり/なしの両ケースで同一ソートロジックを適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: Site Name Tags In List (2026-03-13)
+
+- [x] `yakusoku` 一覧の `現場名` をテキスト1行表示からタグ表示へ変更
+- [x] `屋号` と `店舗名` を分離して2タグ化し、視認性を向上
+- [x] 屋号欠損時は `tenpo` マスタメタ（`tenpo_id/tenpo_name`）から補完してタグ表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: Add Torihikisaki Tag In Site Name (2026-03-13)
+
+- [x] `yakusoku` 一覧 `現場名` タグに `取引先` を追加（`取引先 / 屋号 / 店舗` の順）
+- [x] `取引先名` は `yakusoku` 本体値優先 + `tenpo` メタ補完で表示
+- [x] 同名重複タグは除外し、タグ色を種別ごとに固定
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Yakusoku: Tenpo Tag Color Adjust (2026-03-13)
+
+- [x] `yakusoku` 一覧の `店舗` タグ配色を青系に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Chat/Right Tabs/Report Button Relayout (2026-03-13)
+
+- [x] 旧 `作業完了レポート` 表示領域（中央上段）を `チャット` パネルへ置換
+- [x] 右ペインに `予定カレンダー / 対応履歴` タブ切替パネルを新設
+- [x] `作業完了レポート` はお知らせ右側アクションのボタン化（押下でモーダル表示）
+- [x] レポートモーダル内で一覧表示 + `PDFダウンロード` を継続利用可能化
+- [x] 右側アクションボタン増加に合わせてボタングリッド行数を自動拡張へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Default Pane With Chat + Calendar (2026-03-13)
+
+- [x] デフォルト表示（中央ペイン）に `チャット` と `予定カレンダー` を同居配置
+- [x] `対応履歴` も中央ペインへ統合し、カレンダー選択連動で同画面表示
+- [x] 右ペインの `予定カレンダー/対応履歴` タブ切替を撤去し、右は `ストレージ` 中心へ整理
+- [x] `次回予定` ボタン押下時は中央ペインへ遷移し、該当日付をカレンダー選択
+- [x] お知らせ右側アクションボタンを `2段` 固定・横並び拡張（PC/SPとも5列ベース）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Chat + Calendar Two-Column Layout (2026-03-13)
+
+- [x] 中央ペイン上段を `チャット（左） / 予定カレンダー（右）` の2カラム配置へ変更
+- [x] 2カラム内のセクション見出し余白を調整（同一基準で横並び）
+- [x] 画面幅 `<=1024px` では1カラムへ自動フォールバック
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: History Tab Switch With Calendar (2026-03-13)
+
+- [x] 中央ペイン右上の `予定カレンダー` 枠に `カレンダー / 対応履歴` タブ切替を追加
+- [x] 既存の独立 `対応履歴` セクションを撤去し、カレンダー枠内表示へ統合
+- [x] `次回予定` ボタン押下時はカレンダータブへ自動切替する挙動を追加
+- [x] 対応履歴タブで日付フィルタ中は `選択日` 表示と `全日表示` リセットを提供
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Move Calendar/History Tabs To Bottom Rail (2026-03-13)
+
+- [x] `予定・対応履歴` タブを見出し行からセクション下部へ移動
+- [x] 予定/履歴の表示本体を `customer-center-schedule-body` へ分離し、下部タブと構造分離
+- [x] 上段2カラムを `stretch` にして、左 `送信` 帯と右タブ帯の高さラインを揃えやすく調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Align Chat/Calendar Inner Heights (2026-03-13)
+
+- [x] 上段2カラムの各パネルを縦 `flex` 化し、左右で内部の伸縮ロジックを統一
+- [x] チャット側は `ログ` を伸縮領域に変更し、下段 `送信` 帯の位置を安定化
+- [x] カレンダー側は `schedule-body` を伸縮領域に変更し、下段タブ帯と高さ整合を改善
+- [x] 対応履歴タブ時の履歴リストを可変高さ化（固定 `max-height` を解除）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Move No-Next-Plan Message To Header Row (2026-03-13)
+
+- [x] `次回予定はまだありません` を本文からヘッダー行（`予定・対応履歴` と同じ高さ）へ移動
+- [x] 表示位置をヘッダー右側に固定（カレンダータブ時かつ次回予定なしの場合のみ）
+- [x] 本文側の重複メッセージを削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Align Chat Log Top With Calendar Top (2026-03-13)
+
+- [x] カレンダータブ内の表示順を調整し、`カレンダー` を `次回予定` より先に表示
+- [x] チャット側 `メッセージ表示` とカレンダー側 `カレンダー表示` の上端を同一ラインに統一
+- [x] `次回予定` カードの余白を下マージンから上マージンへ切替（新しい表示順に整合）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Split Chat And Calendar Into Separate Containers (2026-03-13)
+
+- [x] 中央ペインの `チャット` と `予定・対応履歴` を単一パネル内構造から分離し、左右それぞれ独立 `customer-panel` 化
+- [x] 分離後の高さ崩れを防ぐため、中央2カラムパネルに `flex` ベースの共通コンテナルールを追加
+- [x] `チャット` / `予定・対応履歴` ともに内部を独立スクロール可能な構成へ維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Align Title Label Row Height (2026-03-13)
+
+- [x] 中央2カラムのタイトル行（`customer-panel-head-sub`）に `min-height: 34px` を設定し、左右で同一高さに固定
+- [x] 右側補助テキスト（`次回予定はまだありません`）を1行固定 + 省略表示に変更し、折返しによる高さズレを防止
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Force Equal Header Row Height (2026-03-13)
+
+- [x] 中央2カラムのヘッダー行を `min-height` から `height: 36px` 固定へ変更
+- [x] 左右の `customer-panel-head customer-panel-head-sub` が常に同一高さになるよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Header Bottom Margin Zero (2026-03-13)
+
+- [x] 中央2カラム内の `customer-panel-head customer-panel-head-sub` に `margin-bottom: 0` を適用
+- [x] チャット見出し下の余白を除去し、直下コンテンツへ密着させる表示へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Remove Bottom Tabs Margin (2026-03-13)
+
+- [x] `customer-center-tabs customer-center-tabs-bottom` の余白を削除（`margin: 0`）
+- [x] 下部タブ帯の不要スペースを除去
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Calendar Container Vertical Margin 10px (2026-03-13)
+
+- [x] `customer-history-calendar` のマージンを上下 `10px` に統一（`margin: 10px 0`）
+- [x] カレンダーコンテナの上下間隔を固定化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer Chat: Notify Admin Dashboard Activity (2026-03-13)
+
+- [x] お客様マイページのチャット送信時に `admin_chat(room=customer_mypage)` へ同時投稿する処理を追加
+- [x] 投稿ペイロードに `tenpo_id/tenpo_name/yagou_name/store_label` を含め、管理側で店舗文脈を判別可能化
+- [x] 管理ダッシュボードの `現在のアクティビティ` 取得対象へ `admin_chat(room=customer_mypage)` を追加
+- [x] お客様チャットイベントを当日分時系列に統合表示（既存 `kanri_log` / `業務報告` と同列）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Center Pane Two-Column (2026-03-14)
+
+- [x] `お客様詳細` の初期中央ペインで `チャット / 対応履歴` を2カラム横並びへ変更
+- [x] 2カラムの左右カードを同一サイズ（同幅・同高）で表示するよう調整
+- [x] チャット側はメッセージ一覧を伸縮領域化し、カード高さに追従するよう修正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Tone & Manner Sync With Customer MyPage (2026-03-14)
+
+- [x] `AdminTenpoKarte` ライトテーマ配色を `お客様マイページ` パレット（`#FCF9EA / #FFA4A4 / #FFBDBD / #BADFDB / #493628`）へ統一
+- [x] ヘッダー・カード・入力・タグ・セグメント・ステータス色を同一トーンへ調整
+- [x] ミュート文字・見出し色・エラー配色もマイページ準拠へ寄せて可読性を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Consolidate Controls Near Arrow Panel (2026-03-14)
+
+- [x] 矢印コントロール領域に `基本情報 / チャット・対応履歴 / ストレージ` の直接切替ボタンを追加
+- [x] `取引先名簿 / 店舗マスタ / カルテ詳細 / 更新` ボタンを同領域へ集約
+- [x] ヘッダー右側から上記操作ボタンを撤去し、操作場所を1箇所へ統一
+- [x] PC/SPで崩れないようボタン群のグリッドをレスポンシブ化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Place Buttons Inside Arrow Control Panel (2026-03-14)
+
+- [x] `矢印コントロール枠` の内側に `表示切替ボタン` と `ページ操作ボタン` を内包する構造へ変更
+- [x] 既存の外側ボタン群を廃止し、矢印・ラベル・各種ボタンを単一コンテナ化
+- [x] モバイル表示時も同一コンテナ内で折返し表示されるよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Single-line Compact Control Buttons (2026-03-14)
+
+- [x] 矢印内ボタン群を `1行` に統一（`flex-nowrap` + 横スクロール）
+- [x] ボタン幅をコンパクト化（等幅グリッドを廃止し自動幅へ変更）
+- [x] 選択中の状態表現は `ボタン色変化のみ` とし、補助ラベル表示を削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Add Monshin Action Buttons To Control Group (2026-03-14)
+
+- [x] 問診チェック内操作（`基本情報 / 詳細入力 / yakusoku管理`）をコントロールボタン群へ追加
+- [x] `問診: 基本情報` は `概要表示 + 基本情報ペイン` へ遷移するよう連動
+- [x] `問診: 詳細入力` は `カルテ詳細` へ遷移
+- [x] `問診: yakusoku管理へ` リンクをボタン群内へ追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Remove Monshin Section Buttons (2026-03-14)
+
+- [x] `問診チェック` セクション内の操作ボタン（`基本情報 / 詳細入力 / yakusoku管理へ`）を削除
+- [x] 操作導線を上部コントロールボタン群へ一本化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Basic Info Multi-column Density Update (2026-03-14)
+
+- [x] `基本情報` の `accordion-body` を2カラム化し、余白を削減して表示密度を改善
+- [x] ワイド画面では3カラム化（`>=1280px`）し、狭い画面では1カラムへ自動フォールバック
+- [x] 操作行/共有設定アコーディオン/リンクカードは全幅維持、`kv` 情報カードのみカラム配置に変更
+- [x] ライトテーマでもカード境界/背景をパレットに合わせて可読性を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer Chat: Dedicated Portal Thread + Admin Tenpo View (2026-03-14)
+
+- [x] お客様マイページのチャット保存を `localStorage` 依存から廃止し、`admin_chat(room=customer_portal_chat)` を正として取得/表示する構成へ変更
+- [x] お客様マイページのチャット送信を専用ユーティリティ経由に統一（`sender_role=customer` / `tenpo_id` を必須付与）
+- [x] 管理側 `AdminTenpoKartePage` に「お客様チャット（専用）」カードを追加し、店舗単位でお客様マイページと同一スレッドを閲覧・返信可能化
+- [x] 管理返信時は `sender_role=admin` として同一専用スレッドへ投稿するよう実装
+- [x] 管理ダッシュボードのアクティビティ監視対象ルームを `customer_portal_chat` へ更新
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Mypage Tone + Arrow Pane Control (2026-03-14)
+
+- [x] `お客様詳細` サマリーにコントロール矢印を追加し、表示ペインを `左=基本情報 / 初期=チャット+対応履歴 / 右=ストレージ` で切替可能化
+- [x] サマリーの表示モードを1画面集中（非選択ペインは非表示）へ調整
+- [x] 問診チェック（`monshin-overview`）の縦サイズを圧縮（見出し・説明・進捗バー・アクション余白を縮小）
+- [x] サマリー切替コントロールのライトモード配色をマイページトーン寄りに調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Side Arrows + Hint Labels (2026-03-14)
+
+- [x] `お客様詳細` の矢印コントロールをコンテンツ内から分離し、左右サイド（画面中央高さ）へ固定配置
+- [x] 左右矢印にヒントラベル（`基本情報` / `ストレージ`）を追加し、操作意図を視覚化
+- [x] サイド矢印とコンテンツが重ならないよう、シェル側に左右余白（安全域含む）を追加
+- [x] モバイル幅では矢印サイズと余白を縮小し、極小幅ではヒントを非表示化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Main Content Width Tuning For Side Controls (2026-03-14)
+
+- [x] `お客様詳細` のメインコンテンツに最大幅（`1460px`）を設定し、左右コントロールボタンとの重なりを回避
+- [x] `ヘッダー / 問診概要 / サマリーシェル / エラー / メイングリッド` を同一最大幅で中央寄せし、ページ全体の基準幅を統一
+- [x] 既存の縦方向マージン・パディングは維持し、横幅のみ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Width Balance Re-tuning (2026-03-14)
+
+- [x] 全体を絞りすぎていたため、`ヘッダー/問診概要` の中央寄せ制約を解除して元バランスへ復帰
+- [x] 幅制御対象を `サマリーシェル / エラー / メイングリッド` のみに限定
+- [x] 幅制御は `1200px以上` のみ有効化し、`max-width: 1520px` で軽く絞る方式へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Full-width + Monshin/Buttons Single-row Panels (2026-03-14)
+
+- [x] `max-width` 制約を撤回し、`お客様詳細` コンテンツを全幅運用へ戻す
+- [x] `問診票` と `ボタン群` を同一行の2パネル構成へ変更（左: 問診票 / 右: ボタン群）
+- [x] サマリー時は `問診票 + コントロール` を横展開し、詳細入力時は問診票を単体表示
+- [x] モバイル幅では2パネルを縦積みに自動フォールバック
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Move Customer Labels Into Content + Side-control Safe Insets (2026-03-14)
+
+- [x] 上部ヘッダーの顧客名表示を簡素化し、`取引先 / 屋号 / 店舗` 表示をコンテンツ内（チャット上）へ移設
+- [x] サマリー中央ペイン先頭に `お客様表示` セクションを追加し、チャットの直上で店舗文脈を確認可能化
+- [x] サマリー領域に `side-control` 回避用インセットを追加し、固定矢印との干渉を防止
+- [x] 問診票＋ボタン群の1行2パネル構成を維持したまま、SP幅では自動縦積みに調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Customer MyPage Linkage Action (2026-03-14)
+
+- [x] お客様詳細コントロールボタン群に `お客様マイページ` 直接遷移ボタンを追加（同一 `tenpo_id` 付き）
+- [x] 遷移は新規タブで開き、管理画面の編集状態を保持したまま参照可能化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Slightly Narrower Content Width (2026-03-14)
+
+- [x] サマリー表示の左右インセットを拡張し、コンテンツ幅を一段狭めて視認バランスを調整
+- [x] デスクトップ/タブレット/スマホの各ブレークポイントでインセット値を再設定（`72px / 54px / 40px`）
+- [x] 既存の2パネル構成（問診票 + ボタン群）と固定矢印動線は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Move Customer Info Block Back To Lower Position (2026-03-14)
+
+- [x] サマリー中央ペインの `お客様表示` ブロックを下段に戻すよう表示順を調整
+- [x] `チャット -> 対応履歴 -> お客様表示` の順で並ぶよう `order` と `grid-column` を設定
+- [x] DOM構造は維持し、CSSのみで配置を変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Restore Customer Info Into Title Area (2026-03-14)
+
+- [x] ヘッダータイトルを `屋号 / 店舗` ベースの表示へ復帰（未設定時は `取引先` または `tenpo_id`）
+- [x] タイトル下サブ行に `取引先 / 屋号 / 店舗` を表示し、お客様情報をタイトル領域へ統合
+- [x] サマリー中央ペインの `お客様表示` カードを削除
+- [x] 連動して不要化した `tenpo-inline-*` スタイル定義を削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Remove Pane Shortcut Buttons (2026-03-14)
+
+- [x] コントロールボタン群から `基本情報 / チャット・対応履歴 / ストレージ` の3ボタンを削除
+- [x] 左右矢印によるペイン切替導線は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Control Buttons Two-row Layout (2026-03-14)
+
+- [x] コントロールボタン群を `1行スクロール` から `グリッド2段` 表示へ変更
+- [x] PCは4列、タブレットは3列、スマホは2列で折返し表示するレスポンシブ構成に調整
+- [x] 各ボタン/リンクをセル幅いっぱいに展開して、行内高さと視認性を統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Content-only Toggle Back To Customer Summary (2026-03-14)
+
+- [x] `カルテ詳細` ヘッダー操作に `お客様詳細` ボタンを追加
+- [x] `setKarteView(KARTE_VIEW.SUMMARY)` により、ページ遷移なしでコンテンツのみ切替
+- [x] 既存の `保存` ボタンと同列配置のまま運用可能
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Keep Monshin + Button Group In Detail View (2026-03-14)
+
+- [x] `問診票チェック` と `ボタン群` を共通パネル化し、`概要/詳細` の両ビューで同一表示に統一
+- [x] 詳細ビュー上部でも `問診票 + コントロール` を1行2パネルで表示
+- [x] `tenpo-content-safe` の左右インセットを `summary/detail` 共通で適用し、固定矢印との干渉を防止
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Pane Buttons Hover Color Feedback (2026-03-14)
+
+- [x] `お客様詳細` のコントロールボタン群にホバー時の軽い色変化を追加（非アクティブ時のみ）
+- [x] ダーク/ライトテーマそれぞれでホバー配色を調整し、視認性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Split Catalog Viewer + Smooth Page Transition (2026-03-14)
+
+- [x] 分割カタログ画像（`customer/catalog/split/*.png`）を読み込むページ一覧ビューアを追加
+- [x] `サービスカタログ` ボタンを専用モーダル表示へ変更（ページ一覧 + 前へ/次へ + 新規タブ表示）
+- [x] ページ切替時にフェード＋軽いスライドのアニメーションを追加し、閲覧を滑らかに改善
+- [x] カタログモーダルで `Esc / ← / →` キー操作をサポート
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer Info: Operator-extensible Custom Fields (2026-03-14)
+
+- [x] 管理 `お客様詳細 > 基本情報` に `追加情報` 編集UIを追加（項目名/内容を行追加・削除）
+- [x] 追加情報の保存先を `tenpo.karte_detail.spec.custom_fields` に統一（配列構造へ正規化）
+- [x] 保存時に `custom_fields` を正規化し、空行除去・文字数制限を適用して事故を抑制
+- [x] お客様マイページの `基本情報` に `custom_fields` を自動表示し、運用側追加情報を反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Remove HACCP Section (2026-03-14)
+
+- [x] カルテ詳細の `HACCP 準拠チェック` セクションをUIから削除
+- [x] HACCP関連の初期化/更新ロジック（`haccp.items` 生成・更新）を削除
+- [x] HACCP専用CSS定義を削除し、ライトテーマの関連セレクタも整理
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Remove Cleaning Checkpoint Container + Add Rule Free Note (2026-03-14)
+
+- [x] カルテ詳細の `清掃チェックポイント（報告基準）` コンテナをUIから削除
+- [x] ルールセクションに大きめ自由入力 `運用ルール（自由入力）` を追加（`spec.rule_free_note`）
+- [x] `rule_free_note` の初期化/正規化（最大2000文字）を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Remove Monshin Basic/Detail Buttons (2026-03-14)
+
+- [x] ボタン群から `問診: 基本情報` ボタンを削除
+- [x] ボタン群から `問診: 詳細入力` ボタンを削除
+- [x] その他のショートカット導線（取引先名簿/店舗マスタ/お客様マイページ/カルテ詳細/更新/yakusoku）は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Add Yotei Shortcut + Yakusoku Label Rename (2026-03-14)
+
+- [x] ボタン群に `yotei` への導線ボタンを追加（`/admin/yotei`）
+- [x] `問診: yakusoku管理へ` のラベルを `yakusoku` に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Customer Chat Border Visibility (2026-03-14)
+
+- [x] お客様詳細ページのチャット欄（`.support-chat`）に明示的なボーダーを追加
+- [x] 角丸と内側パディングを調整し、チャットコンテナ境界を視認しやすく変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Chat Message Area Border Alignment (2026-03-14)
+
+- [x] お客様詳細チャットのメッセージ表示エリア（`.support-chat-list`）に入力欄同系のボーダーを追加
+- [x] メッセージ表示エリアに角丸と内側余白を付与し、視認性を改善
+- [x] ライトテーマ時も入力欄と同じ配色ルール（`--tp-sub / --tp-card`）を適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Chat: LINE-style Left/Right Bubble Placement (2026-03-15)
+
+- [x] お客様詳細チャットで `customer` メッセージを左、`admin` メッセージを右に配置
+- [x] お客様マイページチャットで `customer` メッセージを右、`agent` メッセージを左に配置
+- [x] 各バブルの最大幅を制限し、LINE風の見え方（片側寄せ）に調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Raise Chat/Schedule Container Height (2026-03-15)
+
+- [x] チャットと予定・対応履歴の両コンテナに最小高さを追加し、表示領域を拡張
+- [x] レスポンシブで高さを段階調整（PC: 520px / タブレット: 460px / スマホ: 420px）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Align Chat Bubble Direction With Admin (2026-03-15)
+
+- [x] お客様マイページのチャットバブル左右配置を管理側と同じ向きに統一
+- [x] `customer` を左寄せ、`agent` を右寄せへ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Chat: Compact LINE-style Bubble Sizing (2026-03-15)
+
+- [x] 管理側・お客様側チャットの吹き出しを `fit-content + max-width(72%)` 化
+- [x] バブル内余白/角丸/メタ文字サイズを圧縮し、余白過多を解消
+- [x] 短文メッセージが横に伸びすぎないLINE風レイアウトへ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Chat: Tag-like Compact Bubble Height (2026-03-15)
+
+- [x] 管理側お客様チャットを `タグ風` 表示へ調整（丸み強化・高さ圧縮・送信者時刻の簡略化）
+- [x] お客様マイページチャットも同様に `タグ風` に調整（メッセージ高さ/メタ表示圧縮）
+- [x] お客様側チャット入力欄の最小高さを 92px → 64px に縮小
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Chat: LINE-like Gray/Green Bubble Alignment (2026-03-15)
+
+- [x] お客様マイページを `自分=右グリーン / 相手=左グレー` のLINE風配色へ調整
+- [x] 管理側お客様詳細チャットも同系配色へ統一（`admin=右グリーン / customer=左グレー`）
+- [x] 両画面でメッセージメタ表示を省き、短文時の高さを最小化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Customer Chat: Fix Light Theme Override For Bubble Colors (2026-03-15)
+
+- [x] ライトテーマ時の汎用 `.support-chat-item` 上書きがLINE風配色を潰していたため、`customer-portal-chat-card` 専用ルールで再固定
+- [x] 管理側チャットの `customer=左グレー / admin=右グリーン` をライトテーマでも維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Chat: Fix Vertical-Stretched Bubble Bug (2026-03-15)
+
+- [x] `inline-flex` 起因でメッセージが縦に潰れる不具合を修正（管理側/お客様側とも `display:block` 化）
+- [x] 吹き出しを横長基準に戻し、`line-height` と `word-break` を見直して自然な改行に調整
+- [x] `border-radius` / `padding` を再調整し、LINE風の通常吹き出し見た目へ復帰
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Chat: Proper Conversation Layout Rebuild (2026-03-15)
+
+- [x] 管理側お客様詳細チャットを `support-chat-row + support-chat-bubble` 構造へ変更し、単なる投稿一覧ではなく会話UIとして再構築
+- [x] お客様マイページチャットを `customer-chat-row + customer-chat-bubble` 構造へ統一し、左右の会話フローを固定
+- [x] 専用スレッド（`customer_portal_chat`）は維持し、ダッシュボード共通チャットとは分離したままUIのみ会話型に改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Chat: Bubble Color Update (2026-03-15)
+
+- [x] 発信バブル色を緑から薄いピンク（`#FFBDBD`）へ変更
+- [x] 受信バブル色を薄い青（`#BADFDB`）へ変更
+- [x] 配色変更に合わせてバブル内文字色を可読性重視で調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Tenpo Detail: Customer Chat AI Candidate Workflow (2026-03-15)
+
+- [x] お客様チャットの会話ログからAI抽出候補（構造化候補）を生成する機能を追加（管理側）
+- [x] 候補ごとに `採用 / 却下` を実装し、採用時はカルテ詳細 `spec`（担当者連絡先・営業時間・連絡手段・鍵/セキュリティ・ルールメモ）へ反映
+- [x] 候補データは `karte_detail.spec.ai_fact_candidates` に保持し、管理側が最終判断できる運用へ変更
+- [x] 候補パネルUI（未処理件数・根拠表示・ステータス表示）を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Show Yagou/Tenpo In Header Title (2026-03-15)
+
+- [x] お客様マイページで `tenpo_id` 指定時、ヘッダータイトル（h1）を `屋号 / 店舗名` 表示へ変更
+- [x] 店舗未指定時は従来どおり `お客様マイページ` を表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer Chat AI: Restriction Guard + Escalation Reply (2026-03-15)
+
+- [x] お客様チャット送信後のAI応答フローを追加（`ミセサポAI` 名義で返信）
+- [x] 契約/金額/請求/補償/責任/法務/判断/確約などの禁止領域をキーワード判定し、固定の担当者エスカレーション文へ切替
+- [x] 禁止領域外は Gemini 応答（キー未設定・API失敗時は安全な受付文へフォールバック）
+- [x] 会話コンテキスト（直近メッセージ）をAI入力へ渡し、短文・案内中心の返信に制御
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Priority Notice For Restricted Customer Inquiries (2026-03-15)
+
+- [x] 禁止領域（契約/金額/判断系）検知時のAI返信メッセージに `event_type=customer_ai_escalation` / `priority=high` を付与
+- [x] ダッシュボード通知集約で上記メタを検知し、`【要対応】...` 形式の優先通知文へ変換
+- [x] 優先通知文は店舗ラベルとメッセージ要約を含め、通常チャット通知と区別可能化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer Chat AI: Operator Hours Auto Switch (2026-03-15)
+
+- [x] オペレーター受付時間を `9:00-18:00`（JST）として判定する自動切替ロジックを追加
+- [x] 受付時間内はAI自動返信を停止し、時間外のみ `MISOGI` 自動返信を有効化
+- [x] 時間帯は `VITE_CUSTOMER_CHAT_OPERATOR_START_HOUR` / `VITE_CUSTOMER_CHAT_OPERATOR_END_HOUR` で変更可能化（未指定時は `9/18`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage Chat: Operator Hours Info Near Send Button (2026-03-15)
+
+- [x] お客様チャット送信ボタンの横に、オペレーター対応時間案内文を追加
+- [x] 文言を「9:00-18:00 はオペレーター対応 / それ以外はサポートAI MISOGI 対応」に統一
+- [x] モバイル幅では案内文と送信ボタンを縦並びに切替
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Chat: Show AI Reply Mode (Gemini/Fallback) (2026-03-15)
+
+- [x] お客様チャット返信データに `ai_meta(mode/provider/model)` を保存するよう拡張
+- [x] お客様マイページのAI返信吹き出し名に `Gemini / 定型 / 制限対応` タグを表示
+- [x] 管理側お客様詳細チャットにも同タグを表示し、AI応答モードを可視化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer Chat AI: Backend Relay Security Hardening (2026-03-15)
+
+- [x] お客様チャットAI応答をフロント直呼びから `master/admin_chat(mode=customer_ai_reply)` 経由へ変更
+- [x] `lambda_torihikisaki_api.py` に `customer_ai_reply` モードを追加（時間帯判定/禁止領域判定/Gemini呼び出し/定型フォールバック）
+- [x] フロント `.env` から `VITE_GOOGLE_AI_API_KEY` を削除し、キーは Lambda 環境変数 `GOOGLE_AI_API_KEY` 管理へ切替
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` / `npm -C src/misogi run build` で確認
+
+## Customer/Admin Chat: Max Height + Scroll Lock (2026-03-15)
+
+- [x] お客様マイページのチャットログに最大表示高さを設定（PC/Tablet/SPで段階的 `max-height`）
+- [x] 管理側お客様詳細チャットログを `overflow-y: auto` / `overflow-x: hidden` に統一
+- [x] チャット本文はログ領域内スクロール表示へ固定（レイアウト崩れ防止）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Activity Direct Link + Store Tag + Common Chat UI Align (2026-03-15)
+
+- [x] 管理ダッシュボードのアクティビティ各行に `開く` ダイレクトリンクを追加（管理日誌/報告詳細/お客様詳細へ遷移）
+- [x] アクティビティ内のお客様チャット通知に `屋号 / 店舗` を1つのタグとして表示
+- [x] ダッシュボード右ペインの社内共通チャットを左右分離の吹き出し配色へ変更（自分=ピンク / 相手=ブルー）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard Activity: One-line Notification Row (2026-03-15)
+
+- [x] アクティビティ通知行を `タグ / 内容 / 時刻 / 詳細を開く` の1行レイアウトへ統一
+- [x] 通知本文から時刻文字列の重複を除去し、時刻は専用カラム（`HH:mm`）表示へ変更
+- [x] 長文内容は1行省略（ellipsis）で表示し、横崩れを防止
+- [x] 通知のアカウント名を独立タグ化し、人物タグを青系配色で表示
+- [x] 通知の時刻を先頭カラムへ移動（`時刻 / 店舗タグ / 人物タグ / 内容 / 詳細`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard Activity: 48-hour History Window (2026-03-15)
+
+- [x] アクティビティ抽出条件を「当日」から「直近48時間」に変更
+- [x] `admin/work-reports` 取得範囲を48時間窓に合わせて拡張（`from` を2日前相当に変更）
+- [x] 通知パネル文言を `本日の更新通知` から `48時間分の通知` / `直近48時間` へ統一
+- [x] 空状態文言を `直近48時間` 基準へ更新
+- [x] 業務報告通知に投稿時刻を表示（`submitted/reported` 優先抽出 + `投稿 HH:mm` 追記）
+- [x] 時刻パーサを拡張し、epoch秒/epochミリ秒形式の投稿時刻も正しく通知へ反映
+- [x] 業務報告イベントを「提出通知（submitted_at）」優先で生成し、状態更新後でも提出時点通知が残るように修正
+- [x] アクティビティ用 `admin/work-reports` 取得を期間パラメータ依存から外し、クライアント側48時間抽出へ統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Master: Customer Master Request Flow (2026-03-15)
+
+- [x] 営業サイドバーに `顧客マスタ申請` を追加し、`/sales/master/customer` へ遷移可能化
+- [x] 営業ルート `/sales/master/customer` を追加し、管理と同一画面 `AdminCustomerMasterPage` を営業モードで再利用
+- [x] 営業モードでは `保存/削除/新規追加` を直接反映せず、`master/admin_chat(room=customer_master_approval)` へ申請イベントとして保存
+- [x] 管理モードに承認待ち一覧を追加し、`承認して反映 / 却下(理由必須)` を実装
+- [x] 承認時は申請内容を実データへ反映し、却下時は却下イベントのみ記録するイベントソーシング構成を追加
+- [x] 顧客マスタ画面の申請キューUI/CSS（一覧・操作ボタン・モバイル時レイアウト）を追加
+- [x] パンくずに `顧客マスタ申請` ラベルを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales HOTBAR: Customer Sub Buttons Simplified (2026-03-15)
+
+- [x] 営業HOTバー `顧客` サブボタンを2件へ削減（`顧客登録申請` / `顧客情報一覧`）
+- [x] 旧 `顧客カルテ` / `顧客マスタ申請` サブボタンを非表示化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer List: Reuse Admin Customer Detail In Sales Mode (2026-03-15)
+
+- [x] 営業向け顧客詳細ルート `/sales/tenpo/:tenpoId` を追加し、`AdminTenpoKartePage(mode=\"sales\")` を再利用
+- [x] 営業顧客一覧カードの遷移先を `/sales/store/:id` から `/sales/tenpo/:tenpoId` へ変更
+- [x] 営業カルテ一覧パネル（`SalesCustomerListPanel`）の遷移先も `/sales/tenpo/:tenpoId` に統一
+- [x] 営業モードの顧客詳細で管理専用導線（取引先/店舗/yakusoku/soukoマスタ等）を非表示化
+- [x] 営業モードの顧客詳細で編集保存導線を抑止（基本情報編集・対応履歴編集・ストレージアップロードは無効）
+- [x] パンくずに営業顧客詳細ラベル（`/sales/tenpo/*` => `顧客詳細`）を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales HOTBAR: Keep Customer Master Registration Entry (2026-03-15)
+
+- [x] 営業HOTバー `顧客` サブ1件目を `顧客マスタ登録` へ変更
+- [x] `顧客マスタ登録` の遷移先を `/sales/master/customer` に修正（顧客情報一覧との2ボタン構成を維持）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer List: Share Admin Customer Info Page (2026-03-15)
+
+- [x] ` /sales/clients/list ` を営業専用一覧から `AdminTorihikisakiMeiboPage(mode=\"sales\")` 共有へ切替
+- [x] 営業モード時の一覧ヘッダ文言を `顧客情報一覧` に変更
+- [x] 営業モード時の `カルテ` 遷移先を `/sales/tenpo/:tenpoId` に統一
+- [x] 営業モード時の補助導線を営業向けに置換（`予定へ` → `/sales/schedule`、`マスタ` → `/sales/master/customer`）
+- [x] 営業モードでは取り消し操作（取引先トリガー/オーバーレイ）を非表示化
+- [x] パンくずに `/sales/clients/list` => `顧客情報一覧` を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Detail: Smartphone One-column Layout (2026-03-15)
+
+- [x] `AdminTenpoKartePage` ルートラッパーに営業モードclass（`is-sales-mode`）を付与
+- [x] 営業モード時、`max-width:900px` で `pane-center` グリッドを 2カラム→1カラムへ固定
+- [x] 営業モード時、スマホ幅で `お客様チャット/対応履歴` カードの最小高さを解除し縦積み表示を安定化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Detail: Mobile Pane Simplify + Swipe Switch (2026-03-15)
+
+- [x] 営業スマホ顧客詳細のボタン群を `基本情報` / `チャット` / `ストレージ` の3ボタン構成へ整理
+- [x] 営業スマホ顧客詳細の3ボタンを1行固定表示（狭幅時も2段折り返ししない）
+- [x] 営業スマホ顧客詳細から `お客様マイページ` / `更新` ボタンを非表示化
+- [x] 営業スマホ顧客詳細の左右コントローラー矢印を非表示化
+- [x] 営業スマホ顧客詳細の表示切替を上部ボタンから下部固定HOTバーへ移行（`基本情報 / チャット / カルテ / ストレージ`）
+- [x] 営業スマホ顧客詳細のHOTバー選択に応じて `概要ペイン切替` と `カルテ画面遷移` を統合制御
+- [x] 営業スマホ顧客詳細で左右スワイプによる `基本情報 <-> チャット <-> ストレージ` 切替を追加
+- [x] 営業スマホ顧客詳細は初期表示を `基本情報` に固定
+- [x] 営業スマホ顧客詳細では `問診票チェック` パネルを非表示化
+- [x] 営業スマホ顧客詳細のヘッダー `お客様詳細` 表示をコンパクト化（余白/文字サイズ縮小、補助行非表示）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Entrance: Customer Icon Update (2026-03-15)
+
+- [x] 営業エントランスHOTバー `顧客` に専用アイコン種別 `customer` を割り当て
+- [x] HOTバー用 `customer.svg` アイコンを追加（`public/icons/hotbar/customer.svg`）
+- [x] HOTバーCSSに `hotbar-icon-customer` マスク定義を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Mobile Entrance Header: Safe-area Offset (2026-03-15)
+
+- [x] スマホ幅で `GlobalNav` の `top` を `env(safe-area-inset-top)` 基準へ変更
+- [x] スマホ幅で `GlobalNav` の上マージン/左マージンを safe-area 加味へ変更（戻る/ハンバーガーの重なり回避）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Mobile: Add Entrance HOTBAR To Customer Master + Customer List (2026-03-15)
+
+- [x] 営業モードの `顧客マスタ (/sales/master/customer)` 下部に、エントランス同等のHOTバーを追加
+- [x] 営業モードの `顧客情報一覧 (/sales/clients/list)` 下部に、エントランス同等のHOTバーを追加
+- [x] HOTバー押下時の遷移を `SALES_HOTBAR` 定義（`to` または先頭 `subItems.path`）で統一
+- [x] モバイル幅のみHOTバーを表示し、コンテンツ下部が隠れないようページ下余白を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## App Startup: Keep Portal Default (2026-03-17)
+
+- [x] standalone(PWA)起動時に `#/customer/mypage` で開かれた場合のみ `#/`（Portal）へ補正するガードを追加
+- [x] 通常ブラウザの直URL（`#/customer/mypage?...`）は維持し、customer導線は破壊しない条件分岐に調整
 - [x] `npm -C src/misogi run build` でビルド確認

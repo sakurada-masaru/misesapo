@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 // Hamburger / admin-top are provided by GlobalNav.
 import './admin-torihikisaki-meibo.css';
 import { matchAllTokens, normalizeForSearch } from '../../shared/utils/search';
+import Hotbar from '../../shared/ui/Hotbar/Hotbar';
+import { SALES_HOTBAR } from '../../jobs/sales/entrance/hotbar.config';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -99,7 +101,10 @@ function tenpoPhone(tp) {
   );
 }
 
-export default function AdminTorihikisakiMeiboPage() {
+export default function AdminTorihikisakiMeiboPage({ mode = 'admin' }) {
+  const isSalesMode = String(mode || '').toLowerCase() === 'sales';
+  const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
@@ -589,15 +594,41 @@ export default function AdminTorihikisakiMeiboPage() {
     });
   }, [q, searchYagous, getVisibleAllTenposForYagou, searchTenpoByYagouGlobal]);
 
+  const salesHotbarActive = useMemo(() => {
+    const path = String(location?.pathname || '');
+    if (path.startsWith('/sales/master/customer') || path.startsWith('/sales/clients/list')) return 'customer';
+    if (path.startsWith('/sales/inbox') || path.startsWith('/sales/leads')) return 'progress';
+    if (path.startsWith('/sales/schedule')) return 'schedule';
+    if (path.startsWith('/houkoku')) return 'report';
+    return 'customer';
+  }, [location?.pathname]);
+
+  const handleSalesHotbarChange = useCallback((id) => {
+    const action = SALES_HOTBAR.find((it) => it.id === id);
+    if (!action) return;
+    const nextPath = String(
+      action.to ||
+      action.subItems?.find((it) => String(it?.path || it?.to || '').trim())?.path ||
+      action.subItems?.find((it) => String(it?.path || it?.to || '').trim())?.to ||
+      ''
+    ).trim();
+    if (!nextPath) return;
+    if (/^https?:\/\//i.test(nextPath)) {
+      window.location.href = nextPath;
+      return;
+    }
+    navigate(nextPath);
+  }, [navigate]);
+
   return (
-    <div className="meibo-page">
+    <div className={`meibo-page ${isSalesMode ? 'is-sales-mode' : ''}`.trim()}>
       <header className="meibo-head">
         <div className="meibo-head-left">
           <div className="admin-top-left">
             {/* GlobalNav handles navigation */}
           </div>
-          <h1>取引先名簿（meibo）</h1>
-          <div className="meibo-sub">torihikisaki → yagou → tenpo</div>
+          <h1>{isSalesMode ? '顧客情報一覧' : '取引先名簿（meibo）'}</h1>
+          <div className="meibo-sub">{isSalesMode ? '顧客情報一覧（営業）' : 'torihikisaki → yagou → tenpo'}</div>
         </div>
         <div className="meibo-head-right">
           <input
@@ -617,14 +648,16 @@ export default function AdminTorihikisakiMeiboPage() {
           <div className="meibo-list-head">
             <div className="k">取引先</div>
             <div className="v">{filteredTorihikisakis.length}</div>
-            <button
-              type="button"
-              className="meibo-cancel-btn"
-              disabled={!bulkSelectedTorihikisakiIds.length || torikeshiSubmitting}
-              onClick={() => setShowTorikeshiOverlay(true)}
-            >
-              取り消し
-            </button>
+            {!isSalesMode ? (
+              <button
+                type="button"
+                className="meibo-cancel-btn"
+                disabled={!bulkSelectedTorihikisakiIds.length || torikeshiSubmitting}
+                onClick={() => setShowTorikeshiOverlay(true)}
+              >
+                取り消し
+              </button>
+            ) : null}
           </div>
           <div className="meibo-list-scroll">
             {filteredTorihikisakis.map((it) => {
@@ -670,7 +703,9 @@ export default function AdminTorihikisakiMeiboPage() {
                   <div className="tid">取引先未選択: 全件表示</div>
                 </div>
                 <div className="actions">
-                  <Link to="/admin/master/torihikisaki" className="link">マスタ編集へ</Link>
+                  <Link to={isSalesMode ? '/sales/master/customer' : '/admin/master/torihikisaki'} className="link">
+                    {isSalesMode ? '顧客マスタ登録へ' : 'マスタ編集へ'}
+                  </Link>
                 </div>
               </div>
 
@@ -716,7 +751,7 @@ export default function AdminTorihikisakiMeiboPage() {
                                 <div className="tenpo-actions">
                                   <button onClick={() => copy(tenpoId)}>IDコピー</button>
                                   <Link
-                                    to={`/admin/tenpo/${encodeURIComponent(tenpoId)}?${new URLSearchParams({
+                                    to={`${isSalesMode ? '/sales/tenpo' : '/admin/tenpo'}/${encodeURIComponent(tenpoId)}?${new URLSearchParams({
                                       torihikisaki_id: toriId,
                                       yagou_id: yId,
                                     }).toString()}`}
@@ -724,8 +759,10 @@ export default function AdminTorihikisakiMeiboPage() {
                                   >
                                     カルテ
                                   </Link>
-                                  <Link to="/admin/yotei" className="link">予定へ</Link>
-                                  <Link to="/admin/master/tenpo" className="link">マスタへ</Link>
+                                  <Link to={isSalesMode ? '/sales/schedule' : '/admin/yotei'} className="link">予定へ</Link>
+                                  <Link to={isSalesMode ? '/sales/master/customer' : '/admin/master/tenpo'} className="link">
+                                    {isSalesMode ? '顧客マスタへ' : 'マスタへ'}
+                                  </Link>
                                 </div>
                               </div>
                             );
@@ -746,7 +783,9 @@ export default function AdminTorihikisakiMeiboPage() {
                 </div>
                 <div className="actions">
                   <button onClick={() => copy(selectedTorihikisakiId)}>IDコピー</button>
-                  <Link to="/admin/master/torihikisaki" className="link">マスタ編集へ</Link>
+                  <Link to={isSalesMode ? '/sales/master/customer' : '/admin/master/torihikisaki'} className="link">
+                    {isSalesMode ? '顧客マスタ登録へ' : 'マスタ編集へ'}
+                  </Link>
                 </div>
               </div>
 
@@ -793,7 +832,7 @@ export default function AdminTorihikisakiMeiboPage() {
                               <div className="tenpo-actions">
                                 <button onClick={() => copy(tenpoId)}>IDコピー</button>
                                 <Link
-                                  to={`/admin/tenpo/${encodeURIComponent(tenpoId)}?${new URLSearchParams({
+                                  to={`${isSalesMode ? '/sales/tenpo' : '/admin/tenpo'}/${encodeURIComponent(tenpoId)}?${new URLSearchParams({
                                     torihikisaki_id: selectedTorihikisakiId,
                                     yagou_id: showYagouId ? (y?.yagou_id || '') : '',
                                   }).toString()}`}
@@ -801,8 +840,10 @@ export default function AdminTorihikisakiMeiboPage() {
                                 >
                                   カルテ
                                 </Link>
-                                <Link to="/admin/yotei" className="link">予定へ</Link>
-                                <Link to="/admin/master/tenpo" className="link">マスタへ</Link>
+                                <Link to={isSalesMode ? '/sales/schedule' : '/admin/yotei'} className="link">予定へ</Link>
+                                <Link to={isSalesMode ? '/sales/master/customer' : '/admin/master/tenpo'} className="link">
+                                  {isSalesMode ? '顧客マスタへ' : 'マスタへ'}
+                                </Link>
                               </div>
                             </div>
                           );
@@ -818,7 +859,7 @@ export default function AdminTorihikisakiMeiboPage() {
         </main>
       </div>
 
-      {showTorikeshiOverlay ? (
+      {!isSalesMode && showTorikeshiOverlay ? (
         <div className="meibo-overlay-backdrop" role="dialog" aria-modal="true">
           <div className="meibo-overlay">
             <h3>取引先の取り消し確認</h3>
@@ -855,6 +896,17 @@ export default function AdminTorihikisakiMeiboPage() {
               </button>
             </div>
           </div>
+        </div>
+      ) : null}
+
+      {isSalesMode ? (
+        <div className="meibo-sales-mobile-hotbar-anchor" aria-label="営業HOTバー">
+          <Hotbar
+            actions={SALES_HOTBAR}
+            active={salesHotbarActive}
+            onChange={handleSalesHotbarChange}
+            showFlowGuideButton={false}
+          />
         </div>
       ) : null}
     </div>

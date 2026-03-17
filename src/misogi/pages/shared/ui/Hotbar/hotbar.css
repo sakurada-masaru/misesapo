@@ -186,6 +186,11 @@
   mask-image: url('/icons/hotbar/home.svg');
 }
 
+.hotbar-icon-customer {
+  -webkit-mask-image: url('/icons/hotbar/customer.svg');
+  mask-image: url('/icons/hotbar/customer.svg');
+}
+
 .hotbar-icon-default {
   -webkit-mask-image: url('/icons/hotbar/default.svg');
   mask-image: url('/icons/hotbar/default.svg');

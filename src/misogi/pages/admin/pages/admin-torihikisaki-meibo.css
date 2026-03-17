@@ -777,4 +777,18 @@
   .meibo-yagou {
     max-height: none;
   }
+
+  .meibo-page.is-sales-mode .meibo-body {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.meibo-sales-mobile-hotbar-anchor {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .meibo-page.is-sales-mode .meibo-sales-mobile-hotbar-anchor {
+    display: block;
+  }
 }

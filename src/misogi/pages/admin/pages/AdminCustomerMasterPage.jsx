@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './admin-master.css';
+import Hotbar from '../../shared/ui/Hotbar/Hotbar';
+import { SALES_HOTBAR } from '../../jobs/sales/entrance/hotbar.config';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -12,6 +14,17 @@ const API_BASE =
   (import.meta.env?.DEV || isLocalUiHost())
     ? '/api-master'
     : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
+
+const CUSTOMER_MASTER_APPROVAL_ROOM = 'customer_master_approval';
+const CUSTOMER_MASTER_APPROVAL_SOURCE = 'customer_master_approval';
+
+const REQUEST_ACTION_LABELS = {
+  update_row: '編集申請',
+  create_torihikisaki: '顧客/取引先追加申請',
+  create_yagou: '屋号追加申請',
+  create_tenpo: '店舗追加申請',
+  delete_rows: '削除申請',
+};
 
 function authHeaders() {
   const legacyAuth = (() => {
@@ -61,10 +74,72 @@ function readActorName() {
   }
 }
 
+function readActorId() {
+  try {
+    const auth = JSON.parse(localStorage.getItem('misesapo_auth') || '{}');
+    return norm(auth?.user_id || auth?.sub || auth?.email || 'unknown');
+  } catch {
+    return 'unknown';
+  }
+}
+
 function getItems(data) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.rows)) return data.rows;
   return [];
+}
+
+function parseDataPayload(raw) {
+  if (raw && typeof raw === 'object') return raw;
+  const s = norm(raw);
+  if (!s) return {};
+  try {
+    const parsed = JSON.parse(s);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function buildApprovalRequestId() {
+  return `CMR-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function listRequestEvents(rawRows) {
+  return getItems(rawRows)
+    .map((row, idx) => {
+      const payload = parseDataPayload(row?.data_payload);
+      if (norm(payload?.channel) !== CUSTOMER_MASTER_APPROVAL_SOURCE) return null;
+      const requestId = norm(payload?.request_id);
+      const eventType = norm(payload?.event_type);
+      if (!requestId || !eventType) return null;
+      const at = norm(row?.created_at || payload?.sent_at || row?.updated_at) || new Date().toISOString();
+      const atMs = Date.parse(at);
+      return {
+        id: norm(row?.admin_chat_id || row?.id) || `cmr-${idx}-${Date.now()}`,
+        requestId,
+        eventType,
+        at,
+        atMs: Number.isFinite(atMs) ? atMs : 0,
+        actorName: norm(payload?.sender_name || row?.sender_name || row?.created_by || 'unknown'),
+        payload,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a.atMs || 0) - (b.atMs || 0));
+}
+
+function requestSummary(reqPayload = {}) {
+  const action = norm(reqPayload?.action);
+  const target = reqPayload?.after || {};
+  const rows = Array.isArray(reqPayload?.rows) ? reqPayload.rows : [];
+  const actionLabel = REQUEST_ACTION_LABELS[action] || '申請';
+  if (action === 'delete_rows') {
+    return `${actionLabel} ${rows.length}件`;
+  }
+  const label = norm(target?.tenpo_name || target?.yagou_name || target?.torihikisaki_name || target?.kokyaku_name || reqPayload?.target_label);
+  return label ? `${actionLabel}: ${label}` : actionLabel;
 }
 
 async function apiJson(path, options = {}) {
@@ -131,7 +206,10 @@ function IdTag({ value, kind }) {
   return <span className={`admin-customer-master-id-tag kind-${kind || 'plain'}`}>{v}</span>;
 }
 
-export default function AdminCustomerMasterPage() {
+export default function AdminCustomerMasterPage({ mode = 'admin' }) {
+  const isSalesMode = String(mode || '').toLowerCase() === 'sales';
+  const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -153,6 +231,9 @@ export default function AdminCustomerMasterPage() {
     tenpo_torihikisaki_id: '',
     tenpo_yagou_id: '',
   });
+  const [requestEvents, setRequestEvents] = useState([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [requestActingId, setRequestActingId] = useState('');
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -287,6 +368,102 @@ export default function AdminCustomerMasterPage() {
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  const loadRequests = useCallback(async () => {
+    setRequestsLoading(true);
+    try {
+      const qs = new URLSearchParams({
+        limit: '2000',
+        jotai: 'yuko',
+        room: CUSTOMER_MASTER_APPROVAL_ROOM,
+      });
+      const data = await apiJson(`/master/admin_chat?${qs.toString()}`);
+      setRequestEvents(listRequestEvents(data));
+    } catch (e) {
+      setError((prev) => prev || (e?.message || '申請一覧の取得に失敗しました'));
+    } finally {
+      setRequestsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRequests();
+  }, [loadRequests]);
+
+  const requestState = useMemo(() => {
+    const requestMap = new Map();
+    const decisionMap = new Map();
+    requestEvents.forEach((ev) => {
+      if (ev.eventType === 'change_request') requestMap.set(ev.requestId, ev);
+      if (ev.eventType === 'change_decision') decisionMap.set(ev.requestId, ev);
+    });
+    const pending = [...requestMap.values()]
+      .filter((ev) => !decisionMap.has(ev.requestId))
+      .sort((a, b) => (b.atMs || 0) - (a.atMs || 0));
+    const resolved = [...requestMap.values()]
+      .filter((ev) => decisionMap.has(ev.requestId))
+      .map((ev) => ({ request: ev, decision: decisionMap.get(ev.requestId) }))
+      .sort((a, b) => (b.decision?.atMs || 0) - (a.decision?.atMs || 0));
+    return { pending, resolved };
+  }, [requestEvents]);
+
+  const postMasterChangeRequest = useCallback(async ({ action, summary, payload }) => {
+    const requestId = buildApprovalRequestId();
+    const sentAt = new Date().toISOString();
+    await apiJson('/master/admin_chat', {
+      method: 'POST',
+      body: {
+        room: CUSTOMER_MASTER_APPROVAL_ROOM,
+        source: CUSTOMER_MASTER_APPROVAL_SOURCE,
+        jotai: 'yuko',
+        has_attachment: false,
+        name: norm(summary).slice(0, 80) || '顧客マスタ申請',
+        message: norm(summary) || '顧客マスタ申請',
+        sender_name: readActorName(),
+        sender_display_name: readActorName(),
+        sender_id: readActorId(),
+        data_payload: {
+          channel: CUSTOMER_MASTER_APPROVAL_SOURCE,
+          event_type: 'change_request',
+          request_id: requestId,
+          action: norm(action),
+          sent_at: sentAt,
+          sender_name: readActorName(),
+          sender_id: readActorId(),
+          summary: norm(summary),
+          ...payload,
+        },
+      },
+    });
+    return requestId;
+  }, []);
+
+  const postMasterDecision = useCallback(async ({ requestId, decision, reason, requestSummaryText }) => {
+    await apiJson('/master/admin_chat', {
+      method: 'POST',
+      body: {
+        room: CUSTOMER_MASTER_APPROVAL_ROOM,
+        source: CUSTOMER_MASTER_APPROVAL_SOURCE,
+        jotai: 'yuko',
+        has_attachment: false,
+        name: `${decision === 'approved' ? '承認' : '却下'}: ${norm(requestSummaryText).slice(0, 60)}`,
+        message: `${decision === 'approved' ? '承認' : '却下'} ${requestSummaryText || ''}`.trim(),
+        sender_name: readActorName(),
+        sender_display_name: readActorName(),
+        sender_id: readActorId(),
+        data_payload: {
+          channel: CUSTOMER_MASTER_APPROVAL_SOURCE,
+          event_type: 'change_decision',
+          request_id: norm(requestId),
+          decision: decision === 'approved' ? 'approved' : 'rejected',
+          reason: norm(reason),
+          sent_at: new Date().toISOString(),
+          sender_name: readActorName(),
+          sender_id: readActorId(),
+        },
+      },
+    });
+  }, []);
 
   const nextIdPreview = useMemo(() => {
     let maxKokyaku = 0;
@@ -550,114 +727,162 @@ export default function AdminCustomerMasterPage() {
     [yagouOptions]
   );
 
-  const saveEdit = useCallback(async () => {
-    if (!editing) return;
-    const origin = editing._origin || {};
+  const applyRowUpdate = useCallback(async ({ before, after, actor }) => {
+    const origin = before || {};
+    const next = after || {};
     const originTorihikisakiId = norm(origin.torihikisaki_id);
     const originYagouId = norm(origin.yagou_id);
     const originTenpoId = norm(origin.tenpo_id);
-    const actor = norm(
-      JSON.parse(localStorage.getItem('misesapo_auth') || '{}')?.name ||
-      JSON.parse(localStorage.getItem('misesapo_auth') || '{}')?.email ||
-      'unknown'
+    const changed = (k) => norm(next[k]) !== norm(origin[k]);
+
+    if (originTorihikisakiId) {
+      const patch = {};
+      if (changed('kokyaku_id')) patch.kokyaku_id = norm(next.kokyaku_id);
+      if (changed('kokyaku_name')) patch.kokyaku_name = norm(next.kokyaku_name);
+      if (changed('torihikisaki_name')) patch.name = norm(next.torihikisaki_name);
+      if (Object.keys(patch).length) {
+        await apiJson(`/master/torihikisaki/${encodeURIComponent(originTorihikisakiId)}`, {
+          method: 'PUT',
+          body: { ...patch, updated_by: actor },
+        });
+      }
+    }
+
+    if (originYagouId) {
+      const patch = {};
+      if (changed('yagou_name')) patch.name = norm(next.yagou_name);
+      if (norm(next.torihikisaki_id) && changed('torihikisaki_id')) patch.torihikisaki_id = norm(next.torihikisaki_id);
+      if (Object.keys(patch).length) {
+        await apiJson(`/master/yagou/${encodeURIComponent(originYagouId)}`, {
+          method: 'PUT',
+          body: { ...patch, updated_by: actor },
+        });
+      }
+    }
+
+    if (originTenpoId) {
+      const patch = {};
+      if (changed('tenpo_name')) patch.name = norm(next.tenpo_name);
+      if (changed('tenpo_address')) patch.address = norm(next.tenpo_address);
+      if (changed('tenpo_phone')) patch.phone = norm(next.tenpo_phone);
+      if (changed('tenpo_tantou_name')) patch.tantou_name = norm(next.tenpo_tantou_name);
+      if (changed('tenpo_email')) patch.email = norm(next.tenpo_email);
+      if (changed('kokyaku_id')) patch.kokyaku_id = norm(next.kokyaku_id);
+      if (changed('kokyaku_name')) patch.kokyaku_name = norm(next.kokyaku_name);
+      if (changed('torihikisaki_id')) patch.torihikisaki_id = norm(next.torihikisaki_id);
+      if (changed('torihikisaki_name')) patch.torihikisaki_name = norm(next.torihikisaki_name);
+      if (changed('yagou_id')) patch.yagou_id = norm(next.yagou_id);
+      if (changed('yagou_name')) patch.yagou_name = norm(next.yagou_name);
+      if (Object.keys(patch).length) {
+        await apiJson(`/master/tenpo/${encodeURIComponent(originTenpoId)}`, {
+          method: 'PUT',
+          body: { ...patch, updated_by: actor },
+        });
+      }
+    }
+  }, []);
+
+  const applyDeleteRows = useCallback(async (rowsToDelete = []) => {
+    let count = 0;
+    for (const row of rowsToDelete) {
+      if (row.kind === 'tenpo' && norm(row.tenpo_id)) {
+        await apiJson(`/master/tenpo/${encodeURIComponent(row.tenpo_id)}`, { method: 'DELETE' });
+        count += 1;
+        continue;
+      }
+      if (row.kind === 'yagou' && norm(row.yagou_id)) {
+        await apiJson(`/master/yagou/${encodeURIComponent(row.yagou_id)}`, { method: 'DELETE' });
+        count += 1;
+        continue;
+      }
+      if (row.kind === 'torihikisaki' && norm(row.torihikisaki_id)) {
+        await apiJson(`/master/torihikisaki/${encodeURIComponent(row.torihikisaki_id)}`, { method: 'DELETE' });
+        count += 1;
+      }
+    }
+    return count;
+  }, []);
+
+  const saveEdit = useCallback(async () => {
+    if (!editing) return;
+    const origin = editing._origin || {};
+    const after = Object.fromEntries(
+      Object.entries(editing).filter(([k]) => !String(k).startsWith('_'))
     );
-    const changed = (k) => norm(editing[k]) !== norm(origin[k]);
+    const actor = readActorName();
 
     setSaving(true);
     setError('');
     setOk('');
     try {
-      if (originTorihikisakiId) {
-        const patch = {};
-        if (changed('kokyaku_id')) patch.kokyaku_id = norm(editing.kokyaku_id);
-        if (changed('kokyaku_name')) patch.kokyaku_name = norm(editing.kokyaku_name);
-        if (changed('torihikisaki_name')) patch.name = norm(editing.torihikisaki_name);
-        if (Object.keys(patch).length) {
-          await apiJson(`/master/torihikisaki/${encodeURIComponent(originTorihikisakiId)}`, {
-            method: 'PUT',
-            body: { ...patch, updated_by: actor },
-          });
-        }
+      if (isSalesMode) {
+        await postMasterChangeRequest({
+          action: 'update_row',
+          summary: requestSummary({ action: 'update_row', after }),
+          payload: {
+            before: origin,
+            after,
+            target_label: norm(after.tenpo_name || after.yagou_name || after.torihikisaki_name || after.kokyaku_name),
+          },
+        });
+        setOk('変更申請を送信しました（管理承認待ち）');
+        setEditing(null);
+        await loadRequests();
+      } else {
+        await applyRowUpdate({ before: origin, after, actor });
+        setOk('顧客マスタを保存しました');
+        setEditing(null);
+        await loadAll();
       }
-
-      if (originYagouId) {
-        const patch = {};
-        if (changed('yagou_name')) patch.name = norm(editing.yagou_name);
-        if (norm(editing.torihikisaki_id) && changed('torihikisaki_id')) patch.torihikisaki_id = norm(editing.torihikisaki_id);
-        if (Object.keys(patch).length) {
-          await apiJson(`/master/yagou/${encodeURIComponent(originYagouId)}`, {
-            method: 'PUT',
-            body: { ...patch, updated_by: actor },
-          });
-        }
-      }
-
-      if (originTenpoId) {
-        const patch = {};
-        if (changed('tenpo_name')) patch.name = norm(editing.tenpo_name);
-        if (changed('tenpo_address')) patch.address = norm(editing.tenpo_address);
-        if (changed('tenpo_phone')) patch.phone = norm(editing.tenpo_phone);
-        if (changed('tenpo_tantou_name')) patch.tantou_name = norm(editing.tenpo_tantou_name);
-        if (changed('tenpo_email')) patch.email = norm(editing.tenpo_email);
-        if (changed('kokyaku_id')) patch.kokyaku_id = norm(editing.kokyaku_id);
-        if (changed('kokyaku_name')) patch.kokyaku_name = norm(editing.kokyaku_name);
-        if (changed('torihikisaki_id')) patch.torihikisaki_id = norm(editing.torihikisaki_id);
-        if (changed('torihikisaki_name')) patch.torihikisaki_name = norm(editing.torihikisaki_name);
-        if (changed('yagou_id')) patch.yagou_id = norm(editing.yagou_id);
-        if (changed('yagou_name')) patch.yagou_name = norm(editing.yagou_name);
-        if (Object.keys(patch).length) {
-          await apiJson(`/master/tenpo/${encodeURIComponent(originTenpoId)}`, {
-            method: 'PUT',
-            body: { ...patch, updated_by: actor },
-          });
-        }
-      }
-
-      setOk('顧客マスタを保存しました');
-      setEditing(null);
-      await loadAll();
     } catch (e) {
-      setError(e?.message || '保存に失敗しました');
+      setError(e?.message || (isSalesMode ? '申請送信に失敗しました' : '保存に失敗しました'));
     } finally {
       setSaving(false);
     }
-  }, [editing, loadAll]);
+  }, [applyRowUpdate, editing, isSalesMode, loadAll, loadRequests, postMasterChangeRequest]);
 
   const deleteSelected = useCallback(async () => {
     if (saving || selectedRows.length === 0) return;
-    const okDelete = window.confirm(`選択した ${selectedRows.length} 件を削除しますか？\nこの操作は取り消せません。`);
+    const okDelete = window.confirm(`選択した ${selectedRows.length} 件を${isSalesMode ? '削除申請' : '削除'}しますか？\nこの操作は取り消せません。`);
     if (!okDelete) return;
 
     setSaving(true);
     setError('');
     setOk('');
     try {
-      let count = 0;
-      for (const row of selectedRows) {
-        if (row.kind === 'tenpo' && norm(row.tenpo_id)) {
-          await apiJson(`/master/tenpo/${encodeURIComponent(row.tenpo_id)}`, { method: 'DELETE' });
-          count += 1;
-          continue;
-        }
-        if (row.kind === 'yagou' && norm(row.yagou_id)) {
-          await apiJson(`/master/yagou/${encodeURIComponent(row.yagou_id)}`, { method: 'DELETE' });
-          count += 1;
-          continue;
-        }
-        if (row.kind === 'torihikisaki' && norm(row.torihikisaki_id)) {
-          await apiJson(`/master/torihikisaki/${encodeURIComponent(row.torihikisaki_id)}`, { method: 'DELETE' });
-          count += 1;
-        }
+      if (isSalesMode) {
+        await postMasterChangeRequest({
+          action: 'delete_rows',
+          summary: requestSummary({ action: 'delete_rows', rows: selectedRows }),
+          payload: {
+            rows: selectedRows.map((row) => ({
+              kind: row.kind,
+              kokyaku_id: row.kokyaku_id,
+              torihikisaki_id: row.torihikisaki_id,
+              yagou_id: row.yagou_id,
+              tenpo_id: row.tenpo_id,
+              kokyaku_name: row.kokyaku_name,
+              torihikisaki_name: row.torihikisaki_name,
+              yagou_name: row.yagou_name,
+              tenpo_name: row.tenpo_name,
+            })),
+          },
+        });
+        setSelectedKeys(new Set());
+        setOk(`${selectedRows.length}件の削除申請を送信しました`);
+        await loadRequests();
+      } else {
+        const count = await applyDeleteRows(selectedRows);
+        setSelectedKeys(new Set());
+        setOk(`${count}件を削除しました`);
+        await loadAll();
       }
-      setSelectedKeys(new Set());
-      setOk(`${count}件を削除しました`);
-      await loadAll();
     } catch (e) {
-      setError(e?.message || '削除に失敗しました');
+      setError(e?.message || (isSalesMode ? '削除申請に失敗しました' : '削除に失敗しました'));
     } finally {
       setSaving(false);
     }
-  }, [saving, selectedRows, loadAll]);
+  }, [applyDeleteRows, isSalesMode, loadAll, loadRequests, postMasterChangeRequest, saving, selectedRows]);
 
   const onTorihikisakiChange = useCallback((nextId) => {
     setEditing((prev) => {
@@ -709,30 +934,44 @@ export default function AdminCustomerMasterPage() {
     setError('');
     setOk('');
     try {
-      const body = {
-        name: torihikisakiName,
-        kokyaku_name: kokyakuName || torihikisakiName,
-        kokyaku_id: kokyakuId,
-        jotai: 'yuko',
-        updated_by: readActorName(),
-      };
-      await apiJson('/master/torihikisaki', {
-        method: 'POST',
-        body,
-      });
+      if (isSalesMode) {
+        const after = {
+          kokyaku_id: kokyakuId,
+          kokyaku_name: kokyakuName || torihikisakiName,
+          torihikisaki_name: torihikisakiName,
+        };
+        await postMasterChangeRequest({
+          action: 'create_torihikisaki',
+          summary: requestSummary({ action: 'create_torihikisaki', after }),
+          payload: { after },
+        });
+      } else {
+        const body = {
+          name: torihikisakiName,
+          kokyaku_name: kokyakuName || torihikisakiName,
+          kokyaku_id: kokyakuId,
+          jotai: 'yuko',
+          updated_by: readActorName(),
+        };
+        await apiJson('/master/torihikisaki', {
+          method: 'POST',
+          body,
+        });
+      }
       setCreateDraft((prev) => ({
         ...prev,
         kokyaku_name: '',
         torihikisaki_name: '',
       }));
-      setOk(`顧客/取引先を追加しました: ${torihikisakiName}`);
-      await loadAll();
+      setOk(isSalesMode ? `顧客/取引先の追加申請を送信しました: ${torihikisakiName}` : `顧客/取引先を追加しました: ${torihikisakiName}`);
+      if (isSalesMode) await loadRequests();
+      else await loadAll();
     } catch (e) {
-      setError(e?.message || '取引先の追加に失敗しました');
+      setError(e?.message || (isSalesMode ? '取引先の追加申請に失敗しました' : '取引先の追加に失敗しました'));
     } finally {
       setCreatingKind('');
     }
-  }, [createDraft.kokyaku_name, createDraft.torihikisaki_name, loadAll, nextIdPreview.kokyaku]);
+  }, [createDraft.kokyaku_name, createDraft.torihikisaki_name, isSalesMode, loadAll, loadRequests, nextIdPreview.kokyaku, postMasterChangeRequest]);
 
   const createYagou = useCallback(async () => {
     const name = norm(createDraft.yagou_name);
@@ -745,22 +984,35 @@ export default function AdminCustomerMasterPage() {
     setError('');
     setOk('');
     try {
-      const body = {
-        name,
-        jotai: 'yuko',
-        updated_by: readActorName(),
-      };
-      if (torihikisakiId) body.torihikisaki_id = torihikisakiId;
-      await apiJson('/master/yagou', { method: 'POST', body });
+      if (isSalesMode) {
+        const after = {
+          yagou_name: name,
+          torihikisaki_id: torihikisakiId,
+        };
+        await postMasterChangeRequest({
+          action: 'create_yagou',
+          summary: requestSummary({ action: 'create_yagou', after }),
+          payload: { after },
+        });
+      } else {
+        const body = {
+          name,
+          jotai: 'yuko',
+          updated_by: readActorName(),
+        };
+        if (torihikisakiId) body.torihikisaki_id = torihikisakiId;
+        await apiJson('/master/yagou', { method: 'POST', body });
+      }
       setCreateDraft((prev) => ({ ...prev, yagou_name: '' }));
-      setOk(`屋号を追加しました: ${name}`);
-      await loadAll();
+      setOk(isSalesMode ? `屋号の追加申請を送信しました: ${name}` : `屋号を追加しました: ${name}`);
+      if (isSalesMode) await loadRequests();
+      else await loadAll();
     } catch (e) {
-      setError(e?.message || '屋号の追加に失敗しました');
+      setError(e?.message || (isSalesMode ? '屋号の追加申請に失敗しました' : '屋号の追加に失敗しました'));
     } finally {
       setCreatingKind('');
     }
-  }, [createDraft.yagou_name, createDraft.yagou_torihikisaki_id, loadAll]);
+  }, [createDraft.yagou_name, createDraft.yagou_torihikisaki_id, isSalesMode, loadAll, loadRequests, postMasterChangeRequest]);
 
   const createTenpo = useCallback(async () => {
     const name = norm(createDraft.tenpo_name);
@@ -777,42 +1029,224 @@ export default function AdminCustomerMasterPage() {
     setError('');
     setOk('');
     try {
-      const body = {
-        name,
-        jotai: 'yuko',
-        updated_by: readActorName(),
-      };
-      if (torihikisakiId) body.torihikisaki_id = torihikisakiId;
-      if (yagouId) body.yagou_id = yagouId;
-      await apiJson('/master/tenpo', { method: 'POST', body });
+      if (isSalesMode) {
+        const after = {
+          tenpo_name: name,
+          torihikisaki_id: torihikisakiId,
+          yagou_id: yagouId,
+        };
+        await postMasterChangeRequest({
+          action: 'create_tenpo',
+          summary: requestSummary({ action: 'create_tenpo', after }),
+          payload: { after },
+        });
+      } else {
+        const body = {
+          name,
+          jotai: 'yuko',
+          updated_by: readActorName(),
+        };
+        if (torihikisakiId) body.torihikisaki_id = torihikisakiId;
+        if (yagouId) body.yagou_id = yagouId;
+        await apiJson('/master/tenpo', { method: 'POST', body });
+      }
       setCreateDraft((prev) => ({ ...prev, tenpo_name: '' }));
-      setOk(`店舗を追加しました: ${name}`);
-      await loadAll();
+      setOk(isSalesMode ? `店舗の追加申請を送信しました: ${name}` : `店舗を追加しました: ${name}`);
+      if (isSalesMode) await loadRequests();
+      else await loadAll();
     } catch (e) {
-      setError(e?.message || '店舗の追加に失敗しました');
+      setError(e?.message || (isSalesMode ? '店舗の追加申請に失敗しました' : '店舗の追加に失敗しました'));
     } finally {
       setCreatingKind('');
     }
-  }, [createDraft.tenpo_name, createDraft.tenpo_torihikisaki_id, createDraft.tenpo_yagou_id, loadAll, yagouById]);
+  }, [createDraft.tenpo_name, createDraft.tenpo_torihikisaki_id, createDraft.tenpo_yagou_id, isSalesMode, loadAll, loadRequests, postMasterChangeRequest, yagouById]);
+
+  const approveRequest = useCallback(async (reqEvent) => {
+    const payload = reqEvent?.payload || {};
+    const requestId = norm(reqEvent?.requestId);
+    if (!requestId) return;
+    setRequestActingId(requestId);
+    setError('');
+    setOk('');
+    try {
+      const action = norm(payload?.action);
+      if (action === 'update_row') {
+        await applyRowUpdate({
+          before: payload?.before || {},
+          after: payload?.after || {},
+          actor: readActorName(),
+        });
+      } else if (action === 'create_torihikisaki') {
+        const after = payload?.after || {};
+        await apiJson('/master/torihikisaki', {
+          method: 'POST',
+          body: {
+            name: norm(after?.torihikisaki_name),
+            kokyaku_name: norm(after?.kokyaku_name || after?.torihikisaki_name),
+            kokyaku_id: norm(after?.kokyaku_id),
+            jotai: 'yuko',
+            updated_by: readActorName(),
+          },
+        });
+      } else if (action === 'create_yagou') {
+        const after = payload?.after || {};
+        const body = {
+          name: norm(after?.yagou_name),
+          jotai: 'yuko',
+          updated_by: readActorName(),
+        };
+        if (norm(after?.torihikisaki_id)) body.torihikisaki_id = norm(after.torihikisaki_id);
+        await apiJson('/master/yagou', { method: 'POST', body });
+      } else if (action === 'create_tenpo') {
+        const after = payload?.after || {};
+        const body = {
+          name: norm(after?.tenpo_name),
+          jotai: 'yuko',
+          updated_by: readActorName(),
+        };
+        if (norm(after?.torihikisaki_id)) body.torihikisaki_id = norm(after.torihikisaki_id);
+        if (norm(after?.yagou_id)) body.yagou_id = norm(after.yagou_id);
+        await apiJson('/master/tenpo', { method: 'POST', body });
+      } else if (action === 'delete_rows') {
+        const rowsToDelete = Array.isArray(payload?.rows) ? payload.rows : [];
+        await applyDeleteRows(rowsToDelete);
+      } else {
+        throw new Error(`未対応の申請アクションです: ${action || '(empty)'}`);
+      }
+      await postMasterDecision({
+        requestId,
+        decision: 'approved',
+        reason: '承認',
+        requestSummaryText: requestSummary(payload),
+      });
+      setOk(`申請を承認して反映しました: ${requestSummary(payload)}`);
+      await Promise.all([loadAll(), loadRequests()]);
+    } catch (e) {
+      setError(e?.message || '申請の承認反映に失敗しました');
+    } finally {
+      setRequestActingId('');
+    }
+  }, [applyDeleteRows, applyRowUpdate, loadAll, loadRequests, postMasterDecision]);
+
+  const rejectRequest = useCallback(async (reqEvent) => {
+    const requestId = norm(reqEvent?.requestId);
+    if (!requestId) return;
+    const reason = window.prompt('却下理由を入力してください（必須）', '内容不備');
+    if (reason == null) return;
+    if (!norm(reason)) {
+      window.alert('却下理由は必須です');
+      return;
+    }
+    setRequestActingId(requestId);
+    setError('');
+    setOk('');
+    try {
+      await postMasterDecision({
+        requestId,
+        decision: 'rejected',
+        reason,
+        requestSummaryText: requestSummary(reqEvent?.payload || {}),
+      });
+      setOk(`申請を却下しました: ${requestSummary(reqEvent?.payload || {})}`);
+      await loadRequests();
+    } catch (e) {
+      setError(e?.message || '申請の却下に失敗しました');
+    } finally {
+      setRequestActingId('');
+    }
+  }, [loadRequests, postMasterDecision]);
+
+  const salesHotbarActive = useMemo(() => {
+    const path = String(location?.pathname || '');
+    if (path.startsWith('/sales/master/customer') || path.startsWith('/sales/clients/list')) return 'customer';
+    if (path.startsWith('/sales/inbox') || path.startsWith('/sales/leads')) return 'progress';
+    if (path.startsWith('/sales/schedule')) return 'schedule';
+    if (path.startsWith('/houkoku')) return 'report';
+    return 'customer';
+  }, [location?.pathname]);
+
+  const handleSalesHotbarChange = useCallback((id) => {
+    const action = SALES_HOTBAR.find((it) => it.id === id);
+    if (!action) return;
+    const nextPath = String(
+      action.to ||
+      action.subItems?.find((it) => String(it?.path || it?.to || '').trim())?.path ||
+      action.subItems?.find((it) => String(it?.path || it?.to || '').trim())?.to ||
+      ''
+    ).trim();
+    if (!nextPath) return;
+    if (/^https?:\/\//i.test(nextPath)) {
+      window.location.href = nextPath;
+      return;
+    }
+    navigate(nextPath);
+  }, [navigate]);
 
   return (
-    <div className="admin-master-page admin-customer-master-page">
+    <div className={`admin-master-page admin-customer-master-page ${isSalesMode ? 'is-sales-mode' : 'is-admin-mode'}`.trim()}>
       <div className="admin-master-content">
         <header className="admin-master-header">
           <div>
             <h1>顧客マスタ</h1>
-            <p className="admin-master-subtitle">kokyaku / torihikisaki / yagou / tenpo を1画面で修正・保存</p>
+            <p className="admin-master-subtitle">
+              {isSalesMode
+                ? 'kokyaku / torihikisaki / yagou / tenpo を1画面で申請（管理承認後に反映）'
+                : 'kokyaku / torihikisaki / yagou / tenpo を1画面で修正・保存'}
+            </p>
           </div>
           <div className="admin-master-header-actions">
-            <button type="button" onClick={loadAll} disabled={loading}>{loading ? '更新中...' : '更新'}</button>
+            <button type="button" onClick={async () => { await Promise.all([loadAll(), loadRequests()]); }} disabled={loading || requestsLoading}>
+              {(loading || requestsLoading) ? '更新中...' : '更新'}
+            </button>
           </div>
         </header>
 
         {error ? <div className="admin-master-error">{error}</div> : null}
         {ok ? <div className="admin-master-success">{ok}</div> : null}
+        {isSalesMode ? (
+          <div className="admin-master-success" style={{ marginBottom: 12 }}>
+            営業モード: ここでの保存・削除・新規追加は「申請」として送信され、管理者承認後に本データへ反映されます。
+          </div>
+        ) : null}
+
+        {!isSalesMode ? (
+          <section className="admin-customer-master-approval-queue">
+            <div className="admin-customer-master-approval-head">
+              <h2>営業からの申請（承認待ち）</h2>
+              <div className="admin-master-count">承認待ち: {requestState.pending.length}</div>
+            </div>
+            {requestState.pending.length === 0 ? (
+              <div className="admin-customer-master-approval-empty">承認待ち申請はありません。</div>
+            ) : (
+              <div className="admin-customer-master-approval-list">
+                {requestState.pending.map((ev) => {
+                  const busy = requestActingId === ev.requestId;
+                  return (
+                    <article key={ev.requestId} className="admin-customer-master-approval-item">
+                      <div className="summary">{requestSummary(ev.payload)}</div>
+                      <div className="meta">
+                        <span>申請ID: {ev.requestId}</span>
+                        <span>申請者: {ev.actorName || 'unknown'}</span>
+                        <span>時刻: {ev.at}</span>
+                      </div>
+                      <div className="actions">
+                        <button type="button" className="primary" disabled={busy || saving} onClick={() => approveRequest(ev)}>
+                          {busy ? '処理中...' : '承認して反映'}
+                        </button>
+                        <button type="button" className="danger" disabled={busy || saving} onClick={() => rejectRequest(ev)}>
+                          却下
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        ) : null}
 
         <section className="admin-customer-master-create">
-          <h2>同画面で新規追加</h2>
+          <h2>{isSalesMode ? '同画面で新規追加（申請）' : '同画面で新規追加'}</h2>
           <div className="admin-customer-master-create-grid">
             <div className="admin-customer-master-create-card">
               <h3>顧客 / 取引先を追加</h3>
@@ -846,7 +1280,7 @@ export default function AdminCustomerMasterPage() {
                 onClick={createTorihikisaki}
                 disabled={creatingKind === 'torihikisaki'}
               >
-                {creatingKind === 'torihikisaki' ? '追加中...' : '顧客/取引先追加'}
+                {creatingKind === 'torihikisaki' ? '追加中...' : (isSalesMode ? '顧客/取引先を申請' : '顧客/取引先追加')}
               </button>
             </div>
 
@@ -884,7 +1318,7 @@ export default function AdminCustomerMasterPage() {
                 onClick={createYagou}
                 disabled={creatingKind === 'yagou'}
               >
-                {creatingKind === 'yagou' ? '追加中...' : '屋号追加'}
+                {creatingKind === 'yagou' ? '追加中...' : (isSalesMode ? '屋号を申請' : '屋号追加')}
               </button>
             </div>
 
@@ -938,7 +1372,7 @@ export default function AdminCustomerMasterPage() {
                 onClick={createTenpo}
                 disabled={creatingKind === 'tenpo'}
               >
-                {creatingKind === 'tenpo' ? '追加中...' : '店舗追加'}
+                {creatingKind === 'tenpo' ? '追加中...' : (isSalesMode ? '店舗を申請' : '店舗追加')}
               </button>
             </div>
           </div>
@@ -969,7 +1403,7 @@ export default function AdminCustomerMasterPage() {
               onClick={deleteSelected}
               disabled={saving || selectedRows.length === 0}
             >
-              {saving ? '処理中...' : '削除'}
+              {saving ? '処理中...' : (isSalesMode ? '削除申請' : '削除')}
             </button>
           </div>
           <div className="admin-master-count">表示件数: {sortedRows.length} / 選択: {selectedRows.length} / 全体: {rows.length}</div>
@@ -1065,8 +1499,8 @@ export default function AdminCustomerMasterPage() {
                     {!rowQuality.get(row.key)?.hasLinkGap && !rowQuality.get(row.key)?.isDuplicate ? <small>正常</small> : null}
                   </td>
                   <td className="actions" data-col="操作">
-                    <button type="button" onClick={() => openEdit(row)}>編集</button>
-                    {row.tenpo_id ? (
+                    <button type="button" onClick={() => openEdit(row)}>{isSalesMode ? '申請編集' : '編集'}</button>
+                    {!isSalesMode && row.tenpo_id ? (
                       <Link to={`/admin/tenpo/${encodeURIComponent(row.tenpo_id)}?mode=monshin`} className="link">カルテ</Link>
                     ) : null}
                   </td>
@@ -1081,7 +1515,7 @@ export default function AdminCustomerMasterPage() {
         <>
           <div className="admin-master-modal-backdrop" onClick={closeEdit} />
           <section className="admin-master-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="admin-master-inline-editor-title">顧客マスタ編集</h2>
+            <h2 className="admin-master-inline-editor-title">{isSalesMode ? '顧客マスタ申請編集' : '顧客マスタ編集'}</h2>
             <div className="admin-master-input-mode">
               <div className="admin-master-input-mode-head">入力モード</div>
               <div className="admin-master-input-mode-switch" role="tablist" aria-label="入力モード切替">
@@ -1217,11 +1651,22 @@ export default function AdminCustomerMasterPage() {
             <div className="admin-master-modal-actions">
               <button type="button" onClick={closeEdit} disabled={saving}>キャンセル</button>
               <button type="button" className="primary" onClick={saveEdit} disabled={saving}>
-                {saving ? '保存中...' : '保存'}
+                {saving ? '保存中...' : (isSalesMode ? '申請' : '保存')}
               </button>
             </div>
           </section>
         </>
+      ) : null}
+
+      {isSalesMode ? (
+        <div className="sales-mobile-hotbar-anchor" aria-label="営業HOTバー">
+          <Hotbar
+            actions={SALES_HOTBAR}
+            active={salesHotbarActive}
+            onChange={handleSalesHotbarChange}
+            showFlowGuideButton={false}
+          />
+        </div>
       ) : null}
     </div>
   );
