@@ -38,6 +38,15 @@ function normalizeStandaloneStartRoute() {
   if (!isStandalone) return false;
   if (pathname !== `${base}/`) return false;
   if (!/^#\/customer\/mypage(?:[/?]|$)/.test(hash)) return false;
+  // Explicit customer URL (tenpo_id 指定) はそのまま表示する。
+  // アプリ起動時に前回状態で customer/mypage が残っているケースのみ Portal へ戻す。
+  const hashQuery = (() => {
+    const qIdx = hash.indexOf('?');
+    if (qIdx < 0) return '';
+    return hash.slice(qIdx + 1);
+  })();
+  const sp = new URLSearchParams(hashQuery);
+  if (String(sp.get('tenpo_id') || '').trim()) return false;
   window.location.replace(`${base}/#/`);
   return true;
 }

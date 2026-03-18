@@ -231,5 +231,10 @@ export default defineConfig(({ mode }) => {
       interval: 500,
     },
   },
+  build: {
+    // デプロイ直後の「古い index.html キャッシュ -> 新しいハッシュJS 404」対策。
+    // 旧ハッシュ資産をしばらく残して起動失敗を減らす。
+    emptyOutDir: false,
+  },
   };
 });

@@ -30,7 +30,7 @@
       else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.setAttribute('data-theme', 'light');
     })();
   </script>
-  <script type="module" crossorigin src="/misogi/assets/index-CdLy4sje.js"></script>
+  <script type="module" crossorigin src="/misogi/assets/index-C0Qo5cho.js"></script>
   <link rel="stylesheet" crossorigin href="/misogi/assets/index-BXNh8Hkm.css">
 </head>
 
@@ -38,14 +38,29 @@
   <div id="root"></div>
   <script>
     (function () {
+      var RETRY_KEY = 'misogi-v2-boot-retry';
       setTimeout(function () {
         var root = document.getElementById('root');
-        if (root && !root.innerHTML.trim()) {
-          root.innerHTML = '<div style="padding:2rem;color:var(--fg);font-family:sans-serif">' +
-            '<p>読み込みに失敗しました。</p>' +
-            '<p>ブラウザの開発者ツール → Network で <code>/misogi/assets/</code> の .js が 200 か 404 か確認してください。</p>' +
-            '<p><a href="/misogi/" style="color:var(--accent)">/misogi/ を再読み込み</a></p></div>';
+        if (!root) return;
+        if (root.innerHTML.trim()) {
+          try { sessionStorage.removeItem(RETRY_KEY); } catch (_) { }
+          return;
         }
+        var retried = '';
+        try { retried = sessionStorage.getItem(RETRY_KEY) || ''; } catch (_) { }
+        if (!retried) {
+          try { sessionStorage.setItem(RETRY_KEY, '1'); } catch (_) { }
+          try {
+            var url = new URL(window.location.href);
+            url.searchParams.set('boot_reload', String(Date.now()));
+            window.location.replace(url.toString());
+            return;
+          } catch (_) { }
+        }
+        root.innerHTML = '<div style="padding:2rem;color:var(--fg);font-family:sans-serif">' +
+          '<p>読み込みに失敗しました。</p>' +
+          '<p>ブラウザの開発者ツール → Network で <code>/misogi/assets/</code> の .js が 200 か 404 か確認してください。</p>' +
+          '<p><a href="/misogi/" style="color:var(--accent)">/misogi/ を再読み込み</a></p></div>';
       }, 5000);
     })();
   </script>
