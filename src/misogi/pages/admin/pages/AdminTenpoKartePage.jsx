@@ -174,8 +174,18 @@ function withQueryParam(url, key, value) {
 
 function buildCustomerMyPageUrl(tenpoId = '') {
   const id = String(tenpoId || '').trim() || 'store';
-  const base = MISOGI_CUSTOMER_MYPAGE_BASE || 'https://misesapo.co.jp/misogi/#/customer/mypage';
-  return withQueryParam(base, 'tenpo_id', id);
+  const explicit = String(MISOGI_CUSTOMER_MYPAGE_BASE || '').trim();
+  if (/customer\/mypage/i.test(explicit)) {
+    return withQueryParam(explicit, 'tenpo_id', id);
+  }
+  // Default: open on the same origin/environment where admin is running.
+  if (typeof window !== 'undefined') {
+    const origin = String(window.location?.origin || '').trim();
+    if (origin) {
+      return `${origin}/misogi/#/customer/mypage?tenpo_id=${encodeURIComponent(id)}`;
+    }
+  }
+  return `https://misesapo.co.jp/misogi/#/customer/mypage?tenpo_id=${encodeURIComponent(id)}`;
 }
 
 function resolveTenpoUrl(tp) {
