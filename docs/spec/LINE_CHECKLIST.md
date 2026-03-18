@@ -4593,6 +4593,7 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 - [x] お客様マイページの `souko` 取得を「先頭1件」から「該当店舗の全 `souko` を集約」へ変更
 - [x] 重複キーを除外しつつ、`uploaded_at` 降順で `detailSoukoFiles` を正規化
+- [x] `作業完了レポート` モーダルで `cleaning_houkoku_pdf`（および関連カテゴリ）のPDFを直接表示/閲覧可能化
 - [x] モーダル表示時に再読込し、提出直後でも反映されるように調整
 - [x] 30秒ポーリングで `souko` を再取得し、報告書反映の追従性を改善
 - [x] `npm -C src/misogi run build` でビルド確認
@@ -4626,4 +4627,36 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 管理 `お客様詳細` のストレージ一覧でファイル削除を可能化（確認ダイアログ付き）
 - [x] 公開設定をボタン式からチェックボックス式へ変更（`お客様へ公開` ON/OFF）
 - [x] 公開設定更新中/削除中の排他制御を追加し、同一行の多重操作を防止
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Standalone Redirect Guard Fix (2026-03-18)
+
+- [x] PWA/standalone 起動時の `customer/mypage` 正規化処理を調整
+- [x] `tenpo_id` 付きの明示URL（`#/customer/mypage?tenpo_id=...`）は Portal へリダイレクトしないよう修正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Asset Load Failure Mitigation (2026-03-18)
+
+- [x] 起動失敗時（root空）のフォールバックで、キャッシュバスター付きの1回自動再読込を追加
+- [x] `vite build` を `emptyOutDir: false` に変更し、旧ハッシュ資産を残して 404 を減らす運用へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Customer Detail: MyPage Link Environment-safe URL (2026-03-18)
+
+- [x] 管理 `お客様詳細` の `お客様マイページ` リンク生成を同一オリジン優先に変更
+- [x] `VITE_MISOGI_CUSTOMER_MYPAGE_URL` が `customer/mypage` を含む場合のみ明示URLを優先し、未指定/不正時は `window.location.origin` ベースで生成
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer/Admin Storage: Expired Image URL Reload Fix (2026-03-18)
+
+- [x] `souko` 返却時の `files[].get_url` を常に再署名するよう `lambda_torihikisaki_api.py` を修正（既存失効URLを上書き）
+- [x] 管理 `お客様詳細` の画像表示URL優先順を `get_url > preview_url` に変更
+- [x] お客様マイページの画像表示URL優先順を `get_url > preview_url` に変更
+- [x] `python3 -m py_compile lambda_torihikisaki_api.py` で構文確認
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Yotei CORS Preflight Avoidance (2026-03-18)
+
+- [x] お客様マイページの `お知らせ用 /yotei` 取得で Authorization ヘッダ送信を停止
+- [x] クロスオリジン時の OPTIONS（プリフライト）依存を回避し、CORSエラーを抑制
 - [x] `npm -C src/misogi run build` でビルド確認

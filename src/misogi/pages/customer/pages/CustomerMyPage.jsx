@@ -1535,8 +1535,11 @@ export default function CustomerMyPage() {
         to: fmtYmd(to),
         limit: '3000',
       });
+      // NOTE:
+      // Customer mypage on production may run cross-origin against API Gateway.
+      // Sending Authorization header triggers preflight and can fail on /yotei CORS.
+      // Notices are read-only, so fetch without auth header to avoid OPTIONS failure.
       const res = await fetch(`${masterApiBase}/yotei?${qs.toString()}`, {
-        headers: { ...authHeaders() },
         cache: 'no-store',
       });
       if (!res.ok) {
