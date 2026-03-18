@@ -60,6 +60,13 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function generateReportReferenceId(workDate, tenpoId) {
+  const datePart = String(workDate || todayYmd()).replace(/-/g, '').slice(0, 8) || todayYmd().replace(/-/g, '');
+  const tenpoPart = String(tenpoId || '').replace(/[^A-Za-z0-9]/g, '').slice(-4).padStart(4, '0');
+  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `RPT-${datePart}-${tenpoPart}-${rand}`;
+}
+
 function safeFilePart(v) {
   const s = norm(v)
     .replace(/[\\/:*?"<>|]+/g, '_')
@@ -1597,7 +1604,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
     };
   }, [apiJson]);
 
-  const saveReportArtifactsToSouko = useCallback(async ({ reportId = '' } = {}) => {
+  const saveReportArtifactsToSouko = useCallback(async ({ reportId = '', reportRefId = '' } = {}) => {
     const tid = norm(tenpoId);
     if (!tid) throw new Error('souko保存先店舗を選択してください');
     const workDate = normalizeYmd(payload.work_date) || todayYmd();
@@ -1630,6 +1637,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
         doc_category: 'cleaning_houkoku_pdf',
         preview_url: pdfStored.preview_url,
         report_id: norm(reportId),
+        report_ref_id: norm(reportRefId || reportId),
         yotei_id: linkedScheduleId,
         schedule_id: linkedScheduleId,
         tenpo_id: tid,
@@ -1637,6 +1645,12 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
         date_key: workDate,
         date_month: workDate.slice(0, 7),
         source: 'cleaning_houkoku',
+        customer_visible: false,
+        customer_published_at: '',
+        approval_status: 'pending',
+        approved_at: '',
+        approved_by: '',
+        approved_by_name: '',
       },
     ];
 
@@ -1680,6 +1694,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
             doc_category: 'cleaning_houkoku_photo',
             preview_url: stored.preview_url,
             report_id: norm(reportId),
+            report_ref_id: norm(reportRefId || reportId),
             yotei_id: linkedScheduleId,
             schedule_id: linkedScheduleId,
             tenpo_id: tid,
@@ -1728,6 +1743,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
         doc_category: 'cleaning_houkoku_photo',
         preview_url: stored.preview_url,
         report_id: norm(reportId),
+        report_ref_id: norm(reportRefId || reportId),
         yotei_id: linkedScheduleId,
         schedule_id: linkedScheduleId,
         tenpo_id: tid,
@@ -1786,6 +1802,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
       const selectedServiceIds = (serviceIds || []).map((sid) => norm(sid)).filter(Boolean);
       const selectedCleanerIds = (cleanerIds || []).map((cid) => norm(cid)).filter(Boolean);
       const linkedScheduleId = norm(linkedYoteiId || linkedYoteiRecord?.id);
+      const reportRefId = generateReportReferenceId(workDate, tid);
       const headers = authHeaders();
       const submitRes = await apiFetchWorkReport('/houkoku', {
         method: 'POST',
@@ -1803,6 +1820,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
           tenpo_id: tid,
           yotei_id: linkedScheduleId,
           schedule_id: linkedScheduleId,
+          report_ref_id: reportRefId,
           context: {
             tenpo_id: tid,
             tenpo_label: selectedTenpoLabel || norm(tenpoById.get(tid)?.name) || tid,
@@ -1814,17 +1832,19 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
             service_names: selectedServiceNames,
             yotei_id: linkedScheduleId,
             schedule_id: linkedScheduleId,
+            report_ref_id: reportRefId,
           },
           payload,
         }),
       });
       const reportId = norm(submitRes?.report_id || submitRes?.id || submitRes?.houkoku_id || submitRes?.work_report_id);
+      const issuedReportId = reportId || reportRefId;
       setSoukoBusy(true);
-      const saved = await saveReportArtifactsToSouko({ reportId });
+      const saved = await saveReportArtifactsToSouko({ reportId: issuedReportId, reportRefId });
       const tenpoName = norm(tenpoById.get(tid)?.name) || tid;
       setStatus({
         type: 'success',
-        text: `提出してsoukoへ保存しました（${tenpoName} / ${saved.workDate} / PDF1件・写真${saved.photoCount}件）`,
+        text: `提出してsoukoへ保存しました（報告ID: ${issuedReportId} / ${tenpoName} / ${saved.workDate} / PDF1件・写真${saved.photoCount}件）`,
       });
     } catch (e) {
       console.error(e);

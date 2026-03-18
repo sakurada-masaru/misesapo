@@ -4588,3 +4588,42 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `マニュアル` ヘッダーを専用クラス（`cleaning-manual-react-head*`）へ分離し、タイトル行とカテゴリタブ行を独立配置
 - [x] 両ページのタブ/操作行を相互非依存レイアウトに再調整（タイトル崩れ防止）
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Show Cleaning Report PDFs Immediately After Submission (2026-03-18)
+
+- [x] お客様マイページの `souko` 取得を「先頭1件」から「該当店舗の全 `souko` を集約」へ変更
+- [x] 重複キーを除外しつつ、`uploaded_at` 降順で `detailSoukoFiles` を正規化
+- [x] モーダル表示時に再読込し、提出直後でも反映されるように調整
+- [x] 30秒ポーリングで `souko` を再取得し、報告書反映の追従性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku: Report ID Issuance On Submit (2026-03-18)
+
+- [x] 清掃報告の送信時に報告ID（`report_ref_id`）を発行する処理を追加
+- [x] 発行IDを報告レコード本体（POST payload / context）へ保存
+- [x] 生成されるPDF/写真の `souko` メタデータにも同一 `report_ref_id` を付与
+- [x] 送信完了トーストに発行済み報告IDを表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku: Customer Publish Gate For Submitted Reports (2026-03-18)
+
+- [x] 清掃員送信直後の `cleaning_houkoku_pdf` を `customer_visible=false` で保存（初期非公開）
+- [x] 管理側 `AdminHoukokuDetailPage` に `お客様へ公開/公開停止` トグルを追加
+- [x] 公開操作時に `customer_visible` と `customer_published_*` を `souko` へ反映
+- [x] お客様マイページは `customer_visible=true` の報告書のみ表示するよう制御
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Houkoku: Admin Approval Flow + Customer Detail Publish Control (2026-03-18)
+
+- [x] 報告書PDFメタに `approval_status=pending` を初期付与し、管理承認待ち状態を明示
+- [x] 管理 `お客様詳細`（`AdminTenpoKartePage`）のストレージ一覧で、清掃報告書ごとに `承認待ち/承認済み` と `公開/非公開` を可視化
+- [x] 同ページで「お客様へ公開/公開停止」トグルを実装（公開時に `approval_status=approved` を付与）
+- [x] お客様マイページ表示条件を `customer_visible=true` かつ承認済み（または旧データ互換条件）へ強化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer Detail: Storage Delete + Publish Checkbox Control (2026-03-18)
+
+- [x] 管理 `お客様詳細` のストレージ一覧でファイル削除を可能化（確認ダイアログ付き）
+- [x] 公開設定をボタン式からチェックボックス式へ変更（`お客様へ公開` ON/OFF）
+- [x] 公開設定更新中/削除中の排他制御を追加し、同一行の多重操作を防止
+- [x] `npm -C src/misogi run build` でビルド確認

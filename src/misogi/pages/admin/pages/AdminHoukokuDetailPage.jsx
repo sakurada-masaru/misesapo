@@ -6,12 +6,120 @@ import { useAuth } from '../../shared/auth/useAuth';
 import TemplateRenderer from '../../../shared/components/TemplateRenderer';
 import { getTemplateById } from '../../../templates';
 
+function norm(v) {
+    return String(v || '').trim();
+}
+
+function asItems(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.rows)) return data.rows;
+    return [];
+}
+
+function isLocalUiHost() {
+    if (typeof window === 'undefined') return false;
+    const h = window.location?.hostname || '';
+    return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+}
+
+const MASTER_API_BASE =
+    (import.meta.env?.DEV || isLocalUiHost())
+        ? '/api-master'
+        : (import.meta.env?.VITE_MASTER_API_BASE || 'https://jtn6in2iuj.execute-api.ap-northeast-1.amazonaws.com/prod');
+
+function coercePayloadObject(raw) {
+    if (!raw) return {};
+    if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+    if (typeof raw !== 'string') return {};
+    const s = raw.trim();
+    if (!s) return {};
+    try {
+        const j = JSON.parse(s);
+        return (j && typeof j === 'object' && !Array.isArray(j)) ? j : {};
+    } catch {
+        return {};
+    }
+}
+
+function pickReportKey(report) {
+    return norm(
+        report?.report_id
+        || report?.work_report_id
+        || report?.houkoku_id
+        || report?.id
+        || report?.log_id
+    );
+}
+
+function pickPayload(report) {
+    return coercePayloadObject(
+        report?.payload
+        ?? report?.payload_json
+        ?? report?.payloadJson
+        ?? report?.body
+        ?? report?.data
+        ?? report?.description
+    );
+}
+
+function pickTenpoId(report, payload) {
+    const context = payload?.context && typeof payload.context === 'object' ? payload.context : {};
+    return norm(
+        report?.tenpo_id
+        || context?.tenpo_id
+        || payload?.tenpo_id
+        || report?.store_id
+        || payload?.store_id
+    );
+}
+
+function pickScheduleId(report, payload) {
+    const context = payload?.context && typeof payload.context === 'object' ? payload.context : {};
+    return norm(
+        report?.schedule_id
+        || report?.yotei_id
+        || context?.schedule_id
+        || context?.yotei_id
+        || payload?.schedule_id
+        || payload?.yotei_id
+    );
+}
+
+function isCleanerReportPdf(file) {
+    const source = [
+        norm(file?.doc_category).toLowerCase(),
+        norm(file?.file_name).toLowerCase(),
+        norm(file?.key).toLowerCase(),
+    ].join('|');
+    return source.includes('cleaning_houkoku_pdf') || source.includes('cleaning_houkoku');
+}
+
+function isTruthyFlag(value) {
+    if (typeof value === 'boolean') return value;
+    const raw = norm(value).toLowerCase();
+    return ['1', 'true', 'yes', 'on', 'y', 'ok'].includes(raw);
+}
+
 const AdminHoukokuDetailPage = () => {
     const { reportId } = useParams();
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeStoreTab, setActiveStoreTab] = useState(0);
+    const [customerPublish, setCustomerPublish] = useState({
+        loading: false,
+        ready: false,
+        visible: false,
+        tenpoId: '',
+        soukoId: '',
+        fileKey: '',
+        fileName: '',
+        reportKey: '',
+        scheduleId: '',
+    });
+    const [publishMessage, setPublishMessage] = useState('');
+    const [publishError, setPublishError] = useState('');
     const { getToken } = useAuth();
 
     useEffect(() => {
@@ -46,23 +154,165 @@ const AdminHoukokuDetailPage = () => {
         fetchDetail();
     }, [reportId, getToken]);
 
+    useEffect(() => {
+        let mounted = true;
+        const loadCustomerPublish = async () => {
+            if (!report) return;
+            setPublishMessage('');
+            setPublishError('');
+            setCustomerPublish((prev) => ({ ...prev, loading: true }));
+            try {
+                const token = getToken() || localStorage.getItem('cognito_id_token');
+                const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
+                const payload = pickPayload(report);
+                const tenpoId = pickTenpoId(report, payload);
+                const reportKey = pickReportKey(report);
+                const scheduleId = pickScheduleId(report, payload);
+                if (!tenpoId || !reportKey) {
+                    if (!mounted) return;
+                    setCustomerPublish({
+                        loading: false,
+                        ready: false,
+                        visible: false,
+                        tenpoId,
+                        soukoId: '',
+                        fileKey: '',
+                        fileName: '',
+                        reportKey,
+                        scheduleId,
+                    });
+                    return;
+                }
+                const base = MASTER_API_BASE.replace(/\/$/, '');
+                const qs = new URLSearchParams({ limit: '100', jotai: 'yuko', tenpo_id: tenpoId });
+                const res = await fetch(`${base}/master/souko?${qs.toString()}`, { headers, cache: 'no-store' });
+                if (!res.ok) {
+                    const text = await res.text().catch(() => '');
+                    throw new Error(`公開状態の確認に失敗しました (${res.status}) ${text}`.trim());
+                }
+                const rows = asItems(await res.json());
+                let matched = null;
+                rows.some((souko) => {
+                    const files = Array.isArray(souko?.files) ? souko.files : [];
+                    return files.some((f) => {
+                        if (!isCleanerReportPdf(f)) return false;
+                        const fileReportId = norm(f?.report_id || f?.houkoku_id || f?.work_report_id || f?.id);
+                        const fileScheduleId = norm(f?.schedule_id || f?.yotei_id);
+                        const byReportId = reportKey && fileReportId && fileReportId === reportKey;
+                        const byScheduleId = scheduleId && fileScheduleId && fileScheduleId === scheduleId;
+                        if (!byReportId && !byScheduleId) return false;
+                        matched = {
+                            tenpoId,
+                            soukoId: norm(souko?.souko_id),
+                            fileKey: norm(f?.key),
+                            fileName: norm(f?.file_name || f?.key),
+                            visible: isTruthyFlag(f?.customer_visible),
+                            reportKey,
+                            scheduleId,
+                        };
+                        return true;
+                    });
+                });
+                if (!mounted) return;
+                if (!matched?.soukoId || !matched?.fileKey) {
+                    setCustomerPublish({
+                        loading: false,
+                        ready: false,
+                        visible: false,
+                        tenpoId,
+                        soukoId: '',
+                        fileKey: '',
+                        fileName: '',
+                        reportKey,
+                        scheduleId,
+                    });
+                    return;
+                }
+                setCustomerPublish({
+                    loading: false,
+                    ready: true,
+                    visible: matched.visible,
+                    tenpoId: matched.tenpoId,
+                    soukoId: matched.soukoId,
+                    fileKey: matched.fileKey,
+                    fileName: matched.fileName,
+                    reportKey: matched.reportKey,
+                    scheduleId: matched.scheduleId,
+                });
+            } catch (e) {
+                if (!mounted) return;
+                setCustomerPublish((prev) => ({ ...prev, loading: false, ready: false }));
+                setPublishError(String(e?.message || e || '公開状態の確認に失敗しました'));
+            }
+        };
+        loadCustomerPublish();
+        return () => { mounted = false; };
+    }, [getToken, report]);
+
+    const toggleCustomerPublish = async () => {
+        if (!customerPublish.ready || customerPublish.loading) return;
+        setPublishMessage('');
+        setPublishError('');
+        setCustomerPublish((prev) => ({ ...prev, loading: true }));
+        try {
+            const token = getToken() || localStorage.getItem('cognito_id_token');
+            const headers = {
+                ...(token ? { Authorization: `Bearer ${String(token).trim()}` } : {}),
+                'Content-Type': 'application/json',
+            };
+            const base = MASTER_API_BASE.replace(/\/$/, '');
+            const qs = new URLSearchParams({ limit: '100', jotai: 'yuko', tenpo_id: customerPublish.tenpoId });
+            const listRes = await fetch(`${base}/master/souko?${qs.toString()}`, { headers, cache: 'no-store' });
+            if (!listRes.ok) {
+                const text = await listRes.text().catch(() => '');
+                throw new Error(`ストレージ取得に失敗しました (${listRes.status}) ${text}`.trim());
+            }
+            const soukoRows = asItems(await listRes.json());
+            const souko = soukoRows.find((row) => norm(row?.souko_id) === customerPublish.soukoId);
+            if (!souko) throw new Error('対象ストレージが見つかりません');
+            const files = Array.isArray(souko?.files) ? souko.files : [];
+            const targetIdx = files.findIndex((f) => norm(f?.key) === customerPublish.fileKey);
+            if (targetIdx < 0) throw new Error('対象ファイルが見つかりません');
+
+            const nextVisible = !customerPublish.visible;
+            const actorName = norm(localStorage.getItem('display_name') || localStorage.getItem('name') || localStorage.getItem('username')) || 'admin';
+            const actorId = norm(localStorage.getItem('user_id') || actorName) || 'admin';
+            const now = new Date().toISOString();
+            const current = files[targetIdx] || {};
+            const nextFiles = files.slice();
+            nextFiles[targetIdx] = {
+                ...current,
+                customer_visible: nextVisible,
+                customer_published_at: nextVisible ? now : '',
+                customer_published_by: nextVisible ? actorId : '',
+                customer_published_by_name: nextVisible ? actorName : '',
+                approval_status: nextVisible ? 'approved' : (norm(current?.approval_status) || 'approved'),
+                approved_at: nextVisible ? (norm(current?.approved_at) || now) : norm(current?.approved_at),
+                approved_by: nextVisible ? actorId : norm(current?.approved_by),
+                approved_by_name: nextVisible ? actorName : norm(current?.approved_by_name),
+            };
+
+            const updateRes = await fetch(`${base}/master/souko/${encodeURIComponent(customerPublish.soukoId)}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ ...souko, files: nextFiles }),
+            });
+            if (!updateRes.ok) {
+                const text = await updateRes.text().catch(() => '');
+                throw new Error(`公開設定の更新に失敗しました (${updateRes.status}) ${text}`.trim());
+            }
+            await updateRes.json().catch(() => null);
+            setCustomerPublish((prev) => ({ ...prev, loading: false, visible: nextVisible }));
+            setPublishMessage(nextVisible ? 'お客様へ公開しました。' : 'お客様への公開を停止しました。');
+        } catch (e) {
+            setCustomerPublish((prev) => ({ ...prev, loading: false }));
+            setPublishError(String(e?.message || e || '公開設定の更新に失敗しました'));
+        }
+    };
+
     if (loading) return <Container><LoadingSpinner />読み込み中...</Container>;
     if (error) return <Container><ErrorMessage>{error}</ErrorMessage></Container>;
     if (!report) return <Container><Message>報告が見つかりません。</Message></Container>;
-
-    const coercePayloadObject = (raw) => {
-        if (!raw) return {};
-        if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
-        if (typeof raw !== 'string') return {};
-        const s = raw.trim();
-        if (!s) return {};
-        try {
-            const j = JSON.parse(s);
-            return (j && typeof j === 'object' && !Array.isArray(j)) ? j : {};
-        } catch {
-            return {};
-        }
-    };
 
     // payload が文字列(JSON)で返ることがあるので吸収（管理側は内容が最重要）
     const payload = coercePayloadObject(
@@ -128,10 +378,23 @@ const AdminHoukokuDetailPage = () => {
             <TopBar>
                 <BackButton to="/admin/houkoku"><i className="fas fa-chevron-left"></i> 戻る</BackButton>
                 <Actions>
+                    <button
+                        type="button"
+                        className={customerPublish.visible ? 'btn-published' : 'btn-hidden'}
+                        onClick={toggleCustomerPublish}
+                        disabled={customerPublish.loading || !customerPublish.ready}
+                        title={!customerPublish.ready ? 'souko内の対象報告書PDFが見つかりません' : ''}
+                    >
+                        {customerPublish.loading
+                            ? '反映中...'
+                            : (customerPublish.visible ? 'お客様公開中（非公開へ）' : 'お客様へ公開')}
+                    </button>
                     <button onClick={() => window.print()}><i className="fas fa-print"></i> 印刷</button>
                     <button><i className="fas fa-share-alt"></i> 共有</button>
                 </Actions>
             </TopBar>
+            {publishMessage ? <PublishInfo className="ok">{publishMessage}</PublishInfo> : null}
+            {publishError ? <PublishInfo className="err">{publishError}</PublishInfo> : null}
 
             <ContentArea>
                 {/* 1. マルチ店舗（stores）データがある場合: 店舗タブ形式 */}
@@ -305,7 +568,43 @@ const Container = styled.div` background: #f0f2f5; min-height: 100vh; padding-bo
 const TopBar = styled.div` background: white; padding: 12px 24px; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; `;
 const BackButton = styled(Link)` text-decoration: none; color: #1e293b; font-weight: 700; margin-right: 20px; font-size: 14px; &:hover { color:#3b82f6; } `;
 const Badge = styled.div` background: ${props => props.$type?.includes('SALES') ? '#3b82f6' : '#10b981'}; color: white; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; `;
-const Actions = styled.div` margin-left: auto; display: flex; gap: 8px; button { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; &:hover { background:#f8fafc; } } `;
+const Actions = styled.div`
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    button {
+        background: white;
+        border: 1px solid #e2e8f0;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        &:hover { background:#f8fafc; }
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+    .btn-published {
+        border-color: #10b981;
+        background: #ecfdf5;
+        color: #065f46;
+    }
+    .btn-hidden {
+        border-color: #f59e0b;
+        background: #fffbeb;
+        color: #92400e;
+    }
+`;
+const PublishInfo = styled.div`
+    max-width: 1000px;
+    margin: 10px auto 0;
+    padding: 0 20px;
+    font-size: 13px;
+    font-weight: 700;
+    &.ok { color: #047857; }
+    &.err { color: #b91c1c; }
+`;
 const ContentArea = styled.div` max-width: 1000px; margin: 32px auto; padding: 0 20px; `;
 const HeroSection = styled.div` background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border-radius: 24px; padding: 40px; display: flex; gap: 40px; align-items: center; margin-bottom: 24px; `;
 const Avatar = styled.div` width: 72px; height: 72px; background: rgba(255,255,255,0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; border: 2px solid rgba(255,255,255,0.2); `;

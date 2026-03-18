@@ -991,6 +991,30 @@ function fileKindLabel(fileName, contentType, key) {
   return ext ? ext.toUpperCase() : 'FILE';
 }
 
+function normalizeApprovalStatus(v) {
+  const s = String(v || '').trim().toLowerCase();
+  if (['approved', 'ok', 'shonin', '承認', '承認済み'].includes(s)) return 'approved';
+  if (['rejected', 'ng', 'denied', '差し戻し'].includes(s)) return 'rejected';
+  return 'pending';
+}
+
+function approvalStatusLabel(v) {
+  const s = normalizeApprovalStatus(v);
+  if (s === 'approved') return '承認済み';
+  if (s === 'rejected') return '差し戻し';
+  return '承認待ち';
+}
+
+function isCleaningReportPdfMeta(item = {}) {
+  const category = String(item?.doc_category || '').trim().toLowerCase();
+  const ext = fileExt(item?.file_name, item?.key);
+  if (category.includes('cleaning_houkoku_pdf')) return true;
+  if (category.includes('cleaning_houkoku')) return ext === 'pdf';
+  if (ext !== 'pdf') return false;
+  const source = String(item?.file_name || item?.key || '').toLowerCase();
+  return /(清掃報告|業務報告|houkoku|result_report)/.test(source);
+}
+
 function sortSupportHistoryNewestFirst(list) {
   const arr = Array.isArray(list) ? list.slice() : [];
   const keyed = arr.map((it, idx) => {
@@ -1162,6 +1186,9 @@ export default function AdminTenpoKartePage({ mode = 'admin' }) {
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
   const [lastUpload, setLastUpload] = useState(null);
+  const [reportPublishBusyKey, setReportPublishBusyKey] = useState('');
+  const [reportPublishMessage, setReportPublishMessage] = useState('');
+  const [reportPublishError, setReportPublishError] = useState('');
   const [soukoView, setSoukoView] = useState('teishutsu'); // teishutsu|naibu|all
   const [uploadKubun, setUploadKubun] = useState('teishutsu'); // default for new upload
   const [uploadDocCategory, setUploadDocCategory] = useState('estimate');
@@ -1595,9 +1622,17 @@ export default function AdminTenpoKartePage({ mode = 'admin' }) {
           uploaded_at: String(it?.uploaded_at || '').trim(),
           kubun: String(it?.kubun || '').trim(), // teishutsu|naibu|'' (legacy)
           doc_category: String(it?.doc_category || '').trim(), // estimate|contract|invoice|report|photo|other
+          report_id: String(it?.report_id || it?.houkoku_id || it?.work_report_id || '').trim(),
+          report_ref_id: String(it?.report_ref_id || '').trim(),
+          schedule_id: String(it?.schedule_id || it?.yotei_id || '').trim(),
+          approval_status: String(it?.approval_status || '').trim(),
+          approved_at: String(it?.approved_at || '').trim(),
+          customer_visible: toBool(it?.customer_visible, false),
+          customer_published_at: String(it?.customer_published_at || '').trim(),
           preview_url: previewUrl,
           get_url: getUrl,
           open_url: previewUrl || getUrl,
+          is_cleaning_report_pdf: isCleaningReportPdfMeta(it),
         };
       })
       .filter((it) => it.key);
@@ -2999,6 +3034,99 @@ export default function AdminTenpoKartePage({ mode = 'admin' }) {
     }
   }, [file, ensureSouko, tenpoId, souko, uploadKubun, uploadDocCategory]);
 
+  const toggleCustomerReportPublish = useCallback(async (fileRow, checkedVisible = null) => {
+    if (isSalesMode) return;
+    const targetKey = String(fileRow?.key || '').trim();
+    const soukoId = String(souko?.souko_id || souko?.id || '').trim();
+    if (!targetKey || !soukoId) return;
+    setReportPublishBusyKey(`publish:${targetKey}`);
+    setReportPublishMessage('');
+    setReportPublishError('');
+    try {
+      const baseFiles = safeArr(souko?.files)
+        .map((it) => {
+          if (!it || typeof it !== 'object') return null;
+          const one = { ...it };
+          delete one.get_url;
+          return one;
+        })
+        .filter((it) => String(it?.key || '').trim());
+      const idx = baseFiles.findIndex((it) => String(it?.key || '').trim() === targetKey);
+      if (idx < 0) throw new Error('対象報告書が見つかりません');
+      const current = baseFiles[idx] || {};
+      const nextVisible = typeof checkedVisible === 'boolean'
+        ? checkedVisible
+        : !toBool(current?.customer_visible, false);
+      const actorName = String(
+        localStorage.getItem('display_name')
+          || localStorage.getItem('name')
+          || localStorage.getItem('username')
+          || 'admin'
+      ).trim() || 'admin';
+      const actorId = String(localStorage.getItem('user_id') || actorName).trim() || actorName;
+      const now = nowIso();
+      baseFiles[idx] = {
+        ...current,
+        customer_visible: nextVisible,
+        customer_published_at: nextVisible ? now : '',
+        customer_published_by: nextVisible ? actorId : '',
+        customer_published_by_name: nextVisible ? actorName : '',
+        approval_status: nextVisible ? 'approved' : (String(current?.approval_status || '').trim() || 'approved'),
+        approved_at: nextVisible ? (String(current?.approved_at || '').trim() || now) : String(current?.approved_at || '').trim(),
+        approved_by: nextVisible ? actorId : String(current?.approved_by || '').trim(),
+        approved_by_name: nextVisible ? actorName : String(current?.approved_by_name || '').trim(),
+      };
+
+      const updated = await apiPutJson(`/master/souko/${encodeURIComponent(soukoId)}`, {
+        ...souko,
+        files: baseFiles,
+      });
+      setSouko(updated);
+      setReportPublishMessage(nextVisible ? '公開設定を更新しました（公開）。' : '公開設定を更新しました（非公開）。');
+    } catch (e) {
+      setReportPublishError(e?.message || '報告書の公開設定更新に失敗しました');
+    } finally {
+      setReportPublishBusyKey('');
+    }
+  }, [isSalesMode, souko]);
+
+  const deleteSoukoFile = useCallback(async (fileRow) => {
+    if (isSalesMode) return;
+    const targetKey = String(fileRow?.key || '').trim();
+    const soukoId = String(souko?.souko_id || souko?.id || '').trim();
+    if (!targetKey || !soukoId) return;
+    const fileName = String(fileRow?.file_name || '').trim() || targetKey;
+    if (typeof window !== 'undefined') {
+      const ok = window.confirm(`このファイルを削除しますか？\n${fileName}`);
+      if (!ok) return;
+    }
+    setReportPublishBusyKey(`delete:${targetKey}`);
+    setReportPublishMessage('');
+    setReportPublishError('');
+    try {
+      const baseFiles = safeArr(souko?.files)
+        .map((it) => {
+          if (!it || typeof it !== 'object') return null;
+          const one = { ...it };
+          delete one.get_url;
+          return one;
+        })
+        .filter((it) => String(it?.key || '').trim());
+      const nextFiles = baseFiles.filter((it) => String(it?.key || '').trim() !== targetKey);
+      if (nextFiles.length === baseFiles.length) throw new Error('削除対象ファイルが見つかりません');
+      const updated = await apiPutJson(`/master/souko/${encodeURIComponent(soukoId)}`, {
+        ...souko,
+        files: nextFiles,
+      });
+      setSouko(updated);
+      setReportPublishMessage('ファイルを削除しました。');
+    } catch (e) {
+      setReportPublishError(e?.message || 'ファイルの削除に失敗しました');
+    } finally {
+      setReportPublishBusyKey('');
+    }
+  }, [isSalesMode, souko]);
+
   const copy = useCallback(async (text) => {
     try {
       await navigator.clipboard.writeText(String(text || ''));
@@ -4217,6 +4345,8 @@ export default function AdminTenpoKartePage({ mode = 'admin' }) {
                 </div>
                 <div className="count">{visibleFiles.length}</div>
               </div>
+              {reportPublishMessage ? <div className="report-publish-status is-ok">{reportPublishMessage}</div> : null}
+              {reportPublishError ? <div className="report-publish-status is-error">{reportPublishError}</div> : null}
               {visibleFiles.length === 0 ? (
                 <div className="muted">まだ登録がありません（アップロードすると一覧に残ります）</div>
               ) : (
@@ -4237,11 +4367,45 @@ export default function AdminTenpoKartePage({ mode = 'admin' }) {
                           <span className="file-sub">{findOptionLabel(SOUKO_DOC_CATEGORY_OPTIONS, f.doc_category) || '未分類'}</span>
                           <span className="file-sub">{f.size ? `${f.size} bytes` : '-'}</span>
                           <span className="file-sub">{f.uploaded_at || ''}</span>
+                          {f.report_ref_id ? <span className="file-sub report-chip is-id">ID: {f.report_ref_id}</span> : null}
+                          {f.is_cleaning_report_pdf ? (
+                            <span className={`file-sub report-chip ${normalizeApprovalStatus(f.approval_status) === 'approved' ? 'is-approved' : 'is-pending'}`}>
+                              {approvalStatusLabel(f.approval_status)}
+                            </span>
+                          ) : null}
+                          {f.is_cleaning_report_pdf ? (
+                            <span className={`file-sub report-chip ${f.customer_visible ? 'is-visible' : 'is-hidden'}`}>
+                              {f.customer_visible ? 'お客様公開中' : 'お客様非公開'}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                       <div className="souko-file-actions">
                         {f.open_url ? (
                           <a className="link" href={f.open_url} target="_blank" rel="noreferrer">開く</a>
+                        ) : null}
+                        {!isSalesMode ? (
+                          <label className="report-publish-check">
+                            <input
+                              type="checkbox"
+                              checked={toBool(f.customer_visible, false)}
+                              onChange={(e) => toggleCustomerReportPublish(f, e.target.checked)}
+                              disabled={reportPublishBusyKey === `publish:${f.key}` || reportPublishBusyKey === `delete:${f.key}`}
+                            />
+                            <span>
+                              {reportPublishBusyKey === `publish:${f.key}` ? '更新中...' : 'お客様へ公開'}
+                            </span>
+                          </label>
+                        ) : null}
+                        {!isSalesMode ? (
+                          <button
+                            type="button"
+                            className="report-delete-btn"
+                            onClick={() => deleteSoukoFile(f)}
+                            disabled={reportPublishBusyKey === `delete:${f.key}` || reportPublishBusyKey === `publish:${f.key}`}
+                          >
+                            {reportPublishBusyKey === `delete:${f.key}` ? '削除中...' : '削除'}
+                          </button>
                         ) : null}
                         <button onClick={() => copy(f.key)}>キーコピー</button>
                       </div>

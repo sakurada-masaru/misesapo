@@ -613,6 +613,12 @@ function normalizeSoukoFiles(soukoRecord) {
         uploaded_at: norm(it?.uploaded_at),
         kubun: norm(it?.kubun),
         doc_category: norm(it?.doc_category),
+        report_id: norm(it?.report_id || it?.houkoku_id || it?.work_report_id),
+        report_ref_id: norm(it?.report_ref_id),
+        approval_status: norm(it?.approval_status || it?.customer_approval_status),
+        approved_at: norm(it?.approved_at),
+        customer_visible: it?.customer_visible,
+        customer_published_at: norm(it?.customer_published_at),
         open_url: previewUrl || getUrl,
       };
     })
@@ -639,6 +645,41 @@ function classifyBillingDocumentType(file) {
   if (/receipt|領収|領収書|ryoushu|ryoshu|入金/.test(source)) return 'receipt';
   if (/invoice|請求|請求書|billing|seikyuu|seikyu/.test(source)) return 'invoice';
   return '';
+}
+
+function classifyCustomerReportDocument(file) {
+  const item = file && typeof file === 'object' ? file : {};
+  const source = [
+    normalizeMatchKey(item.doc_category),
+    normalizeMatchKey(item.kubun),
+    normalizeMatchKey(item.file_name || item.key),
+  ].join('|');
+  if (!source) return '';
+  if (/cleaning_houkoku_pdf|cleaning_houkoku|清掃報告|清掃業務報告|業務報告書|result_report|作業完了レポート/.test(source)) {
+    return 'cleaning_report';
+  }
+  return '';
+}
+
+function isTruthyFlag(value) {
+  if (typeof value === 'boolean') return value;
+  const raw = norm(value).toLowerCase();
+  return ['1', 'true', 'yes', 'on', 'y', 'ok'].includes(raw);
+}
+
+function isCleanerReportFile(file) {
+  const source = normalizeMatchKey(file?.doc_category || file?.file_name || file?.key);
+  if (!source) return false;
+  return /cleaning_houkoku_pdf|cleaning_houkoku/.test(source);
+}
+
+function shouldExposeFileToCustomer(file) {
+  if (!isCleanerReportFile(file)) return true;
+  if (!isTruthyFlag(file?.customer_visible)) return false;
+  const status = norm(file?.approval_status).toLowerCase();
+  if (status === 'approved') return true;
+  // backward compatibility: old data may not have approval_status but has publish timestamp.
+  return !status && !!norm(file?.customer_published_at);
 }
 
 function extractBillingYearMonth(raw) {
@@ -947,8 +988,29 @@ export default function CustomerMyPage() {
       );
       if (soukoRes.ok) {
         const soukoData = await soukoRes.json();
-        const souko = asItems(soukoData)?.[0] || null;
-        setDetailSoukoFiles(normalizeSoukoFiles(souko));
+        const soukoRows = asItems(soukoData);
+        const mergedFiles = soukoRows.flatMap((souko) => (
+          normalizeSoukoFiles(souko).map((f) => ({
+            ...f,
+            souko_id: norm(souko?.souko_id),
+            souko_name: norm(souko?.name),
+            souko_source: norm(souko?.source),
+            souko_folder_id: norm(souko?.folder_id),
+          }))
+        ));
+        const uniqueMap = new Map();
+        mergedFiles.forEach((f) => {
+          const key = norm(f?.key);
+          if (!key) return;
+          if (!uniqueMap.has(key)) uniqueMap.set(key, f);
+        });
+        const normalized = Array.from(uniqueMap.values()).sort((a, b) => {
+          const aTs = Date.parse(String(a?.uploaded_at || '')) || 0;
+          const bTs = Date.parse(String(b?.uploaded_at || '')) || 0;
+          if (aTs !== bTs) return bTs - aTs;
+          return String(b?.file_name || b?.key || '').localeCompare(String(a?.file_name || a?.key || ''));
+        });
+        setDetailSoukoFiles(normalized.filter(shouldExposeFileToCustomer));
       } else {
         setDetailSoukoFiles([]);
       }
@@ -1007,6 +1069,14 @@ export default function CustomerMyPage() {
   useEffect(() => {
     loadScopedDetail();
   }, [loadScopedDetail]);
+
+  useEffect(() => {
+    if (!scopedTenpoId) return undefined;
+    const timer = window.setInterval(() => {
+      loadScopedDetail();
+    }, 30000);
+    return () => window.clearInterval(timer);
+  }, [loadScopedDetail, scopedTenpoId]);
 
   useEffect(() => {
     setDetailPane('center');
@@ -1749,6 +1819,25 @@ export default function CustomerMyPage() {
     billingDocuments.filter((f) => f.billingType === 'receipt')
   ), [billingDocuments]);
 
+  const customerReportDocuments = useMemo(() => (
+    detailSoukoFiles
+      .map((f) => ({
+        ...f,
+        reportType: classifyCustomerReportDocument(f),
+      }))
+      .filter((f) => (
+        f.reportType === 'cleaning_report'
+        && isPdfFile(f.file_name, f.content_type, f.key)
+        && shouldExposeFileToCustomer(f)
+      ))
+      .sort((a, b) => {
+        const aTs = Date.parse(String(a?.uploaded_at || '')) || 0;
+        const bTs = Date.parse(String(b?.uploaded_at || '')) || 0;
+        if (aTs !== bTs) return bTs - aTs;
+        return String(b?.file_name || b?.key || '').localeCompare(String(a?.file_name || a?.key || ''));
+      })
+  ), [detailSoukoFiles]);
+
   const activeBillingDocuments = useMemo(() => (
     billingViewerType === 'receipt' ? receiptDocuments : invoiceDocuments
   ), [billingViewerType, receiptDocuments, invoiceDocuments]);
@@ -1888,8 +1977,10 @@ export default function CustomerMyPage() {
   }, []);
 
   const openResultReportViewer = useCallback(() => {
+    loadScopedDetail();
+    loadResultReports();
     setReportViewerOpen(true);
-  }, []);
+  }, [loadResultReports, loadScopedDetail]);
 
   const closeResultReportViewer = useCallback(() => {
     setReportViewerOpen(false);
@@ -2648,7 +2739,7 @@ export default function CustomerMyPage() {
             <header className="customer-billing-modal-head">
               <div className="customer-billing-modal-title">
                 <h3>作業完了レポート（結果）</h3>
-                <span className="count">{resultReports.length}</span>
+                <span className="count">{customerReportDocuments.length}</span>
               </div>
               <button type="button" className="btn btn-secondary customer-billing-close-btn" onClick={closeResultReportViewer}>
                 閉じる
@@ -2657,33 +2748,42 @@ export default function CustomerMyPage() {
             <div className="customer-report-modal-body">
               {resultReportActionMessage ? <p className="customer-basic-save-message">{resultReportActionMessage}</p> : null}
               {resultReportActionError ? <p className="customer-mypage-error customer-report-action-error">{resultReportActionError}</p> : null}
-              {resultReportsLoading ? (
-                <p className="customer-muted">作業完了レポートを読み込み中です...</p>
-              ) : resultReportsError ? (
-                <p className="customer-muted">{resultReportsError}</p>
-              ) : resultReports.length === 0 ? (
-                <p className="customer-muted">表示できる作業結果はまだありません。</p>
-              ) : (
+              {customerReportDocuments.length > 0 ? (
                 <div className="customer-report-result-list">
-                  {resultReports.map((row, idx) => (
-                    <article key={row.id || `${row.workDate}-${idx}`} className="customer-report-result-card">
-                      <div className="customer-report-result-head">
-                        <div className="customer-report-result-date">{row.workDate || '-'}</div>
-                        <button
-                          type="button"
-                          className="btn btn-secondary customer-report-download-btn"
-                          onClick={() => onDownloadResultReport(row, idx)}
-                          disabled={Boolean(resultReportSavingId)}
-                        >
-                          {resultReportSavingId === (row.id || `${row.workDate || 'row'}-${idx}`)
-                            ? '保存中...'
-                            : 'PDFダウンロード'}
-                        </button>
-                      </div>
-                      <div className="customer-report-result-text">{row.result}</div>
-                    </article>
-                  ))}
+                  {customerReportDocuments.map((row, idx) => {
+                    const actionId = row.key || `${row.file_name || 'report'}-${idx}`;
+                    return (
+                      <article key={actionId} className="customer-report-result-card">
+                        <div className="customer-report-result-head">
+                          <div className="customer-report-result-date">
+                            {fmtDateTimeJst(row.uploaded_at) || '-'}
+                          </div>
+                          {row.open_url ? (
+                            <a
+                              href={row.open_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn btn-secondary customer-report-download-btn"
+                            >
+                              PDFを開く
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-secondary customer-report-download-btn"
+                              disabled
+                            >
+                              URLなし
+                            </button>
+                          )}
+                        </div>
+                        <div className="customer-report-result-text">{row.file_name || row.key || '-'}</div>
+                      </article>
+                    );
+                  })}
                 </div>
+              ) : (
+                <p className="customer-muted">公開されている業務報告書はまだありません。</p>
               )}
             </div>
           </section>
