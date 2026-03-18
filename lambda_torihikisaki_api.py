@@ -1086,7 +1086,7 @@ def _enrich_souko_items(items: list):
                 one = dict(f)
                 key = _strip(one.get("key"))
                 bucket = _strip(one.get("bucket")) or STORAGE_BUCKET
-                if key and bucket and not _strip(one.get("get_url")):
+                if key and bucket:
                     try:
                         one["get_url"] = s3.generate_presigned_url(
                             "get_object",

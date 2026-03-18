@@ -619,7 +619,8 @@ function normalizeSoukoFiles(soukoRecord) {
         approved_at: norm(it?.approved_at),
         customer_visible: it?.customer_visible,
         customer_published_at: norm(it?.customer_published_at),
-        open_url: previewUrl || getUrl,
+        // get_url は API 取得時に再署名されるため、常に優先して使う。
+        open_url: getUrl || previewUrl,
       };
     })
     .filter((it) => it.key);

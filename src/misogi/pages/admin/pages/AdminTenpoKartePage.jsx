@@ -1641,7 +1641,8 @@ export default function AdminTenpoKartePage({ mode = 'admin' }) {
           customer_published_at: String(it?.customer_published_at || '').trim(),
           preview_url: previewUrl,
           get_url: getUrl,
-          open_url: previewUrl || getUrl,
+          // get_url は API 取得時に再署名されるため、常に優先して使う。
+          open_url: getUrl || previewUrl,
           is_cleaning_report_pdf: isCleaningReportPdfMeta(it),
         };
       })
