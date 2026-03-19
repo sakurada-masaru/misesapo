@@ -12,21 +12,20 @@ export const SALES_HOTBAR = [
   },
   {
     id: 'progress',
-    role: 'status',
-    label: '進捗',
+    role: 'plan',
+    label: '予定',
     directOnTap: true,
     subItems: [
-      { id: 'lead-info', label: '進捗一覧', path: '/sales/leads' },
-      { id: 'first-response', label: '一次対応Inbox', path: '/sales/inbox' },
-      { id: 'lead-new', label: '新規リード登録', path: '/sales/leads/new' },
+      { id: 'sales-schedule', label: 'スケジュール', path: '/sales/schedule' },
     ]
   },
   {
     id: 'schedule',
-    role: 'plan',
-    label: '予定',
+    role: 'tools',
+    label: '打刻',
     subItems: [
-      { id: 'schedule-view', label: 'スケジュール', path: '/sales/schedule' },
+      { id: 'sales-attendance', label: '勤怠打刻', path: 'https://f.ieyasu.co/misesapo/login/' },
+      { id: 'sales-monshin-create', label: '問診票作成', path: '/admin/torihikisaki-touroku' },
     ]
   },
   { id: 'report', role: 'log', label: '報告', to: '/houkoku' },

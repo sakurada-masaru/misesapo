@@ -4806,3 +4806,14 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 営業モード時の `申請中の顧客` セクション配色をライトトーンへ補正（黒っぽさ解消）
 - [x] トグルボタン・リストカード・テキスト色を営業画面パレットへ統一
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Entrance HOTBAR: `進捗`→`予定` + `ツール`差し替え (2026-03-19)
+
+- [x] 営業HOTバーの2枠目ラベルを `進捗` から `予定` に変更
+- [x] 2枠目のサブ導線を営業スケジュール（`/sales/schedule`）へ統一（`スケジュール`）
+- [x] 営業HOTバーの3枠目（旧 `予定`）を `ツール` に差し替え
+- [x] 営業HOTバーの3枠目ラベルを `ツール` から `打刻` に変更
+- [x] `ツール` のサブボタンに `勤怠打刻`（`/admin/hr/attendance`）と `問診票作成`（`/admin/torihikisaki-touroku`）を追加
+- [x] 営業 `勤怠打刻` を管理と同一リンク（`https://f.ieyasu.co/misesapo/login/`）へ変更
+- [x] サブHOTバーの外部URLクリック時は新規タブで開く挙動を追加（`JobEntranceScreen`）
+- [x] `npm -C src/misogi run build` でビルド確認

@@ -2490,6 +2490,10 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                         onClick={() => {
                           const path = item.path || item.to;
                           if (path) {
+                            if (/^https?:\/\//i.test(String(path))) {
+                              window.open(String(path), '_blank', 'noopener,noreferrer');
+                              return;
+                            }
                             startTransition(path);
                           }
                         }}
