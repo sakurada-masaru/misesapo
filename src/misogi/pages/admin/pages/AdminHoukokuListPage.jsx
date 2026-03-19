@@ -105,6 +105,14 @@ function mergeReports(primary, secondary) {
     return merged;
 }
 
+function flattenByDate(byDate) {
+    const all = [];
+    for (const v of Object.values(byDate || {})) {
+        if (Array.isArray(v)) all.push(...v);
+    }
+    return all;
+}
+
 const AdminHoukokuListPage = () => {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [reports, setReports] = useState([]);
@@ -315,6 +323,20 @@ const AdminHoukokuListPage = () => {
                     if (!d || !byDate[d]) continue;
                     byDate[d].push(r);
                 }
+                // Legacy compatibility: merge /houkoku every day even when range API succeeds.
+                // Some cleaning submissions are stored only in /houkoku.
+                const rows = await mapLimit(range.days, 4, async (d) => {
+                    try {
+                        const items = await fetchByHoukoku(d, headers);
+                        return [d, items];
+                    } catch {
+                        return [d, []];
+                    }
+                });
+                for (const [d, items] of rows) {
+                    byDate[d] = mergeReports(byDate[d] || [], items || []);
+                }
+                all = mergeReports(allRange, flattenByDate(byDate));
             } catch (e) {
                 // 404/403 etc: fallback to per-day fetch
                 console.warn('[AdminHoukokuList] range API unavailable, fallback to per-day', e?.status || e);
@@ -381,8 +403,26 @@ const AdminHoukokuListPage = () => {
 
         // Common-ish names across templates / historical payloads
         const tenpoName =
+            (typeof report?.target_label === 'string' && report.target_label.trim() ? report.target_label.trim() : '') ||
+            (typeof report?.tenpo_name === 'string' && report.tenpo_name.trim() ? report.tenpo_name.trim() : '') ||
+            (typeof report?.store_name === 'string' && report.store_name.trim() ? report.store_name.trim() : '') ||
             pick('tenpo_name', 'store_name', 'target_name') ||
+            (typeof payload?.context?.tenpo_label === 'string' ? payload.context.tenpo_label.trim() : '') ||
             (payload?.stores?.[0]?.name ? String(payload.stores[0].name) : '');
+
+        const topServiceNames = Array.isArray(report?.service_names)
+            ? report.service_names.map((v) => String(v || '').trim()).filter(Boolean)
+            : [];
+        const payloadServiceNames = Array.isArray(payload?.service_names)
+            ? payload.service_names.map((v) => String(v || '').trim()).filter(Boolean)
+            : [];
+        const contextServiceNames = Array.isArray(payload?.context?.service_names)
+            ? payload.context.service_names.map((v) => String(v || '').trim()).filter(Boolean)
+            : [];
+        const serviceNames = [...topServiceNames, ...payloadServiceNames, ...contextServiceNames]
+            .filter((v, i, arr) => arr.indexOf(v) === i);
+        const serviceLabel = serviceNames.slice(0, 2).join(' / ');
+        const workDetail = pick('work_detail', 'work_content', 'detail', 'report_body');
 
         if (String(report?.template_id || '').startsWith('SALES_')) {
             return (
@@ -392,11 +432,9 @@ const AdminHoukokuListPage = () => {
             );
         }
         if (String(report?.template_id || '').startsWith('CLEAN_') || String(report?.template_id || '').startsWith('CLEANING_')) {
-            return (
-                tenpoName ||
-                pick('summary', 'memo') ||
-                '清掃報告'
-            );
+            return [tenpoName, serviceLabel, workDetail, pick('summary', 'memo')]
+                .map((v) => String(v || '').trim())
+                .find((v) => v.length > 0) || '清掃報告';
         }
         if (String(report?.template_id || '').startsWith('ENGINEERING_') || String(report?.template_id || '').startsWith('DEV_')) {
             return (
@@ -688,6 +726,8 @@ const AdminHoukokuListPage = () => {
                 <Grid>
                     {filteredReports.map(report => {
                         const style = getTemplateLabel(report.template_id);
+                        const isCleaningReport = String(report?.template_id || '').startsWith('CLEAN_') || String(report?.template_id || '').startsWith('CLEANING_');
+                        const reportId = String(report?.id || '').trim();
                         return (
                             <ReportCard key={report.id}>
                                 <CardHeader $color={style.color}>
@@ -702,7 +742,14 @@ const AdminHoukokuListPage = () => {
                                     <Timestamp>{new Date(report.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} 提出</Timestamp>
                                 </CardBody>
                                 <CardFooter>
-                                    <DetailButton to={`/admin/houkoku/${report.id}`}>詳細を見る</DetailButton>
+                                    <CardFooterActions>
+                                        <DetailButton to={`/admin/houkoku/${report.id}`}>詳細を見る</DetailButton>
+                                        {isCleaningReport && reportId ? (
+                                            <EditButton to={`/admin/tools/cleaning-houkoku?report_id=${encodeURIComponent(reportId)}`}>
+                                                修正
+                                            </EditButton>
+                                        ) : null}
+                                    </CardFooterActions>
                                 </CardFooter>
                             </ReportCard>
                         );
@@ -1164,6 +1211,12 @@ const CardFooter = styled.div`
     border-top: 1px solid #f1f5f9;
 `;
 
+const CardFooterActions = styled.div`
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+`;
+
 const DetailButton = styled(Link)`
     display: block;
     text-align: center;
@@ -1175,6 +1228,24 @@ const DetailButton = styled(Link)`
     font-size: 14px;
     transition: all 0.2s;
     &:hover { background: #1e293b; color: white; }
+`;
+
+const EditButton = styled(Link)`
+    display: block;
+    text-align: center;
+    padding: 10px;
+    background: #fff7ed;
+    border-radius: 10px;
+    color: #9a3412;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1px solid #fed7aa;
+    transition: all 0.2s;
+    &:hover {
+        background: #9a3412;
+        color: white;
+        border-color: #9a3412;
+    }
 `;
 
 const LoadingMessage = styled.div`

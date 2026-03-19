@@ -4849,3 +4849,78 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 
 - [x] 営業HOTバー `ツール` サブ項目から `問診票作成` を削除
 - [x] `勤怠打刻 / 顧客申請（月次）` の2導線構成へ整理
+
+## Sales Report: Monthly History View (2026-03-19)
+
+- [x] 営業報告（`SALES_ACTIVITY_REPORT_V1`）カード内に `過去の業務報告` セクションを追加
+- [x] `対象月(YYYY-MM)` 入力 + 更新ボタンで月次履歴を再取得可能化
+- [x] 履歴取得は `GET /work-report?date_from=...&date_to=...`（本人データ）を利用し営業テンプレートのみ表示
+- [x] 各履歴に `日付 / state / version / 詳細` を表示し、`/sales/work-reports/:reportId` へ遷移可能化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History: Legacy Houkoku Fallback (2026-03-19)
+
+- [x] 営業報告履歴取得で `/work-report` が0件の場合、`/houkoku?date=YYYY-MM-DD` を月内日次で収集するフォールバックを追加
+- [x] 旧 `houkoku` 由来データを `template_id=SALES_ACTIVITY_REPORT_V1` かつ本人 `user_id` で絞り込み表示
+- [x] 互換取得ロジック追加後に `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Report Flow: Admin List + Customer Detail Edit Route (2026-03-19)
+
+- [x] 管理 `業務報告一覧` に清掃報告の `修正` 導線を追加（`/admin/tools/cleaning-houkoku?report_id=...`）
+- [x] 管理 `業務報告詳細` のアクションに清掃報告の `修正` 導線を追加
+- [x] 管理 `お客様詳細(ストレージ)` の清掃報告PDF行に `報告を修正` 導線を追加
+- [x] `AdminCleaningHoukokuBuilderPage` に `report_id` 編集モードを追加（既存報告の読込→編集）
+- [x] 編集時は `PUT /houkoku/{report_id}` で更新し、soukoへ再保存（PDF/写真）するフローを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Houkoku Detail: Cleaning Photo URL Hydration Fix (2026-03-19)
+
+- [x] 管理 `業務報告詳細` で `payload` 内画像のURL解決を強化（`key/get_url/preview_url/open_url/url` を統合）
+- [x] `tenpo_id` の `souko.files` から `key -> 署名URL` マップを作り、報告payloadの画像項目へ自動補完
+- [x] 一覧から詳細を開いた際に、清掃報告の写真が表示欠けしないよう互換補正を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Report Attachment Preview: Multi-URL Fallback (2026-03-19)
+
+- [x] `TemplateRenderer` の写真表示で `url` 固定参照を廃止し、`open_url/get_url/preview_url/src/href` も解決するよう修正
+- [x] 管理 `業務報告詳細` の旧レイアウト写真表示でも同様のURLフォールバックを適用
+- [x] URL未解決アイテムは描画しないようにして壊れたプレビュー描画を防止
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Yotei Layout: Topbar Overlap Fix (2026-03-19)
+
+- [x] 清掃予定ページ（`/jobs/cleaning/yotei`）で fixed topbar とメイン本文が重ならないよう上オフセットを追加
+- [x] `.my-yotei-page` / `.my-yotei-page-single` の `report-page-main` に topbar 分の `padding-top` を統一適用
+- [x] 同セクションに左右パディング（safe-area対応）を追加し、画面端詰まりを解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard Common Chat: Ctrl+Enter + @Mention (2026-03-19)
+
+- [x] 共通チャット入力で `Ctrl+Enter`（Macは `⌘+Enter`）送信を追加
+- [x] `@` 入力時に送信履歴の投稿者名からメンション候補を表示
+- [x] メンション候補は Enter / ↑↓ / クリックで選択できるように対応
+- [x] メンション候補UIのダーク/ライト配色を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Sidebar: 勤怠管理 Direct Link (2026-03-19)
+
+- [x] 管理サイドバー `勤怠管理` セクションを開閉式から単独リンク表示へ変更（`direct: true`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Activity + Daily Digest: Houkoku Submit / Customer Master Request (2026-03-19)
+
+- [x] 管理ダッシュボードのアクティビティ集約に `customer_master_approval` ルームを追加
+- [x] 顧客マスタ `change_request / change_decision` を通知行に変換し、`/admin/master/customer` への導線を追加
+- [x] 業務報告イベントに投稿内容のプレビュー文を付加して可読性を改善
+- [x] 日次メール集計（`lambda_work_reports.py`）に顧客マスタ申請イベントを追加
+- [x] 日次メール集計の業務報告行にも内容プレビューを追加
+- [x] `python3 -m py_compile lambda_work_reports.py` で構文確認
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History: Legacy Owner Match Fix (2026-03-19)
+
+- [x] 営業報告履歴の `/houkoku` フォールバックで、本人判定を `user_id` 単独から複数ID（`worker_id/sagyouin_id/created_by/submitted_by` 含む）照合へ拡張
+- [x] `payload` が文字列JSONで返るケースもパースして本人判定に使用
+- [x] IDが無い旧データ向けに `user_name/worker_name/...` の名前照合フォールバックを追加
+- [x] 履歴対象テンプレート判定を `SALES_ACTIVITY_REPORT_V1` 固定から `SALES_*` 系も含む判定へ拡張
+- [x] `npm -C src/misogi run build` でビルド確認

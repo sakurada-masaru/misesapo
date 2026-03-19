@@ -21,6 +21,23 @@ import styled from 'styled-components';
 
 // ===== ユーティリティ =====
 
+const resolveAssetUrl = (item) => {
+    if (!item) return '';
+    if (typeof item === 'string') return item.trim();
+    if (typeof item !== 'object') return '';
+    return String(
+        item.url
+        || item.open_url
+        || item.get_url
+        || item.preview_url
+        || item.src
+        || item.href
+        || item.file_url
+        || item.download_url
+        || ''
+    ).trim();
+};
+
 /**
  * ネストされたキー（例: "overview.work_minutes"）からオブジェクト内の値を取得
  */
@@ -604,16 +621,22 @@ const PhotosSection = ({ section, payload, onFileUpload, onFileRemove, mode }) =
                             </PhotoGroupTitle>
                             <PhotoGrid>
                                 {photos.map((img, i) => (
-                                    <PhotoItemBox key={i}>
-                                        <PhotoItem href={img.url || img} target="_blank">
-                                            <img src={img.url || img} alt={group.label} />
-                                        </PhotoItem>
-                                        {isEdit && (
-                                            <PhotoRemoveBtn onClick={() => onFileRemove && onFileRemove(group.key, i)}>
-                                                <i className="fas fa-times"></i>
-                                            </PhotoRemoveBtn>
-                                        )}
-                                    </PhotoItemBox>
+                                    (() => {
+                                        const mediaUrl = resolveAssetUrl(img);
+                                        if (!mediaUrl) return null;
+                                        return (
+                                            <PhotoItemBox key={i}>
+                                                <PhotoItem href={mediaUrl} target="_blank">
+                                                    <img src={mediaUrl} alt={group.label} />
+                                                </PhotoItem>
+                                                {isEdit && (
+                                                    <PhotoRemoveBtn onClick={() => onFileRemove && onFileRemove(group.key, i)}>
+                                                        <i className="fas fa-times"></i>
+                                                    </PhotoRemoveBtn>
+                                                )}
+                                            </PhotoItemBox>
+                                        );
+                                    })()
                                 ))}
                                 {isEdit && (
                                     <>

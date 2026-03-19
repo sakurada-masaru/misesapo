@@ -23,6 +23,7 @@ export const ADMIN_HOTBAR = [
   {
     id: 'kintai',
     label: '勤怠管理',
+    direct: true,
     subItems: [
       { id: 'kintai-link', label: '勤怠管理', path: 'https://f.ieyasu.co/misesapo/login/', group: '勤怠管理' },
     ]

@@ -293,6 +293,7 @@ function fileToBase64(file) {
 export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUpload = false }) {
   const { user, isLoading: authLoading, isAuthenticated, login, getToken, authz } = useAuth();
   const [searchParams] = useSearchParams();
+  const editReportId = useMemo(() => norm(searchParams?.get('report_id')), [searchParams]);
   const template = useMemo(() => getTemplateById(TEMPLATE_ID), []);
   const editorTemplate = useMemo(() => {
     if (!template) return template;
@@ -336,6 +337,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
   const [yoteiCandidates, setYoteiCandidates] = useState([]);
   const [linkedYoteiId, setLinkedYoteiId] = useState(() => norm(searchParams?.get('yotei_id')));
   const routeYoteiHydratedRef = React.useRef('');
+  const routeReportHydratedRef = React.useRef('');
   const [yoteiBusy, setYoteiBusy] = useState(false);
   const [activeServiceTab, setActiveServiceTab] = useState('');
   const [tenpoId, setTenpoId] = useState('');
@@ -343,6 +345,7 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
   const [cleanerIds, setCleanerIds] = useState([]);
   const [masterStep, setMasterStep] = useState(1);
   const [hasCompanionWorker, setHasCompanionWorker] = useState(false);
+  const [editReportRefId, setEditReportRefId] = useState('');
   const [draggingPhoto, setDraggingPhoto] = useState(null); // {type:'pool'|'service',serviceId?,bucket?,index}
   const localPhotoObjectUrlsRef = React.useRef(new Set());
   const [localPhotoSrcByKey, setLocalPhotoSrcByKey] = useState({});
@@ -1175,6 +1178,92 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
   }, [searchParams]);
 
   React.useEffect(() => {
+    if (!editReportId) return;
+    if (routeReportHydratedRef.current === editReportId) return;
+    let aborted = false;
+    (async () => {
+      try {
+        const res = await apiFetchWorkReport(`/houkoku/${encodeURIComponent(editReportId)}`, {
+          headers: authHeaders(),
+          cache: 'no-store',
+        });
+        if (aborted) return;
+        const row = (res && typeof res === 'object') ? res : null;
+        if (!row) {
+          routeReportHydratedRef.current = editReportId;
+          return;
+        }
+
+        let existingPayload = {};
+        if (row?.payload && typeof row.payload === 'object') {
+          existingPayload = row.payload;
+        } else if (typeof row?.payload === 'string') {
+          try {
+            const j = JSON.parse(row.payload);
+            existingPayload = (j && typeof j === 'object') ? j : {};
+          } catch {
+            existingPayload = {};
+          }
+        }
+        const context = (existingPayload?.context && typeof existingPayload.context === 'object') ? existingPayload.context : {};
+        const loadedTenpoId = norm(
+          row?.tenpo_id ||
+          row?.store_id ||
+          context?.tenpo_id ||
+          existingPayload?.tenpo_id ||
+          existingPayload?.store_id
+        );
+        const loadedServiceIds = Array.from(new Set([
+          ...(Array.isArray(row?.service_ids) ? row.service_ids : []),
+          ...(Array.isArray(existingPayload?.service_ids) ? existingPayload.service_ids : []),
+          ...(Array.isArray(context?.service_ids) ? context.service_ids : []),
+        ].map((v) => norm(v)).filter(Boolean)));
+        const loadedCleanerIds = Array.from(new Set([
+          ...(Array.isArray(row?.worker_ids) ? row.worker_ids : []),
+          ...(Array.isArray(existingPayload?.worker_ids) ? existingPayload.worker_ids : []),
+          ...(Array.isArray(context?.cleaner_ids) ? context.cleaner_ids : []),
+          row?.worker_id,
+          existingPayload?.worker_id,
+          context?.cleaner_id,
+        ].map((v) => norm(v)).filter(Boolean)));
+        const linked = norm(
+          row?.yotei_id ||
+          row?.schedule_id ||
+          context?.yotei_id ||
+          context?.schedule_id ||
+          existingPayload?.yotei_id ||
+          existingPayload?.schedule_id
+        );
+
+        if (loadedTenpoId) setTenpoId(loadedTenpoId);
+        if (loadedServiceIds.length) setServiceIds(loadedServiceIds);
+        if (loadedCleanerIds.length) {
+          setCleanerIds(loadedCleanerIds);
+          setHasCompanionWorker(loadedCleanerIds.length > 1);
+        }
+        if (linked) setLinkedYoteiId(linked);
+        setEditReportRefId(norm(row?.report_ref_id || context?.report_ref_id || existingPayload?.report_ref_id || editReportId));
+        setPayload((prev) => ({
+          ...prev,
+          ...existingPayload,
+          work_date: norm(existingPayload?.work_date || row?.work_date) || prev.work_date,
+          user_name: norm(existingPayload?.user_name || row?.user_name || prev.user_name),
+        }));
+        setMasterStep(4);
+        routeReportHydratedRef.current = editReportId;
+      } catch (e) {
+        if (!aborted) {
+          routeReportHydratedRef.current = editReportId;
+          setStatus({ type: 'error', text: `既存報告の読み込みに失敗: ${e?.message || e}` });
+        }
+      }
+    })();
+    return () => {
+      aborted = true;
+    };
+  }, [authHeaders, editReportId]);
+
+  React.useEffect(() => {
     const routeYoteiId = norm(searchParams?.get('yotei_id'));
     if (!routeYoteiId) return;
     if (routeYoteiHydratedRef.current === routeYoteiId) return;
@@ -1802,49 +1891,73 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
       const selectedServiceIds = (serviceIds || []).map((sid) => norm(sid)).filter(Boolean);
       const selectedCleanerIds = (cleanerIds || []).map((cid) => norm(cid)).filter(Boolean);
       const linkedScheduleId = norm(linkedYoteiId || linkedYoteiRecord?.id);
-      const reportRefId = generateReportReferenceId(workDate, tid);
+      const reportRefId = norm(editReportRefId) || generateReportReferenceId(workDate, tid);
       const headers = authHeaders();
-      const submitRes = await apiFetchWorkReport('/houkoku', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          template_id: TEMPLATE_ID,
-          work_date: workDate,
-          user_name: userName,
-          state: 'submitted',
-          target_label: selectedTenpoLabel || norm(tenpoById.get(tid)?.name) || tid,
-          worker_id: selectedCleanerIds[0] || '',
-          worker_ids: selectedCleanerIds,
+      const payloadWithContext = {
+        ...payload,
+        context: {
+          ...(payload?.context && typeof payload.context === 'object' ? payload.context : {}),
+          tenpo_id: tid,
+          tenpo_label: selectedTenpoLabel || norm(tenpoById.get(tid)?.name) || tid,
+          cleaner_id: selectedCleanerIds[0] || '',
+          cleaner_ids: selectedCleanerIds,
+          cleaner_name: userName,
+          cleaner_names: cleanerNames,
           service_ids: selectedServiceIds,
           service_names: selectedServiceNames,
-          tenpo_id: tid,
           yotei_id: linkedScheduleId,
           schedule_id: linkedScheduleId,
           report_ref_id: reportRefId,
-          context: {
-            tenpo_id: tid,
-            tenpo_label: selectedTenpoLabel || norm(tenpoById.get(tid)?.name) || tid,
-            cleaner_id: selectedCleanerIds[0] || '',
-            cleaner_ids: selectedCleanerIds,
-            cleaner_name: userName,
-            cleaner_names: cleanerNames,
+        },
+        service_ids: selectedServiceIds,
+        service_names: selectedServiceNames,
+        tenpo_id: tid,
+        yotei_id: linkedScheduleId,
+        schedule_id: linkedScheduleId,
+        report_ref_id: reportRefId,
+      };
+      setPayload(payloadWithContext);
+
+      let issuedReportId = '';
+      if (editReportId) {
+        await apiFetchWorkReport(`/houkoku/${encodeURIComponent(editReportId)}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ payload: payloadWithContext }),
+        });
+        issuedReportId = editReportId;
+      } else {
+        const submitRes = await apiFetchWorkReport('/houkoku', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            template_id: TEMPLATE_ID,
+            work_date: workDate,
+            user_name: userName,
+            state: 'submitted',
+            target_label: selectedTenpoLabel || norm(tenpoById.get(tid)?.name) || tid,
+            worker_id: selectedCleanerIds[0] || '',
+            worker_ids: selectedCleanerIds,
             service_ids: selectedServiceIds,
             service_names: selectedServiceNames,
+            tenpo_id: tid,
             yotei_id: linkedScheduleId,
             schedule_id: linkedScheduleId,
             report_ref_id: reportRefId,
-          },
-          payload,
-        }),
-      });
-      const reportId = norm(submitRes?.report_id || submitRes?.id || submitRes?.houkoku_id || submitRes?.work_report_id);
-      const issuedReportId = reportId || reportRefId;
+            context: payloadWithContext.context,
+            payload: payloadWithContext,
+          }),
+        });
+        const reportId = norm(submitRes?.report_id || submitRes?.id || submitRes?.houkoku_id || submitRes?.work_report_id);
+        issuedReportId = reportId || reportRefId;
+      }
+
       setSoukoBusy(true);
       const saved = await saveReportArtifactsToSouko({ reportId: issuedReportId, reportRefId });
       const tenpoName = norm(tenpoById.get(tid)?.name) || tid;
       setStatus({
         type: 'success',
-        text: `提出してsoukoへ保存しました（報告ID: ${issuedReportId} / ${tenpoName} / ${saved.workDate} / PDF1件・写真${saved.photoCount}件）`,
+        text: `${editReportId ? '更新して' : '提出して'}soukoへ保存しました（報告ID: ${issuedReportId} / ${tenpoName} / ${saved.workDate} / PDF1件・写真${saved.photoCount}件）`,
       });
     } catch (e) {
       console.error(e);
@@ -1857,6 +1970,8 @@ export default function AdminCleaningHoukokuBuilderPage({ forceDirectBucketUploa
     authHeaders,
     cleanerIds,
     cleanerNames,
+    editReportId,
+    editReportRefId,
     editorTemplate,
     linkedYoteiId,
     linkedYoteiRecord?.id,

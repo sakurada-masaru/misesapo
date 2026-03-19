@@ -68,6 +68,7 @@ const CLEANING_NOTICE_SWIPE_MAX = 44;
 const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
 const ADMIN_DIRECT_SIDEBAR_SECTION_IDS = new Set(['dashboard', 'filebox']);
 const CUSTOMER_CHAT_ADMIN_ROOM = 'customer_portal_chat';
+const CUSTOMER_MASTER_APPROVAL_ROOM = 'customer_master_approval';
 
 function isLocalUiHost() {
   if (typeof window === 'undefined') return false;
@@ -319,6 +320,64 @@ function reportPostedAtMs(item) {
     if (!Number.isNaN(t)) return t;
   }
   return toEpochMs(item?.created_at || item?.createdAt || '');
+}
+
+function parseJsonLikeObject(raw) {
+  if (raw && typeof raw === 'object') return raw;
+  const s = String(raw || '').trim();
+  if (!s) return {};
+  try {
+    const parsed = JSON.parse(s);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function shrinkInlineText(value, max = 36) {
+  const s = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  return s.length > max ? `${s.slice(0, max)}…` : s;
+}
+
+function reportContentPreview(item) {
+  const payload = parseJsonLikeObject(item?.payload);
+  const pick = (...values) =>
+    values.map((v) => shrinkInlineText(v, 48)).find(Boolean) || '';
+  const serviceNames = [
+    ...(Array.isArray(item?.service_names) ? item.service_names : []),
+    ...(Array.isArray(payload?.service_names) ? payload.service_names : []),
+    ...(Array.isArray(payload?.context?.service_names) ? payload.context.service_names : []),
+  ]
+    .map((v) => shrinkInlineText(v, 20))
+    .filter(Boolean)
+    .filter((v, i, arr) => arr.indexOf(v) === i);
+  const serviceLabel = serviceNames.slice(0, 2).join(' / ');
+  const storeLabel = pick(
+    item?.target_label,
+    item?.tenpo_name,
+    item?.store_name,
+    payload?.tenpo_name,
+    payload?.store_name,
+    payload?.target_name,
+    payload?.context?.tenpo_label,
+  );
+  const bodyLabel = pick(
+    item?.summary,
+    item?.memo,
+    item?.detail,
+    item?.work_detail,
+    item?.work_content,
+    payload?.summary,
+    payload?.memo,
+    payload?.work_detail,
+    payload?.work_content,
+    payload?.report_body,
+    payload?.honjitsu_seika,
+    payload?.result_today,
+    payload?.exception_note,
+  );
+  return pick(bodyLabel, [storeLabel, serviceLabel].filter(Boolean).join(' / '));
 }
 
 function readLocalUserName() {
@@ -1428,7 +1487,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     try {
       const now = new Date();
       const nowMs = now.getTime();
-      const [kanriResult, reportsResult, customerChatResult] = await Promise.allSettled([
+      const [kanriResult, reportsResult, customerChatResult, customerMasterResult] = await Promise.allSettled([
         fetch(`${MASTER_API_BASE}/master/kanri_log?limit=400&jotai=yuko`, {
           headers: {
             ...authHeaders(),
@@ -1456,11 +1515,25 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.json();
         }),
+        fetch(
+          `${MASTER_API_BASE}/master/admin_chat?limit=400&jotai=yuko&room=${encodeURIComponent(CUSTOMER_MASTER_APPROVAL_ROOM)}`,
+          {
+            headers: {
+              ...authHeaders(),
+              'Content-Type': 'application/json',
+            },
+            cache: 'no-store',
+          }
+        ).then(async (res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        }),
       ]);
 
       const kanriRows = kanriResult.status === 'fulfilled' ? asItems(kanriResult.value) : [];
       const reportRows = reportsResult.status === 'fulfilled' ? asItems(reportsResult.value) : [];
       const customerChatRows = customerChatResult.status === 'fulfilled' ? asItems(customerChatResult.value) : [];
+      const customerMasterRows = customerMasterResult.status === 'fulfilled' ? asItems(customerMasterResult.value) : [];
 
       const logEvents = kanriRows
         .map((row) => {
@@ -1502,6 +1575,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           const updatedMs = toEpochMs(item?.updated_at || item?.updatedAt || '');
           const createdMs = toEpochMs(item?.created_at || item?.createdAt || '');
           const action = reportActionLabel(item);
+          const contentPreview = reportContentPreview(item);
           const events = [];
 
           // 提出時刻がある場合は、状態に関係なく「提出通知」を優先して生成する
@@ -1511,7 +1585,9 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
               atMs: postedMs,
               atLabel: hhmmLabel(postedMs),
               who,
-              what: `業務報告を提出しました（投稿 ${hhmmLabel(postedMs)}）`,
+              what: contentPreview
+                ? `業務報告を提出しました（投稿 ${hhmmLabel(postedMs)}）「${contentPreview}」`
+                : `業務報告を提出しました（投稿 ${hhmmLabel(postedMs)}）`,
               kind: 'work-report-submitted',
               linkPath,
               linkLabel,
@@ -1616,7 +1692,46 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
         .filter(Boolean)
         .filter((row) => isWithinLastHours(row.atMs, nowMs, ADMIN_UPDATES_LOOKBACK_HOURS));
 
-      const list = [...customerChatEvents, ...reportEvents, ...logEvents]
+      const customerMasterEvents = customerMasterRows
+        .map((row) => {
+          const whenMs = toEpochMs(row?.created_at || row?.updated_at || row?.reported_at || row?.date);
+          const payload = parseJsonLikeObject(row?.data_payload);
+          const channel = String(payload?.channel || '').trim();
+          const eventType = String(payload?.event_type || '').trim();
+          if (channel !== CUSTOMER_MASTER_APPROVAL_ROOM) return null;
+          if (!eventType) return null;
+          const who = pickDisplayName(
+            payload?.sender_name,
+            row?.sender_display_name,
+            row?.sender_name,
+            row?.updated_by_name,
+            row?.created_by_name,
+            row?.user_name,
+            row?.sender_id,
+          );
+          const summary = shrinkInlineText(payload?.summary || row?.message || row?.name, 48);
+          const isDecision = eventType === 'change_decision';
+          const decision = String(payload?.decision || '').trim();
+          const decisionLabel = decision === 'approved' ? '承認' : decision === 'rejected' ? '却下' : '判定';
+          const what = isDecision
+            ? `${who}が顧客マスタ申請を${decisionLabel}しました${summary ? `「${summary}」` : ''}`
+            : `${who}が顧客マスタ申請を送信しました${summary ? `「${summary}」` : ''}`;
+          return {
+            id: String(row?.chat_id || row?.id || `${who}-${whenMs}-${Math.random()}`),
+            atMs: whenMs,
+            atLabel: hhmmLabel(whenMs),
+            who,
+            what,
+            kind: isDecision ? 'customer-master-decision' : 'customer-master-request',
+            storeTag: '顧客マスタ申請',
+            linkPath: '/admin/master/customer',
+            linkLabel: '顧客マスタを開く',
+          };
+        })
+        .filter(Boolean)
+        .filter((row) => isWithinLastHours(row.atMs, nowMs, ADMIN_UPDATES_LOOKBACK_HOURS));
+
+      const list = [...customerMasterEvents, ...customerChatEvents, ...reportEvents, ...logEvents]
         .sort((a, b) => b.atMs - a.atMs)
         .slice(0, 80);
 
@@ -1625,6 +1740,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
         kanriResult.status === 'rejected'
         && reportsResult.status === 'rejected'
         && customerChatResult.status === 'rejected'
+        && customerMasterResult.status === 'rejected'
       ) {
         setUpdatesError('更新通知の取得に失敗しました');
       }

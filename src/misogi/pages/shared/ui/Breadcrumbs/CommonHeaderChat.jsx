@@ -16,6 +16,7 @@ const POLL_MS = 5000;
 const MAX_ITEMS = 120;
 const MAX_UPLOAD_SIZE = 15 * 1024 * 1024;
 const MAX_MESSAGE_LEN = 280;
+const MAX_MENTION_OPTIONS = 8;
 const CHAT_OVERLAY_WIDTH = 440;
 const CHAT_OVERLAY_RIGHT_GUTTER = 20;
 const CHAT_OVERLAY_VISIBLE_WIDTH = 40;
@@ -147,6 +148,23 @@ function shortMessage(value, maxLen = 72) {
   return chars.length > maxLen ? `${chars.slice(0, maxLen).join('')}…` : s;
 }
 
+function extractMentionContext(text, caretPos) {
+  const value = String(text || '');
+  const caret = Math.max(0, Math.min(Number(caretPos || 0), value.length));
+  const left = value.slice(0, caret);
+  const at = left.lastIndexOf('@');
+  if (at < 0) return null;
+  const before = at > 0 ? left.slice(at - 1, at) : '';
+  if (before && !/\s|\n|\r|\t|[([{"'`]/.test(before)) return null;
+  const query = left.slice(at + 1);
+  if (/[\s\n\r\t]/.test(query)) return null;
+  return {
+    start: at,
+    end: caret,
+    query: String(query || ''),
+  };
+}
+
 export default function CommonHeaderChat({
   alwaysOpen = false,
   hideTrigger = false,
@@ -188,7 +206,10 @@ export default function CommonHeaderChat({
   const [lastSeenAt, setLastSeenAt] = useState('');
   const listRef = useRef(null);
   const fileInputRef = useRef(null);
+  const composeTextareaRef = useRef(null);
   const dragRef = useRef({ active: false, startX: 0, startY: 0, baseX: 0, baseY: 0 });
+  const [caretPos, setCaretPos] = useState(0);
+  const [mentionIndex, setMentionIndex] = useState(0);
   const [boxPos, setBoxPos] = useState(() => {
     if (typeof window === 'undefined') return { x: 24, y: 72 };
     const w = window.innerWidth;
@@ -316,6 +337,40 @@ export default function CommonHeaderChat({
     const found = ROOM_PRESETS.find((row) => row.key === activeRoom);
     return found?.label || '共通';
   }, [activeRoom]);
+
+  const mentionCandidates = useMemo(() => {
+    const seen = new Set();
+    const names = [];
+    (items || []).forEach((row) => {
+      const n = String(
+        row?.sender_name
+        || row?.sender_display_name
+        || row?.updated_by_name
+        || row?.created_by_name
+        || ''
+      ).trim();
+      if (!n) return;
+      const key = n.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      names.push(n);
+    });
+    return names.sort((a, b) => a.localeCompare(b, 'ja'));
+  }, [items]);
+
+  const mentionContext = useMemo(
+    () => extractMentionContext(text, caretPos),
+    [text, caretPos]
+  );
+
+  const mentionOptions = useMemo(() => {
+    if (!mentionContext) return [];
+    const q = String(mentionContext.query || '').trim().toLowerCase();
+    const base = q
+      ? mentionCandidates.filter((n) => n.toLowerCase().includes(q))
+      : mentionCandidates;
+    return base.slice(0, MAX_MENTION_OPTIONS);
+  }, [mentionCandidates, mentionContext]);
 
   const fetchChat = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -463,6 +518,28 @@ export default function CommonHeaderChat({
     }
   }, [activeRoom, attachments, dataText, fetchChat, replyTo, senderId, senderName, sending, text, uploading]);
 
+  const insertMention = useCallback((name) => {
+    if (!mentionContext) return;
+    const picked = String(name || '').trim();
+    if (!picked) return;
+    const current = String(text || '');
+    const left = current.slice(0, mentionContext.start);
+    const right = current.slice(mentionContext.end);
+    const nextText = `${left}@${picked} ${right}`;
+    const nextCaret = left.length + picked.length + 2;
+    setText(truncateByCodePoints(nextText, MAX_MESSAGE_LEN));
+    requestAnimationFrame(() => {
+      const el = composeTextareaRef.current;
+      if (!el) return;
+      const pos = Math.min(nextCaret, String(nextText || '').length);
+      try {
+        el.focus();
+        el.setSelectionRange(pos, pos);
+        setCaretPos(pos);
+      } catch {}
+    });
+  }, [mentionContext, text]);
+
   const onClickAttach = useCallback(() => {
     if (uploading || sending) return;
     fileInputRef.current?.click();
@@ -602,6 +679,10 @@ export default function CommonHeaderChat({
     if (!open || !latestMessageAt) return;
     markAsRead(latestMessageAt);
   }, [latestMessageAt, markAsRead, open]);
+
+  useEffect(() => {
+    setMentionIndex(0);
+  }, [mentionContext?.start, mentionContext?.query, mentionOptions.length]);
 
   const onDragStart = useCallback((e) => {
     if (!desktopOnly || !canDrag) return;
@@ -858,10 +939,55 @@ export default function CommonHeaderChat({
             onChange={onSelectFile}
           />
           <textarea
+            ref={composeTextareaRef}
             value={text}
-            onChange={(e) => setText(truncateByCodePoints(e.target.value, MAX_MESSAGE_LEN))}
+            onChange={(e) => {
+              setText(truncateByCodePoints(e.target.value, MAX_MESSAGE_LEN));
+              setCaretPos(e.currentTarget.selectionStart || 0);
+            }}
+            onClick={(e) => setCaretPos(e.currentTarget.selectionStart || 0)}
+            onKeyUp={(e) => setCaretPos(e.currentTarget.selectionStart || 0)}
+            onSelect={(e) => setCaretPos(e.currentTarget.selectionStart || 0)}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                send();
+                return;
+              }
+              if (mentionOptions.length > 0) {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setMentionIndex((prev) => Math.min(prev + 1, mentionOptions.length - 1));
+                  return;
+                }
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setMentionIndex((prev) => Math.max(prev - 1, 0));
+                  return;
+                }
+                if (e.key === 'Enter' && !e.shiftKey && !e.altKey) {
+                  e.preventDefault();
+                  insertMention(mentionOptions[mentionIndex] || mentionOptions[0]);
+                }
+              }
+            }}
             placeholder={`メッセージ（最大${MAX_MESSAGE_LEN}文字）`}
           />
+          {mentionOptions.length > 0 ? (
+            <div className="mention-picker" aria-label="@メンション候補">
+              {mentionOptions.map((name, idx) => (
+                <button
+                  key={`${name}-${idx}`}
+                  type="button"
+                  className={idx === mentionIndex ? 'active' : ''}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => insertMention(name)}
+                >
+                  @{name}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <div className="compose-template-row">
             <select
               value=""
@@ -935,6 +1061,7 @@ export default function CommonHeaderChat({
                 type="button"
                 disabled={sending || uploading || (!String(text || '').trim() && attachments.length === 0 && !String(dataText || '').trim())}
                 onClick={send}
+                title="Ctrl+Enter で送信"
               >
                 {sending ? '送信中...' : '送信'}
               </button>

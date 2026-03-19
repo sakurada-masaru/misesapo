@@ -2057,6 +2057,27 @@
   color: #fecaca;
 }
 
+.report-edit-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #7c2d12;
+  background: rgba(254, 243, 199, 0.72);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.report-edit-link:hover {
+  background: rgba(251, 191, 36, 0.9);
+  border-color: rgba(245, 158, 11, 0.85);
+  color: #431407;
+}
+
 .file-name {
   font-size: 14px;
   margin-bottom: 6px;

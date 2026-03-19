@@ -43,6 +43,7 @@ ses_client = boto3.client('ses', region_name=os.environ.get('SES_REGION', S3_REG
 
 JST = timezone(timedelta(hours=9))
 CUSTOMER_CHAT_ADMIN_ROOM = os.environ.get('CUSTOMER_CHAT_ADMIN_ROOM', 'customer_portal_chat')
+CUSTOMER_MASTER_APPROVAL_ROOM = os.environ.get('CUSTOMER_MASTER_APPROVAL_ROOM', 'customer_master_approval')
 DAILY_ACTIVITY_EMAIL_TO = os.environ.get('DAILY_ACTIVITY_EMAIL_TO', 'info@misesapo.co.jp')
 DAILY_ACTIVITY_EMAIL_FROM = os.environ.get('DAILY_ACTIVITY_EMAIL_FROM', 'info@misesapo.co.jp')
 DAILY_ACTIVITY_HOURS = int(os.environ.get('DAILY_ACTIVITY_HOURS', '24'))
@@ -90,6 +91,69 @@ def _pick_name(*candidates):
         if v:
             return v
     return '未設定'
+
+
+def _parse_json_like_object(raw):
+    if isinstance(raw, dict):
+        return raw
+    s = str(raw or '').strip()
+    if not s:
+        return {}
+    try:
+        parsed = json.loads(s)
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
+
+
+def _shrink_inline_text(value, max_len=36):
+    s = str(value or '').replace('\n', ' ').replace('\r', ' ')
+    s = ' '.join(s.split()).strip()
+    if not s:
+        return ''
+    return f"{s[:max_len]}…" if len(s) > max_len else s
+
+
+def _report_content_preview(item):
+    payload = _parse_json_like_object(item.get('payload'))
+    service_names = []
+    for raw in (item.get('service_names'), payload.get('service_names'), (payload.get('context') or {}).get('service_names')):
+        if isinstance(raw, list):
+            for v in raw:
+                sv = _shrink_inline_text(v, 20)
+                if sv and sv not in service_names:
+                    service_names.append(sv)
+    service_label = ' / '.join(service_names[:2])
+    store_label = _shrink_inline_text(
+        item.get('target_label')
+        or item.get('tenpo_name')
+        or item.get('store_name')
+        or payload.get('tenpo_name')
+        or payload.get('store_name')
+        or payload.get('target_name')
+        or (payload.get('context') or {}).get('tenpo_label'),
+        40,
+    )
+    body_label = _shrink_inline_text(
+        item.get('summary')
+        or item.get('memo')
+        or item.get('detail')
+        or item.get('work_detail')
+        or item.get('work_content')
+        or payload.get('summary')
+        or payload.get('memo')
+        or payload.get('work_detail')
+        or payload.get('work_content')
+        or payload.get('report_body')
+        or payload.get('honjitsu_seika')
+        or payload.get('result_today')
+        or payload.get('exception_note'),
+        48,
+    )
+    if body_label:
+        return body_label
+    combo = " / ".join([v for v in [store_label, service_label] if v])
+    return _shrink_inline_text(combo, 48)
 
 
 def _scan_all(table_obj, *, filter_expression=None, max_items=5000):
@@ -178,12 +242,13 @@ def _collect_recent_activity(hours=24):
         if work_date:
             extra.append(work_date)
         suffix = f"（{' / '.join(extra)}）" if extra else ''
+        preview = _report_content_preview(item)
         events.append({
             'at_ms': posted_ms,
             'at': _label_hhmm(posted_ms),
             'kind': 'work_report_submitted',
             'who': who,
-            'what': f"業務報告を提出しました{suffix}",
+            'what': f"業務報告を提出しました{suffix}{f'「{preview}」' if preview else ''}",
         })
 
     # 3) お客様チャット
@@ -205,6 +270,43 @@ def _collect_recent_activity(hours=24):
             'kind': 'customer_chat',
             'who': who,
             'what': f"お客様チャットを受信しました{preview}",
+        })
+
+    # 4) 顧客マスタ申請（admin_chat room=customer_master_approval）
+    try:
+        approval_items = _scan_all(admin_chat_table, filter_expression=Attr('room').eq(CUSTOMER_MASTER_APPROVAL_ROOM))
+    except Exception as e:
+        print(f"[activity-digest] customer_master_approval scan failed: {str(e)}")
+        approval_items = []
+    for row in approval_items:
+        at_ms = _parse_epoch_ms(row.get('created_at') or row.get('updated_at'))
+        if at_ms < since_ms or at_ms > now_ms:
+            continue
+        payload = _parse_json_like_object(row.get('data_payload'))
+        event_type = str(payload.get('event_type') or '').strip()
+        if event_type not in ('change_request', 'change_decision'):
+            continue
+        who = _pick_name(
+            payload.get('sender_name'),
+            row.get('sender_display_name'),
+            row.get('sender_name'),
+            row.get('created_by_name'),
+        )
+        summary = _shrink_inline_text(payload.get('summary') or row.get('message') or row.get('name'), 48)
+        if event_type == 'change_decision':
+            decision = str(payload.get('decision') or '').strip()
+            decision_label = '承認' if decision == 'approved' else ('却下' if decision == 'rejected' else '判定')
+            what = f"顧客マスタ申請を{decision_label}しました"
+        else:
+            what = "顧客マスタ申請を送信しました"
+        if summary:
+            what = f"{what}「{summary}」"
+        events.append({
+            'at_ms': at_ms,
+            'at': _label_hhmm(at_ms),
+            'kind': 'customer_master_approval',
+            'who': who,
+            'what': what,
         })
 
     events.sort(key=lambda x: x.get('at_ms', 0), reverse=True)

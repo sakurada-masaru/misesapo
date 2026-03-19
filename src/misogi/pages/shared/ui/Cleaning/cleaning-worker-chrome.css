@@ -77,6 +77,7 @@
 
 .app-fullscreen.cleaning-worker-app {
   padding-top: 0;
+  --cleaning-worker-topbar-offset: calc(68px + env(safe-area-inset-top));
 }
 
 .app-fullscreen.cleaning-worker-app.with-cleaning-nav-hotbar {
@@ -92,6 +93,22 @@
 .app-fullscreen.cleaning-worker-app .report-page-content,
 .app-fullscreen.cleaning-worker-app .report-page-content--full {
   margin-top: 0;
+}
+
+/* 清掃予定ページは fixed topbar と重なるため、本文開始位置を下げる */
+.app-fullscreen.cleaning-worker-app .my-yotei-page .report-page-main {
+  padding-top: var(--cleaning-worker-topbar-offset);
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+  box-sizing: border-box;
+}
+
+/* 単体表示で既存50px固定指定があるため、topbar分を確実に優先 */
+.app-fullscreen.cleaning-worker-app .my-yotei-page-single .report-page-main {
+  padding-top: var(--cleaning-worker-topbar-offset);
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+  box-sizing: border-box;
 }
 
 .cleaning-worker-tools-subbar {

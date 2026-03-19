@@ -101,6 +101,131 @@ function isTruthyFlag(value) {
     return ['1', 'true', 'yes', 'on', 'y', 'ok'].includes(raw);
 }
 
+function buildFileUrlMapsFromSoukoRows(rows) {
+    const byKey = new Map();
+    const byName = new Map();
+    asItems(rows).forEach((souko) => {
+        const files = Array.isArray(souko?.files) ? souko.files : [];
+        files.forEach((f) => {
+            const key = norm(f?.key);
+            const fileName = norm(f?.file_name);
+            const url = norm(f?.get_url || f?.url || f?.preview_url);
+            if (key && url) byKey.set(key, url);
+            if (fileName && url && !byName.has(fileName)) byName.set(fileName, url);
+        });
+    });
+    return { byKey, byName };
+}
+
+function hydratePayloadMediaUrls(value, fileUrlMaps) {
+    if (Array.isArray(value)) return value.map((v) => hydratePayloadMediaUrls(v, fileUrlMaps));
+    if (!value || typeof value !== 'object') return value;
+
+    const out = {};
+    Object.entries(value).forEach(([k, v]) => {
+        out[k] = hydratePayloadMediaUrls(v, fileUrlMaps);
+    });
+
+    const key = norm(value?.key);
+    const fileName = norm(value?.file_name || value?.name);
+    const mappedByKey = key ? norm(fileUrlMaps?.byKey?.get(key) || '') : '';
+    const mappedByName = fileName ? norm(fileUrlMaps?.byName?.get(fileName) || '') : '';
+    const direct = norm(value?.open_url || value?.get_url || value?.preview_url || value?.url || value?.src || value?.href);
+    const resolved = mappedByKey || mappedByName || direct;
+    if (resolved && (key || 'url' in value || 'preview_url' in value || 'get_url' in value || 'open_url' in value)) {
+        out.url = resolved;
+        out.open_url = resolved;
+    }
+    return out;
+}
+
+function isCleanerReportPhoto(file) {
+    const category = norm(file?.doc_category).toLowerCase();
+    return category.includes('cleaning_houkoku_photo');
+}
+
+function sortPhotoRows(rows) {
+    return [...rows].sort((a, b) => {
+        const an = Number(a?.photo_no || 0);
+        const bn = Number(b?.photo_no || 0);
+        if (an !== bn) return an - bn;
+        return String(a?.uploaded_at || '').localeCompare(String(b?.uploaded_at || ''));
+    });
+}
+
+function toPayloadPhotoItem(file) {
+    const url = norm(file?.get_url || file?.preview_url || file?.url);
+    return {
+        key: norm(file?.key),
+        file_name: norm(file?.file_name),
+        name: norm(file?.file_name || file?.name || 'photo'),
+        mime: norm(file?.content_type),
+        content_type: norm(file?.content_type),
+        size: Number(file?.size || 0) || 0,
+        uploaded_at: norm(file?.uploaded_at),
+        photo_no: Number(file?.photo_no || 0) || undefined,
+        url,
+        open_url: url,
+    };
+}
+
+function hydrateCleaningReportPhotos(payload, rows, reportKey, scheduleId) {
+    if (!payload || typeof payload !== 'object') return payload;
+    const rp = payload?.report_photos;
+    if (!rp || typeof rp !== 'object') return payload;
+
+    const matchRows = [];
+    asItems(rows).forEach((souko) => {
+        const files = Array.isArray(souko?.files) ? souko.files : [];
+        files.forEach((f) => {
+            if (!isCleanerReportPhoto(f)) return;
+            const fileReportId = norm(f?.report_id || f?.houkoku_id || f?.work_report_id || f?.id);
+            const fileScheduleId = norm(f?.schedule_id || f?.yotei_id);
+            const byReport = reportKey && fileReportId && fileReportId === reportKey;
+            const bySchedule = scheduleId && fileScheduleId && fileScheduleId === scheduleId;
+            if (!byReport && !bySchedule) return;
+            matchRows.push(f);
+        });
+    });
+    if (!matchRows.length) return payload;
+
+    const byService = {};
+    const pool = [];
+    matchRows.forEach((f) => {
+        const sid = norm(f?.service_id);
+        const bucket = norm(f?.photo_bucket);
+        if (!sid || bucket === 'pool') {
+            pool.push(f);
+            return;
+        }
+        if (!byService[sid]) byService[sid] = { before: [], after: [], work: [] };
+        if (bucket === 'before' || bucket === 'after' || bucket === 'work') {
+            byService[sid][bucket].push(f);
+        } else {
+            byService[sid].work.push(f);
+        }
+    });
+
+    const nextByService = { ...(rp?.by_service && typeof rp.by_service === 'object' ? rp.by_service : {}) };
+    Object.entries(byService).forEach(([sid, buckets]) => {
+        nextByService[sid] = {
+            before: sortPhotoRows(buckets.before).map(toPayloadPhotoItem),
+            after: sortPhotoRows(buckets.after).map(toPayloadPhotoItem),
+            work: sortPhotoRows(buckets.work).map(toPayloadPhotoItem),
+        };
+    });
+    const nextPool = pool.length ? sortPhotoRows(pool).map(toPayloadPhotoItem) : (Array.isArray(rp?.pool) ? rp.pool : []);
+
+    return {
+        ...payload,
+        report_photos: {
+            ...rp,
+            pool: nextPool,
+            by_service: nextByService,
+        },
+    };
+}
+
 const AdminHoukokuDetailPage = () => {
     const { reportId } = useParams();
     const [report, setReport] = useState(null);
@@ -120,6 +245,7 @@ const AdminHoukokuDetailPage = () => {
     });
     const [publishMessage, setPublishMessage] = useState('');
     const [publishError, setPublishError] = useState('');
+    const [hydratedPayload, setHydratedPayload] = useState(null);
     const { getToken } = useAuth();
 
     useEffect(() => {
@@ -165,6 +291,7 @@ const AdminHoukokuDetailPage = () => {
                 const token = getToken() || localStorage.getItem('cognito_id_token');
                 const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
                 const payload = pickPayload(report);
+                setHydratedPayload(payload);
                 const tenpoId = pickTenpoId(report, payload);
                 const reportKey = pickReportKey(report);
                 const scheduleId = pickScheduleId(report, payload);
@@ -191,6 +318,10 @@ const AdminHoukokuDetailPage = () => {
                     throw new Error(`公開状態の確認に失敗しました (${res.status}) ${text}`.trim());
                 }
                 const rows = asItems(await res.json());
+                const fileUrlMaps = buildFileUrlMapsFromSoukoRows(rows);
+                let nextPayload = hydratePayloadMediaUrls(payload, fileUrlMaps);
+                nextPayload = hydrateCleaningReportPhotos(nextPayload, rows, reportKey, scheduleId);
+                if (mounted) setHydratedPayload(nextPayload);
                 let matched = null;
                 rows.some((souko) => {
                     const files = Array.isArray(souko?.files) ? souko.files : [];
@@ -315,13 +446,15 @@ const AdminHoukokuDetailPage = () => {
     if (!report) return <Container><Message>報告が見つかりません。</Message></Container>;
 
     // payload が文字列(JSON)で返ることがあるので吸収（管理側は内容が最重要）
-    const payload = coercePayloadObject(
-        report?.payload ??
-        report?.payload_json ??
-        report?.payloadJson ??
-        report?.body ??
-        report?.data
-    );
+    const payload = (hydratedPayload && typeof hydratedPayload === 'object')
+        ? hydratedPayload
+        : coercePayloadObject(
+            report?.payload ??
+            report?.payload_json ??
+            report?.payloadJson ??
+            report?.body ??
+            report?.data
+        );
 
     // template_id からテンプレートを取得（後方互換: templateId/template/payload.template_id）
     const templateId =
@@ -332,6 +465,8 @@ const AdminHoukokuDetailPage = () => {
         payload?.templateId ||
         payload?.template ||
         null;
+    const isCleaningReport = String(templateId || '').startsWith('CLEAN_') || String(templateId || '').startsWith('CLEANING_');
+    const reportKeyForEdit = pickReportKey(report) || String(reportId || '').trim();
     const template = templateId ? getTemplateById(templateId) : null;
 
     // header/overview も型ガード（後方互換fallback用）
@@ -378,6 +513,11 @@ const AdminHoukokuDetailPage = () => {
             <TopBar>
                 <BackButton to="/admin/houkoku"><i className="fas fa-chevron-left"></i> 戻る</BackButton>
                 <Actions>
+                    {isCleaningReport && reportKeyForEdit ? (
+                        <Link className="btn-edit" to={`/admin/tools/cleaning-houkoku?report_id=${encodeURIComponent(reportKeyForEdit)}`}>
+                            <i className="fas fa-pen"></i> 修正
+                        </Link>
+                    ) : null}
                     <button
                         type="button"
                         className={customerPublish.visible ? 'btn-published' : 'btn-hidden'}
@@ -511,9 +651,15 @@ const AdminHoukokuDetailPage = () => {
                                                 <SectionTitle>5. 作業写真</SectionTitle>
                                                 <PhotoSection>
                                                     <PhotoGrid>
-                                                        {attachments.map((img, i) => (
-                                                            <PhotoItem key={i} href={img.url} target="_blank"><img src={img.url} alt="Before" /></PhotoItem>
-                                                        ))}
+                                                        {attachments.map((img, i) => {
+                                                            const imageUrl = norm(img?.url || img?.open_url || img?.get_url || img?.preview_url || img?.src || img);
+                                                            if (!imageUrl) return null;
+                                                            return (
+                                                                <PhotoItem key={i} href={imageUrl} target="_blank">
+                                                                    <img src={imageUrl} alt="Before" />
+                                                                </PhotoItem>
+                                                            );
+                                                        })}
                                                     </PhotoGrid>
                                                 </PhotoSection>
                                             </Section>
@@ -584,6 +730,20 @@ const Actions = styled.div`
             opacity: 0.6;
             cursor: not-allowed;
         }
+    }
+    .btn-edit {
+        text-decoration: none;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        color: #9a3412;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        &:hover { background: #9a3412; color: #fff; border-color: #9a3412; }
     }
     .btn-published {
         border-color: #10b981;

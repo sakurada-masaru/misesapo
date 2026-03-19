@@ -4395,6 +4395,14 @@ export default function AdminTenpoKartePage({ mode = 'admin' }) {
                         {f.open_url ? (
                           <a className="link" href={f.open_url} target="_blank" rel="noreferrer">開く</a>
                         ) : null}
+                        {!isSalesMode && f.is_cleaning_report_pdf && String(f.report_id || '').trim() ? (
+                          <Link
+                            className="report-edit-link"
+                            to={`/admin/tools/cleaning-houkoku?report_id=${encodeURIComponent(String(f.report_id).trim())}&tenpo_id=${encodeURIComponent(String(tenpoId || f.tenpo_id || '').trim())}`}
+                          >
+                            報告を修正
+                          </Link>
+                        ) : null}
                         {!isSalesMode ? (
                           <label className="report-publish-check">
                             <input

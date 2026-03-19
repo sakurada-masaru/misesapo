@@ -126,6 +126,22 @@ function uniqStrings(list) {
     return Array.from(new Set(a.map((v) => String(v || '').trim()).filter(Boolean)));
 }
 
+function normalizeIdentityToken(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function collectIdentityTokens(...values) {
+    const out = [];
+    values.forEach((value) => {
+        if (Array.isArray(value)) {
+            value.forEach((v) => out.push(normalizeIdentityToken(v)));
+        } else {
+            out.push(normalizeIdentityToken(value));
+        }
+    });
+    return Array.from(new Set(out.filter(Boolean)));
+}
+
 function parseKadaiIds(value) {
     return uniqStrings(
         String(value || '')
@@ -164,6 +180,46 @@ function formatMinutes(totalMin) {
     if (hh <= 0) return `${mm}分`;
     if (mm <= 0) return `${hh}時間`;
     return `${hh}時間${mm}分`;
+}
+
+function monthBounds(yyyyMm) {
+    const v = String(yyyyMm || '').trim();
+    const m = v.match(/^(\d{4})-(\d{2})$/);
+    if (!m) return null;
+    const y = Number(m[1]);
+    const mm = Number(m[2]);
+    if (!Number.isFinite(y) || !Number.isFinite(mm) || mm < 1 || mm > 12) return null;
+    const start = new Date(y, mm - 1, 1);
+    const end = new Date(y, mm, 0);
+    const pad = (n) => String(n).padStart(2, '0');
+    const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    return { from: fmt(start), to: fmt(end) };
+}
+
+function currentMonthValue() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function toItems(data) {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.rows)) return data.rows;
+    return [];
+}
+
+function listDatesInRange(from, to) {
+    const out = [];
+    const start = new Date(`${from}T00:00:00`);
+    const end = new Date(`${to}T00:00:00`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return out;
+    const cur = new Date(start.getTime());
+    const pad = (n) => String(n).padStart(2, '0');
+    while (cur <= end) {
+        out.push(`${cur.getFullYear()}-${pad(cur.getMonth() + 1)}-${pad(cur.getDate())}`);
+        cur.setDate(cur.getDate() + 1);
+    }
+    return out;
 }
 
 function serializeStoreReport(store) {
@@ -314,6 +370,10 @@ export default function AdminReportNewPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [statusMessage, setStatusMessage] = useState(null); // {type: 'success' | 'error', text: string }
     const [saveError, setSaveError] = useState('');
+    const [historyMonth, setHistoryMonth] = useState(currentMonthValue);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState('');
+    const [historyRows, setHistoryRows] = useState([]);
 
     // --- State: Service Master Modal ---
     const [showServiceModal, setShowServiceModal] = useState(false);
@@ -524,6 +584,140 @@ export default function AdminReportNewPage() {
         }
         navigate(nextPath);
     }, [navigate]);
+
+    const salesHistoryIdentityTokens = useMemo(
+        () => collectIdentityTokens(
+            authz?.workerId,
+            authz?.jinzaiId,
+            user?.id,
+            user?.sub,
+            user?.username,
+            user?.email,
+            user?.worker_id,
+            user?.jinzai_id,
+            user?.sagyouin_id
+        ),
+        [authz?.jinzaiId, authz?.workerId, user?.email, user?.id, user?.jinzai_id, user?.sagyouin_id, user?.sub, user?.username, user?.worker_id]
+    );
+
+    const salesHistoryNameTokens = useMemo(
+        () => collectIdentityTokens(
+            user?.name,
+            user?.displayName,
+            user?.username,
+            user?.email
+        ),
+        [user?.displayName, user?.email, user?.name, user?.username]
+    );
+
+    const isSalesTemplateHistoryItem = useCallback((item) => {
+        const templateId = String(item?.template_id || '').trim().toUpperCase();
+        if (!templateId) return false;
+        return templateId === String(TEMPLATE_SALES).toUpperCase() || templateId.startsWith('SALES_');
+    }, []);
+
+    const loadSalesReportHistory = useCallback(async () => {
+        const bounds = monthBounds(historyMonth);
+        if (!bounds) {
+            setHistoryError('対象月の形式が不正です');
+            setHistoryRows([]);
+            return;
+        }
+        setHistoryLoading(true);
+        setHistoryError('');
+        try {
+            const token = getToken() || localStorage.getItem('cognito_id_token');
+            const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
+            const wrData = await apiFetchWorkReport(`/work-report?date_from=${encodeURIComponent(bounds.from)}&date_to=${encodeURIComponent(bounds.to)}`, { headers });
+            let items = toItems(wrData)
+                .filter(isSalesTemplateHistoryItem)
+                .sort((a, b) => String(b?.work_date || '').localeCompare(String(a?.work_date || '')));
+
+            // 互換フォールバック:
+            // 旧営業報告は /houkoku テーブルに保存されているため、
+            // work-report が空の場合は /houkoku?date=YYYY-MM-DD を月内日次で収集する。
+            if (items.length === 0) {
+                const dates = listDatesInRange(bounds.from, bounds.to);
+                const daily = await Promise.all(
+                    dates.map(async (d) => {
+                        try {
+                            const res = await apiFetchWorkReport(`/houkoku?date=${encodeURIComponent(d)}`, { headers });
+                            return toItems(res);
+                        } catch {
+                            return [];
+                        }
+                    })
+                );
+                const legacyItems = daily
+                    .flat()
+                    .filter(isSalesTemplateHistoryItem)
+                    .filter((it) => {
+                        if (!salesHistoryIdentityTokens.length && !salesHistoryNameTokens.length) return true;
+                        const payloadRaw = it?.payload;
+                        let payload = {};
+                        if (payloadRaw && typeof payloadRaw === 'object') {
+                            payload = payloadRaw;
+                        } else if (typeof payloadRaw === 'string') {
+                            try {
+                                const parsed = JSON.parse(payloadRaw);
+                                if (parsed && typeof parsed === 'object') payload = parsed;
+                            } catch (_) {
+                                payload = {};
+                            }
+                        }
+                        const ownerIds = collectIdentityTokens(
+                            it?.user_id,
+                            it?.worker_id,
+                            it?.sagyouin_id,
+                            it?.created_by,
+                            it?.submitted_by,
+                            it?.userId,
+                            payload?.user_id,
+                            payload?.worker_id,
+                            payload?.sagyouin_id,
+                            payload?.created_by,
+                            payload?.submitted_by
+                        );
+                        if (ownerIds.length > 0) {
+                            return ownerIds.some((id) => salesHistoryIdentityTokens.includes(id));
+                        }
+                        const ownerName = normalizeIdentityToken(
+                            it?.user_name ||
+                            it?.worker_name ||
+                            it?.sagyouin_name ||
+                            it?.created_by_name ||
+                            it?.submitted_by_name ||
+                            payload?.user_name ||
+                            payload?.worker_name ||
+                            payload?.sagyouin_name
+                        );
+                        if (!ownerName) return false;
+                        return salesHistoryNameTokens.includes(ownerName);
+                    })
+                    .map((it) => ({
+                        ...it,
+                        work_date: String(it?.work_date || '').trim(),
+                        state: String(it?.state || 'submitted').trim(),
+                        version: Number(it?.version || 1),
+                        legacy_source: 'houkoku',
+                    }))
+                    .sort((a, b) => String(b?.work_date || '').localeCompare(String(a?.work_date || '')));
+                items = legacyItems;
+            }
+            setHistoryRows(items);
+        } catch (e) {
+            setHistoryError(e?.message || '過去の業務報告取得に失敗しました');
+            setHistoryRows([]);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [getToken, historyMonth, isSalesTemplateHistoryItem, salesHistoryIdentityTokens, salesHistoryNameTokens]);
+
+    useEffect(() => {
+        if (activeTemplate !== TEMPLATE_SALES) return;
+        if (authLoading || !isAuthenticated) return;
+        loadSalesReportHistory();
+    }, [activeTemplate, authLoading, isAuthenticated, loadSalesReportHistory]);
 
     if (authLoading) return <div style={{ padding: 40, textAlign: 'center', color: '#493628' }}>読み込み中...</div>;
 
@@ -1191,6 +1385,60 @@ export default function AdminReportNewPage() {
                                 <ActionButton $variant="primary" style={{ flex: 1 }} onClick={() => setShowPreview(true)} disabled={isSaving}>プレビュー</ActionButton>
                                 <ActionButton $variant="secondary" onClick={handleReset}>リセット</ActionButton>
                             </ButtonRow>
+                            <SalesHistorySection>
+                                <SalesHistoryHeader>
+                                    <CardTitle style={{ margin: 0, fontSize: '1rem' }}>過去の業務報告</CardTitle>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <Input
+                                            type="month"
+                                            value={historyMonth}
+                                            onChange={(e) => setHistoryMonth(String(e.target.value || '').trim() || currentMonthValue())}
+                                            style={{ width: 150, height: 36 }}
+                                        />
+                                        <ActionButton
+                                            type="button"
+                                            $variant="secondary"
+                                            style={{ height: 36, padding: '0 12px', borderRadius: 10 }}
+                                            onClick={loadSalesReportHistory}
+                                            disabled={historyLoading}
+                                        >
+                                            {historyLoading ? '更新中...' : '更新'}
+                                        </ActionButton>
+                                    </div>
+                                </SalesHistoryHeader>
+                                {historyError ? (
+                                    <SalesHistoryError>{historyError}</SalesHistoryError>
+                                ) : null}
+                                {historyLoading ? (
+                                    <SalesHistoryEmpty>読み込み中...</SalesHistoryEmpty>
+                                ) : historyRows.length === 0 ? (
+                                    <SalesHistoryEmpty>該当月の業務報告はありません。</SalesHistoryEmpty>
+                                ) : (
+                                    <SalesHistoryList>
+                                        {historyRows.map((row) => (
+                                            <SalesHistoryItem key={row.log_id || row.id || `${row.work_date}-${row.version}`}>
+                                                <div className="meta">
+                                                    <span className="date">{row.work_date || '-'}</span>
+                                                    <span className={`state state-${String(row.state || '').toLowerCase()}`}>{row.state || '-'}</span>
+                                                    <span className="version">v{Number(row.version || 1)}</span>
+                                                </div>
+                                                <div className="actions">
+                                                    {row.log_id ? (
+                                                        <ActionButton
+                                                            type="button"
+                                                            $variant="primary"
+                                                            style={{ height: 30, padding: '0 10px', borderRadius: 10, fontSize: '0.8rem' }}
+                                                            onClick={() => navigate(`/sales/work-reports/${encodeURIComponent(row.log_id)}`)}
+                                                        >
+                                                            詳細
+                                                        </ActionButton>
+                                                    ) : null}
+                                                </div>
+                                            </SalesHistoryItem>
+                                        ))}
+                                    </SalesHistoryList>
+                                )}
+                            </SalesHistorySection>
                         </Card>
                     )
                 }
@@ -1576,6 +1824,90 @@ const UploadZone = styled.div` border: 2px dashed #ffbdbd; background: #fffaf8; 
 const AttachmentList = styled.div` display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; margin-top: 12px; `;
 const AttachmentCard = styled.div` position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; img {width: 100%; height: 100%; object-fit: cover; } `;
 const RemoveBtn = styled.button` position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; `;
+const SalesHistorySection = styled.section`
+    margin-top: 18px;
+    border-top: 1px solid #ffe2e2;
+    padding-top: 14px;
+`;
+const SalesHistoryHeader = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+`;
+const SalesHistoryError = styled.div`
+    border: 1px solid #ffa4a4;
+    background: #fff1f1;
+    color: #7f1d1d;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+`;
+const SalesHistoryEmpty = styled.div`
+    border: 1px dashed #ffbdbd;
+    background: #fff;
+    color: #7a6155;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.85rem;
+`;
+const SalesHistoryList = styled.div`
+    display: grid;
+    gap: 8px;
+`;
+const SalesHistoryItem = styled.div`
+    border: 1px solid #ffdbdb;
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    .meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+    .date {
+        font-weight: 700;
+        color: #493628;
+        font-size: 0.9rem;
+    }
+    .version {
+        font-size: 0.75rem;
+        color: #7a6155;
+    }
+    .state {
+        font-size: 0.75rem;
+        border-radius: 999px;
+        padding: 2px 8px;
+        border: 1px solid #ffbdbd;
+        color: #7a6155;
+        background: #fff8f8;
+    }
+    .state-submitted {
+        border-color: #badfdb;
+        background: #ecfbf9;
+        color: #22544e;
+    }
+    .state-approved {
+        border-color: #9ed7d1;
+        background: #e8fbf8;
+        color: #1f4f4a;
+    }
+    .state-rejected {
+        border-color: #ffa4a4;
+        background: #fff0f0;
+        color: #7f1d1d;
+    }
+`;
 
 const Checkbox = styled.input`
                 width: 20px;
