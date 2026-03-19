@@ -14,7 +14,7 @@ import './hamburger-menu.css';
  */
 const MENU_LINKS = [
   { to: '/', label: 'Portal（トップ）', dept: 'ANY' },
-  { to: '/jobs/sales/entrance', label: '営業 / コンシェルジュ', dept: 'SALES' },
+  { to: '/jobs/sales/entrance', label: '営業', dept: 'SALES' },
   { to: '/jobs/cleaning/entrance', label: '清掃', dept: 'CLEANING' },
   { to: '/jobs/office/entrance', label: '事務', dept: 'OFFICE' },
   { to: '/jobs/dev/entrance', label: '開発', dept: 'ENGINEERING' },

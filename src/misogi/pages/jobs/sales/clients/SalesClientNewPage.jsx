@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTransition';
 import Visualizer from '../../../shared/ui/Visualizer/Visualizer';
 import { normalizeGatewayBase, YOTEI_GATEWAY } from '../../../shared/api/gatewayBase';
+import { useAuth } from '../../../shared/auth/useAuth';
 import '../../../shared/styles/components.css';
+import './sales-client-pages.css';
 
 /**
  * 顧客登録ページ (スマホ特化レイアウト)
@@ -11,7 +13,10 @@ import '../../../shared/styles/components.css';
 export default function SalesClientNewPage() {
     const navigate = useNavigate();
     const { startTransition } = useFlashTransition();
+    const { getToken, user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+    const [copyDone, setCopyDone] = useState(false);
     const [successData, setSuccessData] = useState(null); // { inviteLink: string }
     const [formData, setFormData] = useState({
         company_name: '',
@@ -32,6 +37,23 @@ export default function SalesClientNewPage() {
         return normalizeGatewayBase(import.meta.env?.VITE_API_BASE, YOTEI_GATEWAY);
     })();
 
+    const actorName = useMemo(() => {
+        const fromUser = String(
+            user?.name
+            || user?.displayName
+            || user?.nickname
+            || user?.username
+            || ''
+        ).trim();
+        if (fromUser) return fromUser;
+        try {
+            const auth = JSON.parse(localStorage.getItem('misesapo_auth') || '{}');
+            return String(auth?.name || auth?.email || '').trim();
+        } catch {
+            return '';
+        }
+    }, [user]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -39,6 +61,7 @@ export default function SalesClientNewPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitError('');
         setIsSubmitting(true);
 
         const leadData = {
@@ -50,15 +73,15 @@ export default function SalesClientNewPage() {
             lead_status: formData.lead_status,
             probability: formData.probability,
             notes: formData.notes,
-            sales_rep: '正田和輝',
+            sales_rep: actorName || '営業担当',
             registration_type: 'sales_lead',
             status: 'pending_customer_info',
             created_at: new Date().toISOString()
         };
 
         try {
-            const token = localStorage.getItem('cognito_id_token') ||
-                JSON.parse(localStorage.getItem('misesapo_auth') || '{}').token;
+            const token = getToken?.();
+            if (!token) throw new Error('認証トークンを取得できません。再ログインしてください。');
 
             const response = await fetch(`${API_BASE}/stores`, {
                 method: 'POST',
@@ -73,134 +96,114 @@ export default function SalesClientNewPage() {
                 const result = await response.json();
                 const inviteLink = `${window.location.origin}/misogi/#/registration/onboarding/${result.id}`;
                 setSuccessData({ inviteLink });
-                // startTransition('/jobs/sales/entrance'); // 自動遷移させず成功画面を見せる
             } else {
-                throw new Error('登録に失敗しました');
+                const text = await response.text().catch(() => '');
+                throw new Error(`登録に失敗しました (${response.status}) ${text}`.trim());
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('登録に失敗しました。');
+            setSubmitError(error?.message || '登録に失敗しました。');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="report-page" data-job="sales">
+        <div className="report-page sales-client-new-page" data-job="sales">
             <div className="report-page-viz">
                 <Visualizer mode="base" className="report-page-visualizer" />
             </div>
 
-            <div className="report-page-content">
-                {/* ヘッダー・戻るボタン */}
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+            <div className="report-page-content sales-client-new-content">
+                <div className="sales-client-new-head">
                     <button
+                        type="button"
                         onClick={() => startTransition('/jobs/sales/entrance')}
-                        style={{
-                            background: 'rgba(255,255,255,0.08)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: 'var(--fg)',
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '1.2rem',
-                            marginRight: '12px'
-                        }}
+                        className="sales-client-new-back"
+                        aria-label="営業エントランスへ戻る"
                     >
                         ←
                     </button>
-                    <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 600 }}>顧客登録</h1>
+                    <div className="sales-client-new-title-wrap">
+                        <h1 className="sales-client-new-title">顧客登録申請</h1>
+                        <p className="sales-client-new-sub">営業担当が顧客情報を入力し、申請を送信します。</p>
+                    </div>
                     <button
                         type="button"
                         onClick={() => navigate('/sales/clients/list')}
-                        style={{
-                            marginLeft: 'auto',
-                            padding: '8px 16px',
-                            fontSize: '0.8rem',
-                            background: 'var(--job-sales)',
-                            border: 'none',
-                            borderRadius: '8px',
-                            color: '#fff',
-                            cursor: 'pointer',
-                            fontWeight: 600
-                        }}
+                        className="sales-client-new-link-btn"
                     >
                         一覧
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="report-page-form">
-                    <div className="report-page-field">
-                        <label style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '8px' }}>会社名・屋号 *</label>
-                        <textarea
+                <form onSubmit={handleSubmit} className="report-page-form sales-client-new-form">
+                    <div className="report-page-field sales-client-new-field">
+                        <label>1. 会社名・屋号 *</label>
+                        <input
                             name="company_name"
-                            rows="1"
+                            type="text"
                             required
                             placeholder="例: 株式会社 Dart Ace"
                             value={formData.company_name}
                             onChange={handleChange}
-                            style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}
                         />
                     </div>
 
-                    <div className="report-page-field">
-                        <label style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '8px' }}>店舗名 *</label>
-                        <textarea
+                    <div className="report-page-field sales-client-new-field">
+                        <label>2. 店舗名 *</label>
+                        <input
                             name="store_name"
-                            rows="1"
+                            type="text"
                             required
                             placeholder="例: 日本橋茅場町店"
                             value={formData.store_name}
                             onChange={handleChange}
-                            style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}
                         />
                     </div>
 
-                    <div className="report-page-field">
-                        <label style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '8px' }}>電話番号 *</label>
-                        <textarea
+                    <div className="report-page-field sales-client-new-field">
+                        <label>3. 担当者名 *</label>
+                        <input
+                            name="contact_person"
+                            type="text"
+                            required
+                            placeholder="例: 山田 太郎"
+                            value={formData.contact_person}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <div className="report-page-field sales-client-new-field">
+                        <label>4. 電話番号 *</label>
+                        <input
                             name="phone"
-                            rows="1"
+                            type="tel"
                             required
                             placeholder="03-1234-5678"
                             value={formData.phone}
                             onChange={handleChange}
-                            style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}
                         />
                     </div>
 
-                    <div className="report-page-field">
-                        <label style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '8px' }}>メールアドレス *</label>
-                        <textarea
+                    <div className="report-page-field sales-client-new-field">
+                        <label>5. メールアドレス *</label>
+                        <input
                             name="email"
-                            rows="1"
+                            type="email"
                             required
                             placeholder="info@example.com"
                             value={formData.email}
                             onChange={handleChange}
-                            style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}
                         />
                     </div>
 
-                    <div className="form-actions" style={{ marginTop: '32px' }}>
+                    {submitError ? <p className="sales-client-new-error">{submitError}</p> : null}
+
+                    <div className="form-actions sales-client-new-actions">
                         <button
                             type="submit"
-                            style={{
-                                width: '100%',
-                                padding: '14px',
-                                background: 'var(--job-sales)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '12px',
-                                fontSize: '1rem',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 12px var(--job-sales-glow)'
-                            }}
+                            className="sales-client-new-submit"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? '登録中...' : '登録して招待リンクを送信'}
@@ -208,65 +211,45 @@ export default function SalesClientNewPage() {
                     </div>
                 </form>
 
-                <p style={{ textAlign: 'center', marginTop: '40px', paddingBottom: '40px' }}>
+                <p className="sales-client-new-cancel">
                     <a
                         href="#"
                         onClick={(e) => { e.preventDefault(); startTransition('/jobs/sales/entrance'); }}
-                        style={{ color: 'var(--job-sales)', fontSize: '0.85rem', textDecoration: 'none', opacity: 0.6 }}
                     >
                         キャンセルして戻る
                     </a>
                 </p>
             </div>
 
-            {/* 成功モーダル */}
             {successData && (
-                <div style={{
-                    position: 'fixed', inset: 0, zIndex: 1000,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(0,0,0,0.8)', padding: '20px'
-                }}>
-                    <div style={{
-                        background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '24px', padding: '32px', maxWidth: '480px', width: '100%',
-                        textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-                    }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🎉</div>
-                        <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>リード登録完了</h2>
-                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '24px' }}>
+                <div className="sales-client-new-modal-backdrop">
+                    <div className="sales-client-new-modal">
+                        <div className="sales-client-new-modal-icon">✓</div>
+                        <h2>リード登録完了</h2>
+                        <p className="sales-client-new-modal-sub">
                             リードの登録が完了しました。<br />以下の招待リンクをお客様へお送りください。
                         </p>
 
-                        <div style={{
-                            background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '12px',
-                            border: '1px solid rgba(255,255,255,0.1)', wordBreak: 'break-all',
-                            fontSize: '0.8rem', textAlign: 'left', marginBottom: '20px',
-                            color: 'var(--job-sales)', fontWeight: 600
-                        }}>
+                        <div className="sales-client-new-invite-url">
                             {successData.inviteLink}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '12px' }}>
+                        <div className="sales-client-new-modal-actions">
                             <button
+                                type="button"
                                 onClick={() => {
                                     navigator.clipboard.writeText(successData.inviteLink);
-                                    alert('リンクをコピーしました');
+                                    setCopyDone(true);
+                                    window.setTimeout(() => setCopyDone(false), 1600);
                                 }}
-                                style={{
-                                    flex: 1, padding: '12px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.05)', color: '#fff',
-                                    border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer'
-                                }}
+                                className="sales-client-new-modal-btn"
                             >
-                                リンクをコピー
+                                {copyDone ? 'コピー済み' : 'リンクをコピー'}
                             </button>
                             <button
+                                type="button"
                                 onClick={() => startTransition('/jobs/sales/entrance')}
-                                style={{
-                                    flex: 1, padding: '12px', borderRadius: '12px',
-                                    background: 'var(--job-sales)', color: '#fff',
-                                    border: 'none', cursor: 'pointer', fontWeight: 600
-                                }}
+                                className="sales-client-new-modal-btn primary"
                             >
                                 完了
                             </button>

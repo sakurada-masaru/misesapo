@@ -13,7 +13,7 @@
  * - photos: 写真グループ
  * 
  * 対応するfield.type:
- * - text, number, date, textarea, radio, checkbox_group
+ * - text, number, date, time, textarea, radio, checkbox_group
  */
 
 import React from 'react';
@@ -438,6 +438,27 @@ const FieldInput = ({ field, payload, onChange, mode }) => {
                         id={inputId}
                         name={field.key}
                         type="date"
+                        value={value || ''}
+                        onChange={(e) => onChange(field.key, e.target.value)}
+                        $mode={mode}
+                    />
+                ) : (
+                    <FieldValue>{value || '—'}</FieldValue>
+                )}
+            </FieldRow>
+        );
+    }
+
+    // time の場合
+    if (field.type === 'time') {
+        return (
+            <FieldRow $layout={layout} $mode={mode}>
+                <FieldLabel as="label" $mode={mode} htmlFor={inputId} $required={isRequired}>{field.label}</FieldLabel>
+                {isEdit ? (
+                    <TimeInput
+                        id={inputId}
+                        name={field.key}
+                        type="time"
                         value={value || ''}
                         onChange={(e) => onChange(field.key, e.target.value)}
                         $mode={mode}
@@ -1029,6 +1050,21 @@ const DateInput = styled(TextInput)`
     &::-webkit-calendar-picker-indicator {
         position: absolute;
         right: 12px;
+        filter: ${props => props.$mode === 'edit' ? 'var(--tr-edit-picker-filter)' : 'invert(0)'};
+        cursor: pointer;
+    }
+`;
+
+const TimeInput = styled(TextInput)`
+    &[type="time"] {
+        appearance: none;
+        -webkit-appearance: none;
+        color-scheme: ${props => props.$mode === 'edit' ? 'light dark' : 'light'};
+        background: var(--tr-edit-card-strong);
+        color: var(--tr-edit-fg);
+        min-height: 48px;
+    }
+    &::-webkit-calendar-picker-indicator {
         filter: ${props => props.$mode === 'edit' ? 'var(--tr-edit-picker-filter)' : 'invert(0)'};
         cursor: pointer;
     }

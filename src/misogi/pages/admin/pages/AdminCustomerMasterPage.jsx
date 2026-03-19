@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './admin-master.css';
 import Hotbar from '../../shared/ui/Hotbar/Hotbar';
@@ -23,6 +23,7 @@ const REQUEST_ACTION_LABELS = {
   create_torihikisaki: '顧客/取引先追加申請',
   create_yagou: '屋号追加申請',
   create_tenpo: '店舗追加申請',
+  create_customer_bundle: '顧客登録申請',
   delete_rows: '削除申請',
 };
 
@@ -231,6 +232,12 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
     tenpo_torihikisaki_id: '',
     tenpo_yagou_id: '',
   });
+  const [salesCreateStep, setSalesCreateStep] = useState(1);
+  const [salesCustomerType, setSalesCustomerType] = useState('');
+  const [salesExistingTorihikisakiId, setSalesExistingTorihikisakiId] = useState('');
+  const [salesExistingSearch, setSalesExistingSearch] = useState('');
+  const [salesPendingOpen, setSalesPendingOpen] = useState(false);
+  const createSectionRef = useRef(null);
   const [requestEvents, setRequestEvents] = useState([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [requestActingId, setRequestActingId] = useState('');
@@ -706,6 +713,41 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
     [torihikisakiOptions]
   );
 
+  const salesExistingSearchTextByTorihikisakiId = useMemo(() => {
+    const map = new Map();
+    rows.forEach((row) => {
+      const toriId = norm(row.torihikisaki_id);
+      if (!toriId) return;
+      const base = map.get(toriId) || [];
+      base.push(
+        norm(row.kokyaku_name),
+        norm(row.torihikisaki_name),
+        norm(row.yagou_name),
+        norm(row.tenpo_name),
+        norm(row.torihikisaki_id),
+        norm(row.yagou_id),
+        norm(row.tenpo_id),
+      );
+      map.set(toriId, base);
+    });
+    const compacted = new Map();
+    map.forEach((parts, toriId) => {
+      const text = parts.filter(Boolean).join(' ').toLowerCase();
+      compacted.set(toriId, text);
+    });
+    return compacted;
+  }, [rows]);
+
+  const filteredSalesTorihikisakiOptions = useMemo(() => {
+    const q = norm(salesExistingSearch).toLowerCase();
+    if (!q) return torihikisakiOptions;
+    return torihikisakiOptions.filter((it) => {
+      const quickText = `${norm(it.id)} ${norm(it.name)} ${norm(it.kokyaku_name)}`.toLowerCase();
+      if (quickText.includes(q)) return true;
+      return String(salesExistingSearchTextByTorihikisakiId.get(norm(it.id)) || '').includes(q);
+    });
+  }, [salesExistingSearch, salesExistingSearchTextByTorihikisakiId, torihikisakiOptions]);
+
   const yagouOptions = useMemo(() => {
     const map = new Map();
     rows.forEach((row) => {
@@ -726,6 +768,34 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
     () => new Map(yagouOptions.map((it) => [it.id, it])),
     [yagouOptions]
   );
+
+  const selectedSalesTorihikisaki = useMemo(
+    () => torihikisakiById.get(norm(salesExistingTorihikisakiId)) || null,
+    [salesExistingTorihikisakiId, torihikisakiById]
+  );
+
+  const salesTorihikisakiBaseName = useMemo(() => {
+    if (salesCustomerType === 'existing') {
+      return norm(selectedSalesTorihikisaki?.name || '');
+    }
+    return norm(createDraft.kokyaku_name || createDraft.torihikisaki_name);
+  }, [createDraft.kokyaku_name, createDraft.torihikisaki_name, salesCustomerType, selectedSalesTorihikisaki]);
+
+  const resetSalesCreateWizard = useCallback(() => {
+    setSalesCreateStep(1);
+    setSalesCustomerType('');
+    setSalesExistingTorihikisakiId('');
+    setSalesExistingSearch('');
+    setCreateDraft({
+      kokyaku_name: '',
+      torihikisaki_name: '',
+      yagou_name: '',
+      yagou_torihikisaki_id: '',
+      tenpo_name: '',
+      tenpo_torihikisaki_id: '',
+      tenpo_yagou_id: '',
+    });
+  }, []);
 
   const applyRowUpdate = useCallback(async ({ before, after, actor }) => {
     const origin = before || {};
@@ -924,10 +994,11 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
 
   const createTorihikisaki = useCallback(async () => {
     const kokyakuId = nextIdPreview.kokyaku;
-    const kokyakuName = norm(createDraft.kokyaku_name);
-    const torihikisakiName = norm(createDraft.torihikisaki_name || kokyakuName);
-    if (!torihikisakiName) {
-      setError('顧客名または取引先名を入力してください');
+    const baseName = norm(createDraft.kokyaku_name || createDraft.torihikisaki_name);
+    const kokyakuName = baseName;
+    const torihikisakiName = baseName;
+    if (!baseName) {
+      setError('顧客名を入力してください');
       return;
     }
     setCreatingKind('torihikisaki');
@@ -1061,6 +1132,92 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
     }
   }, [createDraft.tenpo_name, createDraft.tenpo_torihikisaki_id, createDraft.tenpo_yagou_id, isSalesMode, loadAll, loadRequests, postMasterChangeRequest, yagouById]);
 
+  const submitSalesBundleRequest = useCallback(async () => {
+    if (!isSalesMode) return;
+    const mode = norm(salesCustomerType);
+    const yagouName = norm(createDraft.yagou_name);
+    const tenpoName = norm(createDraft.tenpo_name);
+
+    if (mode !== 'new' && mode !== 'existing') {
+      setError('最初に「新規顧客 / 既存顧客」を選択してください');
+      return;
+    }
+    if (!yagouName) {
+      setError('屋号名を入力してください');
+      return;
+    }
+    if (!tenpoName) {
+      setError('店舗名を入力してください');
+      return;
+    }
+
+    let torihikisakiId = '';
+    let torihikisakiName = '';
+    let kokyakuName = '';
+
+    if (mode === 'new') {
+      const baseName = norm(createDraft.kokyaku_name || createDraft.torihikisaki_name);
+      if (!baseName) {
+        setError('顧客名を入力してください');
+        return;
+      }
+      torihikisakiName = baseName;
+      kokyakuName = baseName;
+    } else {
+      torihikisakiId = norm(salesExistingTorihikisakiId);
+      if (!torihikisakiId) {
+        setError('既存の取引先を選択してください');
+        return;
+      }
+      const picked = torihikisakiById.get(torihikisakiId);
+      torihikisakiName = norm(picked?.name || '');
+      kokyakuName = norm(picked?.kokyaku_name || '');
+    }
+
+    const after = {
+      customer_mode: mode,
+      kokyaku_name: kokyakuName,
+      torihikisaki_id: torihikisakiId,
+      torihikisaki_name: torihikisakiName,
+      yagou_name: yagouName,
+      tenpo_name: tenpoName,
+    };
+
+    setCreatingKind('sales_bundle');
+    setError('');
+    setOk('');
+    try {
+      await postMasterChangeRequest({
+        action: 'create_customer_bundle',
+        summary: requestSummary({ action: 'create_customer_bundle', after }),
+        payload: { after },
+      });
+      setOk(`顧客登録申請を送信しました: ${torihikisakiName || tenpoName}`);
+      window.confirm('基本情報を入力しますか？');
+      resetSalesCreateWizard();
+      const qs = torihikisakiId ? `?torihikisaki_id=${encodeURIComponent(torihikisakiId)}` : '';
+      navigate(`/sales/clients/list${qs}`);
+      await loadRequests();
+    } catch (e) {
+      setError(e?.message || '顧客登録申請に失敗しました');
+    } finally {
+      setCreatingKind('');
+    }
+  }, [
+    createDraft.kokyaku_name,
+    createDraft.tenpo_name,
+    createDraft.torihikisaki_name,
+    createDraft.yagou_name,
+    isSalesMode,
+    loadRequests,
+    navigate,
+    postMasterChangeRequest,
+    resetSalesCreateWizard,
+    salesCustomerType,
+    salesExistingTorihikisakiId,
+    torihikisakiById,
+  ]);
+
   const approveRequest = useCallback(async (reqEvent) => {
     const payload = reqEvent?.payload || {};
     const requestId = norm(reqEvent?.requestId);
@@ -1107,6 +1264,86 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
         if (norm(after?.torihikisaki_id)) body.torihikisaki_id = norm(after.torihikisaki_id);
         if (norm(after?.yagou_id)) body.yagou_id = norm(after.yagou_id);
         await apiJson('/master/tenpo', { method: 'POST', body });
+      } else if (action === 'create_customer_bundle') {
+        const after = payload?.after || {};
+        const mode = norm(after?.customer_mode);
+        const actor = readActorName();
+
+        let torihikisakiId = norm(after?.torihikisaki_id);
+        let torihikisakiName = norm(after?.torihikisaki_name);
+        const kokyakuName = norm(after?.kokyaku_name || torihikisakiName);
+        const yagouName = norm(after?.yagou_name);
+        const tenpoName = norm(after?.tenpo_name);
+
+        if (!yagouName || !tenpoName) {
+          throw new Error('申請データ不備: 屋号名または店舗名が不足しています');
+        }
+
+        if (mode === 'new') {
+          if (!torihikisakiName) {
+            throw new Error('申請データ不備: 取引先名が不足しています');
+          }
+          const createdTori = await apiJson('/master/torihikisaki', {
+            method: 'POST',
+            body: {
+              name: torihikisakiName,
+              kokyaku_name: kokyakuName || torihikisakiName,
+              jotai: 'yuko',
+              updated_by: actor,
+            },
+          });
+          torihikisakiId = norm(createdTori?.torihikisaki_id || createdTori?.id || createdTori?.item?.torihikisaki_id);
+          if (!torihikisakiId) {
+            const toriData = await apiJson('/master/torihikisaki?limit=5000&jotai=yuko');
+            const matched = getItems(toriData).filter((it) => norm(it?.name) === torihikisakiName);
+            if (matched.length) {
+              matched.sort((a, b) => compareIdYoungFirst(norm(a?.torihikisaki_id || a?.id), norm(b?.torihikisaki_id || b?.id), -1));
+              torihikisakiId = norm(matched[0]?.torihikisaki_id || matched[0]?.id);
+            }
+          }
+        } else if (mode === 'existing') {
+          if (!torihikisakiId) {
+            throw new Error('申請データ不備: 既存取引先IDが不足しています');
+          }
+          if (!torihikisakiName) {
+            const toriData = await apiJson('/master/torihikisaki?limit=5000&jotai=yuko');
+            const picked = getItems(toriData).find((it) => norm(it?.torihikisaki_id || it?.id) === torihikisakiId);
+            torihikisakiName = norm(picked?.name || '');
+          }
+        } else {
+          throw new Error(`申請データ不備: customer_mode=${mode || '(empty)'}`);
+        }
+
+        const yagouBody = {
+          name: yagouName,
+          jotai: 'yuko',
+          updated_by: actor,
+        };
+        if (torihikisakiId) yagouBody.torihikisaki_id = torihikisakiId;
+        const createdYagou = await apiJson('/master/yagou', { method: 'POST', body: yagouBody });
+        let yagouId = norm(createdYagou?.yagou_id || createdYagou?.id || createdYagou?.item?.yagou_id);
+        if (!yagouId) {
+          const yagouData = await apiJson('/master/yagou?limit=8000&jotai=yuko');
+          const matched = getItems(yagouData).filter((it) => {
+            const sameName = norm(it?.name) === yagouName;
+            if (!sameName) return false;
+            if (!torihikisakiId) return true;
+            return norm(it?.torihikisaki_id) === torihikisakiId;
+          });
+          if (matched.length) {
+            matched.sort((a, b) => compareIdYoungFirst(norm(a?.yagou_id || a?.id), norm(b?.yagou_id || b?.id), -1));
+            yagouId = norm(matched[0]?.yagou_id || matched[0]?.id);
+          }
+        }
+
+        const tenpoBody = {
+          name: tenpoName,
+          jotai: 'yuko',
+          updated_by: actor,
+        };
+        if (torihikisakiId) tenpoBody.torihikisaki_id = torihikisakiId;
+        if (yagouId) tenpoBody.yagou_id = yagouId;
+        await apiJson('/master/tenpo', { method: 'POST', body: tenpoBody });
       } else if (action === 'delete_rows') {
         const rowsToDelete = Array.isArray(payload?.rows) ? payload.rows : [];
         await applyDeleteRows(rowsToDelete);
@@ -1182,23 +1419,125 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
     navigate(nextPath);
   }, [navigate]);
 
+  const salesStep1Ready = useMemo(() => {
+    if (salesCustomerType === 'new') return Boolean(norm(createDraft.kokyaku_name || createDraft.torihikisaki_name));
+    if (salesCustomerType === 'existing') return Boolean(norm(salesExistingTorihikisakiId));
+    return false;
+  }, [createDraft.kokyaku_name, createDraft.torihikisaki_name, salesCustomerType, salesExistingTorihikisakiId]);
+
+  const salesStep2Ready = useMemo(() => Boolean(norm(createDraft.yagou_name)), [createDraft.yagou_name]);
+  const salesStep3Ready = useMemo(() => Boolean(norm(createDraft.tenpo_name)), [createDraft.tenpo_name]);
+
+  const salesOwnPendingRequests = useMemo(() => {
+    if (!isSalesMode) return [];
+    const actorId = norm(readActorId());
+    const actorName = norm(readActorName());
+    return requestState.pending.filter((ev) => {
+      const action = norm(ev?.payload?.action);
+      if (!['create_customer_bundle', 'create_torihikisaki', 'create_yagou', 'create_tenpo'].includes(action)) return false;
+      const sid = norm(ev?.payload?.sender_id || '');
+      const sname = norm(ev?.payload?.sender_name || ev?.actorName || '');
+      if (actorId && sid) return sid === actorId;
+      if (actorName && sname) return sname === actorName;
+      return true;
+    });
+  }, [isSalesMode, requestState.pending]);
+
+  const startReEditPendingRequest = useCallback((reqEvent) => {
+    const payload = reqEvent?.payload || {};
+    const action = norm(payload?.action);
+    const after = payload?.after || {};
+
+    if (action === 'create_customer_bundle') {
+      const mode = norm(after?.customer_mode) === 'existing' ? 'existing' : 'new';
+      const toriId = norm(after?.torihikisaki_id);
+      const picked = torihikisakiById.get(toriId);
+      setSalesCustomerType(mode);
+      setSalesExistingTorihikisakiId(toriId);
+      setSalesExistingSearch(norm(after?.torihikisaki_name || after?.kokyaku_name || picked?.name || ''));
+      setCreateDraft((prev) => ({
+        ...prev,
+        kokyaku_name: norm(after?.kokyaku_name || picked?.kokyaku_name || ''),
+        torihikisaki_name: norm(after?.torihikisaki_name || picked?.name || ''),
+        yagou_name: norm(after?.yagou_name || ''),
+        yagou_torihikisaki_id: toriId,
+        tenpo_name: norm(after?.tenpo_name || ''),
+        tenpo_torihikisaki_id: toriId,
+        tenpo_yagou_id: '',
+      }));
+      setSalesCreateStep(1);
+      setOk('申請内容をフォームへ反映しました。修正後に再申請してください。');
+    } else if (action === 'create_torihikisaki') {
+      setSalesCustomerType('new');
+      setSalesExistingTorihikisakiId('');
+      setSalesExistingSearch('');
+      setCreateDraft((prev) => ({
+        ...prev,
+        kokyaku_name: norm(after?.kokyaku_name || after?.torihikisaki_name || ''),
+        torihikisaki_name: norm(after?.torihikisaki_name || ''),
+      }));
+      setSalesCreateStep(1);
+      setOk('取引先申請内容をフォームへ反映しました。');
+    } else if (action === 'create_yagou') {
+      const toriId = norm(after?.torihikisaki_id);
+      const picked = torihikisakiById.get(toriId);
+      setSalesCustomerType(toriId ? 'existing' : 'new');
+      setSalesExistingTorihikisakiId(toriId);
+      setSalesExistingSearch(norm(picked?.name || ''));
+      setCreateDraft((prev) => ({
+        ...prev,
+        kokyaku_name: norm(picked?.kokyaku_name || prev.kokyaku_name),
+        torihikisaki_name: norm(picked?.name || prev.torihikisaki_name),
+        yagou_name: norm(after?.yagou_name || ''),
+        yagou_torihikisaki_id: toriId,
+        tenpo_torihikisaki_id: toriId,
+      }));
+      setSalesCreateStep(2);
+      setOk('屋号申請内容をフォームへ反映しました。');
+    } else if (action === 'create_tenpo') {
+      const toriId = norm(after?.torihikisaki_id);
+      const picked = torihikisakiById.get(toriId);
+      setSalesCustomerType(toriId ? 'existing' : 'new');
+      setSalesExistingTorihikisakiId(toriId);
+      setSalesExistingSearch(norm(picked?.name || ''));
+      setCreateDraft((prev) => ({
+        ...prev,
+        kokyaku_name: norm(picked?.kokyaku_name || prev.kokyaku_name),
+        torihikisaki_name: norm(picked?.name || prev.torihikisaki_name),
+        tenpo_name: norm(after?.tenpo_name || ''),
+        tenpo_torihikisaki_id: toriId,
+      }));
+      setSalesCreateStep(3);
+      setOk('店舗申請内容をフォームへ反映しました。');
+    }
+
+    setError('');
+    requestAnimationFrame(() => {
+      try {
+        createSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch {
+        // noop
+      }
+    });
+  }, [torihikisakiById]);
+
   return (
     <div className={`admin-master-page admin-customer-master-page ${isSalesMode ? 'is-sales-mode' : 'is-admin-mode'}`.trim()}>
       <div className="admin-master-content">
-        <header className="admin-master-header">
-          <div>
-            <h1>顧客マスタ</h1>
+        <header className="admin-master-header admin-customer-master-header">
+          <div className="admin-customer-master-header-row">
+            <h1>{isSalesMode ? '顧客登録申請' : '顧客マスタ'}</h1>
+            <div className="admin-master-header-actions">
+              <button type="button" onClick={async () => { await Promise.all([loadAll(), loadRequests()]); }} disabled={loading || requestsLoading}>
+                {(loading || requestsLoading) ? '更新中...' : '更新'}
+              </button>
+            </div>
+          </div>
+          {!isSalesMode ? (
             <p className="admin-master-subtitle">
-              {isSalesMode
-                ? 'kokyaku / torihikisaki / yagou / tenpo を1画面で申請（管理承認後に反映）'
-                : 'kokyaku / torihikisaki / yagou / tenpo を1画面で修正・保存'}
+              {'kokyaku / torihikisaki / yagou / tenpo を1画面で修正・保存'}
             </p>
-          </div>
-          <div className="admin-master-header-actions">
-            <button type="button" onClick={async () => { await Promise.all([loadAll(), loadRequests()]); }} disabled={loading || requestsLoading}>
-              {(loading || requestsLoading) ? '更新中...' : '更新'}
-            </button>
-          </div>
+          ) : null}
         </header>
 
         {error ? <div className="admin-master-error">{error}</div> : null}
@@ -1207,6 +1546,45 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
           <div className="admin-master-success" style={{ marginBottom: 12 }}>
             営業モード: ここでの保存・削除・新規追加は「申請」として送信され、管理者承認後に本データへ反映されます。
           </div>
+        ) : null}
+
+        {isSalesMode ? (
+          <section className="admin-customer-master-approval-queue">
+            <div className="admin-customer-master-approval-head">
+              <button
+                type="button"
+                className="admin-customer-master-pending-toggle"
+                onClick={() => setSalesPendingOpen((prev) => !prev)}
+                aria-expanded={salesPendingOpen}
+              >
+                申請中の顧客
+                <span className="state">{salesPendingOpen ? '▲' : '▼'}</span>
+              </button>
+              <div className="admin-master-count">申請中: {salesOwnPendingRequests.length}</div>
+            </div>
+            {salesPendingOpen ? (
+              salesOwnPendingRequests.length === 0 ? (
+                <div className="admin-customer-master-approval-empty">申請中の顧客はありません。</div>
+              ) : (
+                <div className="admin-customer-master-approval-list">
+                  {salesOwnPendingRequests.map((ev) => (
+                    <article key={ev.requestId} className="admin-customer-master-approval-item">
+                      <div className="summary">{requestSummary(ev.payload)}</div>
+                      <div className="meta">
+                        <span>申請ID: {ev.requestId}</span>
+                        <span>時刻: {ev.at}</span>
+                      </div>
+                      <div className="actions">
+                        <button type="button" className="primary" onClick={() => startReEditPendingRequest(ev)}>
+                          再編集
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )
+            ) : null}
+          </section>
         ) : null}
 
         {!isSalesMode ? (
@@ -1245,270 +1623,471 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
           </section>
         ) : null}
 
-        <section className="admin-customer-master-create">
+        <section className="admin-customer-master-create" ref={createSectionRef}>
           <h2>{isSalesMode ? '同画面で新規追加（申請）' : '同画面で新規追加'}</h2>
-          <div className="admin-customer-master-create-grid">
-            <div className="admin-customer-master-create-card">
-              <h3>顧客 / 取引先を追加</h3>
-              <div className="admin-customer-master-auto-id">
-                <span>顧客ID（自動採番）</span>
-                <strong>{nextIdPreview.kokyaku}</strong>
+          {isSalesMode ? (
+            <div className="admin-customer-master-stepper">
+              <div className="admin-customer-master-stepper-head">
+                {[1, 2, 3, 4].map((stepNo) => (
+                  <span
+                    key={`sales-step-${stepNo}`}
+                    className={`admin-customer-master-step-pill${salesCreateStep === stepNo ? ' is-active' : ''}${salesCreateStep > stepNo ? ' is-done' : ''}`}
+                  >
+                    STEP {stepNo}
+                  </span>
+                ))}
               </div>
-              <div className="admin-customer-master-auto-id">
-                <span>取引先ID（自動採番）</span>
-                <strong>{nextIdPreview.torihikisaki}</strong>
-              </div>
-              <label className="admin-master-field">
-                <span>顧客名(kokyaku)</span>
-                <input
-                  value={createDraft.kokyaku_name}
-                  onChange={(e) => setCreateDraft((p) => ({ ...p, kokyaku_name: e.target.value }))}
-                  placeholder="例）株式会社〇〇"
-                />
-              </label>
-              <label className="admin-master-field">
-                <span>取引先名</span>
-                <input
-                  value={createDraft.torihikisaki_name}
-                  onChange={(e) => setCreateDraft((p) => ({ ...p, torihikisaki_name: e.target.value }))}
-                  placeholder="例）株式会社〇〇"
-                />
-              </label>
-              <button
-                type="button"
-                className="primary"
-                onClick={createTorihikisaki}
-                disabled={creatingKind === 'torihikisaki'}
-              >
-                {creatingKind === 'torihikisaki' ? '追加中...' : (isSalesMode ? '顧客/取引先を申請' : '顧客/取引先追加')}
-              </button>
-            </div>
 
-            <div className="admin-customer-master-create-card">
-              <h3>屋号を追加</h3>
-              <div className="admin-customer-master-auto-id">
-                <span>屋号ID（自動採番）</span>
-                <strong>{nextIdPreview.yagou}</strong>
-              </div>
-              <label className="admin-master-field">
-                <span>取引先ID（任意）</span>
-                <select
-                  value={createDraft.yagou_torihikisaki_id}
-                  onChange={(e) => setCreateDraft((p) => ({ ...p, yagou_torihikisaki_id: e.target.value }))}
-                >
-                  <option value="">未選択</option>
-                  {torihikisakiOptions.map((it) => (
-                    <option key={it.id} value={it.id}>
-                      {it.id} / {it.name || '(名称未設定)'}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="admin-master-field">
-                <span>屋号名</span>
-                <input
-                  value={createDraft.yagou_name}
-                  onChange={(e) => setCreateDraft((p) => ({ ...p, yagou_name: e.target.value }))}
-                  placeholder="例）〇〇ブランド"
-                />
-              </label>
-              <button
-                type="button"
-                className="primary"
-                onClick={createYagou}
-                disabled={creatingKind === 'yagou'}
-              >
-                {creatingKind === 'yagou' ? '追加中...' : (isSalesMode ? '屋号を申請' : '屋号追加')}
-              </button>
-            </div>
+              <div className="admin-customer-master-create-card admin-customer-master-step-card">
+                {salesCreateStep === 1 ? (
+                  <>
+                    <h3>新規顧客ですか？既存顧客ですか？</h3>
+                    <div className="admin-customer-master-step-choice">
+                      <button
+                        type="button"
+                        className={`choice-btn${salesCustomerType === 'new' ? ' is-active' : ''}`}
+                        onClick={() => {
+                          setSalesCustomerType('new');
+                          setSalesExistingTorihikisakiId('');
+                          setSalesExistingSearch('');
+                          setCreateDraft((p) => ({
+                            ...p,
+                            yagou_torihikisaki_id: '',
+                            tenpo_torihikisaki_id: '',
+                          }));
+                        }}
+                      >
+                        新規顧客
+                      </button>
+                      <button
+                        type="button"
+                        className={`choice-btn${salesCustomerType === 'existing' ? ' is-active' : ''}`}
+                        onClick={() => {
+                          setSalesCustomerType('existing');
+                          setSalesExistingSearch('');
+                          setCreateDraft((p) => ({
+                            ...p,
+                            kokyaku_name: '',
+                            torihikisaki_name: '',
+                          }));
+                        }}
+                      >
+                        既存顧客
+                      </button>
+                    </div>
 
-            <div className="admin-customer-master-create-card">
-              <h3>店舗を追加</h3>
-              <div className="admin-customer-master-auto-id">
-                <span>店舗ID（自動採番）</span>
-                <strong>{nextIdPreview.tenpo}</strong>
+                    {salesCustomerType === 'new' ? (
+                      <>
+                        <div className="admin-customer-master-auto-id">
+                          <span>取引先ID（自動採番）</span>
+                          <strong>{nextIdPreview.torihikisaki}</strong>
+                        </div>
+                        <label className="admin-master-field">
+                          <span>顧客名（取引先名と共通）</span>
+                          <input
+                            value={createDraft.kokyaku_name}
+                            onChange={(e) => {
+                              const name = e.target.value;
+                              setCreateDraft((p) => ({ ...p, kokyaku_name: name, torihikisaki_name: name }));
+                            }}
+                            placeholder="例）株式会社〇〇"
+                          />
+                        </label>
+                      </>
+                    ) : null}
+
+                    {salesCustomerType === 'existing' ? (
+                      <>
+                        <label className="admin-master-field">
+                          <span>統合検索（顧客 / 取引先 / 屋号 / 店舗）</span>
+                          <input
+                            value={salesExistingSearch}
+                            onChange={(e) => setSalesExistingSearch(e.target.value)}
+                            placeholder="例）取引先名 / 屋号 / 店舗 / ID"
+                          />
+                        </label>
+                        <label className="admin-master-field">
+                          <span>既存取引先</span>
+                          <select
+                            value={salesExistingTorihikisakiId}
+                            onChange={(e) => {
+                              const nextId = norm(e.target.value);
+                              const picked = torihikisakiById.get(nextId);
+                              setSalesExistingTorihikisakiId(nextId);
+                              setCreateDraft((p) => ({
+                                ...p,
+                                kokyaku_name: norm(picked?.kokyaku_name || ''),
+                                torihikisaki_name: norm(picked?.name || ''),
+                                yagou_torihikisaki_id: nextId,
+                                tenpo_torihikisaki_id: nextId,
+                              }));
+                            }}
+                          >
+                            <option value="">選択してください</option>
+                            {filteredSalesTorihikisakiOptions.map((it) => (
+                              <option key={it.id} value={it.id}>
+                                {it.id} / {it.name || '(名称未設定)'}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </>
+                    ) : null}
+                  </>
+                ) : null}
+
+                {salesCreateStep === 2 ? (
+                  <>
+                    <h3>屋号登録</h3>
+                    <label className="admin-master-field">
+                      <span>屋号名</span>
+                      <input
+                        value={createDraft.yagou_name}
+                        onChange={(e) => setCreateDraft((p) => ({ ...p, yagou_name: e.target.value }))}
+                        placeholder="例）〇〇ブランド"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => setCreateDraft((p) => ({ ...p, yagou_name: salesTorihikisakiBaseName }))}
+                      disabled={!salesTorihikisakiBaseName}
+                    >
+                      屋号がない場合は取引先と同じにする
+                    </button>
+                  </>
+                ) : null}
+
+                {salesCreateStep === 3 ? (
+                  <>
+                    <h3>店舗登録</h3>
+                    <label className="admin-master-field">
+                      <span>店舗名</span>
+                      <input
+                        value={createDraft.tenpo_name}
+                        onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_name: e.target.value }))}
+                        placeholder="例）渋谷店"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => setCreateDraft((p) => ({ ...p, tenpo_name: norm(p.yagou_name) }))}
+                      disabled={!norm(createDraft.yagou_name)}
+                    >
+                      店舗がない場合は屋号と同じにする
+                    </button>
+                  </>
+                ) : null}
+
+                {salesCreateStep === 4 ? (
+                  <>
+                    <h3>申請内容確認</h3>
+                    <div className="admin-customer-master-step-summary">
+                      <div><span>顧客区分</span><strong>{salesCustomerType === 'existing' ? '既存顧客' : '新規顧客'}</strong></div>
+                      <div><span>顧客名</span><strong>{createDraft.kokyaku_name || selectedSalesTorihikisaki?.kokyaku_name || '-'}</strong></div>
+                      <div><span>取引先名</span><strong>{createDraft.torihikisaki_name || selectedSalesTorihikisaki?.name || '-'}</strong></div>
+                      <div><span>屋号名</span><strong>{createDraft.yagou_name || '-'}</strong></div>
+                      <div><span>店舗名</span><strong>{createDraft.tenpo_name || '-'}</strong></div>
+                    </div>
+                  </>
+                ) : null}
               </div>
-              <label className="admin-master-field">
-                <span>取引先ID（任意）</span>
-                <select
-                  value={createDraft.tenpo_torihikisaki_id}
-                  onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_torihikisaki_id: e.target.value }))}
+
+              <div className="admin-customer-master-step-actions">
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setSalesCreateStep((prev) => Math.max(1, prev - 1))}
+                  disabled={salesCreateStep <= 1 || creatingKind === 'sales_bundle'}
                 >
-                  <option value="">未選択</option>
-                  {torihikisakiOptions.map((it) => (
-                    <option key={it.id} value={it.id}>
-                      {it.id} / {it.name || '(名称未設定)'}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="admin-master-field">
-                <span>屋号ID（任意）</span>
-                <select
-                  value={createDraft.tenpo_yagou_id}
-                  onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_yagou_id: e.target.value }))}
+                  戻る
+                </button>
+
+                {salesCreateStep < 4 ? (
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => setSalesCreateStep((prev) => Math.min(4, prev + 1))}
+                    disabled={
+                      creatingKind === 'sales_bundle' ||
+                      (salesCreateStep === 1 && !salesStep1Ready) ||
+                      (salesCreateStep === 2 && !salesStep2Ready) ||
+                      (salesCreateStep === 3 && !salesStep3Ready)
+                    }
+                  >
+                    次へ
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={submitSalesBundleRequest}
+                    disabled={creatingKind === 'sales_bundle' || !salesStep3Ready}
+                  >
+                    {creatingKind === 'sales_bundle' ? '申請中...' : '申請する'}
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="admin-customer-master-create-grid">
+              <div className="admin-customer-master-create-card">
+                <h3>顧客 / 取引先を追加</h3>
+                <div className="admin-customer-master-auto-id">
+                  <span>取引先ID（自動採番）</span>
+                  <strong>{nextIdPreview.torihikisaki}</strong>
+                </div>
+                <label className="admin-master-field">
+                  <span>顧客名（取引先名と共通）</span>
+                  <input
+                    value={createDraft.kokyaku_name}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setCreateDraft((p) => ({ ...p, kokyaku_name: name, torihikisaki_name: name }));
+                    }}
+                    placeholder="例）株式会社〇〇"
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={createTorihikisaki}
+                  disabled={creatingKind === 'torihikisaki'}
                 >
-                  <option value="">未選択</option>
-                  {yagouOptions
-                    .filter((it) => !norm(createDraft.tenpo_torihikisaki_id) || norm(it.torihikisaki_id) === norm(createDraft.tenpo_torihikisaki_id))
-                    .map((it) => (
+                  {creatingKind === 'torihikisaki' ? '追加中...' : '顧客/取引先追加'}
+                </button>
+              </div>
+
+              <div className="admin-customer-master-create-card">
+                <h3>屋号を追加</h3>
+                <div className="admin-customer-master-auto-id">
+                  <span>屋号ID（自動採番）</span>
+                  <strong>{nextIdPreview.yagou}</strong>
+                </div>
+                <label className="admin-master-field">
+                  <span>取引先ID（任意）</span>
+                  <select
+                    value={createDraft.yagou_torihikisaki_id}
+                    onChange={(e) => setCreateDraft((p) => ({ ...p, yagou_torihikisaki_id: e.target.value }))}
+                  >
+                    <option value="">未選択</option>
+                    {torihikisakiOptions.map((it) => (
                       <option key={it.id} value={it.id}>
                         {it.id} / {it.name || '(名称未設定)'}
                       </option>
                     ))}
-                </select>
-              </label>
-              <label className="admin-master-field">
-                <span>店舗名</span>
-                <input
-                  value={createDraft.tenpo_name}
-                  onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_name: e.target.value }))}
-                  placeholder="例）渋谷店"
-                />
-              </label>
+                  </select>
+                </label>
+                <label className="admin-master-field">
+                  <span>屋号名</span>
+                  <input
+                    value={createDraft.yagou_name}
+                    onChange={(e) => setCreateDraft((p) => ({ ...p, yagou_name: e.target.value }))}
+                    placeholder="例）〇〇ブランド"
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={createYagou}
+                  disabled={creatingKind === 'yagou'}
+                >
+                  {creatingKind === 'yagou' ? '追加中...' : '屋号追加'}
+                </button>
+              </div>
+
+              <div className="admin-customer-master-create-card">
+                <h3>店舗を追加</h3>
+                <div className="admin-customer-master-auto-id">
+                  <span>店舗ID（自動採番）</span>
+                  <strong>{nextIdPreview.tenpo}</strong>
+                </div>
+                <label className="admin-master-field">
+                  <span>取引先ID（任意）</span>
+                  <select
+                    value={createDraft.tenpo_torihikisaki_id}
+                    onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_torihikisaki_id: e.target.value }))}
+                  >
+                    <option value="">未選択</option>
+                    {torihikisakiOptions.map((it) => (
+                      <option key={it.id} value={it.id}>
+                        {it.id} / {it.name || '(名称未設定)'}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="admin-master-field">
+                  <span>屋号ID（任意）</span>
+                  <select
+                    value={createDraft.tenpo_yagou_id}
+                    onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_yagou_id: e.target.value }))}
+                  >
+                    <option value="">未選択</option>
+                    {yagouOptions
+                      .filter((it) => !norm(createDraft.tenpo_torihikisaki_id) || norm(it.torihikisaki_id) === norm(createDraft.tenpo_torihikisaki_id))
+                      .map((it) => (
+                        <option key={it.id} value={it.id}>
+                          {it.id} / {it.name || '(名称未設定)'}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label className="admin-master-field">
+                  <span>店舗名</span>
+                  <input
+                    value={createDraft.tenpo_name}
+                    onChange={(e) => setCreateDraft((p) => ({ ...p, tenpo_name: e.target.value }))}
+                    placeholder="例）渋谷店"
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={createTenpo}
+                  disabled={creatingKind === 'tenpo'}
+                >
+                  {creatingKind === 'tenpo' ? '追加中...' : '店舗追加'}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {!isSalesMode ? (
+          <section className="admin-master-toolbar admin-customer-master-toolbar">
+            <label className="admin-customer-master-search">
+              <span>統合検索</span>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="顧客 / 取引先 / 屋号 / 店舗 / ID / 住所 / 電話"
+              />
+            </label>
+            <div className="admin-master-header-actions">
+              <button type="button" className={viewMode === 'all' ? 'primary' : ''} onClick={() => setViewMode('all')}>
+                全件
+              </button>
+              <button type="button" className={viewMode === 'gap' ? 'primary' : ''} onClick={() => setViewMode('gap')}>
+                未紐付け
+              </button>
+              <button type="button" className={viewMode === 'duplicate' ? 'primary' : ''} onClick={() => setViewMode('duplicate')}>
+                重複候補
+              </button>
               <button
                 type="button"
-                className="primary"
-                onClick={createTenpo}
-                disabled={creatingKind === 'tenpo'}
+                className="danger"
+                onClick={deleteSelected}
+                disabled={saving || selectedRows.length === 0}
               >
-                {creatingKind === 'tenpo' ? '追加中...' : (isSalesMode ? '店舗を申請' : '店舗追加')}
+                {saving ? '処理中...' : '削除'}
               </button>
             </div>
-          </div>
-        </section>
+            <div className="admin-master-count">表示件数: {sortedRows.length} / 選択: {selectedRows.length} / 全体: {rows.length}</div>
+          </section>
+        ) : null}
 
-        <section className="admin-master-toolbar admin-customer-master-toolbar">
-          <label className="admin-customer-master-search">
-            <span>統合検索</span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="顧客 / 取引先 / 屋号 / 店舗 / ID / 住所 / 電話"
-            />
-          </label>
-          <div className="admin-master-header-actions">
-            <button type="button" className={viewMode === 'all' ? 'primary' : ''} onClick={() => setViewMode('all')}>
-              全件
-            </button>
-            <button type="button" className={viewMode === 'gap' ? 'primary' : ''} onClick={() => setViewMode('gap')}>
-              未紐付け
-            </button>
-            <button type="button" className={viewMode === 'duplicate' ? 'primary' : ''} onClick={() => setViewMode('duplicate')}>
-              重複候補
-            </button>
-            <button
-              type="button"
-              className="danger"
-              onClick={deleteSelected}
-              disabled={saving || selectedRows.length === 0}
-            >
-              {saving ? '処理中...' : (isSalesMode ? '削除申請' : '削除')}
-            </button>
-          </div>
-          <div className="admin-master-count">表示件数: {sortedRows.length} / 選択: {selectedRows.length} / 全体: {rows.length}</div>
-        </section>
-
-        <section className="admin-master-table-wrap">
-          <table className="admin-master-table">
-            <thead>
-              <tr>
-                <th className="bulk-check-col">
-                  <input
-                    type="checkbox"
-                    checked={allVisibleSelected}
-                    onChange={(e) => toggleAllVisible(e.target.checked)}
-                    aria-label="全件選択"
-                  />
-                </th>
-                <th>
-                  <button type="button" className={`admin-master-sort-btn${sortKey === 'kokyaku' ? ' is-active' : ''}`} onClick={() => handleSort('kokyaku')}>
-                    顧客(kokyaku)
-                    <span className="sort-indicator">{sortMark('kokyaku')}</span>
-                  </button>
-                </th>
-                <th>
-                  <button type="button" className={`admin-master-sort-btn${sortKey === 'torihikisaki' ? ' is-active' : ''}`} onClick={() => handleSort('torihikisaki')}>
-                    取引先
-                    <span className="sort-indicator">{sortMark('torihikisaki')}</span>
-                  </button>
-                </th>
-                <th>
-                  <button type="button" className={`admin-master-sort-btn${sortKey === 'yagou' ? ' is-active' : ''}`} onClick={() => handleSort('yagou')}>
-                    屋号
-                    <span className="sort-indicator">{sortMark('yagou')}</span>
-                  </button>
-                </th>
-                <th>
-                  <button type="button" className={`admin-master-sort-btn${sortKey === 'tenpo' ? ' is-active' : ''}`} onClick={() => handleSort('tenpo')}>
-                    店舗
-                    <span className="sort-indicator">{sortMark('tenpo')}</span>
-                  </button>
-                </th>
-                <th>
-                  <button type="button" className={`admin-master-sort-btn${sortKey === 'phone' ? ' is-active' : ''}`} onClick={() => handleSort('phone')}>
-                    電話
-                    <span className="sort-indicator">{sortMark('phone')}</span>
-                  </button>
-                </th>
-                <th>
-                  <button type="button" className={`admin-master-sort-btn${sortKey === 'status' ? ' is-active' : ''}`} onClick={() => handleSort('status')}>
-                    状態
-                    <span className="sort-indicator">{sortMark('status')}</span>
-                  </button>
-                </th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedRows.length === 0 && !loading ? (
+        {!isSalesMode ? (
+          <section className="admin-master-table-wrap">
+            <table className="admin-master-table">
+              <thead>
                 <tr>
-                  <td colSpan={8} className="empty">データがありません</td>
-                </tr>
-              ) : null}
-              {sortedRows.map((row) => (
-                <tr key={row.key}>
-                  <td className="bulk-check-col" data-col="選択">
+                  <th className="bulk-check-col">
                     <input
                       type="checkbox"
-                      checked={selectedKeys.has(row.key)}
-                      onChange={(e) => toggleRowSelected(row.key, e.target.checked)}
-                      aria-label={`${row.tenpo_name || row.yagou_name || row.torihikisaki_name || row.key} を選択`}
+                      checked={allVisibleSelected}
+                      onChange={(e) => toggleAllVisible(e.target.checked)}
+                      aria-label="全件選択"
                     />
-                  </td>
-                  <td data-col="顧客(kokyaku)">
-                    <div>{row.kokyaku_name || ''}</div>
-                    <IdTag value={row.kokyaku_id} kind="kokyaku" />
-                  </td>
-                  <td data-col="取引先">
-                    <div>{row.torihikisaki_name || ''}</div>
-                    <IdTag value={row.torihikisaki_id} kind="torihikisaki" />
-                  </td>
-                  <td data-col="屋号">
-                    <div>{row.yagou_name || ''}</div>
-                    <IdTag value={row.yagou_id} kind="yagou" />
-                  </td>
-                  <td data-col="店舗">
-                    <div>{row.tenpo_name || ''}</div>
-                    <IdTag value={row.tenpo_id} kind="tenpo" />
-                  </td>
-                  <td data-col="電話">{row.tenpo_phone || ''}</td>
-                  <td data-col="状態">
-                    {rowQuality.get(row.key)?.hasLinkGap ? <small>未紐付けあり</small> : null}
-                    {rowQuality.get(row.key)?.isDuplicate ? <small>重複候補</small> : null}
-                    {!rowQuality.get(row.key)?.hasLinkGap && !rowQuality.get(row.key)?.isDuplicate ? <small>正常</small> : null}
-                  </td>
-                  <td className="actions" data-col="操作">
-                    <button type="button" onClick={() => openEdit(row)}>{isSalesMode ? '申請編集' : '編集'}</button>
-                    {!isSalesMode && row.tenpo_id ? (
-                      <Link to={`/admin/tenpo/${encodeURIComponent(row.tenpo_id)}?mode=monshin`} className="link">カルテ</Link>
-                    ) : null}
-                  </td>
+                  </th>
+                  <th>
+                    <button type="button" className={`admin-master-sort-btn${sortKey === 'kokyaku' ? ' is-active' : ''}`} onClick={() => handleSort('kokyaku')}>
+                      顧客(kokyaku)
+                      <span className="sort-indicator">{sortMark('kokyaku')}</span>
+                    </button>
+                  </th>
+                  <th>
+                    <button type="button" className={`admin-master-sort-btn${sortKey === 'torihikisaki' ? ' is-active' : ''}`} onClick={() => handleSort('torihikisaki')}>
+                      取引先
+                      <span className="sort-indicator">{sortMark('torihikisaki')}</span>
+                    </button>
+                  </th>
+                  <th>
+                    <button type="button" className={`admin-master-sort-btn${sortKey === 'yagou' ? ' is-active' : ''}`} onClick={() => handleSort('yagou')}>
+                      屋号
+                      <span className="sort-indicator">{sortMark('yagou')}</span>
+                    </button>
+                  </th>
+                  <th>
+                    <button type="button" className={`admin-master-sort-btn${sortKey === 'tenpo' ? ' is-active' : ''}`} onClick={() => handleSort('tenpo')}>
+                      店舗
+                      <span className="sort-indicator">{sortMark('tenpo')}</span>
+                    </button>
+                  </th>
+                  <th>
+                    <button type="button" className={`admin-master-sort-btn${sortKey === 'phone' ? ' is-active' : ''}`} onClick={() => handleSort('phone')}>
+                      電話
+                      <span className="sort-indicator">{sortMark('phone')}</span>
+                    </button>
+                  </th>
+                  <th>
+                    <button type="button" className={`admin-master-sort-btn${sortKey === 'status' ? ' is-active' : ''}`} onClick={() => handleSort('status')}>
+                      状態
+                      <span className="sort-indicator">{sortMark('status')}</span>
+                    </button>
+                  </th>
+                  <th>操作</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+              </thead>
+              <tbody>
+                {sortedRows.length === 0 && !loading ? (
+                  <tr>
+                    <td colSpan={8} className="empty">データがありません</td>
+                  </tr>
+                ) : null}
+                {sortedRows.map((row) => (
+                  <tr key={row.key}>
+                    <td className="bulk-check-col" data-col="選択">
+                      <input
+                        type="checkbox"
+                        checked={selectedKeys.has(row.key)}
+                        onChange={(e) => toggleRowSelected(row.key, e.target.checked)}
+                        aria-label={`${row.tenpo_name || row.yagou_name || row.torihikisaki_name || row.key} を選択`}
+                      />
+                    </td>
+                    <td data-col="顧客(kokyaku)">
+                      <div>{row.kokyaku_name || ''}</div>
+                    </td>
+                    <td data-col="取引先">
+                      <div>{row.torihikisaki_name || ''}</div>
+                      <IdTag value={row.torihikisaki_id} kind="torihikisaki" />
+                    </td>
+                    <td data-col="屋号">
+                      <div>{row.yagou_name || ''}</div>
+                      <IdTag value={row.yagou_id} kind="yagou" />
+                    </td>
+                    <td data-col="店舗">
+                      <div>{row.tenpo_name || ''}</div>
+                      <IdTag value={row.tenpo_id} kind="tenpo" />
+                    </td>
+                    <td data-col="電話">{row.tenpo_phone || ''}</td>
+                    <td data-col="状態">
+                      {rowQuality.get(row.key)?.hasLinkGap ? <small>未紐付けあり</small> : null}
+                      {rowQuality.get(row.key)?.isDuplicate ? <small>重複候補</small> : null}
+                      {!rowQuality.get(row.key)?.hasLinkGap && !rowQuality.get(row.key)?.isDuplicate ? <small>正常</small> : null}
+                    </td>
+                    <td className="actions" data-col="操作">
+                      <button type="button" onClick={() => openEdit(row)}>編集</button>
+                      {row.tenpo_id ? (
+                        <Link to={`/admin/tenpo/${encodeURIComponent(row.tenpo_id)}?mode=monshin`} className="link">カルテ</Link>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        ) : null}
       </div>
 
       {editing ? (
@@ -1545,14 +2124,6 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
               </div>
             </div>
             <div className="admin-master-modal-grid">
-              <label className="admin-master-field">
-                <span>顧客ID(kokyaku)</span>
-                <input
-                  value={editing.kokyaku_id || ''}
-                  readOnly={!editing._manualInput}
-                  onChange={(e) => setEditing((p) => ({ ...p, kokyaku_id: e.target.value }))}
-                />
-              </label>
               <label className="admin-master-field">
                 <span>顧客名(kokyaku)</span>
                 <input

@@ -21,10 +21,14 @@
             "label": "2. 活動時間",
             "fields": [
                 {
-                    "key": "activity.minutes",
-                    "label": "活動時間（分）",
-                    "type": "number",
-                    "min": 0
+                    "key": "activity.start_time",
+                    "label": "活動開始",
+                    "type": "time"
+                },
+                {
+                    "key": "activity.end_time",
+                    "label": "活動終了",
+                    "type": "time"
                 }
             ]
         },

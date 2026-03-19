@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useFlashTransition } from '../../../shared/ui/ReportTransition/reportTransition';
 import Visualizer from '../Visualizer/Visualizer';
@@ -27,6 +27,31 @@ const ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'pdf', 'xlsx', 'docx', 'heic'];
 
 function getToday() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function toDayMinutes(hhmm) {
+  const text = String(hhmm || '').trim();
+  if (!/^\d{2}:\d{2}$/.test(text)) return null;
+  const [h, m] = text.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+  return h * 60 + m;
+}
+
+function calcDurationMinutes(startTime, endTime) {
+  const start = toDayMinutes(startTime);
+  const end = toDayMinutes(endTime);
+  if (start === null || end === null) return null;
+  let diff = end - start;
+  if (diff < 0) diff += 24 * 60;
+  return diff;
+}
+
+function resolveHeaderMinutes(header) {
+  const fromTime = calcDurationMinutes(header?.work_start_time, header?.work_end_time);
+  if (fromTime !== null) return fromTime;
+  const fallback = Number(header?.total_minutes);
+  return Number.isFinite(fallback) && fallback >= 0 ? fallback : 0;
 }
 
 function emptyHeader(workDate = '') {
@@ -180,6 +205,7 @@ export default function SalesDayReportPage() {
   const fileInputRefs = useRef({});
   const saveSuccessTimerRef = useRef(null);
   const reportContentRef = useRef(null);
+  const headerMinutes = useMemo(() => resolveHeaderMinutes(header), [header]);
 
   const updateHeader = useCallback((next) => setHeader((h) => (typeof next === 'function' ? next(h) : { ...h, ...next })), []);
 
@@ -282,7 +308,7 @@ export default function SalesDayReportPage() {
       const body = {
         date: currentHeader.work_date,
         work_date: currentHeader.work_date,
-        work_minutes: Number(currentHeader.total_minutes),
+        work_minutes: resolveHeaderMinutes(currentHeader),
         template_id: TEMPLATE_DAY,
         state: 'draft',
         target_label: 'sales-day',
@@ -320,9 +346,12 @@ export default function SalesDayReportPage() {
 
   const validateHeader = useCallback(() => {
     if (!header.work_date?.trim()) return '作業日は必須です';
-    if (Number(header.total_minutes) < 0) return '合計作業時間（分）は0以上で入力してください';
+    if ((header.work_start_time && !header.work_end_time) || (!header.work_start_time && header.work_end_time)) {
+      return '活動開始・活動終了を両方選択してください';
+    }
+    if (headerMinutes < 0) return '活動時間は0分以上で入力してください';
     return '';
-  }, [header.work_date, header.total_minutes]);
+  }, [header.work_date, header.work_start_time, header.work_end_time, headerMinutes]);
 
   const validateCaseSubmit = useCallback((c) => {
     // 営業テンプレートは現場負担を下げるため、案件カード提出時の必須入力を設けない。
@@ -430,7 +459,7 @@ export default function SalesDayReportPage() {
       const body = {
         date: header.work_date,
         work_date: header.work_date,
-        work_minutes: Number(header.total_minutes),
+        work_minutes: headerMinutes,
         template_id: TEMPLATE_DAY,
         state: 'draft',
         target_label: 'sales-day',
@@ -475,7 +504,7 @@ export default function SalesDayReportPage() {
     } finally {
       setHeaderSaving(false);
     }
-  }, [header, user?.name, validateHeader, workDate]);
+  }, [header, headerMinutes, user?.name, validateHeader, workDate]);
 
   const handleHeaderSubmit = useCallback(async () => {
     setHeaderSubmitError('');
@@ -501,7 +530,7 @@ export default function SalesDayReportPage() {
         const saveBody = {
           date: header.work_date,
           work_date: header.work_date,
-          work_minutes: Number(header.total_minutes),
+          work_minutes: headerMinutes,
           template_id: TEMPLATE_DAY,
           state: 'draft',
           target_label: 'sales-day',
@@ -576,7 +605,7 @@ export default function SalesDayReportPage() {
     } finally {
       setHeaderSubmitting(false);
     }
-  }, [header.saved?.log_id, header.saved?.version, header.saved?.state, header.work_date, workDate]);
+  }, [header.saved?.log_id, header.saved?.version, header.saved?.state, header.work_date, headerMinutes, workDate]);
 
   const handleCaseSave = useCallback(
     async (index) => {
@@ -767,33 +796,20 @@ export default function SalesDayReportPage() {
       </div>
       <div className="report-page-content sales-day-content" ref={reportContentRef}>
         {authError && (
-          <div style={{ marginBottom: 16, padding: 12, background: 'rgba(255,48,48,0.15)', border: '1px solid rgba(255,48,48,0.3)', borderRadius: 8, fontSize: '0.9rem' }} role="alert">
+          <div className="sales-day-auth-alert" role="alert">
             ログインが必要です。業務報告の取得・保存にはサインインしてください。
-            <Link to="/" style={{ marginLeft: 8, color: 'var(--accent)' }}>トップへ</Link>
+            <Link to="/" className="sales-day-auth-alert-link">トップへ</Link>
           </div>
         )}
         {/* ヘッダー・戻るボタン */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="sales-day-topbar">
           <button
             onClick={() => startTransition('/jobs/sales/entrance')}
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              color: 'var(--fg)',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.2rem',
-              marginRight: '12px'
-            }}
+            className="sales-day-back-btn"
           >
             ←
           </button>
-          <h1 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 600 }}>業務報告</h1>
+          <h1 className="sales-day-report-title">業務報告</h1>
         </div>
 
         {/* 日次サマリ（簡易版） */}
@@ -809,13 +825,32 @@ export default function SalesDayReportPage() {
               />
             </div>
             <div className="sales-day-field">
-              <label>活動時間（分）</label>
+              <label>活動開始</label>
               <input
-                type="number"
-                min={0}
-                value={header.total_minutes || ''}
-                onChange={(e) => updateHeader({ total_minutes: e.target.value })}
+                type="time"
+                value={header.work_start_time || ''}
+                onChange={(e) => updateHeader((prev) => {
+                  const next = { ...prev, work_start_time: e.target.value };
+                  const minutes = calcDurationMinutes(next.work_start_time, next.work_end_time);
+                  return minutes === null ? next : { ...next, total_minutes: minutes };
+                })}
               />
+            </div>
+            <div className="sales-day-field">
+              <label>活動終了</label>
+              <input
+                type="time"
+                value={header.work_end_time || ''}
+                onChange={(e) => updateHeader((prev) => {
+                  const next = { ...prev, work_end_time: e.target.value };
+                  const minutes = calcDurationMinutes(next.work_start_time, next.work_end_time);
+                  return minutes === null ? next : { ...next, total_minutes: minutes };
+                })}
+              />
+            </div>
+            <div className="sales-day-field">
+              <label>活動時間（自動計算）</label>
+              <input type="text" value={`${headerMinutes}分`} readOnly />
             </div>
             <div className="sales-day-field">
               <label>本日の成果</label>

@@ -4660,3 +4660,149 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] お客様マイページの `お知らせ用 /yotei` 取得で Authorization ヘッダ送信を停止
 - [x] クロスオリジン時の OPTIONS（プリフライト）依存を回避し、CORSエラーを抑制
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Portal/Entrance Access Lock (2026-03-18)
+
+- [x] ルーターに customer専用ガードを追加し、`/customer/mypage?tenpo_id=...` で開いたタブを customer-only モードへロック
+- [x] customer-only モード中は `Portal` / `Entrance` / 他全ルートへの遷移を `customer/mypage` へ強制リダイレクト
+- [x] `tenpo_id` が欠落した `customer/mypage` も保持済み `tenpo_id` 付きURLへ補正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales UX: Progress Usability + Contrast Tuning (2026-03-19)
+
+- [x] 営業エントランス `進捗` をタップ時に `進捗一覧(/sales/leads)` へ直接遷移する導線へ変更（`directOnTap`）
+- [x] 営業エントランス `進捗` サブ項目ラベルを用途が分かる文言へ整理（`進捗一覧 / 一次対応Inbox / 新規リード登録`）
+- [x] 営業エントランスの HOTバー / サブHOTバー配色コントラストをライトテーマで強化（可読性改善）
+- [x] 営業エントランス `顧客` サブ項目ラベルを `顧客登録申請` へ統一
+- [x] 営業 `顧客登録申請` 画面を調整（担当者入力追加、営業担当自動反映、エラー表示改善、フォーム視認性改善）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report: Background Tone Unified (2026-03-19)
+
+- [x] 営業 `業務報告` ページ背景を他ページと同じトーン（`#FCF9EA`）へ統一
+- [x] 営業報告カード/入力欄/添付行の背景と枠線を統一配色（白背景 + ピンク系ボーダー）へ調整
+- [x] 営業報告ヘッダー（戻るボタン/タイトル）と認証エラーバナーをページ専用クラスへ整理
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Hotbar Report (`#/houkoku`): Background Tone Unified (2026-03-19)
+
+- [x] 営業HOTバー `報告` 遷移先（`/houkoku` = `AdminReportNewPage`）の背景をライトトーン（`#FCF9EA`）へ統一
+- [x] `/houkoku` のカード/入力/ボタン/選択系UIを白背景 + ピンク/セピア系アクセント配色へ統一
+- [x] `/houkoku` 内の読みにくい固定色（白文字/濃色背景）をライト配色へ補正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Label Cleanup: Hide `営業 / コンシェルジュ` (2026-03-19)
+
+- [x] 報告タブ（`AdminReportNewPage`）の `営業 / コンシェルジュ` 表記を `営業` に統一
+- [x] ハンバーガーメニュー（`/jobs/sales/entrance`）の同表記を `営業` に統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report UI Cleanup: Reduce Repetitive Titles (2026-03-19)
+
+- [x] `/houkoku` で表示可能テンプレートが1つのみの場合、テンプレート切替タブを非表示化
+- [x] 営業単独表示時は `営業活動報告` 見出しを非表示化し、`業務報告` との重複を削減
+- [x] テンプレート切替タブの営業ラベルを `報告` に調整（複数タブ表示時）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report UI: Add HOTBAR + Remove Bottom Portal Link (2026-03-19)
+
+- [x] `/houkoku` 営業単独表示時に営業HOTバー（顧客/進捗/予定/報告）を下部固定で表示
+- [x] HOTバー重なり回避のため、報告ページの下部パディングを調整
+- [x] 下部 `ポータルに戻る` リンクを削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report UI: Hook Order Error Fix (2026-03-19)
+
+- [x] `/houkoku` で追加した HOTバー制御フック（`useMemo`/`useCallback`）を条件分岐より上へ移動
+- [x] Reactフック順序不一致（Rendered more hooks than during previous render）を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report: Activity Time Picker (2026-03-19)
+
+- [x] `TemplateRenderer` に `field.type = "time"` の描画対応を追加
+- [x] `SALES_ACTIVITY_REPORT_V1` の `活動時間` を `活動開始/活動終了` の時間選択へ変更
+- [x] 旧営業日報UI（`SalesDayReportPage`）も `活動時間（分）` 入力を `開始/終了` 時間選択へ統一
+- [x] 旧営業日報UIは時間入力から `total_minutes` を自動計算して保存するよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Header Text Cleanup (2026-03-19)
+
+- [x] 営業モード `/sales/master/customer` のヘッダータイトルを `顧客登録申請` に変更
+- [x] 営業モード時の説明文 `kokyaku / torihikisaki / yagou / tenpo を1画面で申請（管理承認後に反映）` を非表示化
+- [x] 更新ボタンはヘッダー内配置を維持（営業モードでも同位置で表示）
+
+## Sales Customer Master: Refresh Button Align Right of Title (2026-03-19)
+
+- [x] 顧客マスタページのヘッダーを `タイトル行 + 補足行` 構造に変更
+- [x] 更新ボタンをタイトル行の右端に固定配置（同一行）へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Simplify Customer/Torihikisaki Input (2026-03-19)
+
+- [x] `顧客 / 取引先を追加` を単一入力へ変更（`顧客名（取引先名と共通）`）
+- [x] 入力値を `kokyaku_name` と `torihikisaki_name` に同時反映
+- [x] 登録処理を単一値ベースへ調整（`顧客名` 未入力時エラー）
+
+## Sales/Admin Customer Master: Hide Kokyaku ID From UI (2026-03-19)
+
+- [x] 顧客マスタ新規追加カードの `顧客ID（自動採番）` 表示を削除（内部採番は維持）
+- [x] 顧客マスタ一覧の `顧客(kokyaku)` 列から `kokyaku_id` タグ表示を削除
+- [x] 顧客マスタ編集モーダルの `顧客ID(kokyaku)` 入力欄を非表示化（内部値は保持）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Step-Based Registration Request (2026-03-19)
+
+- [x] 営業モード `顧客登録申請` の新規追加UIをステップ式へ変更（STEP1〜STEP4）
+- [x] STEP1で `新規顧客 / 既存顧客` を選択し、新規は顧客名入力、既存は取引先選択に分岐
+- [x] STEP2に `屋号がない場合は取引先と同じにする` ボタンを追加
+- [x] STEP3に `店舗がない場合は屋号と同じにする` ボタンを追加
+- [x] STEP4で申請内容確認のうえ `申請する` ボタンで一括申請
+- [x] 承認側に `create_customer_bundle` アクションを追加し、承認時に `取引先→屋号→店舗` を順に実作成
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Hide Unified Search For Registration (2026-03-19)
+
+- [x] 営業モード `顧客登録申請` 画面では統合検索ツールバー（検索/全件/未紐付け/重複候補/削除）を非表示化
+- [x] 管理モード `顧客マスタ` では既存どおり統合検索ツールバーを維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Hide List Table On Registration (2026-03-19)
+
+- [x] 営業モード `顧客登録申請` 画面では顧客一覧テーブル（リスト）自体を非表示化
+- [x] 管理モード `顧客マスタ` では一覧テーブルを従来どおり表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Existing-Customer Search In Step 1 (2026-03-19)
+
+- [x] 営業モードのステップ1で `既存顧客` 選択時のみ `統合検索` 入力を表示
+- [x] 統合検索で `顧客名 / 取引先名 / 屋号 / 店舗 / ID` を対象に既存取引先候補を絞り込み
+- [x] 新規顧客選択時は統合検索を非表示化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Post-Submit Basic Info Prompt (2026-03-19)
+
+- [x] `申請する` 実行後に `基本情報を入力しますか？` の確認ダイアログを表示
+- [x] ダイアログ閉じ後は `顧客情報一覧(/sales/clients/list)` へ直接遷移（既存取引先IDがある場合はクエリ付与）
+- [x] ダイアログ後にステップ入力状態をリセット
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Pending Request Re-Edit (2026-03-19)
+
+- [x] 営業モードでタイトル下説明文の直下に `申請中の顧客（再編集可）` セクションを追加
+- [x] 申請中一覧に `申請ID / 時刻 / 再編集` を表示（営業自身の未承認申請を対象）
+- [x] `再編集` 押下で申請内容をステップフォームへ再反映し、フォーム位置へスクロール
+- [x] `create_customer_bundle` に加えて既存の `create_torihikisaki / create_yagou / create_tenpo` 申請も再編集読み込み対応
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Pending List Toggle (2026-03-19)
+
+- [x] `申請中の顧客` をトグルボタン化し、初期状態ではリストを閉じたまま表示
+- [x] ボタン押下時のみ申請中リストを展開し、再編集操作ができる挙動へ変更
+- [x] `申請中件数` は常時表示し、開閉状態は `▲/▼` で明示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Customer Master: Pending Section Color Tone Fix (2026-03-19)
+
+- [x] 営業モード時の `申請中の顧客` セクション配色をライトトーンへ補正（黒っぽさ解消）
+- [x] トグルボタン・リストカード・テキスト色を営業画面パレットへ統一
+- [x] `npm -C src/misogi run build` でビルド確認

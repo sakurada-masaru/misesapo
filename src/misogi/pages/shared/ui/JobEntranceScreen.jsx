@@ -903,8 +903,8 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       return;
     }
 
-    // 清掃エントランスではメインHOTバー押下で既定のサブ項目へ進める
-    if (jobKey === 'cleaning') {
+    // 清掃エントランス / directOnTap 指定時はメインHOTバー押下で既定のサブ項目へ進める
+    if (jobKey === 'cleaning' || action?.directOnTap === true) {
       const firstSub = Array.isArray(action?.subItems)
         ? action.subItems.find((it) => String(it?.path || it?.to || '').trim())
         : null;

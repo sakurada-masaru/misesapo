@@ -283,6 +283,25 @@
   align-self: end;
 }
 
+.admin-customer-master-header {
+  gap: 6px;
+}
+
+.admin-customer-master-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-customer-master-header-row .admin-master-header-actions {
+  margin-left: auto;
+}
+
+.admin-customer-master-header-row .admin-master-header-actions button {
+  white-space: nowrap;
+}
+
 .admin-customer-master-create {
   border: 1px solid #273049;
   border-radius: 12px;
@@ -395,6 +414,117 @@
   box-shadow: none;
 }
 
+.admin-customer-master-stepper {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-customer-master-stepper-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-customer-master-step-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #475569;
+  background: rgba(15, 23, 42, 0.6);
+  color: #9aa6c5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-customer-master-step-pill.is-active {
+  border-color: #f472b6;
+  background: rgba(249, 168, 212, 0.24);
+  color: #fde7f3;
+}
+
+.admin-customer-master-step-pill.is-done {
+  border-color: #7dd3fc;
+  background: rgba(125, 211, 252, 0.18);
+  color: #e0f2fe;
+}
+
+.admin-customer-master-step-card {
+  min-height: 190px;
+}
+
+.admin-customer-master-step-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-customer-master-step-choice .choice-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #475569;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-customer-master-step-choice .choice-btn.is-active {
+  border-color: #f472b6;
+  background: rgba(249, 168, 212, 0.24);
+  color: #fde7f3;
+}
+
+.admin-customer-master-create-card button.secondary,
+.admin-customer-master-step-actions button.secondary {
+  min-height: 36px;
+  border-radius: 999px;
+  border: 1px solid #475569;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e5e7eb;
+  font-weight: 700;
+  padding: 0 12px;
+}
+
+.admin-customer-master-create-card button.secondary:disabled,
+.admin-customer-master-step-actions button.secondary:disabled {
+  opacity: 0.62;
+}
+
+.admin-customer-master-step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.admin-customer-master-step-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-customer-master-step-summary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px dashed #475569;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.admin-customer-master-step-summary span {
+  font-size: 12px;
+  color: #9aa6c5;
+}
+
+.admin-customer-master-step-summary strong {
+  font-size: 13px;
+  color: #f8fafc;
+}
+
 .admin-customer-master-approval-queue {
   border: 1px solid #273049;
   border-radius: 12px;
@@ -415,6 +545,57 @@
   margin: 0;
   font-size: 15px;
   color: #e2e8f0;
+}
+
+.admin-customer-master-pending-toggle {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid #475569;
+  background: rgba(15, 23, 42, 0.76);
+  color: #e5e7eb;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-customer-master-pending-toggle .state {
+  font-size: 11px;
+  color: #9aa6c5;
+}
+
+.admin-master-page.is-sales-mode .admin-customer-master-approval-queue {
+  border-color: #ffd0d0;
+  background: #fffdfc;
+}
+
+.admin-master-page.is-sales-mode .admin-customer-master-approval-head h2 {
+  color: #493628;
+}
+
+.admin-master-page.is-sales-mode .admin-customer-master-approval-item {
+  border-color: #ffd7e1;
+  background: #ffffff;
+}
+
+.admin-master-page.is-sales-mode .admin-customer-master-approval-item .summary {
+  color: #493628;
+}
+
+.admin-master-page.is-sales-mode .admin-customer-master-approval-item .meta {
+  color: #7c5f53;
+}
+
+.admin-master-page.is-sales-mode .admin-customer-master-pending-toggle {
+  border-color: #ffbdbd;
+  background: #fff0f0;
+  color: #493628;
+}
+
+.admin-master-page.is-sales-mode .admin-customer-master-pending-toggle .state {
+  color: #8a6a5a;
 }
 
 .admin-customer-master-approval-empty {
@@ -2221,6 +2402,66 @@
 [data-theme="light"] .admin-customer-master-create-card button.primary {
   border-color: #f472b6;
   color: #493628;
+}
+
+[data-theme="light"] .admin-customer-master-pending-toggle {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+[data-theme="light"] .admin-customer-master-pending-toggle .state {
+  color: #64748b;
+}
+
+[data-theme="light"] .admin-customer-master-step-pill {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+}
+
+[data-theme="light"] .admin-customer-master-step-pill.is-active {
+  border-color: #f472b6;
+  background: #ffe4ef;
+  color: #7f1d4f;
+}
+
+[data-theme="light"] .admin-customer-master-step-pill.is-done {
+  border-color: #7dd3fc;
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+[data-theme="light"] .admin-customer-master-step-choice .choice-btn {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+[data-theme="light"] .admin-customer-master-step-choice .choice-btn.is-active {
+  border-color: #f472b6;
+  background: #ffe4ef;
+  color: #7f1d4f;
+}
+
+[data-theme="light"] .admin-customer-master-create-card button.secondary,
+[data-theme="light"] .admin-customer-master-step-actions button.secondary {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+[data-theme="light"] .admin-customer-master-step-summary > div {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+[data-theme="light"] .admin-customer-master-step-summary span {
+  color: #64748b;
+}
+
+[data-theme="light"] .admin-customer-master-step-summary strong {
+  color: #0f172a;
 }
 
 @media (max-width: 900px) {

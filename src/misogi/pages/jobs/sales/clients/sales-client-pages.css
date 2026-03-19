@@ -1,0 +1,229 @@
+.sales-client-new-page .sales-client-new-content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+}
+
+.sales-client-new-head {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sales-client-new-back {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 1.15rem;
+}
+
+.sales-client-new-title-wrap {
+  min-width: 0;
+}
+
+.sales-client-new-title {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.sales-client-new-sub {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.sales-client-new-link-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--job-sales) 46%, #ffffff 54%);
+  background: color-mix(in srgb, var(--job-sales) 14%, #ffffff 86%);
+  color: var(--fg);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.sales-client-new-form {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+}
+
+.sales-client-new-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.sales-client-new-field input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--card-bg) 92%, #ffffff 8%);
+  color: var(--fg);
+  font-size: 0.95rem;
+}
+
+.sales-client-new-field input::placeholder {
+  color: color-mix(in srgb, var(--muted) 78%, #ffffff 22%);
+}
+
+.sales-client-new-field input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--job-sales) 60%, #ffffff 40%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--job-sales) 20%, transparent 80%);
+}
+
+.sales-client-new-actions {
+  margin-top: 18px;
+}
+
+.sales-client-new-submit {
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  border-radius: 12px;
+  background: var(--job-sales);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sales-client-new-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.sales-client-new-error {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.36);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+  font-size: 0.82rem;
+}
+
+.sales-client-new-cancel {
+  text-align: center;
+  margin-top: 24px;
+  padding-bottom: 22px;
+}
+
+.sales-client-new-cancel a {
+  color: var(--job-sales);
+  text-decoration: none;
+  font-size: 0.84rem;
+}
+
+.sales-client-new-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.58);
+  padding: 20px;
+}
+
+.sales-client-new-modal {
+  width: min(520px, 100%);
+  border-radius: 18px;
+  border: 1px solid var(--card-border);
+  background: var(--bg);
+  padding: 20px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+}
+
+.sales-client-new-modal-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--job-sales) 70%, #ffffff 30%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.sales-client-new-modal h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.sales-client-new-modal-sub {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.sales-client-new-invite-url {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  word-break: break-all;
+  font-size: 0.78rem;
+  color: var(--fg);
+}
+
+.sales-client-new-modal-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sales-client-new-modal-btn {
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--fg);
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sales-client-new-modal-btn.primary {
+  border: none;
+  background: var(--job-sales);
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .sales-client-new-page .sales-client-new-content {
+    max-width: 100%;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .sales-client-new-head {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .sales-client-new-link-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .sales-client-new-form {
+    padding: 12px;
+  }
+}

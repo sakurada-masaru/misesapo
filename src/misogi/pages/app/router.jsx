@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Routes, Route, useParams, Navigate, Link } from 'react-router-dom';
+import { Routes, Route, useParams, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../shared/auth/useAuth';
 
 /** /report/* は廃止。社内は /office/work-reports/:reportId を使用 */
@@ -70,6 +70,52 @@ import MyYoteiListPage from '../shared/ui/Yotei/MyYoteiListPage';
 import CustomerOnboardingPage from '../registration/CustomerOnboardingPage';
 import FlowGuideScreen from '../FlowGuideScreen';
 import CustomerMyPage from '../customer/pages/CustomerMyPage';
+
+const CUSTOMER_ONLY_LOCK_KEY = 'misogi-customer-only-tenpo-id';
+
+function readCustomerOnlyTenpoId() {
+  if (typeof window === 'undefined') return '';
+  try {
+    return String(window.sessionStorage.getItem(CUSTOMER_ONLY_LOCK_KEY) || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+function writeCustomerOnlyTenpoId(tenpoId) {
+  const id = String(tenpoId || '').trim();
+  if (!id || typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(CUSTOMER_ONLY_LOCK_KEY, id);
+  } catch {
+    // noop
+  }
+}
+
+function CustomerOnlyRouteGuard({ children }) {
+  const location = useLocation();
+  const pathname = String(location?.pathname || '/');
+  const isCustomerPath = /^\/customer\/mypage(?:\/|$)/.test(pathname);
+  const qs = new URLSearchParams(String(location?.search || ''));
+  const routeTenpoId = String(qs.get('tenpo_id') || '').trim();
+
+  if (isCustomerPath && routeTenpoId) {
+    writeCustomerOnlyTenpoId(routeTenpoId);
+  }
+
+  const lockedTenpoId = readCustomerOnlyTenpoId();
+  if (!lockedTenpoId) return children;
+
+  if (!isCustomerPath) {
+    return <Navigate to={`/customer/mypage?tenpo_id=${encodeURIComponent(lockedTenpoId)}`} replace />;
+  }
+
+  if (!routeTenpoId) {
+    return <Navigate to={`/customer/mypage?tenpo_id=${encodeURIComponent(lockedTenpoId)}`} replace />;
+  }
+
+  return children;
+}
 
 function readCurrentTokenClaims() {
   try {
@@ -153,82 +199,84 @@ function JobEntranceRoute() {
  */
 export default function Router() {
   return (
-    <Routes>
-      <Route path="/" element={<Portal />} />
-      <Route path="/portal" element={<Navigate to="/" replace />} />
-      <Route path="/entrance" element={<Navigate to="/" replace />} />
-      <Route path="/jobs/:job/entrance" element={<JobEntranceRoute />} />
-      <Route path="/jobs/:job/report" element={<ReportCreatePage />} />
-      <Route path="/jobs/:job/houkoku" element={<ReportCreatePage />} />
-      <Route path="/jobs/:job/yotei" element={<MyYoteiListPage />} />
-      <Route path="/admin" element={<AdminHome />} />
-      <Route path="/admin/entrance" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route path="/admin/dashboard" element={<AdminEntrancePage />} />
-      <Route path="/admin/filebox" element={<AdminEntrancePage />} />
-      <Route path="/admin/cleaning-reports" element={<AdminCleaningReportsPage />} />
-      <Route path="/admin/reports/new" element={<AdminReportNewPage />} />
-      <Route path="/houkoku" element={<AdminReportNewPage />} />
-      <Route path="/admin/schedule" element={<AdminScheduleTimelinePage />} />
-      <Route path="/admin/yotei" element={<AdminYoteiTimelinePage />} />
-      <Route path="/admin/yakusoku" element={<AdminYakusokuPage />} />
-      <Route path="/admin/ugoki" element={<AdminUgokiDashboardPage />} />
-      <Route path="/admin/yasumi" element={<AdminYasumiPage />} />
-      <Route path="/admin/cleaning-sales" element={<AdminCleaningSalesPage />} />
-      <Route path="/admin/torihikisaki-touroku" element={<AdminTorihikisakiTourokuPage />} />
-      <Route path="/admin/torihikisaki-meibo" element={<AdminMasterOnly><AdminTorihikisakiMeiboPage /></AdminMasterOnly>} />
-      <Route path="/admin/jinzai-meibo" element={<AdminMasterOnly><AdminJinzaiMeiboPage /></AdminMasterOnly>} />
-      <Route path="/admin/tenpo/:tenpoId" element={<AdminMasterOnly><AdminTenpoKartePage /></AdminMasterOnly>} />
-      <Route path="/admin/master/torihikisaki" element={<AdminMasterOnly><AdminMasterTorihikisakiPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/yagou" element={<AdminMasterOnly><AdminMasterYagouPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/tenpo" element={<AdminMasterOnly><AdminMasterTenpoPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/customer" element={<AdminMasterOnly><AdminCustomerMasterPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/souko" element={<AdminMasterOnly><AdminMasterSoukoPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/jinzai" element={<AdminMasterOnly><AdminMasterJinzaiPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/jinzai-busho" element={<AdminMasterOnly><AdminMasterJinzaiBushoPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/jinzai-shokushu" element={<AdminMasterOnly><AdminMasterJinzaiShokushuPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/service" element={<AdminMasterOnly><AdminMasterServicePage /></AdminMasterOnly>} />
-      <Route path="/admin/master/keiyaku" element={<AdminMasterOnly><AdminMasterKeiyakuPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/zaiko" element={<AdminMasterOnly><AdminMasterZaikoPage /></AdminMasterOnly>} />
-      <Route path="/admin/master/zaiko-order" element={<AdminMasterOnly><AdminZaikoOrderPage /></AdminMasterOnly>} />
-      <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />
-      <Route path="/admin/houkoku/:reportId" element={<AdminHoukokuDetailPage />} />
-      <Route path="/admin/tools/cleaning-houkoku" element={<AdminCleaningHoukokuToolPage />} />
-      <Route path="/admin/tools/cleaning-houkoku/list" element={<AdminCleaningHoukokuListPage />} />
-      <Route path="/admin/kadai" element={<AdminKadaiListPage />} />
-      <Route path="/admin/request-doc" element={<AdminRequestDocumentPage />} />
-      <Route path="/admin/admin-log" element={<AdminAdminLogPage />} />
-      <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
-      <Route path="/sales/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
-      <Route path="/office/payroll/:userId/:yyyyMm" element={<OfficePayrollMonthPage />} />
-      {/* 廃止: 旧 /report/:shareToken。参照が残っている環境でクラッシュしないようフォールバック */}
-      <Route path="/report/*" element={<ReportLegacyRedirect />} />
-      <Route path="/admin/hr/attendance" element={<HrAttendance />} />
-      <Route path="/sales/store/:storeKey" element={<SalesStoreKartePage />} />
-      <Route path="/sales/report-day" element={<SalesDayReportPage />} />
-      <Route path="/sales/customers" element={<Navigate to="/sales/clients/list" replace />} />
-      <Route path="/sales/clients/list" element={<AdminTorihikisakiMeiboPage mode="sales" />} />
-      <Route path="/sales/register" element={<Navigate to="/sales/clients/new" replace />} />
-      <Route path="/sales/clients/new" element={<SalesClientNewPage />} />
-      <Route path="/sales/kartes" element={<SalesKarteListPage />} />
-      <Route path="/sales/inbox" element={<SalesFirstResponsePage />} />
-      <Route path="/sales/leads" element={<SalesLeadsPage />} />
-      <Route path="/sales/leads/new" element={<SalesLeadNewPage />} />
-      <Route path="/sales/leads/:leadId" element={<SalesLeadDetailPage />} />
-      <Route path="/sales/schedule" element={<SalesSchedulePage />} />
-      <Route path="/sales/master/customer" element={<AdminCustomerMasterPage mode="sales" />} />
-      <Route path="/sales/tenpo/:tenpoId" element={<AdminTenpoKartePage mode="sales" />} />
-      <Route path="/jobs/cleaning/schedule" element={<CleanerSchedulePage />} />
-      <Route path="/jobs/cleaning/availability-declare" element={<ContractorAvailabilityDeclarationPage />} />
-      <Route path="/jobs/cleaning/manual" element={<CleaningManualPage />} />
-      <Route path="/jobs/cleaning/mypage" element={<CleanerMySalesPage />} />
-      <Route path="/cleaning-manual" element={<Navigate to="/jobs/cleaning/manual" replace />} />
-      <Route path="/jobs/cleaning/clients/list" element={<CleanerClientListPage />} />
-      <Route path="/jobs/cleaning/clients/:storeId" element={<CleanerClientKartePage />} />
-      <Route path="/product/chuka-menu" element={<ChineseTabletMenuPage />} />
-      <Route path="/product/chinese-tablet-menu" element={<ChineseTabletMenuPage />} />
-      <Route path="/registration/onboarding/:storeId" element={<CustomerOnboardingPage />} />
-      <Route path="/customer/mypage" element={<CustomerMyPage />} />
-      <Route path="/flow-guide" element={<FlowGuideScreen />} />
-    </Routes>
+    <CustomerOnlyRouteGuard>
+      <Routes>
+        <Route path="/" element={<Portal />} />
+        <Route path="/portal" element={<Navigate to="/" replace />} />
+        <Route path="/entrance" element={<Navigate to="/" replace />} />
+        <Route path="/jobs/:job/entrance" element={<JobEntranceRoute />} />
+        <Route path="/jobs/:job/report" element={<ReportCreatePage />} />
+        <Route path="/jobs/:job/houkoku" element={<ReportCreatePage />} />
+        <Route path="/jobs/:job/yotei" element={<MyYoteiListPage />} />
+        <Route path="/admin" element={<AdminHome />} />
+        <Route path="/admin/entrance" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminEntrancePage />} />
+        <Route path="/admin/filebox" element={<AdminEntrancePage />} />
+        <Route path="/admin/cleaning-reports" element={<AdminCleaningReportsPage />} />
+        <Route path="/admin/reports/new" element={<AdminReportNewPage />} />
+        <Route path="/houkoku" element={<AdminReportNewPage />} />
+        <Route path="/admin/schedule" element={<AdminScheduleTimelinePage />} />
+        <Route path="/admin/yotei" element={<AdminYoteiTimelinePage />} />
+        <Route path="/admin/yakusoku" element={<AdminYakusokuPage />} />
+        <Route path="/admin/ugoki" element={<AdminUgokiDashboardPage />} />
+        <Route path="/admin/yasumi" element={<AdminYasumiPage />} />
+        <Route path="/admin/cleaning-sales" element={<AdminCleaningSalesPage />} />
+        <Route path="/admin/torihikisaki-touroku" element={<AdminTorihikisakiTourokuPage />} />
+        <Route path="/admin/torihikisaki-meibo" element={<AdminMasterOnly><AdminTorihikisakiMeiboPage /></AdminMasterOnly>} />
+        <Route path="/admin/jinzai-meibo" element={<AdminMasterOnly><AdminJinzaiMeiboPage /></AdminMasterOnly>} />
+        <Route path="/admin/tenpo/:tenpoId" element={<AdminMasterOnly><AdminTenpoKartePage /></AdminMasterOnly>} />
+        <Route path="/admin/master/torihikisaki" element={<AdminMasterOnly><AdminMasterTorihikisakiPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/yagou" element={<AdminMasterOnly><AdminMasterYagouPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/tenpo" element={<AdminMasterOnly><AdminMasterTenpoPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/customer" element={<AdminMasterOnly><AdminCustomerMasterPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/souko" element={<AdminMasterOnly><AdminMasterSoukoPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/jinzai" element={<AdminMasterOnly><AdminMasterJinzaiPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/jinzai-busho" element={<AdminMasterOnly><AdminMasterJinzaiBushoPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/jinzai-shokushu" element={<AdminMasterOnly><AdminMasterJinzaiShokushuPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/service" element={<AdminMasterOnly><AdminMasterServicePage /></AdminMasterOnly>} />
+        <Route path="/admin/master/keiyaku" element={<AdminMasterOnly><AdminMasterKeiyakuPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/zaiko" element={<AdminMasterOnly><AdminMasterZaikoPage /></AdminMasterOnly>} />
+        <Route path="/admin/master/zaiko-order" element={<AdminMasterOnly><AdminZaikoOrderPage /></AdminMasterOnly>} />
+        <Route path="/admin/houkoku" element={<AdminHoukokuListPage />} />
+        <Route path="/admin/houkoku/:reportId" element={<AdminHoukokuDetailPage />} />
+        <Route path="/admin/tools/cleaning-houkoku" element={<AdminCleaningHoukokuToolPage />} />
+        <Route path="/admin/tools/cleaning-houkoku/list" element={<AdminCleaningHoukokuListPage />} />
+        <Route path="/admin/kadai" element={<AdminKadaiListPage />} />
+        <Route path="/admin/request-doc" element={<AdminRequestDocumentPage />} />
+        <Route path="/admin/admin-log" element={<AdminAdminLogPage />} />
+        <Route path="/office/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
+        <Route path="/sales/work-reports/:reportId" element={<OfficeWorkReportDetailPage />} />
+        <Route path="/office/payroll/:userId/:yyyyMm" element={<OfficePayrollMonthPage />} />
+        {/* 廃止: 旧 /report/:shareToken。参照が残っている環境でクラッシュしないようフォールバック */}
+        <Route path="/report/*" element={<ReportLegacyRedirect />} />
+        <Route path="/admin/hr/attendance" element={<HrAttendance />} />
+        <Route path="/sales/store/:storeKey" element={<SalesStoreKartePage />} />
+        <Route path="/sales/report-day" element={<SalesDayReportPage />} />
+        <Route path="/sales/customers" element={<Navigate to="/sales/clients/list" replace />} />
+        <Route path="/sales/clients/list" element={<AdminTorihikisakiMeiboPage mode="sales" />} />
+        <Route path="/sales/register" element={<Navigate to="/sales/clients/new" replace />} />
+        <Route path="/sales/clients/new" element={<SalesClientNewPage />} />
+        <Route path="/sales/kartes" element={<SalesKarteListPage />} />
+        <Route path="/sales/inbox" element={<SalesFirstResponsePage />} />
+        <Route path="/sales/leads" element={<SalesLeadsPage />} />
+        <Route path="/sales/leads/new" element={<SalesLeadNewPage />} />
+        <Route path="/sales/leads/:leadId" element={<SalesLeadDetailPage />} />
+        <Route path="/sales/schedule" element={<SalesSchedulePage />} />
+        <Route path="/sales/master/customer" element={<AdminCustomerMasterPage mode="sales" />} />
+        <Route path="/sales/tenpo/:tenpoId" element={<AdminTenpoKartePage mode="sales" />} />
+        <Route path="/jobs/cleaning/schedule" element={<CleanerSchedulePage />} />
+        <Route path="/jobs/cleaning/availability-declare" element={<ContractorAvailabilityDeclarationPage />} />
+        <Route path="/jobs/cleaning/manual" element={<CleaningManualPage />} />
+        <Route path="/jobs/cleaning/mypage" element={<CleanerMySalesPage />} />
+        <Route path="/cleaning-manual" element={<Navigate to="/jobs/cleaning/manual" replace />} />
+        <Route path="/jobs/cleaning/clients/list" element={<CleanerClientListPage />} />
+        <Route path="/jobs/cleaning/clients/:storeId" element={<CleanerClientKartePage />} />
+        <Route path="/product/chuka-menu" element={<ChineseTabletMenuPage />} />
+        <Route path="/product/chinese-tablet-menu" element={<ChineseTabletMenuPage />} />
+        <Route path="/registration/onboarding/:storeId" element={<CustomerOnboardingPage />} />
+        <Route path="/customer/mypage" element={<CustomerMyPage />} />
+        <Route path="/flow-guide" element={<FlowGuideScreen />} />
+      </Routes>
+    </CustomerOnlyRouteGuard>
   );
 }

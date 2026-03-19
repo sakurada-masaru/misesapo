@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import { useAuth } from '../../shared/auth/useAuth';
 import { apiFetch, apiFetchWorkReport } from '../../shared/api/client';
 import Visualizer from '../../shared/ui/Visualizer/Visualizer';
+import Hotbar from '../../shared/ui/Hotbar/Hotbar';
+import { SALES_HOTBAR } from '../../jobs/sales/entrance/hotbar.config';
 import TemplateRenderer, { validateTemplatePayload } from '../../../shared/components/TemplateRenderer';
 import { getTemplateById, getTemplateList } from '../../../templates';
 
@@ -221,6 +223,7 @@ function deserializeStoreReport(descStr, meta = {}) {
 
 export default function AdminReportNewPage() {
     const { user, authz, isLoading: authLoading, getToken } = useAuth();
+    const navigate = useNavigate();
     const [activeTemplate, setActiveTemplate] = useState(TEMPLATE_CLEANING);
     const [showPreview, setShowPreview] = useState(false); // プレビュー状態
 
@@ -484,9 +487,45 @@ export default function AdminReportNewPage() {
         }
     }, [authLoading, authz.workerId, loadData]);
 
-    const { isAuthenticated, login } = useAuth();
+    const { isAuthenticated } = useAuth();
 
-    if (authLoading) return <div style={{ padding: 40, textAlign: 'center', color: '#fff' }}>読み込み中...</div>;
+    const visibleTemplateIds = [
+        TEMPLATE_CLEANING,
+        TEMPLATE_SALES,
+        TEMPLATE_ENGINEERING,
+        TEMPLATE_OFFICE,
+    ].filter((tid) => checkPermission(tid));
+    const showTemplateTabs = visibleTemplateIds.length > 1;
+    const isSalesOnlyView = visibleTemplateIds.length === 1 && visibleTemplateIds[0] === TEMPLATE_SALES;
+    const showSalesHotbar = isSalesOnlyView;
+
+    const salesHotbarActive = useMemo(() => {
+        const path = String(location?.pathname || '');
+        if (path.startsWith('/sales/master/customer') || path.startsWith('/sales/clients/list')) return 'customer';
+        if (path.startsWith('/sales/inbox') || path.startsWith('/sales/leads')) return 'progress';
+        if (path.startsWith('/sales/schedule')) return 'schedule';
+        if (path.startsWith('/houkoku')) return 'report';
+        return 'report';
+    }, [location?.pathname]);
+
+    const handleSalesHotbarChange = useCallback((id) => {
+        const action = SALES_HOTBAR.find((it) => it.id === id);
+        if (!action) return;
+        const nextPath = String(
+            action.to ||
+            action.subItems?.find((it) => String(it?.path || it?.to || '').trim())?.path ||
+            action.subItems?.find((it) => String(it?.path || it?.to || '').trim())?.to ||
+            ''
+        ).trim();
+        if (!nextPath) return;
+        if (/^https?:\/\//i.test(nextPath)) {
+            window.location.href = nextPath;
+            return;
+        }
+        navigate(nextPath);
+    }, [navigate]);
+
+    if (authLoading) return <div style={{ padding: 40, textAlign: 'center', color: '#493628' }}>読み込み中...</div>;
 
     if (!isAuthenticated) {
         return (
@@ -902,8 +941,6 @@ export default function AdminReportNewPage() {
         });
     };
 
-    if (authLoading) return <div style={{ padding: 40, textAlign: 'center' }}>読み込み中...</div>;
-
     return (
         <PageContainer data-job="admin">
             {statusMessage && (
@@ -915,34 +952,36 @@ export default function AdminReportNewPage() {
                 </StatusOverlay>
             )}
             <VizContainer><Visualizer mode="base" /></VizContainer>
-            <MainContent>
+            <MainContent $withHotbar={showSalesHotbar}>
                 <ContentHeader>
                     <BackLink to="/portal"><i className="fas fa-chevron-left"></i></BackLink>
                     <ContentTitle>業務報告</ContentTitle>
                 </ContentHeader>
 
-                <TabNav>
-                    {checkPermission(TEMPLATE_CLEANING) && (
-                        <TabButton $active={activeTemplate === TEMPLATE_CLEANING} onClick={() => setActiveTemplate(TEMPLATE_CLEANING)}>
-                            <i className="fas fa-broom"></i><span>清掃</span>
-                        </TabButton>
-                    )}
-                    {checkPermission(TEMPLATE_SALES) && (
-                        <TabButton $active={activeTemplate === TEMPLATE_SALES} onClick={() => setActiveTemplate(TEMPLATE_SALES)}>
-                            <i className="fas fa-briefcase"></i><span>営業 / コンシェルジュ</span>
-                        </TabButton>
-                    )}
-                    {checkPermission(TEMPLATE_ENGINEERING) && (
-                        <TabButton $active={activeTemplate === TEMPLATE_ENGINEERING} onClick={() => setActiveTemplate(TEMPLATE_ENGINEERING)}>
-                            <i className="fas fa-code"></i><span>開発</span>
-                        </TabButton>
-                    )}
-                    {checkPermission(TEMPLATE_OFFICE) && (
-                        <TabButton $active={activeTemplate === TEMPLATE_OFFICE} onClick={() => setActiveTemplate(TEMPLATE_OFFICE)}>
-                            <i className="fas fa-file-invoice"></i><span>事務</span>
-                        </TabButton>
-                    )}
-                </TabNav>
+                {showTemplateTabs && (
+                    <TabNav>
+                        {checkPermission(TEMPLATE_CLEANING) && (
+                            <TabButton $active={activeTemplate === TEMPLATE_CLEANING} onClick={() => setActiveTemplate(TEMPLATE_CLEANING)}>
+                                <i className="fas fa-broom"></i><span>清掃</span>
+                            </TabButton>
+                        )}
+                        {checkPermission(TEMPLATE_SALES) && (
+                            <TabButton $active={activeTemplate === TEMPLATE_SALES} onClick={() => setActiveTemplate(TEMPLATE_SALES)}>
+                                <i className="fas fa-briefcase"></i><span>報告</span>
+                            </TabButton>
+                        )}
+                        {checkPermission(TEMPLATE_ENGINEERING) && (
+                            <TabButton $active={activeTemplate === TEMPLATE_ENGINEERING} onClick={() => setActiveTemplate(TEMPLATE_ENGINEERING)}>
+                                <i className="fas fa-code"></i><span>開発</span>
+                            </TabButton>
+                        )}
+                        {checkPermission(TEMPLATE_OFFICE) && (
+                            <TabButton $active={activeTemplate === TEMPLATE_OFFICE} onClick={() => setActiveTemplate(TEMPLATE_OFFICE)}>
+                                <i className="fas fa-file-invoice"></i><span>事務</span>
+                            </TabButton>
+                        )}
+                    </TabNav>
+                )}
 
                 {activeTemplate === TEMPLATE_CLEANING && (
                     <MobileStage>
@@ -991,7 +1030,7 @@ export default function AdminReportNewPage() {
                                                 {sch.target_name || sch.store_name}
                                             </div>
                                             {sch.brand_name && (
-                                                <div style={{ fontSize: '0.7rem', color: '#3b82f6', marginTop: 2 }}>
+                                                <div style={{ fontSize: '0.7rem', color: '#b55c5c', marginTop: 2 }}>
                                                     {sch.brand_name}
                                                 </div>
                                             )}
@@ -1101,7 +1140,7 @@ export default function AdminReportNewPage() {
                                                 checked={currentStore.confirmed}
                                                 onChange={e => updateStore(activeStoreIdx, { confirmed: e.target.checked })}
                                             />
-                                            <Label htmlFor={`confirm-${activeStoreIdx}`} style={{ margin: 0, cursor: 'pointer', color: currentStore.confirmed ? '#3b82f6' : '#94a3b8', fontSize: '0.75rem' }}>
+                                            <Label htmlFor={`confirm-${activeStoreIdx}`} style={{ margin: 0, cursor: 'pointer', color: currentStore.confirmed ? '#b55c5c' : '#7a6155', fontSize: '0.75rem' }}>
                                                 この店舗の入力内容を確認しました
                                             </Label>
                                         </div>
@@ -1119,9 +1158,9 @@ export default function AdminReportNewPage() {
                                 }
                             />
                         ) : (
-                            <div style={{ marginTop: 20, textAlign: 'center', padding: 60, border: '2px dashed #334155', borderRadius: 24, color: '#475569' }}>
+                            <div style={{ marginTop: 20, textAlign: 'center', padding: 60, border: '2px dashed #ffbdbd', borderRadius: 24, color: '#7a6155' }}>
                                 <i className="fas fa-hand-pointer" style={{ fontSize: 32, marginBottom: 16, opacity: 0.3 }}></i>
-                                <div style={{ fontSize: '0.8rem', lineHeight: 1.6, color: '#94a3b8', maxWidth: 400, margin: '0 auto', textAlign: 'left' }}>
+                                <div style={{ fontSize: '0.8rem', lineHeight: 1.6, color: '#7a6155', maxWidth: 400, margin: '0 auto', textAlign: 'left' }}>
                                     現在、現場の皆さんの利便性向上を目指すため報告内容の選定を行なっています。<br />
                                     上記にサービス項目がない場合に限り、実施サービスを選択の『自由入力』を選択し作業報告を行ってください。<br />
                                     各実施サービスの報告テンプレート内の『備考』に、ご意見ご要望がございましたら、今後の開発の参考にさせていただきます。<br />
@@ -1136,7 +1175,9 @@ export default function AdminReportNewPage() {
                 {
                     activeTemplate === TEMPLATE_SALES && (
                         <Card>
-                            <SectionHeader><CardTitle>営業活動報告</CardTitle></SectionHeader>
+                            {!isSalesOnlyView && (
+                                <SectionHeader><CardTitle>営業活動報告</CardTitle></SectionHeader>
+                            )}
                             <TemplateRenderer
                                 template={getTemplateById(TEMPLATE_SALES)}
                                 payload={sales}
@@ -1226,7 +1267,7 @@ export default function AdminReportNewPage() {
                                         {(Array.isArray(office.work_sessions) ? office.work_sessions : [{ start: '', end: '' }]).map((s, idx) => (
                                             <div key={`office-session-${idx}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 10, alignItems: 'end' }}>
                                                 <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>開始</span>
+                                                    <span style={{ fontSize: '0.85rem', color: '#7a6155' }}>開始</span>
                                                     <Input
                                                         type="time"
                                                         value={String(s?.start || '')}
@@ -1242,7 +1283,7 @@ export default function AdminReportNewPage() {
                                                     />
                                                 </label>
                                                 <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>終了</span>
+                                                    <span style={{ fontSize: '0.85rem', color: '#7a6155' }}>終了</span>
                                                     <Input
                                                         type="time"
                                                         value={String(s?.end || '')}
@@ -1271,9 +1312,9 @@ export default function AdminReportNewPage() {
                                                         height: 42,
                                                         padding: '0 12px',
                                                         borderRadius: 10,
-                                                        border: '1px solid #334155',
-                                                        background: '#1e293b',
-                                                        color: '#e2e8f0',
+                                                        border: '1px solid #ffbdbd',
+                                                        background: '#fff',
+                                                        color: '#493628',
                                                         cursor: 'pointer',
                                                     }}
                                                     disabled={(Array.isArray(office.work_sessions) ? office.work_sessions.length : 1) <= 1}
@@ -1298,15 +1339,15 @@ export default function AdminReportNewPage() {
                                                     height: 42,
                                                     padding: '0 14px',
                                                     borderRadius: 10,
-                                                    border: '1px solid #334155',
-                                                    background: '#0b1220',
-                                                    color: '#e2e8f0',
+                                                    border: '1px solid #badfdb',
+                                                    background: '#badfdb',
+                                                    color: '#2f473f',
                                                     cursor: 'pointer',
                                                 }}
                                             >
                                                 ＋ 追加
                                             </button>
-                                            <div style={{ color: '#e2e8f0', fontWeight: 700 }}>
+                                            <div style={{ color: '#493628', fontWeight: 700 }}>
                                                 総時間: {officeTotalLabel}
                                             </div>
                                         </div>
@@ -1333,7 +1374,7 @@ export default function AdminReportNewPage() {
                                                             });
                                                         }}
                                                     />
-                                                    <span style={{ fontSize: '0.9rem', color: '#e2e8f0' }}>{it.label}</span>
+                                                    <span style={{ fontSize: '0.9rem', color: '#493628' }}>{it.label}</span>
                                                 </label>
                                             );
                                         })}
@@ -1360,7 +1401,7 @@ export default function AdminReportNewPage() {
                                             { key: 'other', label: 'その他' },
                                         ].map((c) => (
                                             <label key={c.key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                                <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{c.label}</span>
+                                                <span style={{ fontSize: '0.85rem', color: '#7a6155' }}>{c.label}</span>
                                                 <Input
                                                     type="number"
                                                     min="0"
@@ -1395,7 +1436,7 @@ export default function AdminReportNewPage() {
                                                             });
                                                         }}
                                                     />
-                                                    <span style={{ fontSize: '0.9rem', color: '#e2e8f0' }}>{it.label}</span>
+                                                    <span style={{ fontSize: '0.9rem', color: '#493628' }}>{it.label}</span>
                                                 </label>
                                             );
                                         })}
@@ -1453,58 +1494,84 @@ export default function AdminReportNewPage() {
                     </PreviewOverlay>
                 )}
 
-                <div style={{ marginTop: 32, textAlign: 'center' }}>
-                    <Link to="/portal" style={{ color: '#64748b', textDecoration: 'none' }}>ポータルに戻る</Link>
-                </div>
+                {showSalesHotbar ? (
+                    <div aria-label="営業HOTバー">
+                        <Hotbar
+                            actions={SALES_HOTBAR}
+                            active={salesHotbarActive}
+                            onChange={handleSalesHotbarChange}
+                            showFlowGuideButton={false}
+                        />
+                    </div>
+                ) : null}
             </MainContent >
         </PageContainer >
     );
 }
 
-const PageContainer = styled.div` min-height: 100vh; background: #0f172a; color: #f8fafc; `;
-const VizContainer = styled.div` position: fixed; inset: 0; pointer-events: none; z-index: -10; opacity: 0.15; `;
-const MainContent = styled.div` position: relative; z-index: 100; max-width: 800px; margin: 0 auto; padding: 24px 16px; @media(max-width:600px){ padding: 12px 8px; } `;
+const PageContainer = styled.div` min-height: 100vh; background: #fcf9ea; color: #493628; `;
+const VizContainer = styled.div` position: fixed; inset: 0; pointer-events: none; z-index: -10; opacity: 0.08; `;
+const MainContent = styled.div`
+  position: relative;
+  z-index: 100;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 16px ${props => (props.$withHotbar ? '132px' : '24px')};
+  @media(max-width:600px){
+    padding: 12px 8px ${props => (props.$withHotbar ? '124px' : '12px')};
+  }
+`;
 const ContentHeader = styled.header` display: flex; align-items: center; gap: 16px; margin-bottom: 32px; `;
-const BackLink = styled(Link)` color: #94a3b8; `;
-const ContentTitle = styled.h1` font-size: 1.5rem; font-weight: 700; `;
+const BackLink = styled(Link)` color: #7a6155; &:hover { color: #493628; }`;
+const ContentTitle = styled.h1` font-size: 1.5rem; font-weight: 700; color: #3b3b1a; `;
 const TabNav = styled.div` display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; `;
-const TabButton = styled.button` display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: ${props => props.$active ? '#3b82f6' : '#1e293b'}; color: #fff; border: 1px solid #334155; border-radius: 99px; cursor: pointer; `;
-const Card = styled.div` background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(8px); border: 1px solid #334155; border-radius: 16px; padding: 24px; margin-bottom: 24px; @media(max-width:600px){ padding: 16px 12px; } `;
-const SectionHeader = styled.div` margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); `;
-const CardTitle = styled.h2` font-size: 1.1rem; color: #3b82f6; `;
-const FormGrid = styled.div` display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media(max-width:600px){grid - template - columns:1fr; } `;
+const TabButton = styled.button` display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: ${props => props.$active ? '#ffa4a4' : '#fff'}; color: #493628; border: 1px solid #ffbdbd; border-radius: 99px; cursor: pointer; box-shadow: ${props => props.$active ? '0 8px 16px rgba(255, 164, 164, 0.3)' : 'none'}; `;
+const Card = styled.div` background: #fff; border: 1px solid #ffbdbd; border-radius: 16px; padding: 24px; margin-bottom: 24px; @media(max-width:600px){ padding: 16px 12px; } `;
+const SectionHeader = styled.div` margin-bottom: 20px; border-bottom: 1px solid #ffe2e2; `;
+const CardTitle = styled.h2` font-size: 1.1rem; color: #3b3b1a; `;
+const FormGrid = styled.div` display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media(max-width:600px){grid-template-columns:1fr;} `;
 const Field = styled.div` grid-column: ${props => props.$full ? '1 / -1' : 'span 1'}; `;
-const Label = styled.label` display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; `;
+const Label = styled.label` display: block; font-size: 0.85rem; color: #7a6155; margin-bottom: 6px; `;
 const Input = styled.input`
     width: 100%;
-    background: #1e293b;
-    border: 1px solid #334155;
-    color: #fff;
+    background: #fff;
+    border: 1px solid #ffbdbd;
+    color: #493628;
     padding: 10px;
     border-radius: 8px;
+    &:focus {
+        outline: none;
+        border-color: #ffa4a4;
+        box-shadow: 0 0 0 3px rgba(255, 164, 164, 0.2);
+    }
     &::placeholder {
-        color: ${props => props.$mode === 'edit' ? '#94a3b8' : '#475569'};
+        color: #b89a90;
         opacity: 1;
     }
 `;
 const FormTextarea = styled.textarea`
     width: 100%;
     height: 100px;
-    background: #1e293b;
-    border: 1px solid #334155;
-    color: #fff;
+    background: #fff;
+    border: 1px solid #ffbdbd;
+    color: #493628;
     padding: 10px;
     border-radius: 8px;
+    &:focus {
+        outline: none;
+        border-color: #ffa4a4;
+        box-shadow: 0 0 0 3px rgba(255, 164, 164, 0.2);
+    }
     &::placeholder {
-        color: ${props => props.$mode === 'edit' ? '#94a3b8' : '#475569'};
+        color: #b89a90;
         opacity: 1;
     }
 `;
 const ButtonRow = styled.div` display: flex; gap: 12px; margin-top: 24px; `;
-const ActionButton = styled.button` padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; background: ${props => props.$variant === 'primary' ? '#3b82f6' : '#334155'}; color: #fff; border: none; &:disabled{opacity: 0.5; } `;
+const ActionButton = styled.button` padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; background: ${props => props.$variant === 'primary' ? '#ffa4a4' : '#badfdb'}; color: ${props => props.$variant === 'primary' ? '#493628' : '#2f473f'}; border: 1px solid ${props => props.$variant === 'primary' ? '#f09a9a' : '#92cfc8'}; &:disabled{opacity: 0.5; } `;
 const StoreTabNav = styled.div` display: flex; gap: 4px; margin-bottom: 16px; `;
-const StoreTabItem = styled.div` flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: ${props => props.$active ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)'}; border: 1px solid ${props => props.$active ? '#3b82f6' : '#334155'}; border-radius: 8px; cursor: pointer; `;
-const UploadZone = styled.div` border: 2px dashed #334155; padding: 20px; text-align: center; color: #94a3b8; border-radius: 12px; cursor: pointer; `;
+const StoreTabItem = styled.div` flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: ${props => props.$active ? '#ffe4e4' : '#fff'}; border: 1px solid ${props => props.$active ? '#ffa4a4' : '#ffdbdb'}; border-radius: 8px; cursor: pointer; `;
+const UploadZone = styled.div` border: 2px dashed #ffbdbd; background: #fffaf8; padding: 20px; text-align: center; color: #7a6155; border-radius: 12px; cursor: pointer; `;
 const AttachmentList = styled.div` display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; margin-top: 12px; `;
 const AttachmentCard = styled.div` position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; img {width: 100%; height: 100%; object-fit: cover; } `;
 const RemoveBtn = styled.button` position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; `;
@@ -1512,7 +1579,7 @@ const RemoveBtn = styled.button` position: absolute; top: 2px; right: 2px; backg
 const Checkbox = styled.input`
                 width: 20px;
                 height: 20px;
-                accent-color: #3b82f6;
+                accent-color: #ffa4a4;
                 cursor: pointer;
                 `;
 
@@ -1521,21 +1588,21 @@ const SuggestionList = styled.div`
                 top: 100%;
                 left: 0;
                 right: 0;
-                background: #1e293b;
-                border: 1px solid #334155;
+                background: #fff;
+                border: 1px solid #ffbdbd;
                 border-radius: 8px;
                 margin-top: 4px;
                 max-height: 200px;
                 overflow-y: auto;
                 z-index: 100;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                box-shadow: 0 4px 12px rgba(73,54,40,0.16);
                 `;
 
 const SuggestionItem = styled.div`
     padding: 10px 16px;
     cursor: pointer;
-    border-bottom: 1px solid #334155;
-    &:hover { background: #334155; }
+    border-bottom: 1px solid #ffdbdb;
+    &:hover { background: #fcf9ea; }
     &:last-child { border-bottom: none; }
 `;
 
@@ -1546,14 +1613,15 @@ const ScheduleList = styled.div`
                 `;
 
 const ScheduleItem = styled.div`
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: #fff;
+    border: 1px solid #ffbdbd;
     border-radius: 10px;
     padding: 12px;
     cursor: pointer;
     transition: all 0.2s;
     &:hover {
-        background: rgba(59, 130, 246, 0.2);
+        background: #fff2f2;
+        border-color: #ffa4a4;
         transform: translateY(-2px);
     }
 `;
@@ -1663,26 +1731,26 @@ const PreviewCard = styled.div`
 const CategoryTab = styled.button`
                 padding: 6px 16px;
                 border-radius: 20px;
-                border: 1px solid ${props => props.$active ? '#3b82f6' : '#334155'};
-                background: ${props => props.$active ? '#3b82f6' : 'transparent'};
-                color: ${props => props.$active ? '#fff' : '#94a3b8'};
+                border: 1px solid ${props => props.$active ? '#ffa4a4' : '#ffdbdb'};
+                background: ${props => props.$active ? '#ffa4a4' : '#fff'};
+                color: #493628;
                 font-size: 0.8rem;
                 cursor: pointer;
                 white-space: nowrap;
                 transition: all 0.2s;
-    &:hover { border-color: #3b82f6; color: #fff; }
+    &:hover { border-color: #ffa4a4; }
                 `;
 
 const ServiceItemCard = styled.div`
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid #334155;
+                background: #fff;
+                border: 1px solid #ffdbdb;
                 border-radius: 12px;
                 padding: 12px;
                 cursor: pointer;
                 transition: all 0.2s;
                 &:hover {
-                    background: rgba(59, 130, 246, 0.1);
-                border-color: #3b82f6;
+                    background: #fff2f2;
+                border-color: #ffa4a4;
                 transform: translateY(-2px);
     }
                 `;
@@ -1694,8 +1762,8 @@ const StoreTabs = styled.div`
                 gap: 8px;
                 margin-bottom: 24px;
                 padding: 6px;
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(255, 255, 255, 0.05);
+                background: #fff;
+                border: 1px solid #ffdbdb;
                 border-radius: 16px;
                 `;
 
@@ -1706,8 +1774,8 @@ const MobileStage = styled.div`
                 `;
 
 const CompactCard = styled.div`
-                background: rgba(30, 41, 59, 0.3);
-                border: 1px solid rgba(255, 255, 255, 0.06);
+                background: #fff;
+                border: 1px solid #ffdbdb;
                 border-radius: 20px;
                 padding: 24px;
                 margin-bottom: 24px;
@@ -1721,9 +1789,9 @@ const StoreTab = styled.button`
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                border: 1px solid ${props => props.$active ? '#3b82f6' : 'rgba(255,255,255,0.05)'};
-                background: ${props => props.$active ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.02)'};
-                color: ${props => props.$active ? '#3b82f6' : '#94a3b8'};
+                border: 1px solid ${props => props.$active ? '#ffa4a4' : '#ffd5d5'};
+                background: ${props => props.$active ? '#ffe4e4' : '#fff'};
+                color: ${props => props.$active ? '#493628' : '#7a6155'};
                 border-radius: 12px;
                 font-size: 0.8rem;
                 font-weight: 600;
@@ -1731,7 +1799,7 @@ const StoreTab = styled.button`
                 transition: all 0.2s;
                 position: relative;
                 padding: 0 12px;
-                &:hover {background: rgba(59, 130, 246, 0.05); }
+                &:hover {background: #fff4f4; }
                 `;
 
 const TemplateSelectGrid = styled.div`
@@ -1747,14 +1815,14 @@ const TemplateSelectButton = styled.button`
     gap: 6px;
     padding: 12px 4px;
     border-radius: 12px;
-    border: 1px solid ${props => props.$selected ? '#3b82f6' : 'rgba(255, 255, 255, 0.08)'};
-    background: ${props => props.$selected ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.03)'};
-    color: ${props => props.$selected ? '#3b82f6' : '#94a3b8'};
+    border: 1px solid ${props => props.$selected ? '#ffa4a4' : '#ffd5d5'};
+    background: ${props => props.$selected ? '#ffe4e4' : '#fff'};
+    color: ${props => props.$selected ? '#493628' : '#7a6155'};
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
     z-index: 10;
     pointer-events: auto;
 
-    &:hover { border-color: #3b82f6; color: #3b82f6; }
+    &:hover { border-color: #ffa4a4; color: #493628; }
 `;

@@ -1775,6 +1775,57 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.job-entrance-page[data-job="sales"] .sub-hotbar {
+  gap: var(--space-3);
+}
+
+[data-theme="light"] .job-entrance-page[data-job="sales"] .sub-hotbar-btn {
+  min-width: 172px;
+  border-color: #f2b8b8;
+  background: #fffdfb;
+  color: #493628;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(73, 54, 40, 0.08);
+}
+
+[data-theme="light"] .job-entrance-page[data-job="sales"] .sub-hotbar-btn:hover:not(:disabled) {
+  background: #ffe8e8;
+  border-color: #ff9f9f;
+  box-shadow: 0 4px 12px rgba(255, 164, 164, 0.28);
+}
+
+[data-theme="light"] .job-entrance-page[data-job="sales"] .sub-hotbar-group-btn {
+  border-color: #f2b8b8;
+  color: #5f463a;
+  background: #fffdfb;
+}
+
+[data-theme="light"] .job-entrance-page[data-job="sales"] .sub-hotbar-group-btn.active {
+  background: #ffe3e3;
+  border-color: #ff9b9b;
+  box-shadow: 0 2px 10px rgba(255, 164, 164, 0.24);
+}
+
+.job-entrance-page[data-job="sales"] .hotbar-btn-label {
+  font-weight: 700;
+}
+
+[data-theme="light"] .job-entrance-page[data-job="sales"] .hotbar-btn {
+  color: #6d5c53;
+}
+
+[data-theme="light"] .job-entrance-page[data-job="sales"] .hotbar-btn:hover {
+  background: rgba(255, 164, 164, 0.16);
+}
+
+[data-theme="light"] .job-entrance-page[data-job="sales"] .hotbar-btn.active .hotbar-btn-icon {
+  background-color: #db5a7e;
+}
+
+[data-theme="light"] .job-entrance-page[data-job="sales"] .hotbar-btn.active .hotbar-btn-label {
+  color: #db5a7e;
+}
+
 .sub-hotbar-simple {
   justify-content: center;
 }
