@@ -56,6 +56,29 @@ const SERVICE_TO_TEMPLATE = {
     '床ワックス': 'CLEAN_FLOOR_WAX_V1',
 };
 
+const SALES_RESULT_TEXT_TEMPLATES = [
+    {
+        id: 'new-visit',
+        label: '新規訪問',
+        text: `【新規訪問】\n・訪問先：\n・面談者：\n・ヒアリング要点：\n・次回アクション：`
+    },
+    {
+        id: 'follow-up',
+        label: '既存フォロー',
+        text: `【既存フォロー】\n・実施内容：\n・先方反応：\n・課題/懸念：\n・次回アクション：`
+    },
+    {
+        id: 'proposal',
+        label: '提案/見積',
+        text: `【提案/見積】\n・提案内容：\n・見積金額：\n・決裁/判断時期：\n・次回アクション：`
+    },
+    {
+        id: 'closing',
+        label: '受注/失注',
+        text: `【結果】\n・結果：受注 / 失注\n・理由：\n・対応内容：\n・次回アクション：`
+    },
+];
+
 // サービス名からtemplate_idを取得（マッチしなければデフォルトを返す）
 const getTemplateIdFromServices = (services, defaultId = TEMPLATE_CLEANING) => {
     if (!services || services.length === 0) return defaultId;
@@ -140,6 +163,288 @@ function collectIdentityTokens(...values) {
         }
     });
     return Array.from(new Set(out.filter(Boolean)));
+}
+
+function coercePayloadObject(raw) {
+    if (!raw) return {};
+    if (typeof raw === 'object') return raw;
+    if (typeof raw !== 'string') return {};
+    const s = raw.trim();
+    if (!s) return {};
+    try {
+        const parsed = JSON.parse(s);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_) {
+        return {};
+    }
+}
+
+function coerceTextValue(raw) {
+    if (typeof raw !== 'string') return '';
+    const s = raw.trim();
+    if (!s) return '';
+    const parsed = coercePayloadObject(s);
+    if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) return '';
+    return s;
+}
+
+function unwrapPayloadObject(rawObject) {
+    let current = rawObject && typeof rawObject === 'object' ? rawObject : {};
+    for (let i = 0; i < 4; i += 1) {
+        if (!current || typeof current !== 'object') return {};
+        const nested = [
+            current?.payload,
+            current?.template_payload,
+            current?.template_data,
+            current?.data,
+        ];
+        let advanced = false;
+        for (const cand of nested) {
+            const parsed = coercePayloadObject(cand);
+            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+                current = parsed;
+                advanced = true;
+                break;
+            }
+        }
+        if (!advanced) break;
+    }
+    return current && typeof current === 'object' ? current : {};
+}
+
+function getReportDataObject(item) {
+    const candidates = [
+        item?.payload,
+        item?.payload_json,
+        item?.payloadJson,
+        item?.template_payload,
+        item?.template_data,
+        item?.body,
+        item?.data,
+        item?.description,
+    ];
+    for (const raw of candidates) {
+        const parsed = coercePayloadObject(raw);
+        if (!parsed || typeof parsed !== 'object' || Object.keys(parsed).length === 0) continue;
+        return unwrapPayloadObject(parsed);
+    }
+    return {};
+}
+
+function getReportTemplateId(item) {
+    const payload = getReportDataObject(item);
+    return String(
+        item?.template_id ||
+        item?.templateId ||
+        item?.template ||
+        payload?.template_id ||
+        payload?.templateId ||
+        payload?.template ||
+        ''
+    ).trim();
+}
+
+function getReportPrimaryId(item) {
+    return String(
+        item?.log_id ||
+        item?.id ||
+        item?.report_id ||
+        item?.reportId ||
+        ''
+    ).trim();
+}
+
+function getHistoryDetailId(item, source = '') {
+    const logId = String(item?.log_id || item?.report_id || item?.reportId || '').trim();
+    if (logId) return logId;
+    const rawId = String(item?.id || '').trim();
+    if (!rawId) return '';
+    if (source === 'houkoku' || /^HK-/i.test(rawId)) return rawId;
+    return '';
+}
+
+function isLegacyHoukokuId(value) {
+    return /^HK-/i.test(String(value || '').trim());
+}
+
+function isLikelySalesPayload(item) {
+    const payload = getReportDataObject(item);
+    const keys = new Set(Object.keys(payload || {}).map((k) => String(k || '').trim()));
+    const salesHintKeys = ['target_name', 'visit_type', 'next_actions', 'status', 'content', 'cases', 'activities', 'result', 'plan', 'concern', 'activity'];
+    if (salesHintKeys.some((k) => keys.has(k))) return true;
+    const nestedHit = Boolean(
+        payload?.result?.today ||
+        payload?.plan?.tomorrow ||
+        payload?.concern?.notes ||
+        payload?.activity?.start_time ||
+        payload?.activity?.end_time
+    );
+    return nestedHit;
+}
+
+function getHistoryRowSummary(item) {
+    const payload = getReportDataObject(item);
+    const read = (obj, path) => {
+        try {
+            return path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
+        } catch (_) {
+            return undefined;
+        }
+    };
+    const pathsTarget = [
+        'target_name',
+        'store_name',
+        'tenpo_name',
+        'brand_name',
+        'company_name',
+        'overview.store_name',
+        'header.store_name',
+        'sales.target_name',
+        'sales.store_name',
+        'store.name',
+        'store.store_name',
+        'stores.0.store.name',
+        'stores.0.store.store_name',
+        'stores.0.store_name',
+        'overview.target_name',
+        'overview.store_name',
+        'header.target_name',
+        'header.store_name',
+    ];
+    const pathsContent = [
+        'content',
+        'summary',
+        'detail',
+        'next_actions',
+        'note',
+        'memo',
+        'sales.content',
+        'sales.summary',
+        'sales.detail',
+        'sales.next_actions',
+        'store.note',
+        'stores.0.note',
+        'stores.0.store.note',
+        'stores.0.store.memo',
+        'stores.0.template_payload.summary',
+        'stores.0.template_payload.detail',
+        'result.today',
+        'plan.tomorrow',
+        'concern.notes',
+        'activity.note',
+        'activity.memo',
+        'overview.summary',
+        'overview.detail',
+        'header.summary',
+        'header.detail',
+    ];
+
+    const pickFirst = (obj, paths) => {
+        for (const p of paths) {
+            const v = read(obj, p);
+            const s = String(v || '').trim();
+            if (s) return s;
+        }
+        return '';
+    };
+
+    const topLevelTarget = String(
+        item?.target_label ||
+        item?.tenpo_name ||
+        item?.store_name ||
+        item?.brand_name ||
+        item?.company_name ||
+        ''
+    ).trim();
+    const topLevelContent = String(
+        item?.content ||
+        item?.summary ||
+        item?.detail ||
+        item?.next_actions ||
+        item?.memo ||
+        item?.note ||
+        coerceTextValue(item?.description) ||
+        coerceTextValue(item?.body) ||
+        coerceTextValue(item?.data) ||
+        coerceTextValue(item?.payload_json) ||
+        coerceTextValue(item?.payloadJson) ||
+        ''
+    ).trim();
+
+    let target = String(
+        pickFirst(payload, pathsTarget) ||
+        topLevelTarget ||
+        ''
+    ).trim();
+    let content = String(
+        pickFirst(payload, pathsContent) ||
+        topLevelContent ||
+        ''
+    ).trim();
+    if (!target && Array.isArray(payload?.stores) && payload.stores.length > 0) {
+        const s0 = payload.stores[0];
+        target = String(
+            s0?.store?.name ||
+            s0?.store?.store_name ||
+            s0?.store_name ||
+            ''
+        ).trim();
+        if (!content) {
+            content = String(
+                s0?.store?.note ||
+                s0?.note ||
+                s0?.template_payload?.summary ||
+                s0?.template_payload?.detail ||
+                ''
+            ).trim();
+        }
+    }
+    if (!content && Array.isArray(payload?.activities) && payload.activities.length > 0) {
+        const a0 = payload.activities[0];
+        content = String(a0?.summary || a0?.content || a0?.detail || a0?.title || '').trim();
+    }
+    if (!content && Array.isArray(payload?.cases) && payload.cases.length > 0) {
+        const c0 = payload.cases[0];
+        content = String(c0?.summary || c0?.content || c0?.detail || c0?.title || '').trim();
+    }
+    if (target && content) return `${target} / ${content}`;
+    if (!content) {
+        const st = String(payload?.activity?.start_time || '').trim();
+        const et = String(payload?.activity?.end_time || '').trim();
+        if (st || et) content = `${st || '--:--'}〜${et || '--:--'}`;
+    }
+    return target || content || '';
+}
+
+function getHistorySummaryScore(item) {
+    const payload = getReportDataObject(item);
+    const payloadKeys = payload && typeof payload === 'object' ? Object.keys(payload).length : 0;
+    const summary = getHistoryRowSummary(item);
+    return (payloadKeys > 0 ? 3 : 0) + (summary ? 8 : 0) + (item?.detail_id ? 2 : 0) + (item?.legacy_source ? 0 : 1);
+}
+
+function mergeHistoryRows(a, b) {
+    const first = a || {};
+    const second = b || {};
+    const primary = getHistorySummaryScore(second) >= getHistorySummaryScore(first) ? second : first;
+    const secondary = primary === second ? first : second;
+    const merged = { ...secondary, ...primary };
+    const keepWhenEmpty = ['payload', 'payload_json', 'payloadJson', 'template_payload', 'template_data', 'description', 'body', 'data', 'target_label', 'note', 'content', 'summary', 'detail'];
+    keepWhenEmpty.forEach((k) => {
+        const pv = primary?.[k];
+        const sv = secondary?.[k];
+        const pEmpty =
+            pv == null ||
+            pv === '' ||
+            (typeof pv === 'object' && !Array.isArray(pv) && Object.keys(pv || {}).length === 0);
+        if (pEmpty && sv != null && sv !== '') {
+            merged[k] = sv;
+        }
+    });
+    if (!merged.detail_id) merged.detail_id = String(primary?.detail_id || secondary?.detail_id || '').trim();
+    if (!merged.log_id) merged.log_id = String(primary?.log_id || secondary?.log_id || '').trim();
+    if (!merged.id) merged.id = String(primary?.id || secondary?.id || '').trim();
+    return merged;
 }
 
 function parseKadaiIds(value) {
@@ -591,13 +896,29 @@ export default function AdminReportNewPage() {
             authz?.jinzaiId,
             user?.id,
             user?.sub,
+            user?.cognito_sub,
+            user?.cognitoSub,
+            user?.attributes?.sub,
             user?.username,
             user?.email,
             user?.worker_id,
             user?.jinzai_id,
             user?.sagyouin_id
         ),
-        [authz?.jinzaiId, authz?.workerId, user?.email, user?.id, user?.jinzai_id, user?.sagyouin_id, user?.sub, user?.username, user?.worker_id]
+        [
+            authz?.jinzaiId,
+            authz?.workerId,
+            user?.attributes?.sub,
+            user?.cognitoSub,
+            user?.cognito_sub,
+            user?.email,
+            user?.id,
+            user?.jinzai_id,
+            user?.sagyouin_id,
+            user?.sub,
+            user?.username,
+            user?.worker_id,
+        ]
     );
 
     const salesHistoryNameTokens = useMemo(
@@ -611,9 +932,13 @@ export default function AdminReportNewPage() {
     );
 
     const isSalesTemplateHistoryItem = useCallback((item) => {
-        const templateId = String(item?.template_id || '').trim().toUpperCase();
-        if (!templateId) return false;
-        return templateId === String(TEMPLATE_SALES).toUpperCase() || templateId.startsWith('SALES_');
+        const templateId = getReportTemplateId(item).toUpperCase();
+        if (templateId) {
+            if (templateId === String(TEMPLATE_SALES).toUpperCase() || templateId.startsWith('SALES_')) return true;
+            if (templateId === 'DEFAULT' || templateId === 'GENERAL_V1') return isLikelySalesPayload(item);
+            return false;
+        }
+        return isLikelySalesPayload(item);
     }, []);
 
     const loadSalesReportHistory = useCallback(async () => {
@@ -628,82 +953,105 @@ export default function AdminReportNewPage() {
         try {
             const token = getToken() || localStorage.getItem('cognito_id_token');
             const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
-            const wrData = await apiFetchWorkReport(`/work-report?date_from=${encodeURIComponent(bounds.from)}&date_to=${encodeURIComponent(bounds.to)}`, { headers });
-            let items = toItems(wrData)
-                .filter(isSalesTemplateHistoryItem)
-                .sort((a, b) => String(b?.work_date || '').localeCompare(String(a?.work_date || '')));
-
-            // 互換フォールバック:
-            // 旧営業報告は /houkoku テーブルに保存されているため、
-            // work-report が空の場合は /houkoku?date=YYYY-MM-DD を月内日次で収集する。
-            if (items.length === 0) {
-                const dates = listDatesInRange(bounds.from, bounds.to);
-                const daily = await Promise.all(
-                    dates.map(async (d) => {
-                        try {
-                            const res = await apiFetchWorkReport(`/houkoku?date=${encodeURIComponent(d)}`, { headers });
-                            return toItems(res);
-                        } catch {
-                            return [];
-                        }
-                    })
-                );
-                const legacyItems = daily
-                    .flat()
+            let rangeItems = [];
+            try {
+                const wrData = await apiFetchWorkReport(`/work-report?date_from=${encodeURIComponent(bounds.from)}&date_to=${encodeURIComponent(bounds.to)}`, { headers });
+                rangeItems = toItems(wrData)
                     .filter(isSalesTemplateHistoryItem)
-                    .filter((it) => {
-                        if (!salesHistoryIdentityTokens.length && !salesHistoryNameTokens.length) return true;
-                        const payloadRaw = it?.payload;
-                        let payload = {};
-                        if (payloadRaw && typeof payloadRaw === 'object') {
-                            payload = payloadRaw;
-                        } else if (typeof payloadRaw === 'string') {
-                            try {
-                                const parsed = JSON.parse(payloadRaw);
-                                if (parsed && typeof parsed === 'object') payload = parsed;
-                            } catch (_) {
-                                payload = {};
-                            }
-                        }
-                        const ownerIds = collectIdentityTokens(
-                            it?.user_id,
-                            it?.worker_id,
-                            it?.sagyouin_id,
-                            it?.created_by,
-                            it?.submitted_by,
-                            it?.userId,
-                            payload?.user_id,
-                            payload?.worker_id,
-                            payload?.sagyouin_id,
-                            payload?.created_by,
-                            payload?.submitted_by
-                        );
-                        if (ownerIds.length > 0) {
-                            return ownerIds.some((id) => salesHistoryIdentityTokens.includes(id));
-                        }
-                        const ownerName = normalizeIdentityToken(
-                            it?.user_name ||
-                            it?.worker_name ||
-                            it?.sagyouin_name ||
-                            it?.created_by_name ||
-                            it?.submitted_by_name ||
-                            payload?.user_name ||
-                            payload?.worker_name ||
-                            payload?.sagyouin_name
-                        );
-                        if (!ownerName) return false;
-                        return salesHistoryNameTokens.includes(ownerName);
-                    })
-                    .map((it) => ({
+                    .map((it) => {
+                        const rid = getReportPrimaryId(it);
+                        const detailId = getHistoryDetailId(it, 'work-report');
+                        return {
+                            ...it,
+                            id: rid || it?.id || '',
+                            log_id: rid || it?.log_id || '',
+                            detail_id: detailId,
+                            work_date: String(it?.work_date || it?.date || '').trim(),
+                            state: String(it?.state || 'submitted').trim(),
+                            version: Number(it?.version || 1),
+                        };
+                    });
+            } catch (_) {
+                rangeItems = [];
+            }
+
+            // /houkoku 側は常時マージして欠落を防ぐ（混在期間データ対応）
+            const dates = listDatesInRange(bounds.from, bounds.to);
+            const daily = await Promise.all(
+                dates.map(async (d) => {
+                    try {
+                        const res = await apiFetchWorkReport(`/houkoku?date=${encodeURIComponent(d)}`, { headers });
+                        return toItems(res);
+                    } catch {
+                        return [];
+                    }
+                })
+            );
+            const legacyItems = daily
+                .flat()
+                .filter(isSalesTemplateHistoryItem)
+                .filter((it) => {
+                    if (!salesHistoryIdentityTokens.length && !salesHistoryNameTokens.length) return true;
+                    const payload = getReportDataObject(it);
+                    const ownerIds = collectIdentityTokens(
+                        it?.user_id,
+                        it?.worker_id,
+                        it?.sagyouin_id,
+                        it?.created_by,
+                        it?.submitted_by,
+                        it?.userId,
+                        payload?.user_id,
+                        payload?.worker_id,
+                        payload?.sagyouin_id,
+                        payload?.created_by,
+                        payload?.submitted_by
+                    );
+                    if (ownerIds.length > 0) {
+                        return ownerIds.some((id) => salesHistoryIdentityTokens.includes(id));
+                    }
+                    const ownerName = normalizeIdentityToken(
+                        it?.user_name ||
+                        it?.worker_name ||
+                        it?.sagyouin_name ||
+                        it?.created_by_name ||
+                        it?.submitted_by_name ||
+                        payload?.user_name ||
+                        payload?.worker_name ||
+                        payload?.sagyouin_name
+                    );
+                    if (!ownerName) return false;
+                    return salesHistoryNameTokens.includes(ownerName);
+                })
+                .map((it) => {
+                    const rid = getReportPrimaryId(it);
+                    const detailId = getHistoryDetailId(it, 'houkoku');
+                    return {
                         ...it,
-                        work_date: String(it?.work_date || '').trim(),
+                        id: rid || it?.id || '',
+                        log_id: rid || it?.log_id || '',
+                        detail_id: detailId,
+                        work_date: String(it?.work_date || it?.date || '').trim(),
                         state: String(it?.state || 'submitted').trim(),
                         version: Number(it?.version || 1),
                         legacy_source: 'houkoku',
-                    }))
-                    .sort((a, b) => String(b?.work_date || '').localeCompare(String(a?.work_date || '')));
-                items = legacyItems;
-            }
+                    };
+                });
+
+            const mergedMap = new Map();
+            [...legacyItems, ...rangeItems].forEach((it) => {
+                const rid = String(it?.log_id || it?.id || '').trim();
+                const key = rid || `${String(it?.work_date || '').trim()}::${String(it?.template_id || '')}::${Number(it?.version || 1)}`;
+                if (!key) return;
+                const prev = mergedMap.get(key);
+                if (!prev) {
+                    mergedMap.set(key, it);
+                    return;
+                }
+                mergedMap.set(key, mergeHistoryRows(prev, it));
+            });
+
+            const items = Array.from(mergedMap.values())
+                .sort((a, b) => String(b?.work_date || '').localeCompare(String(a?.work_date || '')));
             setHistoryRows(items);
         } catch (e) {
             setHistoryError(e?.message || '過去の業務報告取得に失敗しました');
@@ -1136,6 +1484,43 @@ export default function AdminReportNewPage() {
         });
     };
 
+    const handleApplySalesResultTemplate = (templateText) => {
+        const snippet = String(templateText || '').trim();
+        if (!snippet) return;
+        const current = String(sales?.result?.today || sales?.content || '').trim();
+        const nextText = current ? `${current}\n\n${snippet}` : snippet;
+        handleSalesPayloadChange('result.today', nextText);
+        // 旧形式互換のため content も同期しておく
+        handleSalesPayloadChange('content', nextText);
+    };
+
+    const renderSalesSectionAddon = ({ section, mode }) => {
+        if (activeTemplate !== TEMPLATE_SALES) return null;
+        if (mode !== 'edit') return null;
+        if (section?.id !== 'today_result') return null;
+        return (
+            <SalesTemplateAssistInline>
+                <SalesTemplateAssistHead>
+                    <strong>本日の成果テンプレート</strong>
+                    <span>押すと本文へ追記</span>
+                </SalesTemplateAssistHead>
+                <SalesTemplateAssistButtons>
+                    {SALES_RESULT_TEXT_TEMPLATES.map((tpl) => (
+                        <ActionButton
+                            key={tpl.id}
+                            type="button"
+                            $variant="secondary"
+                            style={{ height: 32, padding: '0 10px', borderRadius: 999, fontSize: '0.78rem' }}
+                            onClick={() => handleApplySalesResultTemplate(tpl.text)}
+                        >
+                            {tpl.label}
+                        </ActionButton>
+                    ))}
+                </SalesTemplateAssistButtons>
+            </SalesTemplateAssistInline>
+        );
+    };
+
     return (
         <PageContainer data-job="admin">
             {statusMessage && (
@@ -1380,6 +1765,7 @@ export default function AdminReportNewPage() {
                                 onChange={handleSalesPayloadChange}
                                 onFileUpload={handleSalesFileUpload}
                                 onFileRemove={handleSalesFileRemove}
+                                renderSectionAddon={renderSalesSectionAddon}
                             />
                             <ButtonRow>
                                 <ActionButton $variant="primary" style={{ flex: 1 }} onClick={() => setShowPreview(true)} disabled={isSaving}>プレビュー</ActionButton>
@@ -1415,27 +1801,45 @@ export default function AdminReportNewPage() {
                                     <SalesHistoryEmpty>該当月の業務報告はありません。</SalesHistoryEmpty>
                                 ) : (
                                     <SalesHistoryList>
-                                        {historyRows.map((row) => (
-                                            <SalesHistoryItem key={row.log_id || row.id || `${row.work_date}-${row.version}`}>
+                                        {historyRows.map((row) => {
+                                            const summaryText = getHistoryRowSummary(row);
+                                            return (
+                                            <SalesHistoryItem key={row.detail_id || row.log_id || row.id || `${row.work_date}-${row.version}`}>
                                                 <div className="meta">
-                                                    <span className="date">{row.work_date || '-'}</span>
-                                                    <span className={`state state-${String(row.state || '').toLowerCase()}`}>{row.state || '-'}</span>
-                                                    <span className="version">v{Number(row.version || 1)}</span>
+                                                    <div className="meta-head">
+                                                        <span className="date">{row.work_date || '-'}</span>
+                                                        <span className={`state state-${String(row.state || '').toLowerCase()}`}>{row.state || '-'}</span>
+                                                        <span className="version">v{Number(row.version || 1)}</span>
+                                                    </div>
+                                                    {summaryText ? (
+                                                        <span className="summary">{summaryText}</span>
+                                                    ) : (
+                                                        <span className="summary summary-empty">内容未入力</span>
+                                                    )}
                                                 </div>
                                                 <div className="actions">
-                                                    {row.log_id ? (
+                                                    {row.detail_id ? (
                                                         <ActionButton
                                                             type="button"
                                                             $variant="primary"
                                                             style={{ height: 30, padding: '0 10px', borderRadius: 10, fontSize: '0.8rem' }}
-                                                            onClick={() => navigate(`/sales/work-reports/${encodeURIComponent(row.log_id)}`)}
+                                                            onClick={() => {
+                                                                const rid = String(row.detail_id || '').trim();
+                                                                if (!rid) return;
+                                                                if (isLegacyHoukokuId(rid)) {
+                                                                    navigate(`/admin/houkoku/${encodeURIComponent(rid)}`);
+                                                                    return;
+                                                                }
+                                                                navigate(`/sales/work-reports/${encodeURIComponent(rid)}`);
+                                                            }}
                                                         >
                                                             詳細
                                                         </ActionButton>
                                                     ) : null}
                                                 </div>
                                             </SalesHistoryItem>
-                                        ))}
+                                            );
+                                        })}
                                     </SalesHistoryList>
                                 )}
                             </SalesHistorySection>
@@ -1824,6 +2228,27 @@ const UploadZone = styled.div` border: 2px dashed #ffbdbd; background: #fffaf8; 
 const AttachmentList = styled.div` display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; margin-top: 12px; `;
 const AttachmentCard = styled.div` position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; img {width: 100%; height: 100%; object-fit: cover; } `;
 const RemoveBtn = styled.button` position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; `;
+const SalesTemplateAssistInline = styled.div`
+    border: 1px solid #ffdbdb;
+    background: #fff8f8;
+    border-radius: 12px;
+    padding: 8px 10px;
+    margin: -4px 0 8px;
+`;
+const SalesTemplateAssistHead = styled.div`
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+    strong { color: #493628; font-size: 0.88rem; }
+    span { color: #7a6155; font-size: 0.75rem; }
+`;
+const SalesTemplateAssistButtons = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+`;
 const SalesHistorySection = styled.section`
     margin-top: 18px;
     border-top: 1px solid #ffe2e2;
@@ -1863,12 +2288,19 @@ const SalesHistoryItem = styled.div`
     border-radius: 10px;
     background: #fff;
     padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     gap: 10px;
+    min-width: 0;
 
     .meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+    .meta-head {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -1906,6 +2338,28 @@ const SalesHistoryItem = styled.div`
         border-color: #ffa4a4;
         background: #fff0f0;
         color: #7f1d1d;
+    }
+    .summary {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        font-size: 0.82rem;
+        color: #5c4a40;
+        line-height: 1.4;
+        margin-top: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .actions {
+        justify-self: end;
+        align-self: center;
+        display: flex;
+        align-items: center;
+    }
+    .summary-empty {
+        color: #9b8578;
+        font-style: italic;
     }
 `;
 

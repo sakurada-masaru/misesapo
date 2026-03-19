@@ -135,7 +135,8 @@ const TemplateRenderer = ({
     footer,
     hideHeader = false,
     suppressEditGlow = false,
-    editMaxWidth = null
+    editMaxWidth = null,
+    renderSectionAddon = null
 }) => {
     // AdminReportNewPage 等で onPayloadChange を使っている場合への配慮
     const handleChange = onChange || onPayloadChange;
@@ -185,6 +186,7 @@ const TemplateRenderer = ({
                             onFileUpload={onFileUpload}
                             onFileRemove={onFileRemove}
                             mode={mode}
+                            renderSectionAddon={renderSectionAddon}
                         />
                     ))}
 
@@ -210,10 +212,10 @@ const TemplateRenderer = ({
 
 // ===== セクションレンダラ =====
 
-const SectionRenderer = ({ section, report, payload, onChange, onFileUpload, onFileRemove, mode }) => {
+const SectionRenderer = ({ section, report, payload, onChange, onFileUpload, onFileRemove, mode, renderSectionAddon }) => {
     switch (section.type) {
         case 'group':
-            return <GroupSection section={section} report={report} payload={payload} onChange={onChange} mode={mode} />;
+            return <GroupSection section={section} report={report} payload={payload} onChange={onChange} mode={mode} renderSectionAddon={renderSectionAddon} />;
         case 'static':
             return <StaticSection section={section} />;
         case 'static_plus_text':
@@ -229,7 +231,7 @@ const SectionRenderer = ({ section, report, payload, onChange, onFileUpload, onF
 
 // ===== グループセクション =====
 
-const GroupSection = ({ section, report, payload, onChange, mode }) => {
+const GroupSection = ({ section, report, payload, onChange, mode, renderSectionAddon }) => {
     // meta_fields の文字列配列をオブジェクト配列に正規化
     const normalizedMetaFields = (section.meta_fields || []).map(mf => {
         if (typeof mf === 'string') {
@@ -246,6 +248,7 @@ const GroupSection = ({ section, report, payload, onChange, mode }) => {
     return (
         <Section $mode={mode}>
             <SectionTitle $mode={mode} $required={section.required}>{section.label || section.name}</SectionTitle>
+            {typeof renderSectionAddon === 'function' ? renderSectionAddon({ section, report, payload, onChange, mode }) : null}
             <FieldList $mode={mode}>
                 {/* meta_fields: report（=reportMeta）とpayloadの両方を見る。編集可能にする。 */}
                 {normalizedMetaFields.map((mf) => {

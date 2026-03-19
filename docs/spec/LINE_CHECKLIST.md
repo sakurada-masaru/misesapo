@@ -4924,3 +4924,79 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] IDが無い旧データ向けに `user_name/worker_name/...` の名前照合フォールバックを追加
 - [x] 履歴対象テンプレート判定を `SALES_ACTIVITY_REPORT_V1` 固定から `SALES_*` 系も含む判定へ拡張
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History: WorkReport + Houkoku Merge Fix (2026-03-19)
+
+- [x] 営業履歴で `/work-report` が1件でも返ると `/houkoku` が無視される欠落ロジックを修正（常時マージ化）
+- [x] テンプレート判定を `item.template_id` だけでなく `payload.template_id` 等も参照するよう拡張
+- [x] 履歴IDの揺れ（`log_id` / `id` / `report_id`）を統一して詳細導線の欠落を防止
+- [x] 重複キー統合時は `/work-report` 側（非legacy）を優先するマージルールを追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report Detail 404 Fallback Fix (2026-03-19)
+
+- [x] 営業履歴詳細（`/sales/work-reports/:reportId`）で `GET /admin/work-reports/{id}` が404時に `GET /houkoku/{id}` へフォールバックするよう修正
+- [x] legacy `HK-` ID は `houkoku` 優先、それ以外は `admin/work-reports` 優先の順序制御を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History: Default Template Legacy Detection (2026-03-19)
+
+- [x] 営業履歴のテンプレート判定を `template_id` のみ依存から、`payload/description` の営業キー（`target_name/visit_type/next_actions/...`）でも判定するよう拡張
+- [x] `user.cognito_sub`（Cognito sub）を本人照合トークンに追加し、`/houkoku` 旧レコードの `user_id=sub` を拾えるよう修正
+- [x] 履歴判定時のデータ取得を `payload` に加え `description/body/data` もパース対象に拡張
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History/Detail: Content Visibility Fix (2026-03-19)
+
+- [x] 営業報告詳細で `description` のみ参照して内容空になる問題を修正（`payload/description/body/data` の順で内容復元）
+- [x] 営業報告詳細に `SALES_ACTIVITY_REPORT_V1` 向けの「営業報告」表示ブロック（対象/接触種別/進捗/内容/次アクション）を追加
+- [x] 営業履歴リスト行に内容サマリ（対象＋内容）を追加し、内容未登録時は明示表示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report Detail: UUID 404 Fallback + Detail ID Strictness (2026-03-19)
+
+- [x] 営業履歴行の `詳細` 導線IDを厳格化（`detail_id` 導入。`id` の汎用UUID誤採用を抑止）
+- [x] `/sales/work-reports/:id` の詳細取得フォールバックに `GET /work-report/{id}` を追加
+- [x] 参照順序を `admin/work-reports → work-report → houkoku`（HKは `houkoku` 優先）へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History: HK Payload Shape Compatibility (2026-03-19)
+
+- [x] 営業履歴サマリ抽出で `payload_json/payloadJson/template_payload/template_data` も復元対象に追加
+- [x] `stores[0].store.*` / `stores[0].template_payload.*` など清掃系構造でも履歴サマリを抽出できるよう対応
+- [x] 詳細表示側（`OfficeWorkReportDetailPage`）も同様に複数ペイロード形状を復元できるよう拡張
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History: HK Detail Route Fix (2026-03-19)
+
+- [x] 営業履歴の `HK-` 報告は `sales/work-reports/:id` ではなく `admin/houkoku/:id` へ遷移するよう分岐追加（内容復元差異を回避）
+- [x] 非HK報告は従来どおり `sales/work-reports/:id` へ遷移
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History: Summary Extraction + Merge Priority Fix (2026-03-19)
+
+- [x] 営業履歴サマリ抽出で `description/body/data` のプレーンテキストも要約候補に追加し、`内容未入力` になりやすいケースを解消
+- [x] ネストされた `payload/template_payload/template_data`（文字列JSON含む）を段階的に復元するよう拡張
+- [x] 同一報告IDマージ時に `/work-report` 固定優先を廃止し、要約が取得できる方を優先するスコアマージへ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report History: SALES_ACTIVITY Payload Key Coverage Fix (2026-03-19)
+
+- [x] 営業テンプレート実データキー（`result.today` / `plan.tomorrow` / `concern.notes` / `activity.*`）を履歴要約抽出に追加
+- [x] 営業判定ロジックに `result/plan/concern/activity` ネスト構造を追加し、営業履歴取り込み漏れを抑制
+- [x] 要約が空の場合の補助表示として `activity.start_time/end_time` を時間要約に利用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report: Quick Text Templates for "本日の成果" (2026-03-19)
+
+- [x] 営業活動報告フォーム上部に「本日の成果テンプレート」ボタン群を追加（新規訪問 / 既存フォロー / 提案見積 / 受注失注）
+- [x] ボタン押下で `result.today` へテンプレ文を追記挿入する処理を追加（既存入力保持）
+- [x] 旧形式互換のため `content` へも同時同期
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report: Move Template Buttons Under "本日の成果" Heading (2026-03-19)
+
+- [x] `TemplateRenderer` にセクション見出し直下の差し込み描画フック（`renderSectionAddon`）を追加
+- [x] 営業テンプレ `today_result` セクション（`3. 本日の成果`）直下にテンプレートボタンを表示するよう移設
+- [x] 既存の営業カード先頭のテンプレートボタン表示を削除し、見出し直下表示へ統一
+- [x] `npm -C src/misogi run build` でビルド確認

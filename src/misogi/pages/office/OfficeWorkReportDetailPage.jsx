@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getAdminWorkReportDetail } from '../shared/api/adminWorkReportsApi';
+import { apiFetchWorkReport } from '../shared/api/client';
+import { useAuth } from '../shared/auth/useAuth';
 import '../shared/styles/components.css';
 import './office-work-report-detail.css';
 
@@ -16,9 +18,37 @@ function safeJsonParse(val) {
   }
 }
 
+function getReportPayload(item) {
+  const candidates = [
+    item?.payload,
+    item?.payload_json,
+    item?.payloadJson,
+    item?.template_payload,
+    item?.template_data,
+    item?.description,
+    item?.body,
+    item?.data,
+  ];
+  for (const raw of candidates) {
+    const parsed = safeJsonParse(raw);
+    if (!parsed || typeof parsed !== 'object' || Object.keys(parsed).length === 0) continue;
+    if (parsed.payload && typeof parsed.payload === 'object' && Object.keys(parsed.payload).length > 0) {
+      return parsed.payload;
+    }
+    if (parsed.template_payload && typeof parsed.template_payload === 'object' && Object.keys(parsed.template_payload).length > 0) {
+      return parsed.template_payload;
+    }
+    if (parsed.template_data && typeof parsed.template_data === 'object' && Object.keys(parsed.template_data).length > 0) {
+      return parsed.template_data;
+    }
+    return parsed;
+  }
+  return {};
+}
+
 function collectAttachmentUrls(item) {
   const urls = [];
-  const desc = safeJsonParse(item?.description);
+  const desc = getReportPayload(item);
   const push = (arr) => {
     if (!Array.isArray(arr)) return;
     arr.forEach((a) => {
@@ -83,6 +113,7 @@ function formatMinutes(totalMin) {
 export default function OfficeWorkReportDetailPage({ reportId: propReportId, embed = false }) {
   const params = useParams();
   const reportId = propReportId ?? params.reportId;
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
@@ -93,17 +124,42 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
       setLoading(false);
       return;
     }
-    getAdminWorkReportDetail(reportId)
-      .then((data) => {
+    const fetchDetail = async () => {
+      try {
+        const token = getToken?.() || localStorage.getItem('cognito_id_token');
+        const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
+        const encodedId = encodeURIComponent(String(reportId || ''));
+        const isLegacyHoukokuId = /^HK-/i.test(String(reportId || ''));
+        const paths = isLegacyHoukokuId
+          ? [`/houkoku/${encodedId}`, `/admin/work-reports/${encodedId}`, `/work-report/${encodedId}`]
+          : [`/admin/work-reports/${encodedId}`, `/work-report/${encodedId}`, `/houkoku/${encodedId}`];
+
+        let data = null;
+        let lastErr = null;
+        for (const path of paths) {
+          try {
+            if (path.startsWith('/admin/work-reports/')) {
+              data = await getAdminWorkReportDetail(reportId);
+            } else {
+              data = await apiFetchWorkReport(path, { headers });
+            }
+            if (data) break;
+          } catch (e) {
+            lastErr = e;
+          }
+        }
+        if (!data) throw lastErr || new Error('報告が見つかりません');
         setReport(data);
         setError(null);
-      })
-      .catch((e) => {
+      } catch (e) {
         setError(e?.message || '報告が見つかりません');
         setReport(null);
-      })
-      .finally(() => setLoading(false));
-  }, [reportId]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetail();
+  }, [reportId, getToken]);
 
   if (loading) {
     return (
@@ -122,11 +178,22 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
     );
   }
 
-  const desc = safeJsonParse(report.description);
+  const desc = getReportPayload(report);
   const attachments = collectAttachmentUrls(report);
-  const isDay = report.template_id === 'SALES_DAY_V1';
-  const isCase = report.template_id === 'SALES_CASE_V1';
-  const isOffice = String(report.template_id || '').startsWith('OFFICE_');
+  const resolvedTemplateId = String(
+    report?.template_id ||
+    report?.templateId ||
+    desc?.template_id ||
+    desc?.templateId ||
+    ''
+  ).trim();
+  const isDay = resolvedTemplateId === 'SALES_DAY_V1';
+  const isCase = resolvedTemplateId === 'SALES_CASE_V1';
+  const isOffice = String(resolvedTemplateId || '').startsWith('OFFICE_');
+  const isSalesActivity = resolvedTemplateId === 'SALES_ACTIVITY_REPORT_V1' || (
+    !!desc &&
+    (desc.target_name || desc.visit_type || desc.next_actions || desc.content)
+  );
 
   const handlePrint = () => {
     window.print();
@@ -146,7 +213,7 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
           </div>
           <h1 className="report-print-title" style={{ fontSize: '1.25rem', marginBottom: 8 }}>業務報告（閲覧）</h1>
           <p className="report-print-meta" style={{ fontSize: '0.9rem', color: 'var(--muted)', marginBottom: 24 }}>
-            {templateLabel(report.template_id)} · {report.work_date || '—'} · {report.state || '—'}
+            {templateLabel(resolvedTemplateId || report.template_id)} · {report.work_date || '—'} · {report.state || '—'}
           </p>
         </>
       )}
@@ -157,7 +224,7 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
           <dt style={{ margin: 0, color: 'var(--muted)' }}>報告日</dt>
           <dd style={{ margin: 0 }}>{report.work_date || '—'}</dd>
           <dt style={{ margin: 0, color: 'var(--muted)' }}>種別</dt>
-          <dd style={{ margin: 0 }}>{templateLabel(report.template_id)}</dd>
+          <dd style={{ margin: 0 }}>{templateLabel(resolvedTemplateId || report.template_id)}</dd>
           {report.target_label && (
             <>
               <dt style={{ margin: 0, color: 'var(--muted)' }}>店舗・対象</dt>
@@ -332,7 +399,45 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
         </section>
       )}
 
-      {!isDay && !isCase && !isOffice && Object.keys(desc).length > 0 && (
+      {isSalesActivity && (
+        <section style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+          <h2 style={{ fontSize: '1rem', margin: '0 0 12px', color: 'var(--muted)' }}>営業報告</h2>
+          <dl style={{ margin: 0, display: 'grid', gap: '8px 16px', gridTemplateColumns: 'auto 1fr' }}>
+            {(desc.target_name || report.target_label) && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>対象</dt>
+                <dd style={{ margin: 0 }}>{desc.target_name || report.target_label}</dd>
+              </>
+            )}
+            {desc.visit_type && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>接触種別</dt>
+                <dd style={{ margin: 0 }}>{desc.visit_type}</dd>
+              </>
+            )}
+            {desc.status && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>進捗</dt>
+                <dd style={{ margin: 0 }}>{desc.status}</dd>
+              </>
+            )}
+            {desc.content && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>内容</dt>
+                <dd style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{desc.content}</dd>
+              </>
+            )}
+            {desc.next_actions && (
+              <>
+                <dt style={{ margin: 0, color: 'var(--muted)' }}>次アクション</dt>
+                <dd style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{desc.next_actions}</dd>
+              </>
+            )}
+          </dl>
+        </section>
+      )}
+
+      {!isDay && !isCase && !isOffice && !isSalesActivity && Object.keys(desc).length > 0 && (
         <section style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 20, marginBottom: 16 }}>
           <h2 style={{ fontSize: '1rem', margin: '0 0 12px', color: 'var(--muted)' }}>内容</h2>
           <pre style={{ margin: 0, fontSize: '0.85rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
