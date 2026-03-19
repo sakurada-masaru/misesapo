@@ -732,6 +732,7 @@ export default function AdminReportNewPage() {
                     template_id: finalTemplateId,
                     work_date: header.work_date,
                     user_name: header.reporter_name,
+                    state: 'submitted',
                     payload: payload
                 })
             });

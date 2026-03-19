@@ -59,6 +59,7 @@ import SalesLeadNewPage from '../shared/ui/Sales/SalesLeadNewPage';
 import SalesLeadDetailPage from '../shared/ui/Sales/SalesLeadDetailPage';
 import SalesSchedulePage from '../shared/ui/Sales/SalesSchedulePage';
 import SalesFirstResponsePage from '../shared/ui/Sales/SalesFirstResponsePage';
+import SalesCustomerRequestsMonthlyPage from '../shared/ui/Sales/SalesCustomerRequestsMonthlyPage';
 import CleanerSchedulePage from '../jobs/cleaning/pages/CleanerSchedulePage';
 import ContractorAvailabilityDeclarationPage from '../jobs/cleaning/pages/ContractorAvailabilityDeclarationPage';
 import CleanerClientListPage from '../jobs/cleaning/pages/CleanerClientListPage';
@@ -262,6 +263,7 @@ export default function Router() {
         <Route path="/sales/leads/new" element={<SalesLeadNewPage />} />
         <Route path="/sales/leads/:leadId" element={<SalesLeadDetailPage />} />
         <Route path="/sales/schedule" element={<SalesSchedulePage />} />
+        <Route path="/sales/tools/customer-requests" element={<SalesCustomerRequestsMonthlyPage />} />
         <Route path="/sales/master/customer" element={<AdminCustomerMasterPage mode="sales" />} />
         <Route path="/sales/tenpo/:tenpoId" element={<AdminTenpoKartePage mode="sales" />} />
         <Route path="/jobs/cleaning/schedule" element={<CleanerSchedulePage />} />

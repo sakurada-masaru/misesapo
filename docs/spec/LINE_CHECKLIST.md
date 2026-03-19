@@ -4817,3 +4817,35 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 営業 `勤怠打刻` を管理と同一リンク（`https://f.ieyasu.co/misesapo/login/`）へ変更
 - [x] サブHOTバーの外部URLクリック時は新規タブで開く挙動を追加（`JobEntranceScreen`）
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Activity + Daily Digest: All Report Submissions (2026-03-19)
+
+- [x] 管理報告提出（`AdminReportNewPage` 通常提出）に `state: submitted` を付与
+- [x] `work-report` 経路（PUT/PATCH/submit）で `submitted_at / last_submitted_at` を保持するよう統一
+- [x] `work-report` の提出遷移時に `kanri_log` へ `業務報告提出` イベントを追記
+- [x] 旧 `houkoku` 経路の提出時にも `kanri_log` へ `業務報告提出` イベントを追記
+- [x] `lambda_work_reports.py` に日次アクティビティメール送信（EventBridge起動）を追加
+- [x] 送信先既定を `info@misesapo.co.jp`、集計対象を直近24時間（環境変数で変更可）に設定
+- [x] `npm -C src/misogi run build` でビルド確認
+- [x] `python3 -m py_compile universal_work_reports.py lambda_work_reports.py houkoku_api.py lambda_package/universal_work_reports.py` で構文確認
+
+## Sales Tool: Monthly Own Customer Registration Requests (2026-03-19)
+
+- [x] 営業向け `顧客登録申請（月次）` ページを新設（`/sales/tools/customer-requests`）
+- [x] `customer_master_approval` 申請イベントから営業本人の `create_customer_bundle` のみ抽出
+- [x] 月選択（`YYYY-MM`）で当月分の申請履歴を絞り込み表示
+- [x] 状態フィルタ（全て/承認待ち/承認済み/却下）を追加
+- [x] 申請総数・承認待ち・承認済み・却下の月次サマリを表示
+- [x] 各申請に `申請ID / 申請時刻 / 顧客・取引先・屋号・店舗 / 判定情報` を表示
+- [x] 営業HOTバー `打刻` サブボタンに `顧客申請（月次）` 導線を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales HOTBAR Label: 打刻 → ツール (2026-03-19)
+
+- [x] 営業HOTバー3枠目ラベルを `打刻` から `ツール` に変更
+- [x] `勤怠打刻 / 問診票作成 / 顧客申請（月次）` のサブ導線は維持
+
+## Sales HOTBAR Tools: Remove 問診票作成 (2026-03-19)
+
+- [x] 営業HOTバー `ツール` サブ項目から `問診票作成` を削除
+- [x] `勤怠打刻 / 顧客申請（月次）` の2導線構成へ整理

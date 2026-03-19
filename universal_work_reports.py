@@ -50,6 +50,9 @@ TABLE_NAME = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-re
 if not TABLE_NAME:
     raise ValueError("UNIVERSAL_WORK_LOGS_TABLE environment variable is required")
 table = dynamodb.Table(TABLE_NAME)
+# 管理アクティビティ通知（kanri_log）用
+KANRI_LOG_TABLE_NAME = os.environ.get('TABLE_KANRI_LOG', 'kanri_log')
+kanri_log_table = dynamodb.Table(KANRI_LOG_TABLE_NAME)
 # 報告系の保存先は manual バケットと分離する（manual 側にはフォールバックしない）
 WORK_REPORTS_BUCKET = (
     os.environ.get('WORK_REPORTS_BUCKET')
@@ -58,6 +61,63 @@ WORK_REPORTS_BUCKET = (
 )
 logger.info("[INIT] DynamoDB table=%s, region=%s", TABLE_NAME, DYNAMODB_REGION)
 print(f"[INIT] DynamoDB table={TABLE_NAME}, region={DYNAMODB_REGION}")
+
+
+def _is_submitted_state(state_value):
+    return str(state_value or '').strip().lower() == 'submitted'
+
+
+def _put_submitted_timestamps(item: dict, now_iso: str):
+    """
+    提出状態のとき、提出時刻を明示保持する。
+    - submitted_at: 初回提出時刻（なければ設定）
+    - last_submitted_at: 直近提出時刻（毎回更新）
+    """
+    if not isinstance(item, dict):
+        return item
+    if not _is_submitted_state(item.get('state')):
+        return item
+    item['last_submitted_at'] = now_iso
+    if not item.get('submitted_at'):
+        item['submitted_at'] = now_iso
+    return item
+
+
+def _log_work_report_submission_to_kanri(*, log_id, worker_id, actor_name, work_date, template_id, submitted_at):
+    """
+    管理アクティビティ（kanri_log）へ「業務報告提出」を追記する。
+    失敗しても本処理は継続（通知の best effort）。
+    """
+    try:
+        report_id = str(log_id or '').strip()
+        if not report_id:
+            return
+        now_iso = str(submitted_at or _get_jst_now().isoformat())
+        name = str(actor_name or worker_id or '未設定').strip() or '未設定'
+        work_date_str = str(work_date or '').strip()
+        template = str(template_id or '').strip()
+        action = '業務報告を提出しました'
+        if template:
+            action += f'（{template}）'
+        if work_date_str:
+            action += f' [{work_date_str}]'
+
+        kanri_log_table.put_item(Item={
+            'kanri_log_id': f"KANRI-{uuid.uuid4().hex[:20]}",
+            'jotai': 'yuko',
+            'reported_by': name,
+            'reported_by_id': str(worker_id or '').strip(),
+            'action': action,
+            'event': 'work_report_submitted',
+            'type': 'work_report',
+            'report_id': report_id,
+            'template_id': template,
+            'work_date': work_date_str,
+            'created_at': now_iso,
+            'updated_at': now_iso,
+        })
+    except Exception as e:
+        logger.warning("[WORK_REPORT] failed to log kanri activity: %s", str(e))
 
 def _get_jst_now():
     return datetime.now(timezone(timedelta(hours=9)))
@@ -359,6 +419,7 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             work_minutes = body.get('work_minutes')
             if work_minutes is None:
                 work_minutes = _calculate_work_minutes(start_at, end_at, break_minutes, next_day)
+            requested_state = body.get('state', 'draft')
 
             item = {
                 'log_id': log_id,
@@ -377,7 +438,7 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 'pay_code': body.get('pay_code', ''),
                 'template_id': body.get('template_id'),  # テンプレートIDを追加
                 'target_label': body.get('target_label'),  # ターゲットラベルを追加
-                'state': body.get('state', 'draft'),  # リクエストのstateを使用（デフォルトはdraft）
+                'state': requested_state,  # リクエストのstateを使用（デフォルトはdraft）
                 'version': new_version,
                 'updated_at': now_iso,
                 'created_at': existing.get('created_at', now_iso) if existing else now_iso
@@ -391,14 +452,15 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 history_type='update',
                 by_user=worker_id,
                 from_state=from_state,
-                to_state='draft'
+                to_state=requested_state
             ))
             item['history'] = history
+            item = _put_submitted_timestamps(item, now_iso)
 
             # 条件付き書き込み / upsert
             try:
-                item["date"] = date
-                item["work_date"] = date
+                item["date"] = work_date
+                item["work_date"] = work_date
                 
                 # ✅ 保存処理ログ（直前）
                 table_name = os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports')
@@ -422,6 +484,15 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
                 # ✅ 保存処理ログ（直後）
                 logger.info("[WORK_REPORT] saved log_id=%s, table=%s", log_id, table_name)
                 print(f"[PUT /work-report] Saved successfully: log_id={log_id}, table={table_name}")
+                if _is_submitted_state(requested_state) and not _is_submitted_state(from_state):
+                    _log_work_report_submission_to_kanri(
+                        log_id=log_id,
+                        worker_id=worker_id,
+                        actor_name=(user_info or {}).get('name') or (user_info or {}).get('email') or worker_id,
+                        work_date=work_date,
+                        template_id=item.get('template_id'),
+                        submitted_at=item.get('submitted_at') or now_iso,
+                    )
 
             except ClientError as e:
                 error_code = e.response.get("Error", {}).get("Code", "Unknown")
@@ -549,10 +620,18 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             
             updated = table.update_item(
                 Key={'log_id': log_id},
-                UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, version=version + :one",
+                UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, submitted_at=if_not_exists(submitted_at, :at), last_submitted_at=:at, version=version + :one",
                 ExpressionAttributeNames={'#st': 'state'},
                 ExpressionAttributeValues={':st': 'submitted', ':hist': history, ':at': now_iso, ':one': 1},
                 ReturnValues="ALL_NEW"
+            )
+            _log_work_report_submission_to_kanri(
+                log_id=log_id,
+                worker_id=worker_id,
+                actor_name=(user_info or {}).get('name') or (user_info or {}).get('email') or worker_id,
+                work_date=item.get('work_date') or item.get('date'),
+                template_id=item.get('template_id'),
+                submitted_at=now_iso,
             )
             return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated['Attributes'], ensure_ascii=False)}
         except Exception as e:
@@ -606,7 +685,7 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             
             updated = table.update_item(
                 Key={'log_id': log_id},
-                UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, share_token=:share, version=version + :one",
+                UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, submitted_at=if_not_exists(submitted_at, :at), last_submitted_at=:at, share_token=:share, version=version + :one",
                 ExpressionAttributeNames={'#st': 'state'},
                 ExpressionAttributeValues={':st': 'submitted', ':hist': history, ':at': now_iso, ':share': share_token, ':one': 1},
                 ReturnValues="ALL_NEW"
@@ -629,6 +708,14 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             # ✅ 保存成功ログ（必須）
             logger.info(f"[WORK_REPORT] submitted log_id={log_id}, worker_id={worker_id}, state=submitted")
             print(f"[PATCH /work-report/{log_id}] Success - state=submitted")
+            _log_work_report_submission_to_kanri(
+                log_id=log_id,
+                worker_id=worker_id,
+                actor_name=(user_info or {}).get('name') or (user_info or {}).get('email') or worker_id,
+                work_date=item.get('work_date') or item.get('date'),
+                template_id=item.get('template_id'),
+                submitted_at=now_iso,
+            )
             
             return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated_item, ensure_ascii=False)}
         except Exception as e:
@@ -768,7 +855,7 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             try:
                 updated = table.update_item(
                     Key={'log_id': log_id},
-                    UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, last_submitted_at=:lsa, share_token=:share, version=version + :one",
+                    UpdateExpression="SET #st=:st, history=:hist, updated_at=:at, submitted_at=if_not_exists(submitted_at, :at), last_submitted_at=:lsa, share_token=:share, version=version + :one",
                     ConditionExpression="version = :v AND #st = :draft AND worker_id = :wid",
                     ExpressionAttributeNames={'#st': 'state'},
                     ExpressionAttributeValues={
@@ -809,6 +896,14 @@ def handle_universal_worker_work_reports(event, headers, path, method, user_info
             # ✅ 保存処理ログ（直後）
             logger.info("[WORK_REPORT] submitted (compat) log_id=%s, table=%s", log_id, table_name)
             print(f"[PATCH /work-report (compat)] Submitted successfully: log_id={log_id}, table={table_name}")
+            _log_work_report_submission_to_kanri(
+                log_id=log_id,
+                worker_id=worker_id,
+                actor_name=(user_info or {}).get('name') or (user_info or {}).get('email') or worker_id,
+                work_date=item.get('work_date') or item.get('date'),
+                template_id=item.get('template_id'),
+                submitted_at=now_iso,
+            )
 
             return {'statusCode': 200, 'headers': headers, 'body': json.dumps(updated['Attributes'], ensure_ascii=False)}
 

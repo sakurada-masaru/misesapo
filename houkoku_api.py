@@ -20,6 +20,8 @@ REGION = 'ap-northeast-1'
 TABLE_NAME = os.environ.get('HOUKOKU_TABLE', 'houkoku')
 dynamodb = boto3.resource('dynamodb', region_name=REGION)
 table = dynamodb.Table(TABLE_NAME)
+KANRI_LOG_TABLE_NAME = os.environ.get('TABLE_KANRI_LOG', 'kanri_log')
+kanri_log_table = dynamodb.Table(KANRI_LOG_TABLE_NAME)
 
 # S3
 from botocore.config import Config
@@ -92,6 +94,38 @@ def sanitize_payload(payload: dict) -> dict:
 
     return payload
 
+
+def log_houkoku_submit_to_kanri(*, report_id, user, work_date, template_id, submitted_at):
+    try:
+        actor_name = (
+            (user or {}).get('name')
+            or (user or {}).get('email')
+            or (user or {}).get('user_id')
+            or '未設定'
+        )
+        action = '業務報告を提出しました'
+        if template_id:
+            action += f'（{template_id}）'
+        if work_date:
+            action += f' [{work_date}]'
+        now_iso = submitted_at or datetime.now(JST).isoformat()
+        kanri_log_table.put_item(Item={
+            'kanri_log_id': f"KANRI-{uuid.uuid4().hex[:20]}",
+            'jotai': 'yuko',
+            'reported_by': actor_name,
+            'reported_by_id': (user or {}).get('user_id', ''),
+            'action': action,
+            'event': 'work_report_submitted',
+            'type': 'work_report',
+            'report_id': report_id,
+            'template_id': template_id or '',
+            'work_date': work_date or '',
+            'created_at': now_iso,
+            'updated_at': now_iso,
+        })
+    except Exception as e:
+        print(f"[houkoku_api] failed to write kanri_log: {str(e)}")
+
 def lambda_handler(event, context):
     try:
         path = event.get('path', '') or event.get('rawPath', '') or '/'
@@ -151,6 +185,8 @@ def handle_create(event, origin):
         'template_id': body.get('template_id') or 'DEFAULT',
         'payload': sanitize_payload(body_payload),
         'state': 'submitted',
+        'submitted_at': now.isoformat(),
+        'last_submitted_at': now.isoformat(),
         'created_at': now.isoformat(),
         'updated_at': now.isoformat()
     }
@@ -158,6 +194,13 @@ def handle_create(event, origin):
         item['store_id'] = store_id
         
     table.put_item(Item=item)
+    log_houkoku_submit_to_kanri(
+        report_id=new_id,
+        user=user,
+        work_date=item.get('work_date'),
+        template_id=item.get('template_id'),
+        submitted_at=item.get('submitted_at'),
+    )
     return response(200, {'id': new_id, 'message': '保存しました'}, origin)
 
 def handle_list(event, origin):

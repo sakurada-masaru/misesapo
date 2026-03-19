@@ -10,9 +10,10 @@ import re
 import uuid
 import urllib.request
 import urllib.error
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import boto3
+from boto3.dynamodb.conditions import Attr
 
 try:
     print("[lambda_work_reports] Attempting to import universal_work_reports...")
@@ -34,6 +35,211 @@ except Exception as e:
 WORK_REPORTS_BUCKET = os.environ.get('WORK_REPORTS_BUCKET', 'misesapo-work-reports')
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
 s3_client = boto3.client('s3', region_name=S3_REGION)
+dynamodb = boto3.resource('dynamodb', region_name=S3_REGION)
+work_reports_table = dynamodb.Table(os.environ.get('UNIVERSAL_WORK_LOGS_TABLE', 'misesapo-sales-work-reports'))
+kanri_log_table = dynamodb.Table(os.environ.get('TABLE_KANRI_LOG', 'kanri_log'))
+admin_chat_table = dynamodb.Table(os.environ.get('TABLE_ADMIN_CHAT', 'admin_chat'))
+ses_client = boto3.client('ses', region_name=os.environ.get('SES_REGION', S3_REGION))
+
+JST = timezone(timedelta(hours=9))
+CUSTOMER_CHAT_ADMIN_ROOM = os.environ.get('CUSTOMER_CHAT_ADMIN_ROOM', 'customer_portal_chat')
+DAILY_ACTIVITY_EMAIL_TO = os.environ.get('DAILY_ACTIVITY_EMAIL_TO', 'info@misesapo.co.jp')
+DAILY_ACTIVITY_EMAIL_FROM = os.environ.get('DAILY_ACTIVITY_EMAIL_FROM', 'info@misesapo.co.jp')
+DAILY_ACTIVITY_HOURS = int(os.environ.get('DAILY_ACTIVITY_HOURS', '24'))
+DAILY_ACTIVITY_MAX_LINES = int(os.environ.get('DAILY_ACTIVITY_MAX_LINES', '200'))
+
+
+def _now_jst():
+    return datetime.now(JST)
+
+
+def _to_iso(dt: datetime):
+    return dt.isoformat()
+
+
+def _parse_epoch_ms(raw):
+    if raw is None:
+        return 0
+    s = str(raw).strip()
+    if not s:
+        return 0
+    try:
+        if s.endswith('Z'):
+            s = f"{s[:-1]}+00:00"
+        return int(datetime.fromisoformat(s).timestamp() * 1000)
+    except Exception:
+        pass
+    for fmt in ('%Y-%m-%d %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%Y-%m-%d'):
+        try:
+            dt = datetime.strptime(s, fmt).replace(tzinfo=JST)
+            return int(dt.timestamp() * 1000)
+        except Exception:
+            continue
+    return 0
+
+
+def _label_hhmm(epoch_ms: int):
+    if epoch_ms <= 0:
+        return '--:--'
+    return datetime.fromtimestamp(epoch_ms / 1000, JST).strftime('%H:%M')
+
+
+def _pick_name(*candidates):
+    for c in candidates:
+        v = str(c or '').strip()
+        if v:
+            return v
+    return '未設定'
+
+
+def _scan_all(table_obj, *, filter_expression=None, max_items=5000):
+    items = []
+    kwargs = {}
+    if filter_expression is not None:
+        kwargs['FilterExpression'] = filter_expression
+    while True:
+        resp = table_obj.scan(**kwargs)
+        chunk = resp.get('Items', [])
+        items.extend(chunk)
+        if len(items) >= max_items:
+            return items[:max_items]
+        lek = resp.get('LastEvaluatedKey')
+        if not lek:
+            break
+        kwargs['ExclusiveStartKey'] = lek
+    return items
+
+
+def _collect_recent_activity(hours=24):
+    now = _now_jst()
+    now_ms = int(now.timestamp() * 1000)
+    since_ms = int((now - timedelta(hours=hours)).timestamp() * 1000)
+    events = []
+
+    # 1) 管理日誌（kanri_log）
+    try:
+        kanri_items = _scan_all(kanri_log_table, filter_expression=Attr('jotai').eq('yuko'))
+    except Exception as e:
+        print(f"[activity-digest] kanri_log scan failed: {str(e)}")
+        kanri_items = []
+    for row in kanri_items:
+        at_ms = _parse_epoch_ms(row.get('updated_at') or row.get('created_at') or row.get('reported_at'))
+        if at_ms < since_ms or at_ms > now_ms:
+            continue
+        who = _pick_name(row.get('reported_by'), row.get('updated_by_name'), row.get('created_by_name'))
+        what = _pick_name(
+            row.get('action'),
+            row.get('event'),
+            row.get('name'),
+            row.get('title'),
+            row.get('note'),
+            row.get('summary'),
+            '情報を更新しました',
+        )
+        events.append({
+            'at_ms': at_ms,
+            'at': _label_hhmm(at_ms),
+            'kind': 'kanri_log',
+            'who': who,
+            'what': what,
+        })
+
+    # 2) 業務報告提出（universal_work_reports table）
+    try:
+        report_items = _scan_all(work_reports_table)
+    except Exception as e:
+        print(f"[activity-digest] work_reports scan failed: {str(e)}")
+        report_items = []
+    for item in report_items:
+        state = str(item.get('state') or '').strip().lower()
+        posted_ms = _parse_epoch_ms(
+            item.get('submitted_at')
+            or item.get('last_submitted_at')
+            or item.get('report_submitted_at')
+            or item.get('updated_at')
+            or item.get('created_at')
+        )
+        if posted_ms < since_ms or posted_ms > now_ms:
+            continue
+        if state and state != 'submitted' and not item.get('submitted_at') and not item.get('last_submitted_at'):
+            continue
+        who = _pick_name(
+            item.get('submitted_by_name'),
+            item.get('created_by_name'),
+            item.get('user_name'),
+            item.get('worker_name'),
+            item.get('worker_id'),
+        )
+        template = str(item.get('template_id') or '').strip()
+        work_date = str(item.get('work_date') or item.get('date') or '').strip()
+        extra = []
+        if template:
+            extra.append(template)
+        if work_date:
+            extra.append(work_date)
+        suffix = f"（{' / '.join(extra)}）" if extra else ''
+        events.append({
+            'at_ms': posted_ms,
+            'at': _label_hhmm(posted_ms),
+            'kind': 'work_report_submitted',
+            'who': who,
+            'what': f"業務報告を提出しました{suffix}",
+        })
+
+    # 3) お客様チャット
+    try:
+        chat_items = _scan_all(admin_chat_table, filter_expression=Attr('room').eq(CUSTOMER_CHAT_ADMIN_ROOM))
+    except Exception as e:
+        print(f"[activity-digest] admin_chat scan failed: {str(e)}")
+        chat_items = []
+    for row in chat_items:
+        at_ms = _parse_epoch_ms(row.get('created_at') or row.get('updated_at'))
+        if at_ms < since_ms or at_ms > now_ms:
+            continue
+        who = _pick_name(row.get('sender_display_name'), row.get('sender_name'), row.get('created_by_name'))
+        msg = str(row.get('message') or '').strip().replace('\n', ' ')
+        preview = f"「{msg[:32]}{'…' if len(msg) > 32 else ''}」" if msg else ''
+        events.append({
+            'at_ms': at_ms,
+            'at': _label_hhmm(at_ms),
+            'kind': 'customer_chat',
+            'who': who,
+            'what': f"お客様チャットを受信しました{preview}",
+        })
+
+    events.sort(key=lambda x: x.get('at_ms', 0), reverse=True)
+    return events[:DAILY_ACTIVITY_MAX_LINES], since_ms, now_ms
+
+
+def _send_daily_activity_digest(hours=24):
+    events, since_ms, now_ms = _collect_recent_activity(hours=hours)
+    since_label = datetime.fromtimestamp(since_ms / 1000, JST).strftime('%Y/%m/%d %H:%M')
+    now_label = datetime.fromtimestamp(now_ms / 1000, JST).strftime('%Y/%m/%d %H:%M')
+    date_label = _now_jst().strftime('%Y/%m/%d')
+
+    subject = f"【MISOGI】直近アクティビティ通知 {date_label}"
+    lines = [
+        "MISOGI 管理アクティビティ（日次通知）",
+        f"対象期間: {since_label} - {now_label} (JST)",
+        f"件数: {len(events)}",
+        "",
+    ]
+    if events:
+        for idx, ev in enumerate(events, start=1):
+            lines.append(f"{idx:03d}. {ev.get('at','--:--')} | {ev.get('who','未設定')} | {ev.get('what','')}")
+    else:
+        lines.append("対象期間内のアクティビティはありません。")
+    body = "\n".join(lines)
+
+    ses_client.send_email(
+        Source=DAILY_ACTIVITY_EMAIL_FROM,
+        Destination={'ToAddresses': [DAILY_ACTIVITY_EMAIL_TO]},
+        Message={
+            'Subject': {'Data': subject, 'Charset': 'UTF-8'},
+            'Body': {'Text': {'Data': body, 'Charset': 'UTF-8'}},
+        },
+    )
+    return {'subject': subject, 'count': len(events), 'from': DAILY_ACTIVITY_EMAIL_FROM, 'to': DAILY_ACTIVITY_EMAIL_TO}
 
 
 def _get_headers(event):
@@ -257,6 +463,29 @@ def lambda_handler(event, context):
     print("### HIT LAMBDA_HANDLER ###")
     print("### EVENT_KEYS ###", list(event.keys())[:50] if isinstance(event, dict) else str(event)[:200])
     print("### CONTEXT ###", str(context)[:200] if context else "None")
+
+    # EventBridge スケジュール実行（毎日 19:00 JST 想定）
+    if isinstance(event, dict) and (
+        event.get('source') == 'aws.events'
+        or event.get('detail-type') == 'Scheduled Event'
+        or event.get('action') == 'send_daily_activity_digest'
+    ):
+        try:
+            result = _send_daily_activity_digest(hours=DAILY_ACTIVITY_HOURS)
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json; charset=utf-8'},
+                'body': json.dumps({'ok': True, 'result': result}, ensure_ascii=False),
+            }
+        except Exception as e:
+            import traceback
+            print(f"[activity-digest] failed: {str(e)}")
+            traceback.print_exc()
+            return {
+                'statusCode': 500,
+                'headers': {'Content-Type': 'application/json; charset=utf-8'},
+                'body': json.dumps({'ok': False, 'error': str(e)}, ensure_ascii=False),
+            }
     
     try:
         path = event.get('path', '') or event.get('requestContext', {}).get('path', '') or ''

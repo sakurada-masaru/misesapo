@@ -22,10 +22,10 @@ export const SALES_HOTBAR = [
   {
     id: 'schedule',
     role: 'tools',
-    label: '打刻',
+    label: 'ツール',
     subItems: [
       { id: 'sales-attendance', label: '勤怠打刻', path: 'https://f.ieyasu.co/misesapo/login/' },
-      { id: 'sales-monshin-create', label: '問診票作成', path: '/admin/torihikisaki-touroku' },
+      { id: 'sales-customer-requests', label: '顧客申請（月次）', path: '/sales/tools/customer-requests' },
     ]
   },
   { id: 'report', role: 'log', label: '報告', to: '/houkoku' },
