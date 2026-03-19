@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="{{ base_path }}" />
+    <title>ミセサポが選ばれる理由｜企業情報｜ミセサポ</title>
+    <meta name="description" content="簡単・便利・安心。業務効率向上と従業員満足度向上を実現する、ミセサポが選ばれる理由をご紹介します。">
+    <meta name="keywords" content="ミセサポ,選ばれる理由,店舗運営,清掃,業務効率,従業員満足度">
+    <meta name="robots" content="index, follow">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/normal-header-hamburger.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #333;
+            line-height: 1.8;
+            background: #FDEDED;
+        }
+
+        main {
+            margin-top: 8rem;
+            padding-bottom: 80px;
+        }
+
+        .breadcrumb {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 16px 20px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb-inner {
+            display: inline-block;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .breadcrumb a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: #FF679C;
+        }
+
+        .breadcrumb span {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .breadcrumb .current {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .select-hero {
+            background: linear-gradient(135deg, #FF679C 0%, #E53888 100%);
+            color: #fff;
+            padding: 56px 20px;
+            text-align: center;
+        }
+
+        .select-hero h1 {
+            font-size: clamp(28px, 4.2vw, 44px);
+            font-weight: 800;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .select-hero p {
+            font-size: clamp(16px, 2.2vw, 22px);
+            opacity: 0.95;
+        }
+
+        .select-wrap {
+            max-width: 800px;
+            margin: 40px auto 0;
+            padding: 0 20px;
+        }
+
+        .select-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 34px 28px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+            margin-top: 26px;
+        }
+
+        .section-title {
+            font-size: clamp(24px, 3vw, 34px);
+            color: #FF679C;
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+        .section-subtitle {
+            font-size: clamp(18px, 2.3vw, 26px);
+            color: #333;
+            margin-top: 8px;
+            font-weight: 700;
+        }
+
+        .select-block + .select-block {
+            margin-top: 56px;
+        }
+
+        .select-block h3 {
+            font-size: clamp(24px, 3vw, 32px);
+            font-weight: 800;
+            color: #FF679C;
+            margin-bottom: 6px;
+        }
+
+        .select-block h4 {
+            font-size: clamp(18px, 2.4vw, 24px);
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .select-block p {
+            font-size: 16px;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .select-image {
+            margin-top: 20px;
+        }
+
+        .select-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+            margin: auto;
+        }
+
+        .image-grid-2 {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .select-hero {
+                padding: 42px 16px;
+            }
+
+            .select-wrap {
+                padding: 0 14px;
+            }
+
+            .select-card {
+                padding: 24px 16px;
+            }
+
+            .image-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        .about-main-text-box {
+    margin: 60px auto 30px;
+    color: #000;
+    width: 100%;
+    text-align: center;
+}
+.about-main-text-box h3 {
+    font-size: 24px;
+    border-bottom: #000 2px solid;
+    width: fit-content;
+    padding-bottom: 5px;
+    margin: auto;
+}
+.about-main-text-box h2 {
+    font-size: 32px;
+    color: #FF679C;
+    line-height: 42px;
+    border-bottom: 2px solid #666;
+    width: fit-content;
+    margin: 0 auto 25px;
+    padding-bottom: 15px;
+}
+.about-main-text-box p {
+    font-size: 20px;
+    margin:20px;
+    text-align: left;
+}
+.misesapo-footer {
+    background: #FF679C;
+    color: #fff;
+    text-align: center;
+    padding: 24px 20px;
+    font-size: 14px;
+}
+.misesapo-footer-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+</style>
+</head>
+<body>
+    <div id="normal-header-mount" data-src="module/normal-header-hamburger.html"></div>
+
+    <main>
+        <div class="breadcrumb">
+            <div class="breadcrumb-inner">
+                <a href="/">TOP</a>
+                <span>&gt;</span>
+                <a href="/about/">企業情報</a>
+                <span>&gt;</span>
+                <span class="current">ミセサポが選ばれる理由</span>
+            </div>
+        </div>
+
+        <section class="select-hero">
+            <h1>ミセサポが選ばれる理由</h1>
+            <p>ミセサポがどうして選ばれるか</p>
+        </section>
+
+        <div class="select-wrap">
+
+            <section class="about-main-text-box">
+                <h2>
+                    簡単・便利・安心<br>
+                    今までの手間や面倒を解消
+                </h2>
+                <p>自分たちで行ってきた終業後の清掃や等の数々の面倒事<br>清掃員や清掃業者の方々が自社ではだけでは困難な事案を<br>ミセサポが仲介して解決とサポートを致します。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_01.jpg" alt="簡単・便利・安心のイメージ">
+                </figure>
+            </section>
+
+            <section class="about-main-text-box">
+                <h2>
+                    <br>
+                    手間の掛かること全てをミセサポに任せて<br>
+                    業務効率の向上が可能
+                </h2>
+                <p>ミセサポでは店舗運営管理に関する実績と多様な経験に基づき、オーナー様が対処困難な本業以外の業務をミセサポにお任せできます。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_02.jpg" alt="店舗運営管理サポートのイメージ">
+                </figure>
+                <p>店舗で使用する機材のメンテナンスから店舗の管理<br>日々増え続ける領収書や請求書の管理やレポートの作成<br>また、店舗の皆様が抱える緊急的なトラブルの対応も行います。<br>厨房機器、空調設備、トイレ、配管等はのメンテナンスを行わないとトラブルは発生しますので発生を未然に防ぐ定期清掃をオススメしております。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_03.jpg" alt="店舗設備メンテナンスのイメージ">
+                </figure>
+                <p>店舗を管理運営する上で、人員・売上・在庫の管理、行政に提出が必要な書類等の作成は経営者の大きな負担になっている事と思います。<br>その様な書類等の作成から管理を代行しご負担の軽減を行います。<br>清掃も合わせてご依頼いただくことで経費の軽減もできますのでぜひご活用ください。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_04.jpg" alt="書類作成や管理代行のイメージ">
+                </figure>
+                    <figure class="select-image">
+                        <img src="/images/about/select_05.jpg" alt="業務効率化のイメージ1">
+                    </figure>
+            </section>
+
+            <section class="about-main-text-box">
+                <h2>従業員の満足度が向上<br>
+                「辞めたい」理由を減らして「続けたい」に</h2>
+                <p>「従業員がストレスに感じることをミセサポに任せる」<br>従業員の方の負担を軽減して業務に専念でき長く勤務を続けられる環境を作りをお手伝いします。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_06.jpg" alt="業務効率化のイメージ2">
+                </figure>
+                <p>接客をはじめ、清掃やごみ捨てなど幅広い業務はストレスとなり仕事の効率低下を招きます。<br>集中して業務を行っていただける環境作りでサービスや業務の向上も期待できます。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_08.jpg" alt="業務集中環境のイメージ">
+                </figure>
+                <p>ミセサポは24時間の対応のため終業後や閉店後に清掃作業を行います。<br>そのため業務を滞らせることなくご依頼主様のご負担も軽減いたします。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_07.jpg" alt="従業員満足度向上のイメージ">
+                </figure>
+                    <figure class="select-image">
+                        <img src="/images/about/select_09.jpg" alt="24時間対応のイメージ1">
+                    </figure>
+            </section>
+
+            <section class="about-main-text-box">
+                <h2>
+                    ミセサポを支える高スキルのスタッフ<br>
+                    店舗とスタッフを繋げるマッチング力
+                </h2>
+                <p>清掃業を始めたものの営業活動や契約書の取り交わし等、清掃以外の個所での負担が大きい業者様の負担を軽減し清掃のプロとしての技術を発揮していただく環境作りを行っております。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_10.jpg" alt="24時間対応のイメージ2">
+                </figure>
+                <p>案件を提供するだけではなくトラブルが発生した際には解決を行う仲介を行いご依頼主とスタッフが安心して清掃ができるよう注意を払っております。</p>
+                <figure class="select-image">
+                    <img src="/images/about/select_11.jpg" alt="高スキルスタッフのイメージ">
+                </figure>
+                    <figure class="select-image">
+                        <img src="/images/about/select_12.jpg" alt="仲介サポートのイメージ1">
+                    </figure>
+            </section>
+
+            <section class="about-main-text-box">
+                <h2>
+                    店舗さまにもスタッフにも選ばれるミセサポ<br>
+                    対応エリア拡大中につきご期待ください。
+                </h2>
+                <figure class="select-image">
+                    <img src="/images/about/select_13.jpg" alt="選ばれるサービスのイメージ">
+                </figure>
+            </section>
+        </div>
+    </main>
+    <footer class="misesapo-footer">
+        <div class="misesapo-footer-inner">©2026 ミセサポ | 株式会社ミセサポ</div>
+    </footer>
+    <script src="/js/script.js"></script>
+    <script>
+        function resolvePath(path) {
+            if (!path || path.startsWith("http://") || path.startsWith("https://") || path.startsWith("//")) {
+                return path;
+            }
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "";
+            const isCustomDomain = hostname === "misesapo.co.jp" || hostname === "www.misesapo.co.jp";
+            if (isLocalDev || isCustomDomain) {
+                return path.startsWith("/") ? path : "/" + path;
+            }
+            if (path.startsWith("/misesapo/")) {
+                return window.location.origin + path;
+            }
+            if (path.startsWith("/")) {
+                return window.location.origin + "/misesapo" + path;
+            }
+            return window.location.origin + "/misesapo/" + path;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const normalHeader = document.querySelector(".normal-header");
+            if (normalHeader) {
+                normalHeader.classList.add("visible");
+                const originalRemove = normalHeader.classList.remove;
+                normalHeader.classList.remove = function (...args) {
+                    if (args[0] !== "visible") {
+                        originalRemove.apply(this, args);
+                    }
+                };
+            }
+
+            document.querySelectorAll('a[href^="/"]').forEach(function (link) {
+                const href = link.getAttribute("href");
+                if (href && !href.startsWith("http://") && !href.startsWith("https://") && !href.startsWith("//")) {
+                    link.href = resolvePath(href);
+                }
+            });
+
+            document.querySelectorAll('img[src^="/"]').forEach(function (img) {
+                const src = img.getAttribute("src");
+                if (src && !src.startsWith("http://") && !src.startsWith("https://") && !src.startsWith("//")) {
+                    img.src = resolvePath(src);
+                }
+            });
+        });
+    </script>
+    <script src="/js/header.js"></script>
+    <script src="/js/normal-header-hamburger.js"></script>
+</body>
+</html>
