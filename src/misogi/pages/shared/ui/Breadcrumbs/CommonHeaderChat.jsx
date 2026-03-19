@@ -171,6 +171,7 @@ export default function CommonHeaderChat({
   docked = false,
   showCloseButton = true,
   draggable = true,
+  enableDropUpload = false,
   ariaLabel = '共通チャット',
   triggerAriaLabel = '共通チャットを開く',
 } = {}) {
@@ -202,6 +203,7 @@ export default function CommonHeaderChat({
   const [showDataEditor, setShowDataEditor] = useState(false);
   const [dataText, setDataText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [dropActive, setDropActive] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastSeenAt, setLastSeenAt] = useState('');
   const listRef = useRef(null);
@@ -545,20 +547,74 @@ export default function CommonHeaderChat({
     fileInputRef.current?.click();
   }, [sending, uploading]);
 
-  const onSelectFile = useCallback(async (e) => {
-    const files = Array.from(e?.target?.files || []);
-    if (files.length === 0) return;
+  const appendAttachments = useCallback(async (files, options = {}) => {
+    const list = Array.from(files || []);
+    const imageOnly = Boolean(options?.imageOnly);
+    const accepted = imageOnly
+      ? list.filter((f) => isImageContentType(f?.type))
+      : list;
+    if (imageOnly && accepted.length === 0 && list.length > 0) {
+      throw new Error('ドラッグ&ドロップは画像ファイルのみ対応です');
+    }
+    if (imageOnly && accepted.length < list.length) {
+      setError('画像以外のファイルは除外しました（画像のみ添付）');
+    }
+    if (accepted.length === 0) return;
     setUploading(true);
     try {
-      const uploaded = await Promise.all(files.map((f) => uploadAttachment(f)));
+      const uploaded = await Promise.all(accepted.map((f) => uploadAttachment(f)));
       setAttachments((prev) => [...prev, ...uploaded].slice(0, 12));
-      setError('');
-    } catch (err) {
-      setError(String(err?.message || err || '添付エラー'));
+      if (!(imageOnly && accepted.length < list.length)) {
+        setError('');
+      }
     } finally {
       setUploading(false);
     }
   }, [uploadAttachment]);
+
+  const onSelectFile = useCallback(async (e) => {
+    const files = Array.from(e?.target?.files || []);
+    if (files.length === 0) return;
+    try {
+      await appendAttachments(files, { imageOnly: false });
+    } catch (err) {
+      setError(String(err?.message || err || '添付エラー'));
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, [appendAttachments]);
+
+  const onComposeDragOver = useCallback((e) => {
+    if (!enableDropUpload) return;
+    if (sending || uploading) return;
+    if (!e?.dataTransfer?.types?.includes?.('Files')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setDropActive(true);
+  }, [enableDropUpload, sending, uploading]);
+
+  const onComposeDragLeave = useCallback((e) => {
+    if (!enableDropUpload) return;
+    const next = e?.relatedTarget;
+    if (next && typeof e.currentTarget?.contains === 'function' && e.currentTarget.contains(next)) {
+      return;
+    }
+    setDropActive(false);
+  }, [enableDropUpload]);
+
+  const onComposeDrop = useCallback(async (e) => {
+    if (!enableDropUpload) return;
+    e.preventDefault();
+    setDropActive(false);
+    if (sending || uploading) return;
+    const files = Array.from(e?.dataTransfer?.files || []);
+    if (files.length === 0) return;
+    try {
+      await appendAttachments(files, { imageOnly: true });
+    } catch (err) {
+      setError(String(err?.message || err || '添付エラー'));
+    }
+  }, [appendAttachments, enableDropUpload, sending, uploading]);
 
   const onInsertEmoji = useCallback((emoji) => {
     setText((prev) => truncateByCodePoints(`${prev || ''}${emoji || ''}`, MAX_MESSAGE_LEN));
@@ -923,7 +979,12 @@ export default function CommonHeaderChat({
             })
           )}
         </div>
-        <div className="header-chat-compose">
+        <div
+          className={`header-chat-compose ${enableDropUpload ? 'drop-enabled' : ''} ${dropActive ? 'drop-active' : ''}`.trim()}
+          onDragOver={onComposeDragOver}
+          onDragLeave={onComposeDragLeave}
+          onDrop={onComposeDrop}
+        >
           {replyTo ? (
             <div className="reply-box">
               <div className="reply-box-title">返信先: {String(replyTo?.sender_name || replyTo?.sender_display_name || '不明')}</div>
@@ -938,6 +999,9 @@ export default function CommonHeaderChat({
             multiple
             onChange={onSelectFile}
           />
+          {enableDropUpload ? (
+            <div className="drop-hint">画像/スクショをここへドラッグ&ドロップで添付</div>
+          ) : null}
           <textarea
             ref={composeTextareaRef}
             value={text}

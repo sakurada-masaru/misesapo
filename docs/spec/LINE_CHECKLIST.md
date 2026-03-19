@@ -5000,3 +5000,25 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 営業テンプレ `today_result` セクション（`3. 本日の成果`）直下にテンプレートボタンを表示するよう移設
 - [x] 既存の営業カード先頭のテンプレートボタン表示を削除し、見出し直下表示へ統一
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Sales Report Detail: Back Navigation Fix (2026-03-20)
+
+- [x] 共通詳細ページ `OfficeWorkReportDetailPage` の戻り先をルート別に分岐（`/sales/work-reports/:id` は `/houkoku`、それ以外は `/admin/houkoku`）
+- [x] エラー表示時の「報告一覧へ」リンクも同じ分岐に統一
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer Master: Sales Owner Tracking for Incentive (2026-03-20)
+
+- [x] 営業の `顧客登録申請` / `店舗追加申請` ペイロードに `sales_owner_name` / `sales_owner_id` を付与
+- [x] 承認時の `create_customer_bundle` / `create_tenpo` で営業担当情報を `tenpo` へ保存（`sales_owner_name` / `sales_owner_id`）
+- [x] 管理 `顧客マスタ` 一覧に `営業担当` 列を追加（名称 + IDタグ）
+- [x] 営業担当を検索・ソート・編集保存対象に追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard Common Chat: Drag & Drop Image Upload (2026-03-20)
+
+- [x] 共通チャットに `enableDropUpload` オプションを追加（既存利用は非有効、ダッシュボードのみ有効化）
+- [x] ダッシュボード共通チャットで画像/スクショのドラッグ&ドロップ添付を追加
+- [x] ドロップ時は画像のみ受理し、非画像ファイルは除外メッセージを表示
+- [x] ドロップターゲット強調UI（通常/ライトモード）を追加
+- [x] `npm -C src/misogi run build` でビルド確認

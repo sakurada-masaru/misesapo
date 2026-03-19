@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { getAdminWorkReportDetail } from '../shared/api/adminWorkReportsApi';
 import { apiFetchWorkReport } from '../shared/api/client';
 import { useAuth } from '../shared/auth/useAuth';
@@ -112,11 +112,14 @@ function formatMinutes(totalMin) {
  */
 export default function OfficeWorkReportDetailPage({ reportId: propReportId, embed = false }) {
   const params = useParams();
+  const location = useLocation();
   const reportId = propReportId ?? params.reportId;
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
+  const isSalesDetailRoute = /^\/sales\/work-reports\/[^/]+/i.test(String(location?.pathname || ''));
+  const backTo = isSalesDetailRoute ? '/houkoku' : '/admin/houkoku';
 
   useEffect(() => {
     if (!reportId) {
@@ -173,7 +176,7 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
       <div className={`report-page office-work-report-detail ${embed ? 'embed' : ''}`} data-job="office" style={{ padding: 24, maxWidth: 560, margin: '0 auto' }}>
         {!embed && <h1 style={{ fontSize: '1.25rem', marginBottom: 16 }}>業務報告の閲覧</h1>}
         <p style={{ color: 'var(--alert, #ff3030)' }}>{error}</p>
-        {!embed && <p><Link to="/admin/houkoku">報告一覧へ</Link></p>}
+        {!embed && <p><Link to={backTo}>報告一覧へ</Link></p>}
       </div>
     );
   }
@@ -205,7 +208,7 @@ export default function OfficeWorkReportDetailPage({ reportId: propReportId, emb
         <>
           <div className="office-work-report-detail-actions no-print">
             <p style={{ margin: 0 }}>
-              <Link to="/admin/houkoku" style={{ color: 'var(--job-office)' }}>← 報告一覧</Link>
+              <Link to={backTo} style={{ color: 'var(--job-office)' }}>← 報告一覧</Link>
             </p>
             <button type="button" className="btn btn-print" onClick={handlePrint} aria-label="印刷またはPDFで保存">
               印刷／PDFで保存

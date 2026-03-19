@@ -304,6 +304,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
           tenpo_phone: norm(tenpo?.phone),
           tenpo_url: norm(tenpo?.url),
           tenpo_tantou_name: norm(tenpo?.tantou_name),
+          tenpo_sales_owner_name: norm(tenpo?.sales_owner_name),
+          tenpo_sales_owner_id: norm(tenpo?.sales_owner_id),
           tenpo_email: norm(tenpo?.email),
         });
       });
@@ -331,6 +333,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
           tenpo_phone: '',
           tenpo_url: '',
           tenpo_tantou_name: '',
+          tenpo_sales_owner_name: '',
+          tenpo_sales_owner_id: '',
           tenpo_email: '',
         });
       });
@@ -358,6 +362,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
           tenpo_phone: '',
           tenpo_url: '',
           tenpo_tantou_name: '',
+          tenpo_sales_owner_name: '',
+          tenpo_sales_owner_id: '',
           tenpo_email: '',
         });
       });
@@ -511,6 +517,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
         row.tenpo_id,
         row.tenpo_address,
         row.tenpo_phone,
+        row.tenpo_sales_owner_name,
+        row.tenpo_sales_owner_id,
       ].join(' ').toLowerCase();
       return tokens.every((t) => blob.includes(t));
     });
@@ -601,6 +609,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
           return `${norm(row.tenpo_name)} ${norm(row.tenpo_id)}`;
         case 'phone':
           return norm(row.tenpo_phone);
+        case 'sales_owner':
+          return `${norm(row.tenpo_sales_owner_name)} ${norm(row.tenpo_sales_owner_id)}`;
         case 'status':
           if (quality.hasLinkGap) return '1-未紐付けあり';
           if (quality.isDuplicate) return '2-重複候補';
@@ -836,6 +846,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
       if (changed('tenpo_address')) patch.address = norm(next.tenpo_address);
       if (changed('tenpo_phone')) patch.phone = norm(next.tenpo_phone);
       if (changed('tenpo_tantou_name')) patch.tantou_name = norm(next.tenpo_tantou_name);
+      if (changed('tenpo_sales_owner_name')) patch.sales_owner_name = norm(next.tenpo_sales_owner_name);
+      if (changed('tenpo_sales_owner_id')) patch.sales_owner_id = norm(next.tenpo_sales_owner_id);
       if (changed('tenpo_email')) patch.email = norm(next.tenpo_email);
       if (changed('kokyaku_id')) patch.kokyaku_id = norm(next.kokyaku_id);
       if (changed('kokyaku_name')) patch.kokyaku_name = norm(next.kokyaku_name);
@@ -1105,6 +1117,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
           tenpo_name: name,
           torihikisaki_id: torihikisakiId,
           yagou_id: yagouId,
+          sales_owner_name: readActorName(),
+          sales_owner_id: readActorId(),
         };
         await postMasterChangeRequest({
           action: 'create_tenpo',
@@ -1181,6 +1195,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
       torihikisaki_name: torihikisakiName,
       yagou_name: yagouName,
       tenpo_name: tenpoName,
+      sales_owner_name: readActorName(),
+      sales_owner_id: readActorId(),
     };
 
     setCreatingKind('sales_bundle');
@@ -1256,6 +1272,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
         await apiJson('/master/yagou', { method: 'POST', body });
       } else if (action === 'create_tenpo') {
         const after = payload?.after || {};
+        const salesOwnerName = norm(after?.sales_owner_name || payload?.sender_name || reqEvent?.actorName || '');
+        const salesOwnerId = norm(after?.sales_owner_id || payload?.sender_id || '');
         const body = {
           name: norm(after?.tenpo_name),
           jotai: 'yuko',
@@ -1263,6 +1281,8 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
         };
         if (norm(after?.torihikisaki_id)) body.torihikisaki_id = norm(after.torihikisaki_id);
         if (norm(after?.yagou_id)) body.yagou_id = norm(after.yagou_id);
+        if (salesOwnerName) body.sales_owner_name = salesOwnerName;
+        if (salesOwnerId) body.sales_owner_id = salesOwnerId;
         await apiJson('/master/tenpo', { method: 'POST', body });
       } else if (action === 'create_customer_bundle') {
         const after = payload?.after || {};
@@ -1341,8 +1361,12 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
           jotai: 'yuko',
           updated_by: actor,
         };
+        const salesOwnerName = norm(after?.sales_owner_name || payload?.sender_name || reqEvent?.actorName || '');
+        const salesOwnerId = norm(after?.sales_owner_id || payload?.sender_id || '');
         if (torihikisakiId) tenpoBody.torihikisaki_id = torihikisakiId;
         if (yagouId) tenpoBody.yagou_id = yagouId;
+        if (salesOwnerName) tenpoBody.sales_owner_name = salesOwnerName;
+        if (salesOwnerId) tenpoBody.sales_owner_id = salesOwnerId;
         await apiJson('/master/tenpo', { method: 'POST', body: tenpoBody });
       } else if (action === 'delete_rows') {
         const rowsToDelete = Array.isArray(payload?.rows) ? payload.rows : [];
@@ -2031,6 +2055,12 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
                     </button>
                   </th>
                   <th>
+                    <button type="button" className={`admin-master-sort-btn${sortKey === 'sales_owner' ? ' is-active' : ''}`} onClick={() => handleSort('sales_owner')}>
+                      営業担当
+                      <span className="sort-indicator">{sortMark('sales_owner')}</span>
+                    </button>
+                  </th>
+                  <th>
                     <button type="button" className={`admin-master-sort-btn${sortKey === 'status' ? ' is-active' : ''}`} onClick={() => handleSort('status')}>
                       状態
                       <span className="sort-indicator">{sortMark('status')}</span>
@@ -2042,7 +2072,7 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
               <tbody>
                 {sortedRows.length === 0 && !loading ? (
                   <tr>
-                    <td colSpan={8} className="empty">データがありません</td>
+                    <td colSpan={9} className="empty">データがありません</td>
                   </tr>
                 ) : null}
                 {sortedRows.map((row) => (
@@ -2071,6 +2101,10 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
                       <IdTag value={row.tenpo_id} kind="tenpo" />
                     </td>
                     <td data-col="電話">{row.tenpo_phone || ''}</td>
+                    <td data-col="営業担当">
+                      <div>{row.tenpo_sales_owner_name || ''}</div>
+                      <IdTag value={row.tenpo_sales_owner_id} kind="plain" />
+                    </td>
                     <td data-col="状態">
                       {rowQuality.get(row.key)?.hasLinkGap ? <small>未紐付けあり</small> : null}
                       {rowQuality.get(row.key)?.isDuplicate ? <small>重複候補</small> : null}
@@ -2213,6 +2247,14 @@ export default function AdminCustomerMasterPage({ mode = 'admin' }) {
               <label className="admin-master-field">
                 <span>担当者</span>
                 <input value={editing.tenpo_tantou_name || ''} onChange={(e) => setEditing((p) => ({ ...p, tenpo_tantou_name: e.target.value }))} />
+              </label>
+              <label className="admin-master-field">
+                <span>営業担当名</span>
+                <input value={editing.tenpo_sales_owner_name || ''} onChange={(e) => setEditing((p) => ({ ...p, tenpo_sales_owner_name: e.target.value }))} />
+              </label>
+              <label className="admin-master-field">
+                <span>営業担当ID</span>
+                <input value={editing.tenpo_sales_owner_id || ''} onChange={(e) => setEditing((p) => ({ ...p, tenpo_sales_owner_id: e.target.value }))} />
               </label>
               <label className="admin-master-field">
                 <span>メール</span>

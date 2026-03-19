@@ -2691,6 +2691,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                         docked
                         showCloseButton={false}
                         draggable={false}
+                        enableDropUpload
                         ariaLabel={t('ダッシュボード共通チャット')}
                       />
                     </aside>
