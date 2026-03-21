@@ -2150,24 +2150,6 @@ export default function CustomerMyPage() {
             <aside className="customer-notice-side-actions" aria-label="ミセサポメッセージ操作">
               <button
                 type="button"
-                className="btn btn-secondary customer-quick-btn customer-quick-btn-doc"
-                onClick={() => openBillingViewer('invoice')}
-                disabled={invoiceDocuments.length === 0}
-                title={invoiceDocuments.length === 0 ? '請求書がまだありません' : ''}
-              >
-                請求書
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary customer-quick-btn customer-quick-btn-doc"
-                onClick={() => openBillingViewer('receipt')}
-                disabled={receiptDocuments.length === 0}
-                title={receiptDocuments.length === 0 ? '領収書がまだありません' : ''}
-              >
-                領収書
-              </button>
-              <button
-                type="button"
                 className="btn btn-secondary customer-quick-btn"
                 onClick={openNextYoteiPanel}
                 disabled={!nextYotei}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, Link } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { apiFetchWorkReport } from '../../shared/api/client';
 import { useAuth } from '../../shared/auth/useAuth';
 import TemplateRenderer from '../../../shared/components/TemplateRenderer';
@@ -8,6 +10,34 @@ import { getTemplateById } from '../../../templates';
 
 function norm(v) {
     return String(v || '').trim();
+}
+
+function nowIso() {
+    return new Date().toISOString();
+}
+
+function todayYmd() {
+    return nowIso().slice(0, 10);
+}
+
+function normalizeYmd(value) {
+    const s = norm(value);
+    const m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (!m) return '';
+    const y = Number(m[1]);
+    const mm = Number(m[2]);
+    const dd = Number(m[3]);
+    if (!Number.isFinite(y) || !Number.isFinite(mm) || !Number.isFinite(dd)) return '';
+    if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return '';
+    return `${String(y).padStart(4, '0')}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+}
+
+function safeFilePart(input) {
+    const cleaned = norm(input)
+        .replace(/[\\/:*?"<>|]+/g, '_')
+        .replace(/\s+/g, ' ')
+        .trim();
+    return cleaned || 'report';
 }
 
 function asItems(data) {
@@ -228,6 +258,7 @@ function hydrateCleaningReportPhotos(payload, rows, reportKey, scheduleId) {
 
 const AdminHoukokuDetailPage = () => {
     const { reportId } = useParams();
+    const reportDocumentRef = React.useRef(null);
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -246,6 +277,7 @@ const AdminHoukokuDetailPage = () => {
     const [publishMessage, setPublishMessage] = useState('');
     const [publishError, setPublishError] = useState('');
     const [hydratedPayload, setHydratedPayload] = useState(null);
+    const [backfillBusy, setBackfillBusy] = useState(false);
     const { getToken } = useAuth();
 
     useEffect(() => {
@@ -441,6 +473,207 @@ const AdminHoukokuDetailPage = () => {
         }
     };
 
+    const buildReportPdfBlob = async ({ tenpoLabel, workDate } = {}) => {
+        const node = reportDocumentRef.current;
+        if (!node) throw new Error('PDF化対象の報告プレビューが見つかりません');
+        const canvas = await html2canvas(node, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            logging: false,
+        });
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdfHeight;
+        }
+
+        const normalizedDate = normalizeYmd(workDate) || todayYmd();
+        const fileName = `${normalizedDate}_${safeFilePart(tenpoLabel || 'tenpo')}_清掃報告書.pdf`;
+        return { blob: pdf.output('blob'), fileName, workDate: normalizedDate };
+    };
+
+    const ensureSoukoForTenpo = async ({ tenpoId, headers }) => {
+        const base = MASTER_API_BASE.replace(/\/$/, '');
+        const checkQs = new URLSearchParams({ limit: '20', jotai: 'yuko', tenpo_id: tenpoId });
+        const checkRes = await fetch(`${base}/master/souko?${checkQs.toString()}`, { headers, cache: 'no-store' });
+        if (!checkRes.ok) {
+            const text = await checkRes.text().catch(() => '');
+            throw new Error(`ストレージ確認に失敗しました (${checkRes.status}) ${text}`.trim());
+        }
+        const existing = asItems(await checkRes.json())?.[0];
+        if (norm(existing?.souko_id)) return existing;
+
+        const createRes = await fetch(`${base}/master/souko`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tenpo_id: tenpoId,
+                name: `${tenpoId} 顧客ストレージ`,
+                jotai: 'yuko',
+            }),
+        });
+        if (!createRes.ok) {
+            const text = await createRes.text().catch(() => '');
+            throw new Error(`ストレージ作成に失敗しました (${createRes.status}) ${text}`.trim());
+        }
+        const created = await createRes.json().catch(() => null);
+        if (!norm(created?.souko_id)) throw new Error('ストレージ作成に失敗しました');
+        return created;
+    };
+
+    const uploadBlobToSouko = async ({ tenpoId, fileName, contentType, blob, headers }) => {
+        const base = MASTER_API_BASE.replace(/\/$/, '');
+        const presignRes = await fetch(`${base}/master/souko`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mode: 'presign_upload',
+                tenpo_id: tenpoId,
+                file_name: fileName,
+                content_type: contentType || 'application/octet-stream',
+            }),
+        });
+        if (!presignRes.ok) {
+            const text = await presignRes.text().catch(() => '');
+            throw new Error(`アップロードURL取得に失敗しました (${presignRes.status}) ${text}`.trim());
+        }
+        const presign = await presignRes.json().catch(() => null);
+        const putUrl = norm(presign?.put_url);
+        const key = norm(presign?.key);
+        if (!putUrl || !key) throw new Error('アップロードURL取得に失敗しました');
+        const putRes = await fetch(putUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': contentType || 'application/octet-stream' },
+            body: blob,
+        });
+        if (!putRes.ok) {
+            const text = await putRes.text().catch(() => '');
+            throw new Error(`ファイルアップロードに失敗しました (${putRes.status}) ${text}`.trim());
+        }
+        return {
+            key,
+            preview_url: norm(presign?.get_url),
+            content_type: contentType || 'application/octet-stream',
+            size: Number(blob?.size || 0) || 0,
+        };
+    };
+
+    const backfillCleanerReportToSouko = async () => {
+        if (backfillBusy || loading || !report || !isCleaningReport) return;
+        setBackfillBusy(true);
+        setPublishMessage('');
+        setPublishError('');
+        try {
+            const token = getToken() || localStorage.getItem('cognito_id_token');
+            const headers = token ? { Authorization: `Bearer ${String(token).trim()}` } : {};
+            const payloadObj = pickPayload(report);
+            const tenpoId = pickTenpoId(report, payloadObj);
+            const reportKey = pickReportKey(report);
+            const scheduleId = pickScheduleId(report, payloadObj);
+            if (!tenpoId || !reportKey) throw new Error('店舗IDまたは報告IDが不足しているため保存できません');
+
+            const tenpoLabel = norm(
+                payloadObj?.context?.tenpo_label
+                || payloadObj?.tenpo_label
+                || payloadObj?.store_name
+                || payloadObj?.name
+                || tenpoId
+            ) || tenpoId;
+            const workDate = normalizeYmd(
+                report?.work_date
+                || payloadObj?.work_date
+                || payloadObj?.header?.work_date
+                || payloadObj?.overview?.work_date
+            ) || todayYmd();
+
+            const souko = await ensureSoukoForTenpo({ tenpoId, headers });
+            const existingFiles = Array.isArray(souko?.files) ? souko.files : [];
+            const alreadyExists = existingFiles.some((f) => {
+                if (!isCleanerReportPdf(f)) return false;
+                const fileReportId = norm(f?.report_id || f?.houkoku_id || f?.work_report_id || f?.id);
+                const fileScheduleId = norm(f?.schedule_id || f?.yotei_id);
+                const byReportId = reportKey && fileReportId && fileReportId === reportKey;
+                const byScheduleId = scheduleId && fileScheduleId && fileScheduleId === scheduleId;
+                return byReportId || byScheduleId;
+            });
+            if (alreadyExists) {
+                setPublishMessage('この報告は既に店舗ストレージへ保存済みです。');
+                setReport((prev) => (prev ? { ...prev } : prev));
+                return;
+            }
+
+            const { blob, fileName } = await buildReportPdfBlob({ tenpoLabel, workDate });
+            const stored = await uploadBlobToSouko({
+                tenpoId,
+                fileName,
+                contentType: 'application/pdf',
+                blob,
+                headers,
+            });
+
+            const nextFiles = [
+                ...existingFiles,
+                {
+                    key: stored.key,
+                    file_name: fileName,
+                    content_type: stored.content_type,
+                    size: stored.size,
+                    uploaded_at: nowIso(),
+                    kubun: 'teishutsu',
+                    doc_category: 'cleaning_houkoku_pdf',
+                    preview_url: stored.preview_url,
+                    report_id: reportKey,
+                    report_ref_id: norm(payloadObj?.report_ref_id || reportKey),
+                    yotei_id: scheduleId,
+                    schedule_id: scheduleId,
+                    tenpo_id: tenpoId,
+                    work_date: workDate,
+                    date_key: workDate,
+                    date_month: workDate.slice(0, 7),
+                    source: 'cleaning_houkoku',
+                    customer_visible: false,
+                    customer_published_at: '',
+                    approval_status: 'pending',
+                    approved_at: '',
+                    approved_by: '',
+                    approved_by_name: '',
+                },
+            ];
+
+            const base = MASTER_API_BASE.replace(/\/$/, '');
+            const updateRes = await fetch(`${base}/master/souko/${encodeURIComponent(norm(souko?.souko_id))}`, {
+                method: 'PUT',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...souko, files: nextFiles }),
+            });
+            if (!updateRes.ok) {
+                const text = await updateRes.text().catch(() => '');
+                throw new Error(`ストレージ更新に失敗しました (${updateRes.status}) ${text}`.trim());
+            }
+            await updateRes.json().catch(() => null);
+            setPublishMessage('店舗ストレージへ後追い保存しました。公開設定を続けて行えます。');
+            setReport((prev) => (prev ? { ...prev } : prev));
+        } catch (e) {
+            setPublishError(String(e?.message || e || '店舗ストレージへの保存に失敗しました'));
+        } finally {
+            setBackfillBusy(false);
+        }
+    };
+
     if (loading) return <Container><LoadingSpinner />読み込み中...</Container>;
     if (error) return <Container><ErrorMessage>{error}</ErrorMessage></Container>;
     if (!report) return <Container><Message>報告が見つかりません。</Message></Container>;
@@ -518,6 +751,16 @@ const AdminHoukokuDetailPage = () => {
                             <i className="fas fa-pen"></i> 修正
                         </Link>
                     ) : null}
+                    {isCleaningReport && !customerPublish.ready ? (
+                        <button
+                            type="button"
+                            className="btn-backfill"
+                            onClick={backfillCleanerReportToSouko}
+                            disabled={backfillBusy || customerPublish.loading}
+                        >
+                            {backfillBusy ? '保存中...' : '店舗ストレージへ保存'}
+                        </button>
+                    ) : null}
                     <button
                         type="button"
                         className={customerPublish.visible ? 'btn-published' : 'btn-hidden'}
@@ -569,7 +812,7 @@ const AdminHoukokuDetailPage = () => {
                             const workMinutes = calcMinutes(s.work_start_time, s.work_end_time);
 
                             return (
-                                <ReportDocument>
+                                <ReportDocument ref={reportDocumentRef}>
                                     {resolvedTemplate ? (
                                         <TemplateRenderer
                                             template={resolvedTemplate}
@@ -754,6 +997,11 @@ const Actions = styled.div`
         border-color: #f59e0b;
         background: #fffbeb;
         color: #92400e;
+    }
+    .btn-backfill {
+        border-color: #60a5fa;
+        background: #eff6ff;
+        color: #1d4ed8;
     }
 `;
 const PublishInfo = styled.div`

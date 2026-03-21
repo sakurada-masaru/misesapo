@@ -5022,3 +5022,18 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] ドロップ時は画像のみ受理し、非画像ファイルは除外メッセージを表示
 - [x] ドロップターゲット強調UI（通常/ライトモード）を追加
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Houkoku Detail: Souko Backfill for Legacy Cleaning Reports (2026-03-20)
+
+- [x] 管理 `業務報告詳細`（清掃）に `店舗ストレージへ保存` ボタンを追加（souko未保存時のみ表示）
+- [x] 詳細プレビューをA4 PDF化し、`souko(mode=presign_upload)` 経由で `cleaning_houkoku_pdf` として後追い保存する処理を追加
+- [x] `report_id / report_ref_id / schedule_id / work_date / approval_status` を含むメタ情報で `souko.files` へ反映
+- [x] 保存済み重複を検知して二重登録を回避
+- [x] 保存後に公開状態判定を再読込し、そのまま「お客様へ公開」トグルへ進める導線に調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Customer MyPage: Hide Invoice/Receipt Actions (2026-03-20)
+
+- [x] お客様マイページ右側アクションから `請求書` / `領収書` ボタンを一時非表示化
+- [x] 他アクション（次回予定 / 作業完了レポート / サービスカタログ / チャット / お問い合わせ / 規約）は維持
+- [x] `npm -C src/misogi run build` でビルド確認
