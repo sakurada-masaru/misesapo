@@ -5211,3 +5211,82 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `dashboard-wide` の `position: fixed` を撤廃し、相対配置に戻して `left/right` 競合を解消
 - [x] `with-filebox` に `box-sizing: border-box` と `min-width: 0` を追加し、横方向の余白崩れを抑制
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Remove Centering by Forcing Admin `with-sidebar` Width (2026-03-22)
+
+- [x] `@media (min-width: 1024px)` で `admin .job-entrance-ui` を `width: 100vw; max-width: none;` に固定
+- [x] `admin .job-entrance-main.with-sidebar` を `width: calc(100vw - sidebar)` + `max-width: none` + `min-width: 0` に強制し、中央寄せ余地を排除
+- [x] `npm -C src/misogi run build` でビルド確認
+- [x] `python3 scripts/build.py` で `src/misogi/dist` を `public/misogi` に同期（ローカル配信反映）
+
+## Admin Dashboard: Enforce 2-Column Main Layout Padding/Gap (2026-03-23)
+
+- [x] デスクトップ管理ダッシュボードの `job-entrance-main.with-sidebar` 幅計算を `calc(100% - sidebar)` に統一し、`100vw` 依存を解消
+- [x] メイン外側パディングを `10px` で固定（`with-filebox`）
+- [x] ダッシュボード2カラム（左=通知+ファイルボックス / 右=チャット）を `admin-dashboard-layout` で `gap: 10px` に統一
+- [x] 右ペインリサイザー考慮後の列計算を `grid-template-columns` に明示（`100% - resizer - 10px`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Widen Filebox Folder Area (2026-03-23)
+
+- [x] ダッシュボード左ペイン内フォルダエリアの既定幅を拡大（`--dash-explorer-width` fallback `260px → 340px`）
+- [x] ダッシュボードのフォルダ幅制約を調整（`default 340 / min 300 / max 620`）
+- [x] 既存 localStorage 幅値が狭い場合でも `min` で底上げされるよう調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Force Full-Width Main Area (2026-03-23)
+
+- [x] `job-entrance-ui` を管理画面時に `100vw` 固定（JSXインライン）し、外側幅制約を排除
+- [x] ダッシュボード/ファイルボックス表示時の `main` を `margin-left: 236px` + `width: calc(100vw - 236px)` に強制（JSXインライン）
+- [x] ダッシュボード2カラム/ファイルボックス単体レイアウトに `width: 100% / max-width: none / margin: 0` を強制
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Decouple Outer 2-Column Width from Filebox Inner Size (2026-03-23)
+
+- [x] ダッシュボード外側グリッドを JSX インライン `gridTemplateColumns` で固定（`左 + リサイザー + 右 = 100%`）
+- [x] 外側カラム計算にファイルボックス内幅を使わない構成へ変更（内側サイズの影響を遮断）
+- [x] ファイルボックス単体レイアウトにも `overflow: hidden` を追加し、内側コンテンツ起因の外側押し広げを防止
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Sidebar Right +10px Start, Use Remaining Full Width (2026-03-23)
+
+- [x] 管理ダッシュボード/ファイルボックス表示時の `main` 開始位置を `sidebar右 + 10px` に固定（`left: calc(236px + 10px)`）
+- [x] 外側 `main` の余白を撤廃（`padding: 0`）し、残り領域を全面利用
+- [x] ダッシュボード2カラム/ファイルボックス単体レイアウトの `height: 100%` を明示し、親高さに追従
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Remove Sidebar Filebox + Eliminate Double Offset (2026-03-23)
+
+- [x] 管理サイドバーから `ファイルボックス` 項目を除外（`section.id === 'filebox'` を非表示）
+- [x] `ADMIN_DIRECT_SIDEBAR_SECTION_IDS` から `filebox` を削除
+- [x] 管理デスクトップの `main.with-sidebar` の `margin-left` を撤去（`margin: 0 !important`）
+- [x] `dashboard-wide` を `position: fixed; left: calc(sidebar + 10px); right: 0;` に一本化し、二重オフセットを解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Force `sidebar + main = viewport` by 2-Column Grid (2026-03-23)
+
+- [x] 管理デスクトップの `job-entrance-ui` を `grid(236px + 1fr)` + `column-gap: 10px` に固定
+- [x] 管理サイドバーを `sticky` 化し、レイアウト基準を `fixed` 依存からグリッド基準へ変更
+- [x] `main.with-sidebar.with-filebox` を `width: 100%` に強制し、残り幅を常に全面利用
+- [x] ダッシュボード `main` の JSX インラインを `width: calc(100vw - (sidebar+10))` に単純化
+- [x] `ADMIN_HOTBAR` から `filebox` セクションを削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Remove Double Width Calculation on `main` (2026-03-23)
+
+- [x] `main` のインライン幅指定を `calc(100vw - sidebar)` から `auto` へ変更し、`left/right` 固定との二重計算を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Route Remaining Width to Chat Pane (2026-03-23)
+
+- [x] ダッシュボード2カラムを `左: minmax(700px, ratio計算) / 右: minmax(0, 1fr)` に変更
+- [x] 余剰幅は常に右チャットペインへ割り当てるように調整
+- [x] 右ペインのリサイザー操作は維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Add 10px Body Padding Around Main Workspace (2026-03-23)
+
+- [x] 管理ワークスペース `main` の開始位置を `left: sidebar幅` に調整（開始オフセットは `padding` に集約）
+- [x] 管理ダッシュボード/ファイルボックスの `main` に `padding: 10px`（上下左右）を適用
+- [x] デスクトップ用CSS上書き (`dashboard-wide`) も `padding: 10px` に統一
+- [x] `npm -C src/misogi run build` でビルド確認

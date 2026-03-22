@@ -50,9 +50,9 @@ const DASHBOARD_EXPLORER_WIDTH_STORAGE_KEY = 'misogi-v2-admin-dashboard-explorer
 const DASHBOARD_CHAT_WIDTH_STORAGE_KEY = 'misogi-v2-admin-dashboard-chat-width';
 const DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY = 'misogi-v2-admin-dashboard-explorer-visible';
 const DASHBOARD_CHAT_VISIBLE_STORAGE_KEY = 'misogi-v2-admin-dashboard-chat-visible';
-const DASHBOARD_EXPLORER_WIDTH_DEFAULT = 260;
-const DASHBOARD_EXPLORER_WIDTH_MIN = 220;
-const DASHBOARD_EXPLORER_WIDTH_MAX = 520;
+const DASHBOARD_EXPLORER_WIDTH_DEFAULT = 340;
+const DASHBOARD_EXPLORER_WIDTH_MIN = 300;
+const DASHBOARD_EXPLORER_WIDTH_MAX = 620;
 const DASHBOARD_CHAT_RATIO_DEFAULT = 0.34;
 const DASHBOARD_CHAT_RATIO_MIN = 0.24;
 const DASHBOARD_CHAT_RATIO_MAX = 0.58;
@@ -67,13 +67,14 @@ const DASHBOARD_ACTIVITY_HEIGHT_MAX = 460;
 const DASHBOARD_ACTIVITY_PANEL_MIN_HEIGHT = 280;
 const DASHBOARD_PANE_TOGGLE_EVENT = 'misogi-dashboard-pane-toggle';
 const ADMIN_UPDATES_LOOKBACK_HOURS = 48;
+const ADMIN_SIDEBAR_WIDTH_PX = 236;
 const CLEANING_NOTICE_RUNNING_STORAGE_KEY = 'misogi-v2-cleaning-notice-running';
 const CLEANING_MANUAL_LANG_STORAGE_KEY = 'cleaning-manual-language';
 const CLEANING_NOTICE_SWIPE_MAX = 44;
 const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
 const CLEANING_NOTICE_WINDOW_HOURS = 24;
 const CLEANING_NOTICE_WINDOW_MS = CLEANING_NOTICE_WINDOW_HOURS * 60 * 60 * 1000;
-const ADMIN_DIRECT_SIDEBAR_SECTION_IDS = new Set(['dashboard', 'filebox']);
+const ADMIN_DIRECT_SIDEBAR_SECTION_IDS = new Set(['dashboard']);
 const CUSTOMER_CHAT_ADMIN_ROOM = 'customer_portal_chat';
 const CUSTOMER_MASTER_APPROVAL_ROOM = 'customer_master_approval';
 
@@ -1494,6 +1495,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     if (!useSidebarNav || !Array.isArray(actions)) return [];
     return actions
       .map((section) => {
+        if (String(section?.id || '') === 'filebox') return null;
         const subItems = Array.isArray(section?.subItems) ? section.subItems : [];
         if (!subItems.length) return null;
         const directPath = String(subItems[0]?.path || subItems[0]?.to || '').trim();
@@ -1877,6 +1879,58 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const showAdminDashboard = useSidebarNav && location.pathname === '/admin/dashboard';
   const showAdminFilebox = useSidebarNav && location.pathname === '/admin/filebox';
   const showAdminWorkspace = showAdminDashboard || showAdminFilebox;
+  const adminMainStartGapPx = 0;
+  const adminMainPaddingPx = 10;
+  const dashboardChatRatioClamped = clampNumber(
+    Number(dashboardChatRatio || DASHBOARD_CHAT_RATIO_DEFAULT),
+    DASHBOARD_CHAT_RATIO_MIN,
+    DASHBOARD_CHAT_RATIO_MAX,
+  );
+  const dashboardResizerPx = 14;
+  const dashboardGapPx = 10;
+  const adminUiStyle = undefined;
+  const adminMainStyle = showAdminWorkspace
+    ? {
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: `calc(${ADMIN_SIDEBAR_WIDTH_PX}px + ${adminMainStartGapPx}px)`,
+        width: 'auto',
+        maxWidth: 'none',
+        minWidth: 0,
+        margin: 0,
+        padding: `${adminMainPaddingPx}px`,
+        boxSizing: 'border-box',
+        height: '100dvh',
+        minHeight: 0,
+        overflow: 'hidden',
+      }
+    : undefined;
+  const adminDashboardLayoutStyle = showAdminDashboard
+    ? {
+        '--dash-chat-ratio': dashboardChatRatioClamped,
+        width: '100%',
+        maxWidth: 'none',
+        minWidth: 0,
+        height: '100%',
+        margin: 0,
+        gap: `${dashboardGapPx}px`,
+        gridTemplateColumns: `minmax(${DASHBOARD_PANEL_MIN_WIDTH}px, calc((100% - ${dashboardResizerPx}px - ${dashboardGapPx}px) * ${1 - dashboardChatRatioClamped})) ${dashboardResizerPx}px minmax(0, 1fr)`,
+        overflow: 'hidden',
+      }
+    : undefined;
+  const adminFileboxLayoutStyle = showAdminFilebox
+    ? {
+        '--dash-chat-ratio': dashboardChatRatioClamped,
+        width: '100%',
+        maxWidth: 'none',
+        minWidth: 0,
+        height: '100%',
+        margin: 0,
+        overflow: 'hidden',
+      }
+    : undefined;
 
   useEffect(() => {
     if (!showAdminDashboard) return;
@@ -2781,7 +2835,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       <div className={`job-entrance-viz ${useSidebarNav ? 'is-hidden' : ''}`}>
         {useSidebarNav ? null : <Visualizer mode={vizMode} />}
       </div>
-      <div className={`job-entrance-ui ${showTransition ? TRANSITION_CLASS_UI : ''}`}>
+      <div className={`job-entrance-ui ${showTransition ? TRANSITION_CLASS_UI : ''}`} style={adminUiStyle}>
         {useSidebarNav && (
           <>
             <button
@@ -2962,7 +3016,10 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           </>
         )}
 
-        <main className={`job-entrance-main ${useSidebarNav ? 'with-sidebar' : ''} ${showAdminWorkspace ? 'with-filebox' : ''} ${showAdminDashboard ? 'dashboard-wide' : ''}`.trim()}>
+        <main
+          className={`job-entrance-main ${useSidebarNav ? 'with-sidebar' : ''} ${showAdminWorkspace ? 'with-filebox' : ''} ${showAdminDashboard ? 'dashboard-wide' : ''}`.trim()}
+          style={adminMainStyle}
+        >
           {!showAdminWorkspace ? (
             <h1 className="job-entrance-title" style={{ color: job.color }}>{job.label}</h1>
           ) : null}
@@ -3037,7 +3094,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                 <div
                   className={`admin-filebox-layout admin-dashboard-layout ${dashboardResizingPane === 'chat' ? 'is-resizing' : ''}`.trim()}
                   ref={fileboxLayoutRef}
-                  style={{ '--dash-chat-ratio': dashboardChatRatio }}
+                  style={adminDashboardLayoutStyle}
                 >
                   {renderAdminFileboxPanel()}
                   <div
@@ -3065,7 +3122,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                 <div
                   className={`admin-filebox-layout hide-chat ${dashboardResizingPane === 'explorer' ? 'is-resizing' : ''}`.trim()}
                   ref={fileboxLayoutRef}
-                  style={{ '--dash-chat-ratio': dashboardChatRatio }}
+                  style={adminFileboxLayoutStyle}
                 >
                   {renderAdminFileboxPanel()}
                 </div>

@@ -13,14 +13,6 @@ export const ADMIN_HOTBAR = [
     ]
   },
   {
-    id: 'filebox',
-    label: 'ファイルボックス',
-    direct: true,
-    subItems: [
-      { id: 'company-filebox', label: 'ファイルボックス', path: '/admin/filebox', group: 'ファイルボックス' },
-    ]
-  },
-  {
     id: 'kintai',
     label: '勤怠管理',
     direct: true,

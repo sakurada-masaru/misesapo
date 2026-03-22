@@ -702,6 +702,9 @@ button:disabled {
   box-sizing: border-box;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
+  justify-content: flex-start;
+  align-content: stretch;
+  justify-items: stretch;
   height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   min-height: 0;
   overflow: hidden;
@@ -761,7 +764,7 @@ button:disabled {
 .admin-filebox-layout.admin-dashboard-layout {
   width: 100%;
   max-width: none;
-  gap: 0;
+  gap: 10px;
 }
 
 .admin-filebox-layout.admin-dashboard-layout .admin-filebox-panel {
@@ -1241,7 +1244,7 @@ button:disabled {
   min-width: 0;
   height: 100%;
   display: grid;
-  grid-template-columns: var(--dash-explorer-width, 260px) minmax(0, 1fr);
+  grid-template-columns: var(--dash-explorer-width, 340px) minmax(0, 1fr);
   gap: 12px;
   overflow: hidden;
 }
@@ -3224,6 +3227,13 @@ button:disabled {
     --admin-sidebar-width: 236px;
   }
 
+  .job-entrance-page[data-job="admin"] .job-entrance-ui {
+    width: 100vw !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .job-entrance-sidebar-toggle,
   .job-entrance-sidebar-backdrop,
   .job-entrance-chat-toggle,
@@ -3236,42 +3246,33 @@ button:disabled {
     transform: translateX(0);
   }
 
-  .job-entrance-main.with-sidebar {
-    margin-left: 236px;
-    max-width: calc(100% - 236px);
-  }
-
-  .job-entrance-main.with-sidebar.with-filebox {
-    margin-left: 236px;
-    margin-right: 0;
-    width: calc(100vw - 236px);
-    max-width: none;
-    padding: 10px;
-    box-sizing: border-box;
-    min-width: 0;
+  .job-entrance-page[data-job="admin"] .job-entrance-main.with-sidebar {
+    margin: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .job-entrance-page[data-job="admin"] .job-entrance-main.with-sidebar.with-filebox {
-    margin-left: var(--admin-sidebar-width, 236px) !important;
-    margin-right: 0 !important;
-    width: calc(100vw - var(--admin-sidebar-width, 236px)) !important;
-    max-width: none !important;
-    padding: 10px !important;
-    box-sizing: border-box !important;
+    padding: 0 !important;
+    width: 100% !important;
     min-width: 0 !important;
+    justify-content: flex-start !important;
+    align-content: stretch !important;
+    justify-items: stretch !important;
   }
 
   .job-entrance-page[data-job="admin"] .job-entrance-main.with-sidebar.with-filebox.dashboard-wide {
-    position: relative !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-    margin-left: var(--admin-sidebar-width, 236px) !important;
-    margin-right: 0 !important;
-    width: calc(100vw - var(--admin-sidebar-width, 236px)) !important;
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: var(--admin-sidebar-width, 236px) !important;
+    margin: 0 !important;
+    width: auto !important;
     max-width: none !important;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
     padding: 10px !important;
     height: 100dvh !important;
     min-height: 0 !important;
@@ -3282,6 +3283,12 @@ button:disabled {
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
+    gap: 10px !important;
+    --dash-resizer-size: 14px;
+    grid-template-columns:
+      minmax(700px, calc((100% - var(--dash-resizer-size) - 10px) * (1 - var(--dash-chat-ratio, 0.34))))
+      var(--dash-resizer-size)
+      minmax(0, 1fr);
   }
 
   .job-entrance-chat {
