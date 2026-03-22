@@ -5037,3 +5037,9 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] お客様マイページ右側アクションから `請求書` / `領収書` ボタンを一時非表示化
 - [x] 他アクション（次回予定 / 作業完了レポート / サービスカタログ / チャット / お問い合わせ / 規約）は維持
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard Common Chat: Resizer Width Reflection Fix (2026-03-22)
+
+- [x] ダッシュボード右ペインチャットの固定幅 `440px` を廃止し、グリッド列幅（`--dash-chat-width`）に追従するよう修正
+- [x] 既存のリサイザー操作で共通チャット幅が視覚的にも反映される状態に修正
+- [x] `npm -C src/misogi run build` でビルド確認
