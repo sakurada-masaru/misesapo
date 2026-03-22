@@ -5059,3 +5059,155 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] `admin-filebox-layout / panel / shell / chat-panel` を `height: 100%` + `min-height: 0` + `overflow` 制御へ統一し、内部スクロール中心の構成に調整
 - [x] モバイル媒体（`max-width: 1023px`）では高さ固定を解除して従来挙動を維持
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Cleaning Entrance: 24h Window + Reported Status (2026-03-22)
+
+- [x] 清掃エントランス予定の表示対象を「作業時刻の前後24時間」に変更（それ以外はエントランス非表示）
+- [x] エントランス予定の件数上限（直近5件）を撤廃し、時間窓に該当する予定を表示
+- [x] 終了済み予定（`end_at` 経過 or 完了系ステータス）を `runStatus=reported` として扱い、エントランス上は `報告済み` バッジ表示
+- [x] 清掃予定一覧の `done` ラベルを `完了` から `報告済み` に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Shared Chat Icon Toggle (2026-03-22)
+
+- [x] `CommonHeaderChat` にトリガークリック差し替え用 `onTriggerClick` を追加（既定動作は従来どおりチャットオーバーレイを開く）
+- [x] 管理ダッシュボード (`/admin/dashboard`) のみ、共通チャットアイコン押下で右ペイン（共通チャット）を表示/非表示トグルするよう変更
+- [x] ダッシュボード以外は従来どおり共通チャットオーバーレイ起動
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Full-Width Pane + Chat Resizer Visibility (2026-03-22)
+
+- [x] ダッシュボードレイアウトを `width: 100%` / `max-width: none` に固定し、ペイン領域を常時全幅で使用するよう調整
+- [x] ダッシュボード専用の余白差し込み（右マージン）を除去し、チャットペインを右端密着表示へ統一
+- [x] 右ペインリサイザー (`admin-filebox-resizer-chat`) をダッシュボードで縦方向に常時有効な配置へ調整
+- [x] モバイル幅でもダッシュボードのみ全幅優先となるよう `@media (max-width: 1023px)` を上書き
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Ratio Resizer (Keep Full Width Fixed) (2026-03-22)
+
+- [x] ダッシュボード右ペイン幅の管理を `px` から `割合（ratio）` に変更（localStorageは同一キーでratio保存）
+- [x] レイアウト列を `--dash-chat-ratio` で算出し、全幅固定のまま左右ペイン比率のみ変化するよう調整
+- [x] 右ペインの最小/最大比率と左ペイン最小幅（`DASHBOARD_PANEL_MIN_WIDTH`）を両立するクランプ処理を追加
+- [x] 旧 `px` 保存値は読み込み時に自動フォールバック（`>1` を legacy 値として default ratio 適用）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Remove Header + Pane Toggle Controls (2026-03-22)
+
+- [x] `/admin/dashboard` では共通ヘッダー（Breadcrumbs）自体を非表示化
+- [x] ダッシュボードの左右ペイン表示状態を常時ON固定に変更（表示/非表示ボタン不要化）
+- [x] 右ペインはチャット固定表示のまま、リサイザーによる比率調整のみ有効化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: No Vertical Scroll + Hide Filebox Titles (2026-03-22)
+
+- [x] ダッシュボード時の `job-entrance-page` 下余白を `0` に調整し、外側縦スクロール要因を削減
+- [x] `job-entrance-main.with-sidebar.with-filebox` の高さ計算を `-20px`（フッター分）補正し、1画面内収まりを調整
+- [x] ダッシュボード埋め込みファイルボックスの上部タイトル/説明文（`ファイルとドキュメントを保存・閲覧できます`）を非表示化
+- [x] ダッシュボード埋め込みファイルボックスのワークスペース見出し説明（フォルダ説明）を非表示化
+- [x] ダッシュボード埋め込みファイルボックスの空状態テキスト（`フォルダを選択して...`）を非表示化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Move Activity Panel Under Left Pane (2026-03-22)
+
+- [x] ダッシュボード時のみ、右レールの `48時間分の通知` サイドパネルを非表示化
+- [x] ファイルボックス左ペイン下部にインライン `アクティビティ` パネルを追加
+- [x] 左ペインのフォルダヘッダーに `通知を開く/閉じる` トグルを追加し、インラインパネルを開閉可能化
+- [x] 既存通知リスト（時刻/タグ/内容/開く）ロジックをそのまま移設し、`更新` ボタンで再取得可能に維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Activity Always-On + Vertical Resizer (2026-03-22)
+
+- [x] ダッシュボード左ペインのアクティビティをデフォルト常時表示（トグルボタン削除）
+- [x] 通知パネルを左ペイン上部へ移動し、ファイルボックスを下段へ再配置
+- [x] 通知とファイルボックスの間に上下リサイザー（水平セパレーター）を追加
+- [x] 通知高さをドラッグで調整できるよう実装（`localStorage: misogi-v2-admin-dashboard-activity-height` で保持）
+- [x] 画面高さに応じて通知高さをクランプし、下段ファイルボックス最小高さを確保
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Body Padding 10 + Full-Height Content (2026-03-22)
+
+- [x] ダッシュボード本体レイアウトの内側余白を上下左右 `10px` に統一
+- [x] `with-filebox` 高さ計算を `100dvh - safe-area` に戻し、コンテンツ領域を画面高いっぱいに拡張
+- [x] ダッシュボード下部の固定フッター余白（20px）描画を削除し、下部の謎余白を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Chat Corner Radius + Upload Header White Background (2026-03-22)
+
+- [x] ダッシュボード右ペインチャットに角丸を追加（`admin-filebox-chat-panel` と docked `header-chat-overlay` を丸め）
+- [x] ダッシュボード左ペインのアップロード操作行（`admin-filebox-workspace-head`）を白背景化
+- [x] アップロード操作行に境界線/角丸/内側パディングを追加して視認性を調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Chat Outer Padding Removal (2026-03-22)
+
+- [x] 右ペインチャット外側コンテナ（`admin-filebox-chat-panel`）の余計な外周パディングを削除（`padding: 0`）
+- [x] docked チャット本体（`header-chat-overlay`）の余白を `margin: 0` で固定し、パネルいっぱい表示へ調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Keep Full Width While Explorer Resizing (2026-03-22)
+
+- [x] フォルダ/アップロード間リサイザー操作時に外側レイアウト幅が動かないよう、ダッシュボード配下グリッド階層へ `min-width: 0` を追加
+- [x] 適用対象: `admin-filebox-layout` / `admin-filebox-panel` / `admin-filebox-shell` / `admin-filebox-explorer` / `admin-filebox-workspace`
+- [x] リサイズ影響を左ペイン内部配分に閉じ込め、メインコンテンツ全幅固定を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Fixed Main Width During Explorer Resize (Overlay) (2026-03-22)
+
+- [x] ダッシュボード時のみ `admin-filebox-shell` を `dashboard-fixed-main` 化し、フォルダ列をオーバーレイ表示へ変更
+- [x] フォルダ⇔アップロード間リサイザーを絶対配置に変更し、ドラッグ時も作業領域（メイン）を常時100%幅で固定
+- [x] `hide-explorer` 時はオーバーレイのフォルダ列/リサイザーを非表示化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Remove Explorer-Workspace Resizer (2026-03-22)
+
+- [x] フォルダ⇔アップロード間のリサイザー（`admin-filebox-resizer-explorer`）をUIから削除
+- [x] ファイルボックス内部レイアウトを固定2カラム化（`フォルダ幅固定 + メイン領域`）し、内部ドラッグでメイン幅が変動しない構成へ変更
+- [x] 一時的に入れたオーバーレイ構成（`dashboard-fixed-main`）を撤去して単純構成へ戻し、幅挙動を安定化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Workspace Background White (2026-03-22)
+
+- [x] `admin-filebox-workspace` 背景を管理画面内で白固定（`#fff`）に変更
+- [x] 既存の管理配色上書き（`var(--admin-bg) !important`）からワークスペースのみ分離
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Main Content Full-Width + Padding 10 (2026-03-22)
+
+- [x] デスクトップ時の `job-entrance-main.with-sidebar.with-filebox` に `width: calc(100% - 236px)` / `max-width: none` を明示し、左右の余計な余白を削減
+- [x] ダッシュボード配下の `admin-filebox-panel` 内側余白を `10px` に統一（12px→10px）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Remove Double Horizontal Padding (2026-03-22)
+
+- [x] ダッシュボード左ペインの内側ラッパー余白（`admin-filebox-panel`）を `0` に調整し、外側 `main` の `10px` のみを有効化
+- [x] 体感で二重になっていた左右余白を解消
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Force Full-Width Two-Column Layout (2026-03-22)
+
+- [x] デスクトップ時の `admin` + `with-filebox` に対し、`main` 幅を `calc(100% - 236px)` へ強制固定（`!important`）
+- [x] `admin-filebox-layout.admin-dashboard-layout` を `width/max-width: 100%` へ強制固定（`!important`）
+- [x] 2カラムコンテンツの左右余白を最小化し、表示領域を全幅使用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Sidebar + Two-Column = Viewport Width (2026-03-22)
+
+- [x] ダッシュボード時のみ `main` に `dashboard-wide` クラスを付与し、レイアウト計算を専用化
+- [x] デスクトップ管理画面で `--admin-sidebar-width` を導入し、サイドバー幅とメイン左オフセットを同一変数化
+- [x] `dashboard-wide` は `main` を `width: 100%` 固定、左パディングを `sidebar width + 10px` として余白ズレを抑止
+- [x] `サイドバー + 左カラム + チャット = 画面幅` となるよう、マージン依存ではなくパディング依存に変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Fix Main Bounds by Absolute Edges (2026-03-22)
+
+- [x] ダッシュボード時の `main` を `position: fixed` + `left(sidebar)/right/top/bottom` 指定へ変更
+- [x] `margin/padding` 競合を排除し、`sidebar + left column + chat = viewport width` を座標基準で強制
+- [x] 内側余白は `padding: 10px` のみ維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Simplify Desktop Width Rules in `@media (min-width: 1024px)` (2026-03-22)
+
+- [x] デスクトップ時の `with-filebox` 幅計算を `100%` 基準から `100vw` 基準へ統一（`width: calc(100vw - sidebar)`）
+- [x] `dashboard-wide` の `position: fixed` を撤廃し、相対配置に戻して `left/right` 競合を解消
+- [x] `with-filebox` に `box-sizing: border-box` と `min-width: 0` を追加し、横方向の余白崩れを抑制
+- [x] `npm -C src/misogi run build` でビルド確認

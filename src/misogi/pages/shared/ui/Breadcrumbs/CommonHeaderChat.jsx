@@ -174,6 +174,7 @@ export default function CommonHeaderChat({
   enableDropUpload = false,
   ariaLabel = '共通チャット',
   triggerAriaLabel = '共通チャットを開く',
+  onTriggerClick = null,
 } = {}) {
   const { user, authz } = useAuth();
   const [desktopOnly, setDesktopOnly] = useState(() => {
@@ -795,6 +796,10 @@ export default function CommonHeaderChat({
           className="breadcrumbs-chat-trigger"
           aria-label={triggerAriaLabel}
           onClick={() => {
+            if (typeof onTriggerClick === 'function') {
+              onTriggerClick();
+              return;
+            }
             setOpen(true);
             markAsRead();
           }}

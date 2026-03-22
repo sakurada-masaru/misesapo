@@ -663,6 +663,7 @@ button:disabled {
 }
 
 .job-entrance-ui {
+  width: 100%;
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
@@ -697,7 +698,8 @@ button:disabled {
 .job-entrance-main.with-sidebar.with-filebox {
   align-items: stretch;
   text-align: left;
-  padding: 0;
+  padding: 10px;
+  box-sizing: border-box;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
@@ -713,8 +715,12 @@ button:disabled {
   min-height: 0;
   height: 100%;
   display: grid;
+  min-width: 0;
   --dash-resizer-size: 14px;
-  grid-template-columns: minmax(0, 1fr) var(--dash-resizer-size) var(--dash-chat-width, 440px);
+  grid-template-columns:
+    minmax(0, calc((100% - var(--dash-resizer-size)) * (1 - var(--dash-chat-ratio, 0.34))))
+    var(--dash-resizer-size)
+    minmax(0, calc((100% - var(--dash-resizer-size)) * var(--dash-chat-ratio, 0.34)));
   gap: var(--space-3);
   align-items: start;
   overflow: hidden;
@@ -750,6 +756,32 @@ button:disabled {
 .admin-dashboard-layout.hide-explorer,
 .admin-dashboard-layout.hide-chat {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-filebox-layout.admin-dashboard-layout {
+  width: 100%;
+  max-width: none;
+  gap: 0;
+}
+
+.admin-filebox-layout.admin-dashboard-layout .admin-filebox-panel {
+  padding: 0;
+}
+
+.admin-filebox-layout.admin-dashboard-layout .admin-filebox-panel,
+.admin-filebox-layout.admin-dashboard-layout .admin-dashboard-activity-panel {
+  margin-right: 0;
+}
+
+.admin-filebox-layout.admin-dashboard-layout .admin-filebox-resizer-chat {
+  margin-right: 0;
+  align-self: stretch;
+}
+
+.admin-filebox-layout.admin-dashboard-layout .admin-filebox-chat-panel {
+  justify-self: stretch;
+  margin-right: 0;
+  border-left: 1px solid var(--dash-sub-border);
 }
 
 .admin-dashboard-activity-panel {
@@ -853,6 +885,31 @@ button:disabled {
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
   padding: 10px 12px;
   text-align: left;
+}
+
+.job-entrance-cleaning-notice.is-reported {
+  min-height: 58px;
+  border-radius: 999px;
+  border: none;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 5px;
+  padding: 0 16px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.job-entrance-cleaning-notice .notice-reported-badge {
+  justify-self: end;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 800;
+  color: #ffffff;
+  background: #16a34a;
+  border-radius: 999px;
+  padding: 4px 8px;
+  white-space: nowrap;
 }
 
 .job-entrance-cleaning-notice.is-interactive {
@@ -1162,15 +1219,29 @@ button:disabled {
   background: var(--dash-panel-bg);
   box-shadow: var(--dash-panel-shadow);
   min-height: 0;
+  min-width: 0;
   height: 100%;
   overflow: hidden;
 }
 
+.admin-filebox-panel.admin-filebox-panel-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-filebox-panel.admin-filebox-panel-dashboard .admin-filebox-shell {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
 .admin-filebox-shell {
   min-height: 0;
+  min-width: 0;
   height: 100%;
   display: grid;
-  grid-template-columns: var(--dash-explorer-width, 260px) var(--dash-resizer-size) minmax(0, 1fr);
+  grid-template-columns: var(--dash-explorer-width, 260px) minmax(0, 1fr);
   gap: 12px;
   overflow: hidden;
 }
@@ -1190,6 +1261,14 @@ button:disabled {
   border-radius: 8px;
 }
 
+.admin-filebox-resizer-vertical {
+  width: 100%;
+  min-width: 100%;
+  height: var(--dash-resizer-size);
+  min-height: var(--dash-resizer-size);
+  cursor: row-resize;
+}
+
 .admin-filebox-resizer::before {
   content: '';
   position: absolute;
@@ -1202,6 +1281,16 @@ button:disabled {
   opacity: 0.92;
 }
 
+.admin-filebox-resizer-vertical::before {
+  top: 50%;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
 .admin-filebox-resizer:hover::before,
 .admin-filebox-resizer.active::before,
 .admin-filebox-layout.is-resizing .admin-filebox-resizer-chat::before,
@@ -1212,6 +1301,7 @@ button:disabled {
 
 .admin-filebox-explorer {
   min-height: 0;
+  min-width: 0;
   display: grid;
   grid-template-rows: auto auto 1fr;
   gap: 10px;
@@ -1228,6 +1318,12 @@ button:disabled {
   gap: 8px;
 }
 
+.admin-filebox-explorer-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .admin-filebox-explorer-head strong {
   color: var(--fg);
   font-size: var(--fs-13);
@@ -1241,6 +1337,11 @@ button:disabled {
   border-radius: 7px;
   padding: 6px 10px;
   cursor: pointer;
+}
+
+.admin-filebox-explorer-head button.active {
+  background: var(--dash-row-active-bg);
+  border-color: var(--dash-row-active-border);
 }
 
 .admin-filebox-folder-list {
@@ -1294,6 +1395,7 @@ button:disabled {
 
 .admin-filebox-workspace {
   min-height: 0;
+  min-width: 0;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 10px;
@@ -1308,6 +1410,15 @@ button:disabled {
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 164, 164, 0.5);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.admin-filebox-workspace-head.compact {
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .admin-filebox-welcome {
@@ -1358,6 +1469,37 @@ button:disabled {
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 14px;
+}
+
+.admin-filebox-chat-panel .header-chat-overlay.docked {
+  margin: 0;
+  border-radius: 14px;
+  border: 1px solid var(--dash-sub-border);
+}
+
+.admin-dashboard-inline-activity {
+  min-height: 0;
+  max-height: none;
+  border: 1px solid var(--dash-sub-border);
+  border-radius: 12px;
+  background: var(--dash-sub-bg);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.admin-dashboard-inline-activity .job-entrance-updates-head {
+  border-bottom: 1px solid var(--dash-sub-border);
+  padding: 10px 12px;
+}
+
+.admin-dashboard-inline-activity .job-entrance-updates-body {
+  padding: 8px;
+  min-height: 0;
+  overflow: auto;
 }
 
 .admin-filebox-toolbar {
@@ -3078,6 +3220,10 @@ button:disabled {
 }
 
 @media (min-width: 1024px) {
+  .job-entrance-page[data-job="admin"] {
+    --admin-sidebar-width: 236px;
+  }
+
   .job-entrance-sidebar-toggle,
   .job-entrance-sidebar-backdrop,
   .job-entrance-chat-toggle,
@@ -3086,13 +3232,56 @@ button:disabled {
   }
 
   .job-entrance-sidebar {
-    width: 236px;
+    width: var(--admin-sidebar-width, 236px);
     transform: translateX(0);
   }
 
   .job-entrance-main.with-sidebar {
     margin-left: 236px;
     max-width: calc(100% - 236px);
+  }
+
+  .job-entrance-main.with-sidebar.with-filebox {
+    margin-left: 236px;
+    margin-right: 0;
+    width: calc(100vw - 236px);
+    max-width: none;
+    padding: 10px;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .job-entrance-page[data-job="admin"] .job-entrance-main.with-sidebar.with-filebox {
+    margin-left: var(--admin-sidebar-width, 236px) !important;
+    margin-right: 0 !important;
+    width: calc(100vw - var(--admin-sidebar-width, 236px)) !important;
+    max-width: none !important;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+
+  .job-entrance-page[data-job="admin"] .job-entrance-main.with-sidebar.with-filebox.dashboard-wide {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    margin-left: var(--admin-sidebar-width, 236px) !important;
+    margin-right: 0 !important;
+    width: calc(100vw - var(--admin-sidebar-width, 236px)) !important;
+    max-width: none !important;
+    box-sizing: border-box;
+    padding: 10px !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .job-entrance-page[data-job="admin"] .job-entrance-main.with-sidebar.with-filebox > .admin-filebox-layout.admin-dashboard-layout {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
   }
 
   .job-entrance-chat {
@@ -3127,6 +3316,11 @@ button:disabled {
     width: min(100%, 680px);
     min-height: auto;
     grid-template-columns: 1fr;
+  }
+
+  .admin-filebox-layout.admin-dashboard-layout {
+    width: 100%;
+    max-width: none;
   }
 
   .admin-filebox-panel {
@@ -3647,9 +3841,12 @@ button:disabled {
 .job-entrance-page[data-job="admin"] .card,
 .job-entrance-page[data-job="admin"] .admin-dashboard-activity-panel,
 .job-entrance-page[data-job="admin"] .admin-dashboard-body-footer,
-.job-entrance-page[data-job="admin"] .admin-filebox-workspace,
 .job-entrance-page[data-job="admin"] .admin-filebox-content {
   background: var(--admin-bg) !important;
+}
+
+.job-entrance-page[data-job="admin"] .admin-filebox-workspace {
+  background: #ffffff !important;
 }
 
 .job-entrance-page[data-job="admin"] .admin-filebox-resizer::before,

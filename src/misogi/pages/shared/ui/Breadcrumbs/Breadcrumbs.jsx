@@ -175,6 +175,10 @@ export default function Breadcrumbs() {
     setDashboardChatVisible(readStoredBoolean(DASHBOARD_CHAT_VISIBLE_STORAGE_KEY, true));
   }, [isAdminDashboard, pathname]);
 
+  if (isAdminDashboard) {
+    return null;
+  }
+
   if (hideStandaloneCustomerUi || hideCleaningHeader || hideAllCleaningWorkerHeader) {
     return null;
   }
@@ -258,7 +262,14 @@ export default function Breadcrumbs() {
               </button>
             </div>
           ) : null}
-          <CommonHeaderChat />
+          <CommonHeaderChat
+            triggerAriaLabel={isAdminDashboard ? '共通チャット表示切り替え' : '共通チャットを開く'}
+            onTriggerClick={isAdminDashboard ? (() => {
+              const next = !dashboardChatVisible;
+              setDashboardChatVisible(next);
+              emitPaneToggle('chat', next);
+            }) : null}
+          />
         </div>
       </nav>
     );

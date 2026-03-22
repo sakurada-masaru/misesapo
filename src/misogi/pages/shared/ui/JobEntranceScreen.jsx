@@ -53,19 +53,26 @@ const DASHBOARD_CHAT_VISIBLE_STORAGE_KEY = 'misogi-v2-admin-dashboard-chat-visib
 const DASHBOARD_EXPLORER_WIDTH_DEFAULT = 260;
 const DASHBOARD_EXPLORER_WIDTH_MIN = 220;
 const DASHBOARD_EXPLORER_WIDTH_MAX = 520;
-const DASHBOARD_CHAT_WIDTH_DEFAULT = 440;
-const DASHBOARD_CHAT_WIDTH_MIN = 320;
-const DASHBOARD_CHAT_WIDTH_MAX = 760;
+const DASHBOARD_CHAT_RATIO_DEFAULT = 0.34;
+const DASHBOARD_CHAT_RATIO_MIN = 0.24;
+const DASHBOARD_CHAT_RATIO_MAX = 0.58;
 const DASHBOARD_RESIZER_ENABLED_MIN_WIDTH = 1024;
 const DASHBOARD_RESIZER_BAR_WIDTH = 10;
 const DASHBOARD_WORKSPACE_MIN_WIDTH = 420;
 const DASHBOARD_PANEL_MIN_WIDTH = 700;
+const DASHBOARD_ACTIVITY_HEIGHT_STORAGE_KEY = 'misogi-v2-admin-dashboard-activity-height';
+const DASHBOARD_ACTIVITY_HEIGHT_DEFAULT = 220;
+const DASHBOARD_ACTIVITY_HEIGHT_MIN = 130;
+const DASHBOARD_ACTIVITY_HEIGHT_MAX = 460;
+const DASHBOARD_ACTIVITY_PANEL_MIN_HEIGHT = 280;
 const DASHBOARD_PANE_TOGGLE_EVENT = 'misogi-dashboard-pane-toggle';
 const ADMIN_UPDATES_LOOKBACK_HOURS = 48;
 const CLEANING_NOTICE_RUNNING_STORAGE_KEY = 'misogi-v2-cleaning-notice-running';
 const CLEANING_MANUAL_LANG_STORAGE_KEY = 'cleaning-manual-language';
 const CLEANING_NOTICE_SWIPE_MAX = 44;
 const CLEANING_NOTICE_SWIPE_THRESHOLD = 12;
+const CLEANING_NOTICE_WINDOW_HOURS = 24;
+const CLEANING_NOTICE_WINDOW_MS = CLEANING_NOTICE_WINDOW_HOURS * 60 * 60 * 1000;
 const ADMIN_DIRECT_SIDEBAR_SECTION_IDS = new Set(['dashboard', 'filebox']);
 const CUSTOMER_CHAT_ADMIN_ROOM = 'customer_portal_chat';
 const CUSTOMER_MASTER_APPROVAL_ROOM = 'customer_master_approval';
@@ -590,6 +597,18 @@ function readStoredPaneWidth(key, fallback, min, max) {
   }
 }
 
+function readStoredPaneRatio(key, fallback, min, max) {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = Number(localStorage.getItem(key));
+    if (!Number.isFinite(raw) || raw <= 0) return fallback;
+    if (raw > 1) return fallback; // legacy px value
+    return clampNumber(raw, min, max);
+  } catch {
+    return fallback;
+  }
+}
+
 function readStoredBoolean(key, fallback = true) {
   if (typeof window === 'undefined') return fallback;
   try {
@@ -728,6 +747,19 @@ function toYoteiStartTimeMs(row) {
     if (!Number.isNaN(t)) return t;
   }
   return toYoteiSortTimeMs(row);
+}
+
+function toYoteiEndTimeMs(row, startAtMs = 0) {
+  const direct = toEpochMs(row?.end_at || row?.end || row?.work_end_at);
+  if (direct > 0) return direct;
+  const dateStr = String(row?.date || row?.scheduled_date || '').trim();
+  const hhmm = toYoteiSingleTimeLabel(row?.end_time);
+  if (dateStr && hhmm) {
+    const t = Date.parse(`${dateStr}T${hhmm}:00+09:00`);
+    if (!Number.isNaN(t)) return t;
+  }
+  if (startAtMs > 0) return startAtMs + (60 * 60 * 1000);
+  return 0;
 }
 
 function toYoteiYagouLabel(row) {
@@ -895,15 +927,23 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       DASHBOARD_EXPLORER_WIDTH_MAX,
     )
   );
-  const [dashboardChatWidth, setDashboardChatWidth] = useState(() =>
-    readStoredPaneWidth(
+  const [dashboardChatRatio, setDashboardChatRatio] = useState(() =>
+    readStoredPaneRatio(
       DASHBOARD_CHAT_WIDTH_STORAGE_KEY,
-      DASHBOARD_CHAT_WIDTH_DEFAULT,
-      DASHBOARD_CHAT_WIDTH_MIN,
-      DASHBOARD_CHAT_WIDTH_MAX,
+      DASHBOARD_CHAT_RATIO_DEFAULT,
+      DASHBOARD_CHAT_RATIO_MIN,
+      DASHBOARD_CHAT_RATIO_MAX,
     )
   );
   const [dashboardResizingPane, setDashboardResizingPane] = useState('');
+  const [dashboardActivityHeight, setDashboardActivityHeight] = useState(() =>
+    readStoredPaneWidth(
+      DASHBOARD_ACTIVITY_HEIGHT_STORAGE_KEY,
+      DASHBOARD_ACTIVITY_HEIGHT_DEFAULT,
+      DASHBOARD_ACTIVITY_HEIGHT_MIN,
+      DASHBOARD_ACTIVITY_HEIGHT_MAX,
+    )
+  );
   const [dashboardExplorerVisible, setDashboardExplorerVisible] = useState(() =>
     readStoredBoolean(DASHBOARD_EXPLORER_VISIBLE_STORAGE_KEY, true)
   );
@@ -923,6 +963,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const [cleaningManualLang, setCleaningManualLang] = useState(() => readCleaningManualLang());
   const fileboxInputRef = useRef(null);
   const fileboxLayoutRef = useRef(null);
+  const fileboxPanelRef = useRef(null);
   const fileboxShellRef = useRef(null);
   const cleaningNoticeSwipeRef = useRef({
     id: '',
@@ -933,8 +974,10 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   });
   const dashboardResizeRef = useRef({
     startX: 0,
+    startY: 0,
     explorerWidth: DASHBOARD_EXPLORER_WIDTH_DEFAULT,
-    chatWidth: DASHBOARD_CHAT_WIDTH_DEFAULT,
+    chatRatio: DASHBOARD_CHAT_RATIO_DEFAULT,
+    activityHeight: DASHBOARD_ACTIVITY_HEIGHT_DEFAULT,
   });
 
   const onChangeCleaningManualLang = useCallback((next) => {
@@ -1293,12 +1336,30 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             });
           }
         }
-        const unfinishedRows = filtered.filter((row) => isYoteiUnfinished(row));
-        const notices = unfinishedRows
+        const nowMs = Date.now();
+        const notices = filtered
           .slice()
-          .sort((a, b) => toYoteiSortTimeMs(a) - toYoteiSortTimeMs(b))
-          .slice(-5)
           .map((row, idx) => {
+            const statusCandidates = [
+              row?.jotai,
+              row?.status,
+              row?.state,
+              row?.jokyo,
+              row?.ugoki_jokyo,
+              row?.ugoki_jotai,
+              row?.ugoki_status,
+              row?.progress_status,
+            ];
+            if (statusCandidates.some((v) => isYoteiCanceledLike(v))) return null;
+
+            const startAtMs = toYoteiStartTimeMs(row);
+            const endAtMs = toYoteiEndTimeMs(row, startAtMs);
+            const baseAtMs = endAtMs > 0 ? endAtMs : startAtMs;
+            if (!(baseAtMs > 0)) return null;
+            const windowFromMs = startAtMs > 0 ? (startAtMs - CLEANING_NOTICE_WINDOW_MS) : (baseAtMs - CLEANING_NOTICE_WINDOW_MS);
+            const windowToMs = baseAtMs + CLEANING_NOTICE_WINDOW_MS;
+            if (nowMs < windowFromMs || nowMs > windowToMs) return null;
+
             const idCandidates = Array.from(new Set(
               [
                 row?.id,
@@ -1322,10 +1383,12 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
               || '-'
             ).trim();
             const amount = parseYoteiAmountValue(row);
-            const runStatus = isYoteiRunningLike(
+            let runStatus = isYoteiRunningLike(
               row?.jokyo || row?.ugoki_jokyo || row?.ugoki_jotai || row?.ugoki_status || row?.status
             ) ? 'shinkou' : 'mikanryo';
-            const startAtMs = toYoteiStartTimeMs(row);
+            if (statusCandidates.some((v) => isYoteiCompletedLike(v)) || (endAtMs > 0 && endAtMs <= nowMs)) {
+              runStatus = 'reported';
+            }
             return {
               id,
               idCandidates,
@@ -1339,9 +1402,12 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
               amountLabel: amount > 0 ? `¥${amount.toLocaleString('ja-JP')}` : '-',
               runStatus,
               startAtMs,
+              endAtMs,
               readyAtMs: startAtMs > 0 ? (startAtMs - 30 * 60 * 1000) : 0,
             };
-          });
+          })
+          .filter(Boolean)
+          .sort((a, b) => (Number(a?.startAtMs || 0) - Number(b?.startAtMs || 0)));
 
         if (cancelled) return;
         setCleaningTodayNotices(notices);
@@ -1811,20 +1877,30 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   const showAdminDashboard = useSidebarNav && location.pathname === '/admin/dashboard';
   const showAdminFilebox = useSidebarNav && location.pathname === '/admin/filebox';
   const showAdminWorkspace = showAdminDashboard || showAdminFilebox;
+
+  useEffect(() => {
+    if (!showAdminDashboard) return;
+    setDashboardExplorerVisible(true);
+    setDashboardChatVisible(true);
+  }, [showAdminDashboard]);
+
   const beginDashboardResize = useCallback((pane, event) => {
     if (!showAdminWorkspace) return;
     if (typeof window === 'undefined' || window.innerWidth < DASHBOARD_RESIZER_ENABLED_MIN_WIDTH) return;
     if (pane === 'explorer' && !dashboardExplorerVisible) return;
     if (pane === 'chat' && !dashboardChatVisible) return;
+    if (pane === 'activity' && !showAdminDashboard) return;
     dashboardResizeRef.current = {
       startX: Number(event?.clientX || 0),
+      startY: Number(event?.clientY || 0),
       explorerWidth: dashboardExplorerWidth,
-      chatWidth: dashboardChatWidth,
+      chatRatio: dashboardChatRatio,
+      activityHeight: dashboardActivityHeight,
     };
     setDashboardResizingPane(pane);
     document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'col-resize';
-  }, [dashboardChatVisible, dashboardChatWidth, dashboardExplorerVisible, dashboardExplorerWidth, showAdminWorkspace]);
+    document.body.style.cursor = pane === 'activity' ? 'row-resize' : 'col-resize';
+  }, [dashboardActivityHeight, dashboardChatRatio, dashboardChatVisible, dashboardExplorerVisible, dashboardExplorerWidth, showAdminDashboard, showAdminWorkspace]);
 
   useEffect(() => {
     try {
@@ -1836,11 +1912,19 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
 
   useEffect(() => {
     try {
-      localStorage.setItem(DASHBOARD_CHAT_WIDTH_STORAGE_KEY, String(Math.round(dashboardChatWidth)));
+      localStorage.setItem(DASHBOARD_CHAT_WIDTH_STORAGE_KEY, String(dashboardChatRatio));
     } catch {
       // ignore
     }
-  }, [dashboardChatWidth]);
+  }, [dashboardChatRatio]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DASHBOARD_ACTIVITY_HEIGHT_STORAGE_KEY, String(Math.round(dashboardActivityHeight)));
+    } catch {
+      // ignore
+    }
+  }, [dashboardActivityHeight]);
 
   useEffect(() => {
     try {
@@ -1879,15 +1963,30 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       if (dashboardResizingPane === 'chat') {
         const layoutRect = fileboxLayoutRef.current?.getBoundingClientRect();
         const layoutWidth = Number(layoutRect?.width || 0);
+        const availableWidth = Math.max(1, layoutWidth - DASHBOARD_RESIZER_BAR_WIDTH);
+        const dynamicMin = layoutWidth > 0
+          ? Math.max(DASHBOARD_CHAT_RATIO_MIN, DASHBOARD_RESIZER_BAR_WIDTH / Math.max(1, layoutWidth))
+          : DASHBOARD_CHAT_RATIO_MIN;
         const dynamicMax = layoutWidth > 0
+          ? Math.min(DASHBOARD_CHAT_RATIO_MAX, 1 - (DASHBOARD_PANEL_MIN_WIDTH / availableWidth))
+          : DASHBOARD_CHAT_RATIO_MAX;
+        const minRatio = clampNumber(dynamicMin, DASHBOARD_CHAT_RATIO_MIN, DASHBOARD_CHAT_RATIO_MAX);
+        const maxRatio = clampNumber(Math.max(minRatio, dynamicMax), minRatio, DASHBOARD_CHAT_RATIO_MAX);
+        const nextRatio = dashboardResizeRef.current.chatRatio + ((startX - Number(event?.clientX || 0)) / availableWidth);
+        setDashboardChatRatio(clampNumber(nextRatio, minRatio, maxRatio));
+      }
+      if (dashboardResizingPane === 'activity') {
+        const panelRect = fileboxPanelRef.current?.getBoundingClientRect();
+        const panelHeight = Number(panelRect?.height || 0);
+        const dynamicMax = panelHeight > 0
           ? Math.max(
-            DASHBOARD_CHAT_WIDTH_MIN,
-            Math.floor(layoutWidth - DASHBOARD_RESIZER_BAR_WIDTH - DASHBOARD_PANEL_MIN_WIDTH),
+            DASHBOARD_ACTIVITY_HEIGHT_MIN,
+            Math.floor(panelHeight - DASHBOARD_RESIZER_BAR_WIDTH - DASHBOARD_ACTIVITY_PANEL_MIN_HEIGHT),
           )
-          : DASHBOARD_CHAT_WIDTH_MAX;
-        const maxWidth = clampNumber(dynamicMax, DASHBOARD_CHAT_WIDTH_MIN, DASHBOARD_CHAT_WIDTH_MAX);
-        const next = dashboardResizeRef.current.chatWidth + (startX - Number(event?.clientX || 0));
-        setDashboardChatWidth(clampNumber(Math.round(next), DASHBOARD_CHAT_WIDTH_MIN, maxWidth));
+          : DASHBOARD_ACTIVITY_HEIGHT_MAX;
+        const maxHeight = clampNumber(dynamicMax, DASHBOARD_ACTIVITY_HEIGHT_MIN, DASHBOARD_ACTIVITY_HEIGHT_MAX);
+        const nextHeight = dashboardResizeRef.current.activityHeight + (Number(event?.clientY || 0) - Number(dashboardResizeRef.current.startY || 0));
+        setDashboardActivityHeight(clampNumber(Math.round(nextHeight), DASHBOARD_ACTIVITY_HEIGHT_MIN, maxHeight));
       }
     };
     const stop = () => {
@@ -1914,7 +2013,10 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     if (dashboardResizingPane === 'chat' && !dashboardChatVisible) {
       setDashboardResizingPane('');
     }
-  }, [dashboardChatVisible, dashboardExplorerVisible, dashboardResizingPane]);
+    if (dashboardResizingPane === 'activity' && !showAdminDashboard) {
+      setDashboardResizingPane('');
+    }
+  }, [dashboardChatVisible, dashboardExplorerVisible, dashboardResizingPane, showAdminDashboard]);
 
   useEffect(() => {
     const onPaneToggle = (event) => {
@@ -1936,16 +2038,20 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
     if (typeof window === 'undefined') return undefined;
     const clampDashboardPaneWidths = () => {
       const layoutRect = fileboxLayoutRef.current?.getBoundingClientRect();
+      const panelRect = fileboxPanelRef.current?.getBoundingClientRect();
       const shellRect = fileboxShellRef.current?.getBoundingClientRect();
       const layoutWidth = Number(layoutRect?.width || 0);
+      const panelHeight = Number(panelRect?.height || 0);
       const shellWidth = Number(shellRect?.width || 0);
+      const availableWidth = Math.max(1, layoutWidth - DASHBOARD_RESIZER_BAR_WIDTH);
+      const dynamicChatMin = layoutWidth > 0
+        ? Math.max(DASHBOARD_CHAT_RATIO_MIN, DASHBOARD_RESIZER_BAR_WIDTH / Math.max(1, layoutWidth))
+        : DASHBOARD_CHAT_RATIO_MIN;
       const dynamicChatMax = layoutWidth > 0
-        ? Math.max(
-          DASHBOARD_CHAT_WIDTH_MIN,
-          Math.floor(layoutWidth - DASHBOARD_RESIZER_BAR_WIDTH - DASHBOARD_PANEL_MIN_WIDTH),
-        )
-        : DASHBOARD_CHAT_WIDTH_MAX;
-      const chatMax = clampNumber(dynamicChatMax, DASHBOARD_CHAT_WIDTH_MIN, DASHBOARD_CHAT_WIDTH_MAX);
+        ? Math.min(DASHBOARD_CHAT_RATIO_MAX, 1 - (DASHBOARD_PANEL_MIN_WIDTH / availableWidth))
+        : DASHBOARD_CHAT_RATIO_MAX;
+      const chatMin = clampNumber(dynamicChatMin, DASHBOARD_CHAT_RATIO_MIN, DASHBOARD_CHAT_RATIO_MAX);
+      const chatMax = clampNumber(Math.max(chatMin, dynamicChatMax), chatMin, DASHBOARD_CHAT_RATIO_MAX);
       const dynamicExplorerMax = shellWidth > 0
         ? Math.max(
           DASHBOARD_EXPLORER_WIDTH_MIN,
@@ -1953,8 +2059,16 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
         )
         : DASHBOARD_EXPLORER_WIDTH_MAX;
       const explorerMax = clampNumber(dynamicExplorerMax, DASHBOARD_EXPLORER_WIDTH_MIN, DASHBOARD_EXPLORER_WIDTH_MAX);
-      setDashboardChatWidth((prev) => clampNumber(prev, DASHBOARD_CHAT_WIDTH_MIN, chatMax));
+      const dynamicActivityMax = panelHeight > 0
+        ? Math.max(
+          DASHBOARD_ACTIVITY_HEIGHT_MIN,
+          Math.floor(panelHeight - DASHBOARD_RESIZER_BAR_WIDTH - DASHBOARD_ACTIVITY_PANEL_MIN_HEIGHT),
+        )
+        : DASHBOARD_ACTIVITY_HEIGHT_MAX;
+      const activityMax = clampNumber(dynamicActivityMax, DASHBOARD_ACTIVITY_HEIGHT_MIN, DASHBOARD_ACTIVITY_HEIGHT_MAX);
+      setDashboardChatRatio((prev) => clampNumber(prev, chatMin, chatMax));
       setDashboardExplorerWidth((prev) => clampNumber(prev, DASHBOARD_EXPLORER_WIDTH_MIN, explorerMax));
+      setDashboardActivityHeight((prev) => clampNumber(prev, DASHBOARD_ACTIVITY_HEIGHT_MIN, activityMax));
     };
     if (showAdminWorkspace) {
       window.requestAnimationFrame(clampDashboardPaneWidths);
@@ -2369,13 +2483,75 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   }, [showAdminWorkspace, loadFileboxData]);
 
   const renderAdminFileboxPanel = () => (
-    <section className="admin-filebox-panel" aria-label={t('ファイルボックス')}>
-      <div className="admin-filebox-toolbar admin-filebox-toolbar-top">
-        <div className="admin-filebox-toolbar-title">
-          <strong>{dashboardTitleLabel || t('ファイルボックス')}</strong>
-          <span>{t('ファイルとドキュメントを保存・閲覧できます')}</span>
+    <section
+      className={`admin-filebox-panel ${showAdminDashboard ? 'admin-filebox-panel-dashboard' : ''} ${dashboardResizingPane === 'activity' ? 'is-resizing' : ''}`.trim()}
+      aria-label={t('ファイルボックス')}
+      ref={fileboxPanelRef}
+    >
+      {!showAdminDashboard ? (
+        <div className="admin-filebox-toolbar admin-filebox-toolbar-top">
+          <div className="admin-filebox-toolbar-title">
+            <strong>{dashboardTitleLabel || t('ファイルボックス')}</strong>
+            <span>{t('ファイルとドキュメントを保存・閲覧できます')}</span>
+          </div>
         </div>
-      </div>
+      ) : null}
+      {showAdminDashboard ? (
+        <>
+          <section
+            className="admin-dashboard-inline-activity"
+            aria-label={t('48時間分の通知')}
+            style={{ height: `${dashboardActivityHeight}px` }}
+          >
+            <div className="job-entrance-updates-head">
+              <strong>{t('48時間分の通知')}</strong>
+              <button type="button" onClick={loadTodayUpdates} disabled={updatesLoading}>
+                {updatesLoading ? '...' : '更新'}
+              </button>
+            </div>
+            <div className="job-entrance-updates-body">
+              {updatesError ? <p className="job-entrance-updates-empty">{updatesError}</p> : null}
+              {!updatesError && updatesLoading && todayUpdates.length === 0 ? (
+                <p className="job-entrance-updates-empty">読み込み中...</p>
+              ) : null}
+              {!updatesError && !updatesLoading && todayUpdates.length === 0 ? (
+                <p className="job-entrance-updates-empty">直近48時間のシステム通知はありません。</p>
+              ) : null}
+              {todayUpdates.length > 0 ? (
+                <ul className="job-entrance-updates-list">
+                  {todayUpdates.map((row) => (
+                    <li key={row.id}>
+                      <div className="job-entrance-updates-main">
+                        <span className="time">{row.atLabel}</span>
+                        {row.storeTag ? <span className="store-tag">{row.storeTag}</span> : null}
+                        {row.who ? <span className="account-tag">{row.who}</span> : null}
+                        <span className="what">{row.what}</span>
+                      </div>
+                      {row.linkPath ? (
+                        <button
+                          type="button"
+                          className="job-entrance-updates-link"
+                          onClick={() => jumpToActivityLink(row)}
+                          disabled={isTransitioning}
+                        >
+                          {row.linkLabel || '開く'}
+                        </button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </section>
+          <div
+            className={`admin-filebox-resizer admin-filebox-resizer-vertical ${dashboardResizingPane === 'activity' ? 'active' : ''}`}
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label={t('通知とファイルボックスの高さリサイズ')}
+            onPointerDown={(event) => beginDashboardResize('activity', event)}
+          />
+        </>
+      ) : null}
       <div
         className={`admin-filebox-shell ${dashboardResizingPane === 'explorer' ? 'is-resizing' : ''} ${!dashboardExplorerVisible ? 'hide-explorer' : ''}`.trim()}
         ref={fileboxShellRef}
@@ -2385,13 +2561,15 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           <aside className="admin-filebox-explorer" aria-label={t('フォルダ一覧')}>
             <div className="admin-filebox-explorer-head">
               <strong>{t('フォルダ')}</strong>
-              <button
-                type="button"
-                onClick={onRefreshFilebox}
-                disabled={fileboxBusy}
-              >
-                {(fileboxLoading || fileboxFoldersLoading) ? t('更新中...') : t('更新')}
-              </button>
+              <div className="admin-filebox-explorer-head-actions">
+                <button
+                  type="button"
+                  onClick={onRefreshFilebox}
+                  disabled={fileboxBusy}
+                >
+                  {(fileboxLoading || fileboxFoldersLoading) ? t('更新中...') : t('更新')}
+                </button>
+              </div>
             </div>
             {fileboxError ? <p className="admin-filebox-error">{fileboxError}</p> : null}
             <div className="admin-filebox-create">
@@ -2426,29 +2604,22 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             </div>
           </aside>
         ) : null}
-        {dashboardExplorerVisible ? (
-          <div
-            className={`admin-filebox-resizer admin-filebox-resizer-explorer ${dashboardResizingPane === 'explorer' ? 'active' : ''}`}
-            role="separator"
-            aria-orientation="vertical"
-            aria-label={t('左ペイン幅リサイズ')}
-            onPointerDown={(event) => beginDashboardResize('explorer', event)}
-          />
-        ) : null}
         <section className="admin-filebox-workspace" aria-label={t('ファイルワークスペース')}>
-          <div className="admin-filebox-workspace-head">
-            <div className="admin-filebox-toolbar-title">
-              <strong>{activeFileboxFolder ? activeFileboxFolder.name : t('フォルダを選択')}</strong>
-              <span>
-                {activeFileboxFolder
-                  ? (
-                    activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID
-                      ? t('受信した業務依頼をファイル単位で確認できます')
-                      : t('表示方式を選んでファイルを確認できます')
-                  )
-                  : t('左のフォルダ一覧から選ぶと、ここにファイルが表示されます')}
-              </span>
-            </div>
+          <div className={`admin-filebox-workspace-head ${showAdminDashboard ? 'compact' : ''}`.trim()}>
+            {!showAdminDashboard ? (
+              <div className="admin-filebox-toolbar-title">
+                <strong>{activeFileboxFolder ? activeFileboxFolder.name : t('フォルダを選択')}</strong>
+                <span>
+                  {activeFileboxFolder
+                    ? (
+                      activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID
+                        ? t('受信した業務依頼をファイル単位で確認できます')
+                        : t('表示方式を選んでファイルを確認できます')
+                    )
+                    : t('左のフォルダ一覧から選ぶと、ここにファイルが表示されます')}
+                </span>
+              </div>
+            ) : null}
             <div className="admin-filebox-toolbar-actions">
               {activeFileboxFolder ? (
                 <button
@@ -2481,8 +2652,8 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           {!activeFileboxFolder ? (
             <div className="admin-filebox-welcome">
               <div className="welcome-icon" aria-hidden>🗂️</div>
-              <div className="welcome-title">{t('フォルダを選択してファイルを表示')}</div>
-              <p className="welcome-desc">{t('業務依頼PDFや添付資料を、フォルダ単位で管理できます。')}</p>
+              {!showAdminDashboard ? <div className="welcome-title">{t('フォルダを選択してファイルを表示')}</div> : null}
+              {!showAdminDashboard ? <p className="welcome-desc">{t('業務依頼PDFや添付資料を、フォルダ単位で管理できます。')}</p> : null}
               <div className="welcome-stats">
                 <span>{t('フォルダ数')}: {fileboxFolders.length}</span>
                 <span>
@@ -2597,7 +2768,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           )}
         </section>
       </div>
-    </section>
+      </section>
   );
 
   return (
@@ -2605,7 +2776,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
       className={`job-entrance-page ${showTransition ? TRANSITION_CLASS_PAGE : ''}`}
       data-job={jobKey}
       data-entrance-mode={useSidebarNav ? adminEntranceMode : undefined}
-      style={{ paddingBottom: useSidebarNav ? 24 : 110 }}
+      style={{ paddingBottom: useSidebarNav ? (showAdminDashboard ? 0 : 24) : 110 }}
     >
       <div className={`job-entrance-viz ${useSidebarNav ? 'is-hidden' : ''}`}>
         {useSidebarNav ? null : <Visualizer mode={vizMode} />}
@@ -2631,66 +2802,70 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
               {!showAdminDashboard ? <CommonHeaderChat /> : null}
               {!showAdminDashboard ? <MisogiSupportOrb /> : null}
             </div>
-            <button
-              type="button"
-              className={`job-entrance-updates-rail ${updatesSidebarOpen ? 'open' : ''}`}
-              style={{ left: updatesRailLeft }}
-              aria-label={t('48時間分の通知を開閉')}
-              onClick={() => setUpdatesSidebarOpen((prev) => !prev)}
-            >
-              {updatesSidebarOpen ? '◂' : '▸'}
-            </button>
-            <button
-              type="button"
-              className={`job-entrance-updates-backdrop ${updatesSidebarOpen ? 'open' : ''}`}
-              aria-label={t('通知を閉じる')}
-              onClick={() => setUpdatesSidebarOpen(false)}
-            />
-            <aside
-              className={`job-entrance-updates-sidebar ${updatesSidebarOpen ? 'open' : ''}`}
-              style={{ left: updatesPanelLeft }}
-              aria-label={t('48時間分の通知')}
-            >
-              <div className="job-entrance-updates-head">
-                <strong>{t('48時間分の通知')}</strong>
-                <button type="button" onClick={loadTodayUpdates} disabled={updatesLoading}>
-                  {updatesLoading ? '...' : '更新'}
+            {!showAdminDashboard ? (
+              <>
+                <button
+                  type="button"
+                  className={`job-entrance-updates-rail ${updatesSidebarOpen ? 'open' : ''}`}
+                  style={{ left: updatesRailLeft }}
+                  aria-label={t('48時間分の通知を開閉')}
+                  onClick={() => setUpdatesSidebarOpen((prev) => !prev)}
+                >
+                  {updatesSidebarOpen ? '◂' : '▸'}
                 </button>
-              </div>
-              <div className="job-entrance-updates-body">
-                {updatesError ? <p className="job-entrance-updates-empty">{updatesError}</p> : null}
-                {!updatesError && updatesLoading && todayUpdates.length === 0 ? (
-                  <p className="job-entrance-updates-empty">読み込み中...</p>
-                ) : null}
-                {!updatesError && !updatesLoading && todayUpdates.length === 0 ? (
-                  <p className="job-entrance-updates-empty">直近48時間のシステム通知はありません。</p>
-                ) : null}
-                {todayUpdates.length > 0 ? (
-                  <ul className="job-entrance-updates-list">
-                    {todayUpdates.map((row) => (
-                      <li key={row.id}>
-                        <div className="job-entrance-updates-main">
-                          <span className="time">{row.atLabel}</span>
-                          {row.storeTag ? <span className="store-tag">{row.storeTag}</span> : null}
-                          {row.who ? <span className="account-tag">{row.who}</span> : null}
-                          <span className="what">{row.what}</span>
-                        </div>
-                        {row.linkPath ? (
-                          <button
-                            type="button"
-                            className="job-entrance-updates-link"
-                            onClick={() => jumpToActivityLink(row)}
-                            disabled={isTransitioning}
-                          >
-                            {row.linkLabel || '開く'}
-                          </button>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </aside>
+                <button
+                  type="button"
+                  className={`job-entrance-updates-backdrop ${updatesSidebarOpen ? 'open' : ''}`}
+                  aria-label={t('通知を閉じる')}
+                  onClick={() => setUpdatesSidebarOpen(false)}
+                />
+                <aside
+                  className={`job-entrance-updates-sidebar ${updatesSidebarOpen ? 'open' : ''}`}
+                  style={{ left: updatesPanelLeft }}
+                  aria-label={t('48時間分の通知')}
+                >
+                  <div className="job-entrance-updates-head">
+                    <strong>{t('48時間分の通知')}</strong>
+                    <button type="button" onClick={loadTodayUpdates} disabled={updatesLoading}>
+                      {updatesLoading ? '...' : '更新'}
+                    </button>
+                  </div>
+                  <div className="job-entrance-updates-body">
+                    {updatesError ? <p className="job-entrance-updates-empty">{updatesError}</p> : null}
+                    {!updatesError && updatesLoading && todayUpdates.length === 0 ? (
+                      <p className="job-entrance-updates-empty">読み込み中...</p>
+                    ) : null}
+                    {!updatesError && !updatesLoading && todayUpdates.length === 0 ? (
+                      <p className="job-entrance-updates-empty">直近48時間のシステム通知はありません。</p>
+                    ) : null}
+                    {todayUpdates.length > 0 ? (
+                      <ul className="job-entrance-updates-list">
+                        {todayUpdates.map((row) => (
+                          <li key={row.id}>
+                            <div className="job-entrance-updates-main">
+                              <span className="time">{row.atLabel}</span>
+                              {row.storeTag ? <span className="store-tag">{row.storeTag}</span> : null}
+                              {row.who ? <span className="account-tag">{row.who}</span> : null}
+                              <span className="what">{row.what}</span>
+                            </div>
+                            {row.linkPath ? (
+                              <button
+                                type="button"
+                                className="job-entrance-updates-link"
+                                onClick={() => jumpToActivityLink(row)}
+                                disabled={isTransitioning}
+                              >
+                                {row.linkLabel || '開く'}
+                              </button>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                </aside>
+              </>
+            ) : null}
             <aside className={`job-entrance-sidebar ${sidebarOpen ? 'open' : ''}`} aria-label={t('管理メニュー')}>
               <div className="job-entrance-sidebar-head">{t('管理メニュー')}</div>
               <div className="job-entrance-sidebar-scroll">
@@ -2787,7 +2962,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           </>
         )}
 
-        <main className={`job-entrance-main ${useSidebarNav ? 'with-sidebar' : ''} ${showAdminWorkspace ? 'with-filebox' : ''}`.trim()}>
+        <main className={`job-entrance-main ${useSidebarNav ? 'with-sidebar' : ''} ${showAdminWorkspace ? 'with-filebox' : ''} ${showAdminDashboard ? 'dashboard-wide' : ''}`.trim()}>
           {!showAdminWorkspace ? (
             <h1 className="job-entrance-title" style={{ color: job.color }}>{job.label}</h1>
           ) : null}
@@ -2860,54 +3035,40 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
             showAdminDashboard ? (
               <>
                 <div
-                  className={`admin-filebox-layout admin-dashboard-layout ${dashboardResizingPane === 'chat' ? 'is-resizing' : ''} ${!dashboardChatVisible ? 'hide-chat' : ''} ${!dashboardExplorerVisible ? 'hide-explorer' : ''}`.trim()}
+                  className={`admin-filebox-layout admin-dashboard-layout ${dashboardResizingPane === 'chat' ? 'is-resizing' : ''}`.trim()}
                   ref={fileboxLayoutRef}
-                  style={{ '--dash-chat-width': `${dashboardChatWidth}px` }}
+                  style={{ '--dash-chat-ratio': dashboardChatRatio }}
                 >
-                  {dashboardExplorerVisible ? (
-                    renderAdminFileboxPanel()
-                  ) : null}
-                  {dashboardExplorerVisible && dashboardChatVisible ? (
-                    <div
-                      className={`admin-filebox-resizer admin-filebox-resizer-chat ${dashboardResizingPane === 'chat' ? 'active' : ''}`}
-                      role="separator"
-                      aria-orientation="vertical"
-                      aria-label={t('右ペイン幅リサイズ')}
-                      onPointerDown={(event) => beginDashboardResize('chat', event)}
+                  {renderAdminFileboxPanel()}
+                  <div
+                    className={`admin-filebox-resizer admin-filebox-resizer-chat ${dashboardResizingPane === 'chat' ? 'active' : ''}`}
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label={t('右ペイン幅リサイズ')}
+                    onPointerDown={(event) => beginDashboardResize('chat', event)}
+                  />
+                  <aside className="admin-filebox-chat-panel" aria-label={t('共通チャット')}>
+                    <CommonHeaderChat
+                      alwaysOpen
+                      hideTrigger
+                      docked
+                      showCloseButton={false}
+                      draggable={false}
+                      enableDropUpload
+                      ariaLabel={t('ダッシュボード共通チャット')}
                     />
-                  ) : null}
-                  {dashboardChatVisible ? (
-                    <aside className="admin-filebox-chat-panel" aria-label={t('共通チャット')}>
-                      <CommonHeaderChat
-                        alwaysOpen
-                        hideTrigger
-                        docked
-                        showCloseButton={false}
-                        draggable={false}
-                        enableDropUpload
-                        ariaLabel={t('ダッシュボード共通チャット')}
-                      />
-                    </aside>
-                  ) : (
-                    <section className="admin-dashboard-activity-panel" aria-label={t('ダッシュボード')}>
-                      <div className="admin-dashboard-activity-body">
-                        <p className="admin-filebox-empty">{t('右ペインが非表示です。ヘッダーの「右ON」で表示できます。')}</p>
-                      </div>
-                    </section>
-                  )}
+                  </aside>
                 </div>
-                <div className="admin-dashboard-body-footer" aria-hidden />
               </>
             ) : showAdminFilebox ? (
               <>
                 <div
                   className={`admin-filebox-layout hide-chat ${dashboardResizingPane === 'explorer' ? 'is-resizing' : ''}`.trim()}
                   ref={fileboxLayoutRef}
-                  style={{ '--dash-chat-width': `${dashboardChatWidth}px` }}
+                  style={{ '--dash-chat-ratio': dashboardChatRatio }}
                 >
                   {renderAdminFileboxPanel()}
                 </div>
-                <div className="admin-dashboard-body-footer" aria-hidden />
               </>
             ) : (
               <p className="job-entrance-dummy">{t('左のサイドバーから機能を選択してください。')}</p>
@@ -2949,13 +3110,34 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
           ) : null}
 
           {showCleaningEntranceNotices ? (
-            <section className="job-entrance-cleaning-notices" aria-label={t('未完了予定（直近5件）')}>
+            <section className="job-entrance-cleaning-notices" aria-label={t('予定（作業時刻の前後24時間）')}>
               {cleaningTodayNoticesLoading ? (
-                <div className="job-entrance-cleaning-notice">{t('未完了予定を確認中...')}</div>
+                <div className="job-entrance-cleaning-notice">{t('予定を確認中...')}</div>
               ) : cleaningTodayNotices.length === 0 ? (
-                <div className="job-entrance-cleaning-notice">{t('未完了の予定はありません')}</div>
+                <div className="job-entrance-cleaning-notice">{t('前後24時間に該当する予定はありません')}</div>
               ) : (
                 cleaningTodayNotices.map((item) => (
+                  item.runStatus === 'reported' ? (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="job-entrance-cleaning-notice is-reported"
+                      title={`${item.dateLabel} ${item.time} / ${item.yagou} / ${item.tenpo} / ${item.amountLabel}`}
+                      onClick={() => openCleaningNoticeDetail(item)}
+                    >
+                      <span className="notice-day">{item.dateLabel}</span>
+                      <span className="notice-time-stack">
+                        <span className="notice-time-line">{item.startTimeLabel}</span>
+                        <span className="notice-time-line">{item.endTimeLabel}</span>
+                      </span>
+                      <span className="notice-shop">
+                        <span className="notice-yagou">{item.yagou}</span>
+                        <span className="notice-tenpo">{item.tenpo}</span>
+                      </span>
+                      <span className="notice-amount">{item.amountLabel}</span>
+                      <span className="notice-reported-badge">報告済み</span>
+                    </button>
+                  ) : (
                   <div
                     key={item.id}
                     className={`job-entrance-cleaning-notice is-interactive ${cleaningNoticeRunningMap[item.id] ? 'is-running' : ''}`}
@@ -3006,6 +3188,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                       );
                     })()}
                   </div>
+                  )
                 ))
               )}
             </section>

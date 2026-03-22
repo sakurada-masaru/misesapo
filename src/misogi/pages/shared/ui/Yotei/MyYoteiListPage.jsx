@@ -416,7 +416,7 @@ function jotaiLabel(j) {
     case 'yuko': return '有効';
     case 'planned': return '予定';
     case 'working': return '進行中';
-    case 'done': return '完了';
+    case 'done': return '報告済み';
     case 'mikanryo': return '未完了';
     case 'torikeshi': return '取消';
     default: return j || '-';
