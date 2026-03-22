@@ -2364,9 +2364,241 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
   }, [activeFileboxFolderId, folderById]);
 
   useEffect(() => {
-    if (!showAdminFilebox) return;
+    if (!showAdminWorkspace) return;
     loadFileboxData();
-  }, [showAdminFilebox, loadFileboxData]);
+  }, [showAdminWorkspace, loadFileboxData]);
+
+  const renderAdminFileboxPanel = () => (
+    <section className="admin-filebox-panel" aria-label={t('ファイルボックス')}>
+      <div className="admin-filebox-toolbar admin-filebox-toolbar-top">
+        <div className="admin-filebox-toolbar-title">
+          <strong>{dashboardTitleLabel || t('ファイルボックス')}</strong>
+          <span>{t('ファイルとドキュメントを保存・閲覧できます')}</span>
+        </div>
+      </div>
+      <div
+        className={`admin-filebox-shell ${dashboardResizingPane === 'explorer' ? 'is-resizing' : ''} ${!dashboardExplorerVisible ? 'hide-explorer' : ''}`.trim()}
+        ref={fileboxShellRef}
+        style={{ '--dash-explorer-width': `${dashboardExplorerWidth}px` }}
+      >
+        {dashboardExplorerVisible ? (
+          <aside className="admin-filebox-explorer" aria-label={t('フォルダ一覧')}>
+            <div className="admin-filebox-explorer-head">
+              <strong>{t('フォルダ')}</strong>
+              <button
+                type="button"
+                onClick={onRefreshFilebox}
+                disabled={fileboxBusy}
+              >
+                {(fileboxLoading || fileboxFoldersLoading) ? t('更新中...') : t('更新')}
+              </button>
+            </div>
+            {fileboxError ? <p className="admin-filebox-error">{fileboxError}</p> : null}
+            <div className="admin-filebox-create">
+              <input
+                type="text"
+                value={newFileboxFolderName}
+                onChange={(e) => setNewFileboxFolderName(e.target.value)}
+                placeholder={t('新規フォルダ名を入力')}
+                maxLength={40}
+                disabled={fileboxBusy}
+              />
+              <button
+                type="button"
+                onClick={onCreateFileboxFolder}
+                disabled={fileboxBusy}
+              >
+                {fileboxCreatingFolder ? t('作成中...') : t('フォルダ追加')}
+              </button>
+            </div>
+            <div className="admin-filebox-folder-list">
+              {fileboxFolders.map((folder) => (
+                <button
+                  key={folder.id}
+                  type="button"
+                  className={`admin-filebox-folder-row ${activeFileboxFolder?.id === folder.id ? 'active' : ''}`}
+                  onClick={() => onOpenFolderCard(folder.id)}
+                >
+                  <span className="name">{folder.name}</span>
+                  <span className="meta">{Number(fileboxStats?.[folder.id]?.count || 0)}件</span>
+                </button>
+              ))}
+            </div>
+          </aside>
+        ) : null}
+        {dashboardExplorerVisible ? (
+          <div
+            className={`admin-filebox-resizer admin-filebox-resizer-explorer ${dashboardResizingPane === 'explorer' ? 'active' : ''}`}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={t('左ペイン幅リサイズ')}
+            onPointerDown={(event) => beginDashboardResize('explorer', event)}
+          />
+        ) : null}
+        <section className="admin-filebox-workspace" aria-label={t('ファイルワークスペース')}>
+          <div className="admin-filebox-workspace-head">
+            <div className="admin-filebox-toolbar-title">
+              <strong>{activeFileboxFolder ? activeFileboxFolder.name : t('フォルダを選択')}</strong>
+              <span>
+                {activeFileboxFolder
+                  ? (
+                    activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID
+                      ? t('受信した業務依頼をファイル単位で確認できます')
+                      : t('表示方式を選んでファイルを確認できます')
+                  )
+                  : t('左のフォルダ一覧から選ぶと、ここにファイルが表示されます')}
+              </span>
+            </div>
+            <div className="admin-filebox-toolbar-actions">
+              {activeFileboxFolder ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveFileboxFolderId(null)}
+                  disabled={fileboxBusy}
+                >
+                  {t('戻る')}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={onFileboxUploadClick}
+                disabled={!activeFileboxFolder || fileboxBusy || activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID}
+              >
+                {activeFileboxFolder?.id === WORKFLOW_INBOX_FOLDER_ID
+                  ? t('受信専用')
+                  : (fileboxUploading ? t('アップロード中...') : t('アップロード'))}
+              </button>
+              <input
+                ref={fileboxInputRef}
+                type="file"
+                className="file-input"
+                onChange={onFileboxSelect}
+                multiple
+                hidden
+              />
+            </div>
+          </div>
+          {!activeFileboxFolder ? (
+            <div className="admin-filebox-welcome">
+              <div className="welcome-icon" aria-hidden>🗂️</div>
+              <div className="welcome-title">{t('フォルダを選択してファイルを表示')}</div>
+              <p className="welcome-desc">{t('業務依頼PDFや添付資料を、フォルダ単位で管理できます。')}</p>
+              <div className="welcome-stats">
+                <span>{t('フォルダ数')}: {fileboxFolders.length}</span>
+                <span>
+                  {t('総ファイル数')}: {
+                    fileboxFolders.reduce((sum, folder) => sum + Number(fileboxStats?.[folder.id]?.count || 0), 0)
+                  }
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-filebox-focus">
+              <div className="admin-filebox-focus-card">
+                <div className="admin-filebox-card active">
+                  <div className="icon" aria-hidden>📁</div>
+                  <div className="name">{activeFileboxFolder.name}</div>
+                  <div className="meta">{Number(fileboxStats?.[activeFileboxFolder.id]?.count || 0)}件</div>
+                  <div className="at">
+                    {fileboxStats?.[activeFileboxFolder.id]?.latestAtMs
+                      ? ymdHmLabel(fileboxStats[activeFileboxFolder.id].latestAtMs)
+                      : t('ファイルなし')}
+                  </div>
+                </div>
+              </div>
+              <div className="admin-filebox-view-switch" role="tablist" aria-label={t('表示方式')}>
+                {FILEBOX_VIEW_MODE_OPTIONS.map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={fileboxViewMode === mode.id}
+                    className={fileboxViewMode === mode.id ? 'active' : ''}
+                    onClick={() => setFileboxViewMode(mode.id)}
+                    title={t(mode.label)}
+                  >
+                    <span aria-hidden>{mode.icon}</span>
+                  </button>
+                ))}
+              </div>
+              <section className={`admin-filebox-recents mode-${fileboxViewMode}`}>
+                <h3>{`${activeFileboxFolder.name}${t(' のファイル')}`}</h3>
+                {activeFolderItems.length === 0 ? (
+                  <p className="admin-filebox-empty">{t('ファイルがありません')}</p>
+                ) : fileboxViewMode === 'list' ? (
+                  <ul>
+                    {activeFolderItems.map((item) => {
+                      const kind = detectFileKind(item);
+                      return (
+                        <li key={item.id}>
+                          <div className="file-main">
+                            <span className={`file-preview kind-${kind}`} aria-hidden>
+                              <span className="file-preview-icon">{fileKindIcon(kind)}</span>
+                              {kind === 'image' ? (
+                                <img
+                                  className="file-preview-image"
+                                  src={item.url}
+                                  alt=""
+                                  loading="lazy"
+                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                              ) : null}
+                            </span>
+                            <a
+                              className="file"
+                              href={item.url || '#'}
+                              target={item.url ? '_blank' : undefined}
+                              rel={item.url ? 'noopener noreferrer' : undefined}
+                              onClick={(e) => { if (!item.url) e.preventDefault(); }}
+                            >
+                              {item.name}
+                            </a>
+                          </div>
+                          <span className="folder">{item.uploader || t('未設定')}</span>
+                          <span className="at">{ymdHmLabel(item.atMs)}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div className={`admin-filebox-tiles ${fileboxViewMode === 'slider' ? 'slider' : ''}`}>
+                    {activeFolderItems.map((item) => {
+                      const kind = detectFileKind(item);
+                      return (
+                        <a
+                          key={item.id}
+                          className="admin-filebox-tile"
+                          href={item.url || '#'}
+                          target={item.url ? '_blank' : undefined}
+                          rel={item.url ? 'noopener noreferrer' : undefined}
+                          onClick={(e) => { if (!item.url) e.preventDefault(); }}
+                        >
+                          <span className={`file-preview kind-${kind}`} aria-hidden>
+                            <span className="file-preview-icon">{fileKindIcon(kind)}</span>
+                            {kind === 'image' ? (
+                              <img
+                                className="file-preview-image"
+                                src={item.url}
+                                alt=""
+                                loading="lazy"
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              />
+                            ) : null}
+                          </span>
+                          <span className="tile-name">{item.name}</span>
+                          <span className="tile-at">{ymdHmLabel(item.atMs)}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+        </section>
+      </div>
+    </section>
+  );
 
   return (
     <div
@@ -2633,46 +2865,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                   style={{ '--dash-chat-width': `${dashboardChatWidth}px` }}
                 >
                   {dashboardExplorerVisible ? (
-                    <section className="admin-dashboard-activity-panel" aria-label={t('現在のアクティビティ')}>
-                      <div className="admin-dashboard-activity-head">
-                        <div className="admin-filebox-toolbar-title">
-                          <strong>{t('現在のアクティビティ')}</strong>
-                          <span>{t('直近48時間の通知を時系列で確認できます')}</span>
-                        </div>
-                        <button type="button" onClick={loadTodayUpdates} disabled={updatesLoading}>
-                          {updatesLoading ? '...' : t('更新')}
-                        </button>
-                      </div>
-                      {updatesError ? <p className="admin-filebox-error">{updatesError}</p> : null}
-                      <div className="admin-dashboard-activity-body">
-                        {todayUpdates.length === 0 ? (
-                          <p className="admin-filebox-empty">{t('直近48時間の更新はありません')}</p>
-                        ) : (
-                          <ul className="job-entrance-updates-list">
-                            {todayUpdates.map((item) => (
-                              <li key={item.id}>
-                                <div className="job-entrance-updates-main">
-                                  <span className="time">{item.atLabel}</span>
-                                  {item.storeTag ? <span className="store-tag">{item.storeTag}</span> : null}
-                                  {item.who ? <span className="account-tag">{item.who}</span> : null}
-                                  <span className="what">{item.what}</span>
-                                </div>
-                                {item.linkPath ? (
-                                  <button
-                                    type="button"
-                                    className="job-entrance-updates-link"
-                                    onClick={() => jumpToActivityLink(item)}
-                                    disabled={isTransitioning}
-                                  >
-                                    {item.linkLabel || '開く'}
-                                  </button>
-                                ) : null}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </section>
+                    renderAdminFileboxPanel()
                   ) : null}
                   {dashboardExplorerVisible && dashboardChatVisible ? (
                     <div
@@ -2712,235 +2905,7 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                   ref={fileboxLayoutRef}
                   style={{ '--dash-chat-width': `${dashboardChatWidth}px` }}
                 >
-                  <section className="admin-filebox-panel" aria-label={t('ファイルボックス')}>
-                    <div className="admin-filebox-toolbar admin-filebox-toolbar-top">
-                      <div className="admin-filebox-toolbar-title">
-                        <strong>{dashboardTitleLabel || t('ファイルボックス')}</strong>
-                        <span>{t('ファイルとドキュメントを保存・閲覧できます')}</span>
-                      </div>
-                    </div>
-                    <div
-                      className={`admin-filebox-shell ${dashboardResizingPane === 'explorer' ? 'is-resizing' : ''} ${!dashboardExplorerVisible ? 'hide-explorer' : ''}`.trim()}
-                      ref={fileboxShellRef}
-                      style={{ '--dash-explorer-width': `${dashboardExplorerWidth}px` }}
-                    >
-                      {dashboardExplorerVisible ? (
-                        <aside className="admin-filebox-explorer" aria-label={t('フォルダ一覧')}>
-                          <div className="admin-filebox-explorer-head">
-                            <strong>{t('フォルダ')}</strong>
-                            <button
-                              type="button"
-                              onClick={onRefreshFilebox}
-                              disabled={fileboxBusy}
-                            >
-                              {(fileboxLoading || fileboxFoldersLoading) ? t('更新中...') : t('更新')}
-                            </button>
-                          </div>
-                          {fileboxError ? <p className="admin-filebox-error">{fileboxError}</p> : null}
-                          <div className="admin-filebox-create">
-                            <input
-                              type="text"
-                              value={newFileboxFolderName}
-                              onChange={(e) => setNewFileboxFolderName(e.target.value)}
-                              placeholder={t('新規フォルダ名を入力')}
-                              maxLength={40}
-                              disabled={fileboxBusy}
-                            />
-                            <button
-                              type="button"
-                              onClick={onCreateFileboxFolder}
-                              disabled={fileboxBusy}
-                            >
-                              {fileboxCreatingFolder ? t('作成中...') : t('フォルダ追加')}
-                            </button>
-                          </div>
-                          <div className="admin-filebox-folder-list">
-                            {fileboxFolders.map((folder) => (
-                              <button
-                                key={folder.id}
-                                type="button"
-                                className={`admin-filebox-folder-row ${activeFileboxFolder?.id === folder.id ? 'active' : ''}`}
-                                onClick={() => onOpenFolderCard(folder.id)}
-                              >
-                                <span className="name">{folder.name}</span>
-                                <span className="meta">{Number(fileboxStats?.[folder.id]?.count || 0)}件</span>
-                              </button>
-                            ))}
-                          </div>
-                        </aside>
-                      ) : null}
-                      {dashboardExplorerVisible ? (
-                        <div
-                          className={`admin-filebox-resizer admin-filebox-resizer-explorer ${dashboardResizingPane === 'explorer' ? 'active' : ''}`}
-                          role="separator"
-                          aria-orientation="vertical"
-                          aria-label={t('左ペイン幅リサイズ')}
-                          onPointerDown={(event) => beginDashboardResize('explorer', event)}
-                        />
-                      ) : null}
-                      <section className="admin-filebox-workspace" aria-label={t('ファイルワークスペース')}>
-                        <div className="admin-filebox-workspace-head">
-                          <div className="admin-filebox-toolbar-title">
-                            <strong>{activeFileboxFolder ? activeFileboxFolder.name : t('フォルダを選択')}</strong>
-                            <span>
-                              {activeFileboxFolder
-                                ? (
-                                  activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID
-                                    ? t('受信した業務依頼をファイル単位で確認できます')
-                                    : t('表示方式を選んでファイルを確認できます')
-                                )
-                                : t('左のフォルダ一覧から選ぶと、ここにファイルが表示されます')}
-                            </span>
-                          </div>
-                          <div className="admin-filebox-toolbar-actions">
-                            {activeFileboxFolder ? (
-                              <button
-                                type="button"
-                                onClick={() => setActiveFileboxFolderId(null)}
-                                disabled={fileboxBusy}
-                              >
-                                {t('戻る')}
-                              </button>
-                            ) : null}
-                            <button
-                              type="button"
-                              onClick={onFileboxUploadClick}
-                              disabled={!activeFileboxFolder || fileboxBusy || activeFileboxFolder.id === WORKFLOW_INBOX_FOLDER_ID}
-                            >
-                              {activeFileboxFolder?.id === WORKFLOW_INBOX_FOLDER_ID
-                                ? t('受信専用')
-                                : (fileboxUploading ? t('アップロード中...') : t('アップロード'))}
-                            </button>
-                            <input
-                              ref={fileboxInputRef}
-                              type="file"
-                              className="file-input"
-                              onChange={onFileboxSelect}
-                              multiple
-                              hidden
-                            />
-                          </div>
-                        </div>
-                        {!activeFileboxFolder ? (
-                          <div className="admin-filebox-welcome">
-                            <div className="welcome-icon" aria-hidden>🗂️</div>
-                            <div className="welcome-title">{t('フォルダを選択してファイルを表示')}</div>
-                            <p className="welcome-desc">{t('業務依頼PDFや添付資料を、フォルダ単位で管理できます。')}</p>
-                            <div className="welcome-stats">
-                              <span>{t('フォルダ数')}: {fileboxFolders.length}</span>
-                              <span>
-                                {t('総ファイル数')}: {
-                                  fileboxFolders.reduce((sum, folder) => sum + Number(fileboxStats?.[folder.id]?.count || 0), 0)
-                                }
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="admin-filebox-focus">
-                            <div className="admin-filebox-focus-card">
-                              <div className="admin-filebox-card active">
-                                <div className="icon" aria-hidden>📁</div>
-                                <div className="name">{activeFileboxFolder.name}</div>
-                                <div className="meta">{Number(fileboxStats?.[activeFileboxFolder.id]?.count || 0)}件</div>
-                                <div className="at">
-                                  {fileboxStats?.[activeFileboxFolder.id]?.latestAtMs
-                                    ? ymdHmLabel(fileboxStats[activeFileboxFolder.id].latestAtMs)
-                                    : t('ファイルなし')}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="admin-filebox-view-switch" role="tablist" aria-label={t('表示方式')}>
-                              {FILEBOX_VIEW_MODE_OPTIONS.map((mode) => (
-                                <button
-                                  key={mode.id}
-                                  type="button"
-                                  role="tab"
-                                  aria-selected={fileboxViewMode === mode.id}
-                                  className={fileboxViewMode === mode.id ? 'active' : ''}
-                                  onClick={() => setFileboxViewMode(mode.id)}
-                                  title={t(mode.label)}
-                                >
-                                  <span aria-hidden>{mode.icon}</span>
-                                </button>
-                              ))}
-                            </div>
-                            <section className={`admin-filebox-recents mode-${fileboxViewMode}`}>
-                              <h3>{`${activeFileboxFolder.name}${t(' のファイル')}`}</h3>
-                              {activeFolderItems.length === 0 ? (
-                                <p className="admin-filebox-empty">{t('ファイルがありません')}</p>
-                              ) : fileboxViewMode === 'list' ? (
-                                <ul>
-                                  {activeFolderItems.map((item) => {
-                                    const kind = detectFileKind(item);
-                                    return (
-                                      <li key={item.id}>
-                                        <div className="file-main">
-                                          <span className={`file-preview kind-${kind}`} aria-hidden>
-                                            <span className="file-preview-icon">{fileKindIcon(kind)}</span>
-                                            {kind === 'image' ? (
-                                              <img
-                                                className="file-preview-image"
-                                                src={item.url}
-                                                alt=""
-                                                loading="lazy"
-                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                              />
-                                            ) : null}
-                                          </span>
-                                          <a
-                                            className="file"
-                                            href={item.url || '#'}
-                                            target={item.url ? '_blank' : undefined}
-                                            rel={item.url ? 'noopener noreferrer' : undefined}
-                                            onClick={(e) => { if (!item.url) e.preventDefault(); }}
-                                          >
-                                            {item.name}
-                                          </a>
-                                        </div>
-                                        <span className="folder">{item.uploader || t('未設定')}</span>
-                                        <span className="at">{ymdHmLabel(item.atMs)}</span>
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              ) : (
-                                <div className={`admin-filebox-tiles ${fileboxViewMode === 'slider' ? 'slider' : ''}`}>
-                                  {activeFolderItems.map((item) => {
-                                    const kind = detectFileKind(item);
-                                    return (
-                                      <a
-                                        key={item.id}
-                                        className="admin-filebox-tile"
-                                        href={item.url || '#'}
-                                        target={item.url ? '_blank' : undefined}
-                                        rel={item.url ? 'noopener noreferrer' : undefined}
-                                        onClick={(e) => { if (!item.url) e.preventDefault(); }}
-                                      >
-                                        <span className={`file-preview kind-${kind}`} aria-hidden>
-                                          <span className="file-preview-icon">{fileKindIcon(kind)}</span>
-                                          {kind === 'image' ? (
-                                            <img
-                                              className="file-preview-image"
-                                              src={item.url}
-                                              alt=""
-                                              loading="lazy"
-                                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                            />
-                                          ) : null}
-                                        </span>
-                                        <span className="tile-name">{item.name}</span>
-                                        <span className="tile-at">{ymdHmLabel(item.atMs)}</span>
-                                      </a>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </section>
-                          </div>
-                        )}
-                      </section>
-                    </div>
-                  </section>
+                  {renderAdminFileboxPanel()}
                 </div>
                 <div className="admin-dashboard-body-footer" aria-hidden />
               </>

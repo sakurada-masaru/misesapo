@@ -5043,3 +5043,11 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] ダッシュボード右ペインチャットの固定幅 `440px` を廃止し、グリッド列幅（`--dash-chat-width`）に追従するよう修正
 - [x] 既存のリサイザー操作で共通チャット幅が視覚的にも反映される状態に修正
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Move Filebox to Left Pane (2026-03-22)
+
+- [x] ダッシュボード左ペインの `現在のアクティビティ` を廃止し、`/admin/filebox` で使っているファイルボックスUIを左ペインへ配置
+- [x] ファイルボックス描画を共通化し、`/admin/dashboard` と `/admin/filebox` の表示差分を最小化
+- [x] ファイルボックス初期ロードを `showAdminFilebox` 限定から `showAdminWorkspace`（dashboard/filebox）へ拡張
+- [x] 右レール通知トグルは既存のまま維持（アクティビティ導線を右レールへ集約）
+- [x] `npm -C src/misogi run build` でビルド確認
