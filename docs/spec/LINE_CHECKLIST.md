@@ -5051,3 +5051,11 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] ファイルボックス初期ロードを `showAdminFilebox` 限定から `showAdminWorkspace`（dashboard/filebox）へ拡張
 - [x] 右レール通知トグルは既存のまま維持（アクティビティ導線を右レールへ集約）
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Chat Resizer + Single-Viewport Layout (2026-03-22)
+
+- [x] ダッシュボード右ペインのリサイザー幅を拡大（`--dash-resizer-size: 14px`）し、チャット幅変更を操作しやすく改善
+- [x] `job-entrance-main.with-sidebar.with-filebox` を1画面固定グリッド化し、ダッシュボード外側の縦スクロールを抑制
+- [x] `admin-filebox-layout / panel / shell / chat-panel` を `height: 100%` + `min-height: 0` + `overflow` 制御へ統一し、内部スクロール中心の構成に調整
+- [x] モバイル媒体（`max-width: 1023px`）では高さ固定を解除して従来挙動を維持
+- [x] `npm -C src/misogi run build` でビルド確認
