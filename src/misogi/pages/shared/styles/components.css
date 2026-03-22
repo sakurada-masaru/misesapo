@@ -1231,6 +1231,10 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .admin-filebox-panel.admin-filebox-panel-dashboard .admin-filebox-shell {
@@ -1350,50 +1354,49 @@ button:disabled {
 .admin-filebox-folder-list {
   min-height: 0;
   overflow: auto;
-  display: grid;
-  gap: 6px;
-  padding-right: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-right: 0;
 }
 
 .admin-filebox-folder-row {
   width: 100%;
-  border: 1px solid transparent;
-  border-left: 2px solid transparent;
+  border: 0;
   border-radius: 8px;
   background: transparent;
   color: var(--fg);
-  padding: 8px 10px;
-  display: flex;
+  min-height: 36px;
+  padding: 6px 8px;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
+  justify-items: start;
+  text-align: left;
   gap: 8px;
   cursor: pointer;
 }
 
 .admin-filebox-folder-row:hover {
   background: var(--dash-row-hover-bg);
-  border-color: var(--dash-row-hover-border);
 }
 
 .admin-filebox-folder-row.active {
   background: var(--dash-row-active-bg);
-  border-left-color: var(--dash-row-active-left);
-  border-color: var(--dash-row-active-border);
+}
+
+.admin-filebox-folder-row .folder-icon {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .admin-filebox-folder-row .name {
-  font-size: var(--fs-13);
+  font-size: var(--fs-12);
   font-weight: 600;
-  min-width: 0;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.admin-filebox-folder-row .meta {
-  font-size: var(--fs-11);
-  color: var(--muted);
-  flex: 0 0 auto;
 }
 
 .admin-filebox-workspace {

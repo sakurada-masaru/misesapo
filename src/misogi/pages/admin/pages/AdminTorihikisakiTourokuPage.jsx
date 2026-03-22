@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 // Hamburger / back / admin-top are provided by GlobalNav.
@@ -144,6 +144,7 @@ function getCurrentAccountName() {
 
 export default function AdminTorihikisakiTourokuPage({ mode = 'register' }) {
   const isMasterMode = String(mode || '') === 'master';
+  const location = useLocation();
   const nav = useNavigate();
   const contractPrintRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -218,6 +219,22 @@ export default function AdminTorihikisakiTourokuPage({ mode = 'register' }) {
     const accountName = getCurrentAccountName();
     if (accountName) setAddJouhouTourokuShaName(accountName);
   }, [addJouhouTourokuShaName]);
+
+  useEffect(() => {
+    const qs = new URLSearchParams(String(location?.search || ''));
+    const tab = String(qs.get('tab') || '').trim().toLowerCase();
+    if (tab === 'contract') {
+      setMobileTab('contract');
+      return;
+    }
+    if (tab === 'existing') {
+      setMobileTab('existing');
+      return;
+    }
+    if (tab === 'new') {
+      setMobileTab('new');
+    }
+  }, [location?.search]);
 
   const reloadTorihikisaki = useCallback(async () => {
     setErr('');

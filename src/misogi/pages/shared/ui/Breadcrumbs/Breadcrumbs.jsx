@@ -212,6 +212,9 @@ export default function Breadcrumbs() {
     return (
       <nav className={`breadcrumbs breadcrumbs-admin ${hidden ? 'breadcrumbs-admin-hidden' : ''}`.trim()} aria-label="パンくず">
         <div className="breadcrumbs-admin-left">
+          <button type="button" className="breadcrumbs-back breadcrumbs-back-admin" onClick={onBack} aria-label="一つ前の画面に戻る">
+            ← 戻る
+          </button>
           <HamburgerMenu />
         </div>
         {!hidden ? (

@@ -29,10 +29,10 @@ export const ADMIN_HOTBAR = [
     ]
   },
   {
-    id: 'workflow-requests',
-    label: '業務依頼',
+    id: 'doc-create',
+    label: '書類作成',
     subItems: [
-      { id: 'workflow-request-doc-create', label: '依頼書作成', path: '/admin/request-doc', group: '業務依頼' },
+      { id: 'workflow-request-doc-create', label: '依頼書作成', path: '/admin/request-doc', group: '書類作成' },
     ]
   },
   {

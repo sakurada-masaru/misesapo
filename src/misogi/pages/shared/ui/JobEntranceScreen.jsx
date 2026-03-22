@@ -2651,8 +2651,8 @@ export default function JobEntranceScreen({ job: jobKey, hotbarConfig, showFlowG
                   className={`admin-filebox-folder-row ${activeFileboxFolder?.id === folder.id ? 'active' : ''}`}
                   onClick={() => onOpenFolderCard(folder.id)}
                 >
+                  <span className="folder-icon" aria-hidden>📁</span>
                   <span className="name">{folder.name}</span>
-                  <span className="meta">{Number(fileboxStats?.[folder.id]?.count || 0)}件</span>
                 </button>
               ))}
             </div>

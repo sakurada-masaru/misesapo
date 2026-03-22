@@ -100,6 +100,7 @@
 .breadcrumbs-admin-left{
   display: inline-flex;
   align-items: center;
+  gap: 8px;
 }
 
 .breadcrumbs-admin-left .hamburger-menu-trigger{
@@ -107,6 +108,11 @@
   height: 36px;
   border-radius: 8px;
   box-shadow: none;
+}
+
+.breadcrumbs-back-admin{
+  height: 36px;
+  padding: 0 12px;
 }
 
 .breadcrumbs-admin .breadcrumbs-main{

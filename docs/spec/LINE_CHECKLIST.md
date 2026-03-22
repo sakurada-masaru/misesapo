@@ -5290,3 +5290,308 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 管理ダッシュボード/ファイルボックスの `main` に `padding: 10px`（上下左右）を適用
 - [x] デスクトップ用CSS上書き (`dashboard-wide`) も `padding: 10px` に統一
 - [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Remove Left Column Parent Background (2026-03-23)
+
+- [x] 左カラム親コンテナ（`.admin-filebox-panel.admin-filebox-panel-dashboard`）のみ背景/枠線/影を無効化
+- [x] 通知カード背景とフォルダ/ワークスペース背景は維持（子カードは未変更）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Folder List as Icon Tiles (2026-03-23)
+
+- [x] フォルダ一覧をカード行から「フォルダアイコン + 名称 + 件数」のタイル表示へ変更
+- [x] クリック選択と active 状態は維持（既存のフォルダ選択挙動は変更なし）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Remove Folder Tile Count Numbers (2026-03-23)
+
+- [x] フォルダタイル内の件数表示（数字）を非表示化
+- [x] 不要になった `.admin-filebox-folder-row .meta` スタイルを削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Folder Tiles Square + Tighter Spacing (2026-03-23)
+
+- [x] フォルダタイルを正方形化（`aspect-ratio: 1 / 1`）し、角丸を除去（`border-radius: 0`）
+- [x] タイル内外の余白を縮小（グリッド最小幅 `96px`、gap/padding を圧縮）
+- [x] アイコン・文字サイズを微調整して密度を向上
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Dashboard: Folder List Changed to Google Drive-like Dense Rows (2026-03-23)
+
+- [x] フォルダ一覧をタイルから「アイコン + 名称」の高密度1行リストへ変更
+- [x] ギャップを排除し、行間を最小化（`min-height: 36px`）
+- [x] hover/active は背景色のみで視認性を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Sidebar: Add Document Creation Category (2026-03-23)
+
+- [x] 管理サイドバーに `書類作成` セクションを追加
+- [x] `依頼書作成` / `契約書作成` / `請求書作成` の導線を集約
+- [x] `AdminRequestDocumentPage` に `?template=` クエリ初期反映を追加（例: `payment_request`）
+- [x] `AdminTorihikisakiTourokuPage` に `?tab=` クエリ初期反映を追加（例: `contract`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Documents: Consolidate into Single Request-Doc Page (2026-03-23)
+
+- [x] サイドバー `書類作成` を `依頼書作成` 1導線に集約（契約書/請求書の個別メニューを削除）
+- [x] `依頼書作成` ページ内テンプレート選択で `契約書` / `請求書` を選べるようラベル調整
+- [x] 出力PDFタイトル・見出しをテンプレートに応じて `依頼書` / `契約書` / `請求書` に切替
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Full Width + Preview Toggle (2026-03-23)
+
+- [x] 依頼書作成ページのコンテンツ `max-width` 制約を解除し、全幅表示化
+- [x] ヘッダーに `プレビュー表示/非表示` トグルを追加
+- [x] プレビュー非表示時は入力パネルのみの1カラム表示へ切替
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Keep Preview Always Visible (2026-03-23)
+
+- [x] プレビュー表示/非表示トグルを撤去し、プレビューを常時表示へ戻し
+- [x] トグル関連の未使用CSSを削除
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Template Selection as Tag Chips (2026-03-23)
+
+- [x] テンプレート選択をドロップダウンからタグ（チップ）選択UIへ変更
+- [x] 選択中テンプレートを `active` 表示で明示
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Common Header: Add Global Back Button for Admin Header (2026-03-23)
+
+- [x] 管理用共通ヘッダー（breadcrumbs-admin）左側に `← 戻る` ボタンを追加
+- [x] 既存 `onBack` ロジックを利用（履歴あり: `navigate(-1)` / なし: `/`）
+- [x] ヘッダーレイアウト崩れ防止のためボタン高さ/間隔をCSS調整
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Template Tag Contrast Fix (2026-03-23)
+
+- [x] テンプレートタグの通常/選択時カラーを高コントラスト配色へ調整
+- [x] 選択時文字色が背景と同化しないように固定色で明示
+- [x] タグの hover / focus-visible を追加し視認性と操作性を改善
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Per-Template Layout/Design (2026-03-23)
+
+- [x] プレビュー/PDFをテンプレート別に分岐（部署間依頼書・見積依頼書・契約書・請求書）
+- [x] 契約書テンプレートに当事者ブロック/条項/署名欄レイアウトを追加
+- [x] 請求書テンプレートに請求番号/支払期限/金額強調ボックス/請求明細レイアウトを追加
+- [x] 依頼書系テンプレートに目的/依頼内容/完了条件/備考/添付を整理したセクション表示を追加
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Contract/Invoice Company Header (2026-03-23)
+
+- [x] 契約書・請求書テンプレート上部に会社ロゴ＋会社情報ヘッダーを追加（プレビュー/PDF共通）
+- [x] ロゴは既存アセットを参照し、会社情報は定数化して差し替え可能に整理
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Corporate Header Layout Refinement (2026-03-23)
+
+- [x] 契約書・請求書のヘッダーを「左: 書類タイトル / 右: ロゴ＋会社情報」レイアウトへ調整
+- [x] 会社情報を郵便番号・住所・TEL・メール表示まで拡張し、宛名は `様` 付き表示へ統一
+- [x] 契約書・請求書では中央タイトル重複を抑制し、テンプレートらしい体裁へ修正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Selectable Company Logos (2026-03-23)
+
+- [x] 会社ロゴを `横長ロゴ / 正方形ロゴ` のタグ選択で切替可能化
+- [x] 選択したロゴを契約書・請求書のプレビューとPDF出力に反映
+- [x] ロゴ選択値を下書き保存対象に追加（再訪時に維持）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Remove Odd Header Tint (2026-03-23)
+
+- [x] 契約書・請求書ヘッダー（会社情報ブロック）の背景色を白ベースへ調整
+- [x] ロゴ枠の境界色を中立グレーへ調整（青みの強い背景トーンを排除）
+- [x] プレビューとPDF（print HTML）の両方へ同一調整を適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Add Third Logo Option (2026-03-23)
+
+- [x] 会社ロゴ選択に `アイコンロゴ`（`logo_144x144.png`）を追加
+- [x] ロゴ選択値 `icon` をプレビュー/PDF出力のロゴ描画に反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Invoice Layout to Standard Style (2026-03-23)
+
+- [x] 請求書テンプレートを専用レイアウトへ変更（請求情報ライン / 金額ライン / 明細テーブル / 備考）
+- [x] 請求書の過剰なボーダー・装飾を削減し、一般的な帳票トーンへ調整
+- [x] 請求書テンプレート時のみ会社ヘッダーの枠装飾を簡素化（見出し優先）
+- [x] プレビューとPDF出力で同構成を維持
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Template-Specific Input Fields (2026-03-23)
+
+- [x] テンプレートごとに入力項目の表示を分岐（優先度/完了条件/添付/備考）
+- [x] テンプレートごとに入力ラベル・プレースホルダを最適化（契約/請求向け文言へ切替）
+- [x] テンプレートごとに必須項目を分岐（見積: 対象店舗、契約: 契約先、請求: 請求書番号/金額）
+- [x] 未入力バリデーション表示を項目キーではなく日本語ラベル表示へ変更
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Add Form Reset Button (2026-03-23)
+
+- [x] 入力フォームに `リセット` ボタンを追加（保存/送信の横）
+- [x] リセット時に確認ダイアログを表示し、承認後のみ初期化
+- [x] テンプレート選択とロゴ選択は維持しつつ、入力項目と添付選択を初期化
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Invoice Layout Refinement (2026-03-23)
+
+- [x] 請求書プレビュー/PDFの情報構造を再整理（請求先・金額・発行者の視認性向上）
+- [x] メタ情報をカード化し、請求書番号/発行日/支払期限を明確化
+- [x] 金額ボックス・合計ボックスを一般的な請求書に近い階層へ調整
+- [x] 明細テーブルの線・余白を整理し、過剰装飾を削減
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Estimate/Invoice Consistency Rework (2026-03-23)
+
+- [x] テンプレート `見積書` を業務依頼系から独立した帳票仕様へ再定義（見積書番号/有効期限/支払条件/税率）
+- [x] 請求書・見積書に共通の明細行入力UIを追加（内容/数量/単価/小計、行追加/削除）
+- [x] 小計・消費税・合計を明細行から自動計算し、プレビュー/PDFへ反映
+- [x] 請求書・見積書のプレビュー/PDFレイアウトを同一思想へ統一（上段情報＋明細表＋合計＋注記）
+- [x] テンプレート別必須チェックを調整（見積/請求は明細行必須）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: External Invoice Template Fit (2026-03-23)
+
+- [x] 外部テンプレート（anvil `html-pdf-invoice-template`）の構造を請求書/見積書へ適用（`invoice-info-container` / `line-items-container`）
+- [x] プレビューCSSとPDF出力CSSの両方に同一クラス定義を追加し、見た目を一致
+- [x] 明細行が空の場合でもプレースホルダー行を必ず表示する描画ロジックへ修正
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Template-Aware Input Labels/Fields (2026-03-23)
+
+- [x] テンプレート共通入力のラベルをテンプレート別に切替（請求書/見積書は `依頼` 表現を `発行/宛先` へ変更）
+- [x] 請求書・見積書では自由記述 `依頼内容` フィールドを非表示化（明細行入力に一本化）
+- [x] 明細セクション見出しをテンプレートの明細ラベルへ同期（例: `ご請求内容` / `見積明細`）
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Remove Duplicate Company Info in Invoice/Estimate (2026-03-23)
+
+- [x] 請求書/見積書の上部会社情報はヘッダーに一本化（重複していた右列住所/メール表示を削除）
+- [x] 請求書/見積書の `invoice-info` は宛名 + 帳票メタ情報（発行日/番号/発行部署）へ整理
+- [x] プレビューとPDF出力の両方に同一修正を反映
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Invoice/Estimate Header Alignment Refinement (2026-03-23)
+
+- [x] 請求書/見積書ヘッダーに書類番号メタ行を追加し、タイトル階層（タイトル/サブタイトル/番号）を明確化
+- [x] 請求書/見積書のヘッダー配置を固定（左: タイトル情報 / 右: ロゴ+会社情報）し、視線導線を整理
+- [x] プレビューとPDF出力の両方で同一のヘッダーレイアウトへ揃え込み
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Invoice Header Position Rebased to Report Style (2026-03-23)
+
+- [x] 請求書/見積書を「上段: タイトル+会社情報」「次段: 宛名」「次段: 帳票メタ情報」の3層へ再配置
+- [x] `invoice-info` をメタ表（`th/td`）へ変更し、タイトルと宛名の位置競合を解消
+- [x] プレビューとPDFの両方に同一レイアウトを適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Header 2-Column Match to Report Preview (2026-03-23)
+
+- [x] 請求書/見積書ヘッダーを2カラムへ統一（左: タイトル+相手先 / 右: ロゴ+会社情報）
+- [x] ヘッダー外の宛先行を削除し、相手先はヘッダー左カラム内へ統合
+- [x] プレビューとPDF出力の両方で同一ヘッダー構造へ揃え込み
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Company Info Alignment in Header (2026-03-23)
+
+- [x] 右カラム内の会社情報ブロックを右寄せ配置に変更
+- [x] 会社情報テキストは左揃えを維持（右寄せ配置＋左揃え文字）
+- [x] プレビューCSSとPDF印刷CSSの両方に同一調整を適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Align Left Edge Between Logo and Company Info (2026-03-23)
+
+- [x] 右カラム内のロゴ枠を左寄せ表示へ変更（`justify-content: flex-start`）
+- [x] ロゴ枠と会社情報ブロックを同一幅基準（`width: 100%`）に揃え、左端を一致
+- [x] プレビューCSSとPDF印刷CSSの両方へ同一調整を適用
+- [x] `npm -C src/misogi run build` でビルド確認
+
+## Admin Request-Doc: Right-Align Company Brand Group (2026-03-23)
+
+- [x] ロゴ + 会社情報を1セット化し、右カラム内でセット全体を右寄せ配置に変更
+- [x] セット内部は左揃えを維持（行頭を揃えて可読性を確保）
+- [x] プレビューCSSとPDF印刷CSSの両方へ同一調整を適用
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Center Title in Left Header Column (2026-03-23)
+
+- [x] 請求書/見積書のヘッダータイトル（左カラム）を中央揃えへ変更
+- [x] プレビューCSSとPDF印刷CSSの両方に同一調整を適用
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Top-Centered Invoice/Estimate Title + Remove Top Line (2026-03-23)
+
+- [x] 請求書/見積書のタイトルを最上段中央へ移動（ヘッダー2段構成へ変更）
+- [x] 最上部ラインを削除（プレビュー/PDFともに非表示）
+- [x] 2段目ヘッダーは左: 相手先 / 右: ロゴ+会社情報を維持
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Remove Invoice Subtitle + Add Top-Right Date (2026-03-23)
+
+- [x] 請求書テンプレートでサブタイトル（請求明細書）表示を削除
+- [x] 請求書タイトル帯の右上に `発行日` を追加
+- [x] 請求書メタ表の `請求日` 行を削除し、日付表示をタイトル帯へ一本化
+- [x] プレビューとPDF出力の両方に同一修正を反映
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Shrink Company Brand Set Size (2026-03-23)
+
+- [x] 請求書/見積書の会社情報セットを縮小（右カラム幅を小さく調整）
+- [x] ロゴ高さを縮小（プレビュー/PDFで同等の見た目へ調整）
+- [x] 会社情報のフォントサイズと行間を一段小さく調整
+- [x] プレビューとPDF出力の両方へ同一修正を反映
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Add Recipient Space (御中) Left of Company Info (2026-03-23)
+
+- [x] 請求書/見積書で宛先名を `御中` 形式へ整形して表示
+- [x] 会社情報の左側に宛先専用スペース（下線付き）を追加
+- [x] 宛先スペースは部署行 + 御中行の2段表示に対応
+- [x] プレビューとPDF出力の両方へ同一修正を適用
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Hide Requester/Recipient Fields for Invoice Template (2026-03-23)
+
+- [x] 請求書テンプレート選択時は `発行部署 / 宛先部署 / 発行担当 / 宛先担当者` 入力UIを非表示化
+- [x] 請求書テンプレート時の必須項目から上記4項目を除外（請求書専用必須へ分離）
+- [x] 見積書・契約書・依頼書の入力UIと必須判定には影響させない
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Template-Specific Title Label Fix (2026-03-23)
+
+- [x] 見積書テンプレートの `件名` ラベルを `見積件名` に変更
+- [x] 請求書テンプレートの `件名` ラベルを `請求件名` に変更
+- [x] 既存のテンプレート別ラベル切替ロジック（fieldLabelOverrides）へ統合
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Invoice Client/Bank Fields Alignment (2026-03-23)
+
+- [x] 請求書テンプレートに `請求先会社名 / 請求先担当者名 / 請求先住所 / 振込先` の入力項目を追加し、既存状態保存へ統合
+- [x] 請求書プレビューで宛先表示を請求先情報基準へ統一（依頼書系の宛先ロジックから分離）
+- [x] 請求書プレビューとPDF印刷HTMLの双方に `請求先住所` と `振込先` を反映
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Invoice Recipient Address Placement (2026-03-23)
+
+- [x] 請求書テンプレートの宛先ブロックを `会社名 → 担当者（御中）→ 住所` の順に統一
+- [x] 独立していた住所セクションを削除し、宛先ブロック内へ集約
+- [x] プレビューとPDF印刷HTMLの両方へ同一修正を適用
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Contract Template Expansion (2026-03-23)
+
+- [x] 契約書テンプレートに契約専用入力を追加（契約番号 / 契約先 / 契約開始日 / 契約終了日 / 契約金額 / 支払条件）
+- [x] 契約書テンプレートの必須判定を契約向けに拡張（契約先・契約期間）
+- [x] 契約書プレビューとPDF印刷HTMLを実務向け構成へ更新（タイトル帯 / 宛先 / 契約メタ / 条項）
+- [x] 契約プレビュー内の条項見出しを章立て表現へ統一（第1条〜第4条）
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Contract Signature Source Switch to Keiyaku (2026-03-23)
+
+- [x] 契約書テンプレートで `contract_id` 指定時に `master/keiyaku` を取得する読み込みロジックを追加（ID直指定 + 一覧フォールバック）
+- [x] 契約プレビューの契約先/提供者表示を `keiyaku` 優先で解決するよう変更（`name/company_name/contact/provider_*`）
+- [x] 契約書の署名欄を `keiyaku` 情報ベースに変更（甲: 契約先情報、乙: サービス提供者情報）
+- [x] 署名欄レイアウトをプレビューCSSとPDF印刷HTMLの双方で同一化（カード式・詳細表示）
+- [x] npm -C src/misogi run build でビルド確認
