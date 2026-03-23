@@ -620,6 +620,22 @@ export default function AdminTorihikisakiMeiboPage({ mode = 'admin' }) {
     navigate(nextPath);
   }, [navigate]);
 
+  const buildTenpoCustomerPath = useCallback((tenpoId, torihikisakiId, yagouId) => {
+    const id = String(tenpoId || '').trim();
+    if (!id) return '';
+    const params = new URLSearchParams({
+      torihikisaki_id: String(torihikisakiId || '').trim(),
+      yagou_id: String(yagouId || '').trim(),
+    });
+    return `${isSalesMode ? '/sales/tenpo' : '/admin/tenpo'}/${encodeURIComponent(id)}?${params.toString()}`;
+  }, [isSalesMode]);
+
+  const openTenpoCustomerPage = useCallback((tenpoId, torihikisakiId, yagouId) => {
+    const next = buildTenpoCustomerPath(tenpoId, torihikisakiId, yagouId);
+    if (!next) return;
+    navigate(next);
+  }, [buildTenpoCustomerPath, navigate]);
+
   return (
     <div className={`meibo-page ${isSalesMode ? 'is-sales-mode' : ''}`.trim()}>
       <header className="meibo-head">
@@ -735,7 +751,20 @@ export default function AdminTorihikisakiMeiboPage({ mode = 'admin' }) {
                             const yName = searchNameById.yagouById.get(tp?.yagou_id || '') || '';
                             const yId = normStr(yName) ? (tp?.yagou_id || yagouId || '') : '';
                             return (
-                              <div className="tenpo-row" key={`${yagouId || '(no-yagou)'}-${tenpoId}`}>
+                              <div
+                                className="tenpo-row"
+                                key={`${yagouId || '(no-yagou)'}-${tenpoId}`}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => openTenpoCustomerPage(tenpoId, toriId, yId)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    openTenpoCustomerPage(tenpoId, toriId, yId);
+                                  }
+                                }}
+                                title="クリックでお客様ページを開く"
+                              >
                                 <div className="tenpo-main">
                                   <div className="tenpo-name">{tp?.name || '(no name)'}</div>
                                   <div className="tenpo-id">{tenpoId}</div>
@@ -749,18 +778,26 @@ export default function AdminTorihikisakiMeiboPage({ mode = 'admin' }) {
                                   </div>
                                 </div>
                                 <div className="tenpo-actions">
-                                  <button onClick={() => copy(tenpoId)}>IDコピー</button>
+                                  <button onClick={(e) => { e.stopPropagation(); copy(tenpoId); }}>IDコピー</button>
                                   <Link
-                                    to={`${isSalesMode ? '/sales/tenpo' : '/admin/tenpo'}/${encodeURIComponent(tenpoId)}?${new URLSearchParams({
-                                      torihikisaki_id: toriId,
-                                      yagou_id: yId,
-                                    }).toString()}`}
+                                    to={buildTenpoCustomerPath(tenpoId, toriId, yId)}
                                     className="link"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
-                                    カルテ
+                                    詳細
                                   </Link>
-                                  <Link to={isSalesMode ? '/sales/schedule' : '/admin/yotei'} className="link">予定へ</Link>
-                                  <Link to={isSalesMode ? '/sales/master/customer' : '/admin/master/tenpo'} className="link">
+                                  <Link
+                                    to={isSalesMode ? '/sales/schedule' : '/admin/yotei'}
+                                    className="link"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    予定へ
+                                  </Link>
+                                  <Link
+                                    to={isSalesMode ? '/sales/master/customer' : '/admin/master/tenpo'}
+                                    className="link"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     {isSalesMode ? '顧客マスタへ' : 'マスタへ'}
                                   </Link>
                                 </div>
@@ -816,7 +853,28 @@ export default function AdminTorihikisakiMeiboPage({ mode = 'admin' }) {
                           {tps.map((tp) => {
                             const tenpoId = tp?.tenpo_id || tp?.id;
                             return (
-                              <div className="tenpo-row" key={tenpoId}>
+                              <div
+                                className="tenpo-row"
+                                key={tenpoId}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => openTenpoCustomerPage(
+                                  tenpoId,
+                                  selectedTorihikisakiId,
+                                  showYagouId ? (y?.yagou_id || '') : ''
+                                )}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    openTenpoCustomerPage(
+                                      tenpoId,
+                                      selectedTorihikisakiId,
+                                      showYagouId ? (y?.yagou_id || '') : ''
+                                    );
+                                  }
+                                }}
+                                title="クリックでお客様ページを開く"
+                              >
                               <div className="tenpo-main">
                                   <div className="tenpo-name">{tp?.name || '(no name)'}</div>
                                   <div className="tenpo-id">{tenpoId}</div>
@@ -830,18 +888,30 @@ export default function AdminTorihikisakiMeiboPage({ mode = 'admin' }) {
                                   </div>
                                 </div>
                               <div className="tenpo-actions">
-                                <button onClick={() => copy(tenpoId)}>IDコピー</button>
+                                <button onClick={(e) => { e.stopPropagation(); copy(tenpoId); }}>IDコピー</button>
                                 <Link
-                                  to={`${isSalesMode ? '/sales/tenpo' : '/admin/tenpo'}/${encodeURIComponent(tenpoId)}?${new URLSearchParams({
-                                    torihikisaki_id: selectedTorihikisakiId,
-                                    yagou_id: showYagouId ? (y?.yagou_id || '') : '',
-                                  }).toString()}`}
+                                  to={buildTenpoCustomerPath(
+                                    tenpoId,
+                                    selectedTorihikisakiId,
+                                    showYagouId ? (y?.yagou_id || '') : ''
+                                  )}
                                   className="link"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
-                                  カルテ
+                                  詳細
                                 </Link>
-                                <Link to={isSalesMode ? '/sales/schedule' : '/admin/yotei'} className="link">予定へ</Link>
-                                <Link to={isSalesMode ? '/sales/master/customer' : '/admin/master/tenpo'} className="link">
+                                <Link
+                                  to={isSalesMode ? '/sales/schedule' : '/admin/yotei'}
+                                  className="link"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  予定へ
+                                </Link>
+                                <Link
+                                  to={isSalesMode ? '/sales/master/customer' : '/admin/master/tenpo'}
+                                  className="link"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   {isSalesMode ? '顧客マスタへ' : 'マスタへ'}
                                 </Link>
                               </div>

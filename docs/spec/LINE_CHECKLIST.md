@@ -5623,3 +5623,17 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 請求書テンプレートの `請求件名` 入力UIを再表示
 - [x] 請求書テンプレートの必須判定に `title` を再追加
 - [x] npm -C src/misogi run build でビルド確認
+
+## Admin Torihikisaki Meibo: Tenpo Hover + Row Click Navigation (2026-03-23)
+
+- [x] 取引先名簿の店舗リスト行（`.tenpo-row`）に hover 時の軽い色変化を追加（ライト/ダーク両対応）
+- [x] 店舗リスト行をクリック可能にし、お客様ページ（既存カルテルート）へ遷移する動線を追加
+- [x] Enter/Spaceキーでも遷移できるようにし、キーボード操作に対応
+- [x] 行内ボタン/リンク操作時は親行クリック遷移が発火しないよう `stopPropagation` を適用
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Torihikisaki Meibo: Tenpo Action Label Rename (2026-03-23)
+
+- [x] 取引先名簿ページ右側の店舗リストにあるアクションリンク文言を `カルテ` から `詳細` へ変更
+- [x] 一覧表示モード/取引先選択モードの両方に同一文言変更を適用
+- [x] npm -C src/misogi run build でビルド確認
