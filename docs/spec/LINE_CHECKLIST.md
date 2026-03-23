@@ -5595,3 +5595,31 @@ AGENTS.md 準拠: 変更を finalize する前にここを完了させる。
 - [x] 契約書の署名欄を `keiyaku` 情報ベースに変更（甲: 契約先情報、乙: サービス提供者情報）
 - [x] 署名欄レイアウトをプレビューCSSとPDF印刷HTMLの双方で同一化（カード式・詳細表示）
 - [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Keep A4 Ratio on Narrow Screens (2026-03-23)
+
+- [x] プレビュー領域の幅を監視し、A4固定のまま自動縮小するスケール制御を追加（画面幅に応じて相対縮小）
+- [x] A4プレビュー本体の `210mm x 297mm` を固定し、レスポンシブ時にレイアウト崩壊する幅/余白上書きを削除
+- [x] プレビュー縮小は表示側のみへ適用し、PDF生成対象DOMは同一のまま維持
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Invoice Torihikisaki Search + Auto Fill (2026-03-23)
+
+- [x] 請求書テンプレートの `請求先会社名` ラベル/概念を `請求取引先` に変更
+- [x] 請求書テンプレートに `torihikisaki` 横断検索UIを追加（取引先名/ID/担当者/住所で絞り込み）
+- [x] 検索候補選択時に `請求先担当者名` と `請求先住所` を自動入力する連携を実装
+- [x] 請求書フォーム状態に `invoice_torihikisaki_id` を追加し選択状態を保持
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Hide Invoice Subject Field (2026-03-23)
+
+- [x] 請求書テンプレート時の `請求件名` 入力UIを非表示化
+- [x] 請求書テンプレートの必須判定から `title` を除外
+- [x] ラベル辞書の `client_company` 表記を `請求取引先` へ統一
+- [x] npm -C src/misogi run build でビルド確認
+
+## Admin Request-Doc: Restore Invoice Subject Field (2026-03-23)
+
+- [x] 請求書テンプレートの `請求件名` 入力UIを再表示
+- [x] 請求書テンプレートの必須判定に `title` を再追加
+- [x] npm -C src/misogi run build でビルド確認

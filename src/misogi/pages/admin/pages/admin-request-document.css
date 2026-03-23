@@ -316,6 +316,73 @@
   background: #f8fbff;
 }
 
+[data-theme='light'] .admin-request-doc-torihikisaki-search {
+  background: #f8fbff;
+}
+
+.admin-request-doc-torihikisaki-search {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  display: grid;
+  gap: 8px;
+  background: rgba(8, 18, 32, 0.2);
+}
+
+.admin-request-doc-torihikisaki-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.admin-request-doc-torihikisaki-list {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  max-height: 220px;
+  overflow: auto;
+  background: #ffffff;
+}
+
+.admin-request-doc-torihikisaki-item {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  background: transparent;
+  color: #1f2937;
+  text-align: left;
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.admin-request-doc-torihikisaki-item:last-child {
+  border-bottom: 0;
+}
+
+.admin-request-doc-torihikisaki-item .name {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.admin-request-doc-torihikisaki-item .meta {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.admin-request-doc-torihikisaki-item.active {
+  background: #ffeaea;
+}
+
+.admin-request-doc-torihikisaki-item:hover {
+  background: #fff4f4;
+}
+
+.admin-request-doc-torihikisaki-empty {
+  padding: 10px;
+  font-size: 0.84rem;
+  color: #64748b;
+}
+
 .admin-request-doc-upload-head {
   display: flex;
   align-items: center;
@@ -351,17 +418,22 @@
   border-radius: 10px;
   background: rgba(8, 18, 32, 0.35);
   padding: 14px;
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: hidden;
 }
 
 [data-theme='light'] .admin-request-doc-preview-wrap {
   background: #f8fbff;
 }
 
+.admin-request-doc-preview-scale {
+  width: 210mm;
+  margin: 0 auto;
+  zoom: var(--preview-scale, 1);
+}
+
 .admin-request-doc-preview-paper {
-  width: min(100%, 210mm);
-  max-width: 100%;
+  width: 210mm;
+  max-width: none;
   min-height: 297mm;
   margin: 0 auto;
   background: #ffffff;
@@ -371,6 +443,17 @@
   box-sizing: border-box;
   padding: 15mm 18mm 18mm;
   font-family: 'Yu Mincho', 'Hiragino Mincho ProN', 'MS PMincho', serif;
+}
+
+@supports not (zoom: 1) {
+  .admin-request-doc-preview-scale {
+    width: calc(210mm * var(--preview-scale, 1));
+  }
+
+  .admin-request-doc-preview-paper {
+    transform: scale(var(--preview-scale, 1));
+    transform-origin: top left;
+  }
 }
 
 .doc-letter-line-top {
@@ -1193,12 +1276,6 @@
 
   .admin-request-doc-preview-wrap {
     padding: 10px;
-  }
-
-  .admin-request-doc-preview-paper {
-    width: 100%;
-    min-height: auto;
-    padding: 16px 12px;
   }
 
   .doc-letter-meta {

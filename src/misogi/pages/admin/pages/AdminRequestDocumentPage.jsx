@@ -86,10 +86,11 @@ const FIELD_LABELS = {
   estimate_no: '見積書番号',
   tax_rate: '税率(%)',
   payment_terms: '支払条件',
-  client_company: '請求先会社名',
+  client_company: '請求取引先',
   client_name: '請求先担当者名',
   client_address: '請求先住所',
   bank_info: '振込先',
+  invoice_torihikisaki_id: '請求取引先',
 };
 
 const RECIPIENT_ALLOWED_SCOPES = ['管理', '事務', '営業', '開発'];
@@ -219,14 +220,13 @@ const TEMPLATE_DEFS = {
       amount: 'ご請求金額',
       tax_rate: '税率(%)',
       payment_terms: '支払条件',
-      client_company: '請求先会社名',
+      client_company: '請求取引先',
       client_name: '請求先担当者名',
       client_address: '請求先住所',
       bank_info: '振込先',
     },
     extraFields: [
       { key: 'invoice_no', label: '請求書番号', placeholder: '例: INV-2026-0101' },
-      { key: 'client_company', label: '請求先会社名', placeholder: '例: 株式会社クライアント' },
       { key: 'client_name', label: '請求先担当者名', placeholder: '例: 山田 太郎' },
       { key: 'client_address', label: '請求先住所', placeholder: '例: 東京都新宿区西新宿9-9-9' },
       { key: 'payment_terms', label: '支払条件', placeholder: '例: 月末締め翌月末払い' },
@@ -375,6 +375,7 @@ function emptyDraft() {
     client_company: '',
     client_name: '',
     client_address: '',
+    invoice_torihikisaki_id: '',
     bank_info: '',
     line_items: [createLineItem()],
     company_logo_variant: 'wide',
@@ -1524,11 +1525,25 @@ export default function AdminRequestDocumentPage() {
   const [keiyakuRef, setKeiyakuRef] = useState(null);
   const [keiyakuLoading, setKeiyakuLoading] = useState(false);
   const [keiyakuError, setKeiyakuError] = useState('');
+  const [invoiceTorihikisakiRows, setInvoiceTorihikisakiRows] = useState([]);
+  const [invoiceTorihikisakiLoading, setInvoiceTorihikisakiLoading] = useState(false);
+  const [invoiceTorihikisakiError, setInvoiceTorihikisakiError] = useState('');
+  const [invoiceTorihikisakiQuery, setInvoiceTorihikisakiQuery] = useState('');
   const fileInputRef = useRef(null);
   const previewPaperRef = useRef(null);
+  const previewWrapRef = useRef(null);
+  const [previewScale, setPreviewScale] = useState(1);
   const template = TEMPLATE_DEFS[form.template] || TEMPLATE_DEFS.department_request;
   const templateLabel = TEMPLATE_OPTIONS.find((x) => x.value === form.template)?.label || '-';
   const isEstimateOrInvoice = form.template === 'estimate_request' || form.template === 'payment_request';
+  const filteredInvoiceTorihikisakiRows = useMemo(() => {
+    const q = String(invoiceTorihikisakiQuery || '').trim().toLowerCase();
+    const rows = Array.isArray(invoiceTorihikisakiRows) ? invoiceTorihikisakiRows : [];
+    if (!q) return rows.slice(0, 30);
+    return rows
+      .filter((row) => String(row?._search || '').includes(q))
+      .slice(0, 30);
+  }, [invoiceTorihikisakiRows, invoiceTorihikisakiQuery]);
 
   const preview = useMemo(() => {
     const templateKey = String(form.template || 'department_request');
@@ -1724,6 +1739,36 @@ export default function AdminRequestDocumentPage() {
   }, [location?.search]);
 
   useEffect(() => {
+    const wrap = previewWrapRef.current;
+    if (!wrap) return undefined;
+
+    const PAPER_WIDTH_PX = 794;
+    let rafId = 0;
+    const updateScale = () => {
+      const available = Math.max(0, Number(wrap.clientWidth || 0) - 4);
+      const next = Math.max(0.34, Math.min(1, available / PAPER_WIDTH_PX));
+      setPreviewScale((prev) => (Math.abs(prev - next) < 0.005 ? prev : next));
+    };
+    const queueUpdate = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateScale);
+    };
+    updateScale();
+
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(queueUpdate);
+      ro.observe(wrap);
+    }
+    window.addEventListener('resize', queueUpdate);
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', queueUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     const loadRecipients = async () => {
       setRecipientLoading(true);
@@ -1871,6 +1916,76 @@ export default function AdminRequestDocumentPage() {
   }, [form.template, form.contract_id]);
 
   useEffect(() => {
+    let cancelled = false;
+    if (String(form.template || '') !== 'payment_request') {
+      setInvoiceTorihikisakiRows([]);
+      setInvoiceTorihikisakiLoading(false);
+      setInvoiceTorihikisakiError('');
+      setInvoiceTorihikisakiQuery('');
+      return () => {
+        cancelled = true;
+      };
+    }
+    const loadTorihikisaki = async () => {
+      setInvoiceTorihikisakiLoading(true);
+      setInvoiceTorihikisakiError('');
+      try {
+        const base = MASTER_API_BASE.replace(/\/$/, '');
+        const res = await fetch(`${base}/master/torihikisaki?limit=5000&jotai=yuko`, {
+          headers: {
+            ...authHeaders(),
+            'Content-Type': 'application/json',
+          },
+          cache: 'no-store',
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`請求取引先一覧取得失敗: HTTP ${res.status}${txt ? ` ${txt}` : ''}`);
+        }
+        const rows = asItems(await res.json())
+          .map((row) => {
+            const torihikisakiId = String(row?.torihikisaki_id || row?.id || '').trim();
+            const name = String(row?.name || '').trim();
+            if (!torihikisakiId || !name) return null;
+            const contactName = firstFilled(row?.tantou_name, row?.contact_person, row?.contact_name);
+            const address = firstFilled(row?.address, row?.company_address);
+            const phone = firstFilled(row?.phone, row?.contact_phone, row?.tel);
+            const email = firstFilled(row?.email, row?.mail);
+            const search = [torihikisakiId, name, contactName, address, phone, email]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase();
+            return {
+              torihikisaki_id: torihikisakiId,
+              name,
+              contact_name: contactName,
+              address,
+              phone,
+              email,
+              _search: search,
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ja'));
+        if (!cancelled) {
+          setInvoiceTorihikisakiRows(rows);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setInvoiceTorihikisakiRows([]);
+          setInvoiceTorihikisakiError(String(e?.message || e || '請求取引先一覧の取得に失敗しました'));
+        }
+      } finally {
+        if (!cancelled) setInvoiceTorihikisakiLoading(false);
+      }
+    };
+    loadTorihikisaki();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.template]);
+
+  useEffect(() => {
     if (!form.receiver_jinzai_id) return;
     const exists = recipientOptions.some((row) => row.id === form.receiver_jinzai_id);
     if (exists) return;
@@ -1881,6 +1996,17 @@ export default function AdminRequestDocumentPage() {
     });
   }, [form, recipientOptions]);
 
+  useEffect(() => {
+    if (String(form.template || '') !== 'payment_request') return;
+    const selectedId = String(form.invoice_torihikisaki_id || '').trim();
+    if (!selectedId) return;
+    const selected = invoiceTorihikisakiRows.find((row) => row.torihikisaki_id === selectedId) || null;
+    if (!selected) return;
+    if (!String(invoiceTorihikisakiQuery || '').trim()) {
+      setInvoiceTorihikisakiQuery(selected.name || '');
+    }
+  }, [form.template, form.invoice_torihikisaki_id, invoiceTorihikisakiRows, invoiceTorihikisakiQuery]);
+
   const onReceiverChange = (nextId) => {
     const selected = recipientOptions.find((row) => row.id === nextId) || null;
     saveDraft({
@@ -1889,6 +2015,19 @@ export default function AdminRequestDocumentPage() {
       receiver_name: selected?.name || '',
       receiver_dept: selected?.dept || form.receiver_dept || '',
     });
+  };
+
+  const onInvoiceTorihikisakiSelect = (torihikisakiId) => {
+    const selected = invoiceTorihikisakiRows.find((row) => row.torihikisaki_id === torihikisakiId) || null;
+    if (!selected) return;
+    saveDraft({
+      ...form,
+      invoice_torihikisaki_id: selected.torihikisaki_id,
+      client_company: selected.name || form.client_company,
+      client_name: selected.contact_name || form.client_name,
+      client_address: selected.address || form.client_address,
+    });
+    setInvoiceTorihikisakiQuery(selected.name || '');
   };
 
   const onSave = () => {
@@ -2348,6 +2487,59 @@ export default function AdminRequestDocumentPage() {
                 </label>
               )}
 
+              {form.template === 'payment_request' ? (
+                <div className="admin-request-doc-torihikisaki-search">
+                  <label>
+                    請求取引先
+                    <input
+                      value={invoiceTorihikisakiQuery}
+                      onChange={(e) => {
+                        setInvoiceTorihikisakiQuery(e.target.value);
+                        if (form.invoice_torihikisaki_id) {
+                          update('invoice_torihikisaki_id', '');
+                        }
+                      }}
+                      placeholder="取引先名 / 取引先ID / 担当者 / 住所 で検索"
+                      maxLength={120}
+                    />
+                  </label>
+                  <div className="admin-request-doc-torihikisaki-meta">
+                    {invoiceTorihikisakiLoading
+                      ? '請求取引先を読み込み中...'
+                      : invoiceTorihikisakiError
+                        ? invoiceTorihikisakiError
+                        : `候補 ${filteredInvoiceTorihikisakiRows.length}件`}
+                  </div>
+                  {invoiceTorihikisakiLoading || invoiceTorihikisakiError ? null : (
+                    <div className="admin-request-doc-torihikisaki-list" role="listbox" aria-label="請求取引先候補">
+                      {filteredInvoiceTorihikisakiRows.length ? (
+                        filteredInvoiceTorihikisakiRows.map((row) => {
+                          const active = String(form.invoice_torihikisaki_id || '') === row.torihikisaki_id;
+                          return (
+                            <button
+                              key={row.torihikisaki_id}
+                              type="button"
+                              role="option"
+                              aria-selected={active}
+                              className={`admin-request-doc-torihikisaki-item ${active ? 'active' : ''}`}
+                              onClick={() => onInvoiceTorihikisakiSelect(row.torihikisaki_id)}
+                            >
+                              <span className="name">{row.name}</span>
+                              <span className="meta">
+                                {row.torihikisaki_id}
+                                {row.contact_name ? ` / 担当: ${row.contact_name}` : ''}
+                              </span>
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="admin-request-doc-torihikisaki-empty">一致する請求取引先がありません</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
               {(template.extraFields || []).map((field) => (
                 <label key={field.key}>
                   {field.label}
@@ -2538,11 +2730,12 @@ export default function AdminRequestDocumentPage() {
                 ? `未入力: ${requiredMissing.join(', ')}`
                 : '必須項目は入力済みです。'}
             </div>
-            <div className="admin-request-doc-preview-wrap">
-              <article
-                ref={previewPaperRef}
-                className={`admin-request-doc-preview-paper template-${preview.templateKey || 'department_request'}`}
-              >
+            <div ref={previewWrapRef} className="admin-request-doc-preview-wrap">
+              <div className="admin-request-doc-preview-scale" style={{ '--preview-scale': previewScale }}>
+                <article
+                  ref={previewPaperRef}
+                  className={`admin-request-doc-preview-paper template-${preview.templateKey || 'department_request'}`}
+                >
                 {preview.templateKey === 'payment_request' || preview.templateKey === 'contract_review' || preview.templateKey === 'estimate_request' ? null : (
                   <>
                     <header className="doc-letter-head">
@@ -2916,7 +3109,8 @@ export default function AdminRequestDocumentPage() {
                     <div className="doc-letter-closing">敬具</div>
                   </>
                 )}
-              </article>
+                </article>
+              </div>
             </div>
           </section>
         </div>
